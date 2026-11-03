@@ -29,7 +29,7 @@ test('CSV: header, BOM, Hebrew, quoting, formula-injection neutralised, only fin
   assert.ok(csv.startsWith('﻿')); assert.equal(lines.length, 4); assert.match(lines[0], /^date,start,end,routine,status,planned_sec/);
   assert.ok(lines[3].includes('"בוקר, ""טוב"""')); assert.ok(csv.includes(`"'=HYPERLINK(""http://evil"")"`)); assert.ok(lines.some((l) => l.includes("'+cmd|x")));
   assert.ok(!lines.some((l) => /,=HYPERLINK|,\+cmd/.test(l)), 'no cell starts with a formula character');
-  assert.match(lines[1], /,done,100,100,90,30,3,2,2$/);
+  assert.match(lines[1], /,done,100,100,90,30,3,2,2,0,0$/);
 });
 test('sample routines: all five have fixed ids, valid tasks and never duplicate; undo restores a deleted routine exactly', async () => {
   await S.init(); await S.addSamples(true); await S.addSamples(true);

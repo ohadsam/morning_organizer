@@ -7,7 +7,7 @@ import { moodEmoji } from '../mood.js';
 import { modal, toast, confirmBox } from './common.js';
 import { openCapture, openThought, openGratitude, openPark } from './capture.js';
 
-const KIND_EMOJI = { note: '📝', voice: '🎙️', thought: '🧠', gratitude: '🌟', mood: '🙂', park: '🅿️', calm: '🌿' };
+const KIND_EMOJI = { note: '📝', voice: '🎙️', thought: '🧠', gratitude: '🌟', mood: '🙂', park: '🅿️', calm: '🌿', insight: '🔍' };
 const PRESET_Q = ['lqPet', 'lqStreet', 'lqFood', 'lqFriend', 'lqBook', 'lqPlace'];
 const field = (label, input, hint) => h('label', { class: 'field' }, label, hint ? h('span', { class: 'hint' }, hint) : null, input);
 const waitText = (ms) => t('jWait', { s: Math.ceil(ms / 1000) });

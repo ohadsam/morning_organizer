@@ -1,3 +1,4 @@
+import { alarmEditor } from './alarmEditor.js';
 import { h, fmtHuman, debounce, uid, setChildren } from '../util.js';
 import { t, units } from '../i18n.js';
 import * as S from '../store.js';
@@ -108,22 +109,7 @@ export function renderEditor(root, id, nav) {
         iconBtn('trash', t('gearRemove'), () => { tpl.gear.splice(i, 1); save(); drawGear(); })), dayChips(g.days || [], (d) => { g.days = d; save(); drawGear(); }))),
       h('button', { class: 'btn add', type: 'button', onclick: () => { tpl.gear.push({ id: uid(), name: '', icon: '', days: [] }); save(); drawGear(); gearBox.querySelector('.gear-row:last-of-type input[type=text]')?.focus(); } }, icon('plus', 18), t('addGear')));
   }
-  const alarmBox = h('section', { class: 'card alarm' });
-  function drawAlarm() {
-    const a = tpl.alarm;
-    const on = () => { save(); drawAlarm(); };
-    alarmBox.replaceChildren(
-      h('label', { class: 'switch row' }, h('span', {}, icon('bell', 18), ' ', t('alarmEnable')),
-        h('input', { type: 'checkbox', checked: a.enabled, onchange: (e) => { a.enabled = e.target.checked; if (a.enabled) { requestWebNotifications(); native.requestNotifications(); } on(); } })),
-      a.enabled ? h('div', { class: 'alarm-grid' },
-        h('label', {}, h('span', { class: 'lbl' }, t('alarmTime')), h('input', { type: 'time', value: a.time, oninput: (e) => { a.time = e.target.value || '07:00'; save(); } })),
-        h('fieldset', { class: 'days' }, h('legend', {}, t('alarmDays')),
-          [0, 1, 2, 3, 4, 5, 6].map((d) => h('label', { class: 'day' }, h('input', { type: 'checkbox', checked: a.days.includes(d), onchange: (e) => { a.days = e.target.checked ? [...a.days, d].sort() : a.days.filter((x) => x !== d); save(); } }), h('span', {}, t(`day${d}`))))),
-        h('label', {}, h('span', { class: 'lbl' }, `${t('alarmVolume')}: ${a.volume}%`), h('input', { type: 'range', min: 0, max: 100, value: a.volume, oninput: (e) => { a.volume = +e.target.value; e.target.previousSibling.textContent = `${t('alarmVolume')}: ${a.volume}%`; save(); } })),
-        h('label', { class: 'switch row' }, h('span', {}, t('alarmVibrate')), h('input', { type: 'checkbox', checked: a.vibrate, onchange: (e) => { a.vibrate = e.target.checked; save(); } })),
-        h('label', {}, h('span', { class: 'lbl' }, `${t('alarmDuration')}: ${a.durationSec} ${t('seconds')}`), h('input', { type: 'range', min: 5, max: 300, step: 5, value: a.durationSec, oninput: (e) => { a.durationSec = +e.target.value; e.target.previousSibling.textContent = `${t('alarmDuration')}: ${a.durationSec} ${t('seconds')}`; save(); } })),
-        native.available ? null : h('p', { class: 'note' }, t('alarmWebNote'))) : null);
-  }
+  const alarmEd = alarmEditor(tpl, save), alarmBox = alarmEd.el, drawAlarm = alarmEd.draw;
 
   function draw() {
     list.replaceChildren(...tpl.tasks.map(taskRow));

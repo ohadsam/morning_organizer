@@ -1,6 +1,19 @@
 // Strings for the "helpers" added in 1.10: calm corner, journal (optional password, voice notes, dictation), focus areas, sprints, reward menu.
 // Merged into the main dictionary by i18n.js. Hebrew uses neutral plural forms ("לחצו") so it fits any gender.
 export const EN = {
+  colDate: 'Date',
+  alarmSound: 'Sound', snd_alarm: 'Alarm clock', snd_gentle: 'Gentle chime', snd_ringtone: 'Ringtone', snd_rising: 'Rising (gets louder)', alarmText: 'Message', alarmTextPh: 'e.g. Time to get up! Feet on the floor', alarmSpeak: 'Read the message aloud', alarmTest: 'Test this alarm',
+  alarmRingN: 'Alarm {n} · {time}', alarmRingShort: 'Alarm {n}', alarmGap: 'Minutes after the previous alarm', alarmAddRing: 'Add another alarm', alarmRepCount: 'How many more alarms', alarmRepTimes: 'more alarms', alarmRepGap: 'Minutes between them', alarmRepEvery: 'min apart', alarmRepAdd: 'Add them',
+  alarmStartMode: 'After the last alarm', startMode_offer: 'Offer to start', startModeHint_offer: 'Shows “Time to start” with a Start button.', startMode_auto: 'Start the routine automatically', startModeHint_auto: 'Opens the app and begins the routine right away.',
+  alarmSummaryOffer: 'Rings at {times}, then offers to start at {last}', alarmSummaryAuto: 'Rings at {times}, then starts the routine at {last}',
+  alarmAutoNote: 'Automatic start needs the screen to turn on: when the phone is locked the app opens by itself, otherwise tap the notification. The Start button on the notification always starts.', alarmDefaultText: 'Time to start: {name}', offerTitle: 'Time to start {name}', offerLater: 'Not now',
+  unpBtn: 'Unplanned', unpTitle: 'Something unplanned came up', unpHint: 'The routine clock stops and this time is counted separately. Tap what happened.', unpCustom: 'Something else', unpCustomPh: 'Write what happened', unpStart: 'Start', unpBack: 'Back to the routine', unpBackSay: 'Back to the routine', unpClockStopped: 'routine clock stopped', unpTotal: 'Unplanned',
+  unp_toilet: 'Toilet', unp_spill: 'Spilled something', unp_forgot: 'Forgot something', unp_call: 'Phone call / message', unp_sibling: 'Sibling / family', unp_unwell: 'Feeling unwell', unp_lost: 'Looking for something', unp_other: 'Something else',
+  patTitle: '{name} came up in {hits} of the last {runs} runs', patBody: 'Usually about {t}, around “{task}”. Since it keeps happening, you can plan for it or look closer.', patAdd: 'Add to the routine ({t})', patAdded: '“{name}” added to the routine', patLook: 'Look closer', invWatching: 'Watching this one',
+  invWhy: 'Why do I think it happens?', invBefore: 'What happens right before?', invIdea: 'One small thing to try', invFactRate: 'Came up in {hits} of the last {runs} runs', invFactAvg: 'Takes about {t} each time', invFactTask: 'Usually around “{task}”', invSince: 'Since you started watching: before {b} runs, after {a} runs',
+  invHint: 'Look at it with curiosity, not blame. Short answers are fine - the app will keep counting and show whether it changes.', invExamples: 'Ideas: go before starting the routine, prepare things the night before, move the task earlier, set a reminder.', invStop: 'Stop watching', invSave: 'Save and keep watching', invSaved: 'Saved - I will keep watching',
+  unpStatsTitle: 'Unplanned interruptions', unpCount: 'Times', unpTime: 'Total time', unpRuns: 'Runs with one', kind_insight: 'Insight',
+
   leaveLine2: 'Leave by {time}', gearCount2: '🎒 {n}',
   // calm corner
   calmTitle: 'Calm corner', calmIntro: 'A minute to settle. Pick an exercise and follow the circle.', calmKind: 'Exercise', calmBreath: 'Breathing', calmGround: '5-4-3-2-1', calmScan: 'Body scan', calmPattern: 'Breathing pattern', calmLength: 'Length', calmMin: '{n} min',
@@ -51,6 +64,19 @@ export const EN = {
   menuEdit: 'Edit menu', menuHint: 'Things stars can buy. Each costs a number of stars.', menuAdd: 'Add reward', menuItem: 'Reward', menuCost: 'Stars', menuEmoji: 'Icon', menuRequests: 'Reward requests', menuMarkGiven: 'Given', redeemAlert: '{name} would like: {title}', sendToChild: 'Send to {name}',
 };
 export const HE = {
+  colDate: 'תאריך',
+  alarmSound: 'צליל', snd_alarm: 'שעון מעורר', snd_gentle: 'צלצול עדין', snd_ringtone: 'רינגטון', snd_rising: 'עולה (מתחזק)', alarmText: 'הודעה', alarmTextPh: 'למשל: הגיע הזמן לקום! רגליים על הרצפה', alarmSpeak: 'הקראת ההודעה בקול', alarmTest: 'בדיקת השעון',
+  alarmRingN: 'שעון {n} · {time}', alarmRingShort: 'שעון {n}', alarmGap: 'דקות אחרי השעון הקודם', alarmAddRing: 'הוספת שעון נוסף', alarmRepCount: 'כמה שעונים נוספים', alarmRepTimes: 'שעונים נוספים', alarmRepGap: 'דקות ביניהם', alarmRepEvery: 'דק׳ הפרש', alarmRepAdd: 'הוספה',
+  alarmStartMode: 'אחרי השעון האחרון', startMode_offer: 'להציע להתחיל', startModeHint_offer: 'מציג “הגיע הזמן להתחיל” עם כפתור התחלה.', startMode_auto: 'להתחיל את השגרה אוטומטית', startModeHint_auto: 'פותח את האפליקציה ומתחיל את השגרה מיד.',
+  alarmSummaryOffer: 'מצלצל ב-{times}, ואז מציע להתחיל ב-{last}', alarmSummaryAuto: 'מצלצל ב-{times}, ואז מתחיל את השגרה ב-{last}',
+  alarmAutoNote: 'התחלה אוטומטית דורשת שהמסך יידלק: כשהטלפון נעול האפליקציה נפתחת מעצמה, אחרת לחצו על ההתראה. כפתור התחלה בהתראה תמיד מתחיל.', alarmDefaultText: 'הגיע הזמן להתחיל: {name}', offerTitle: 'הגיע הזמן להתחיל {name}', offerLater: 'לא עכשיו',
+  unpBtn: 'בלתי מתוכנן', unpTitle: 'קרה משהו לא מתוכנן', unpHint: 'שעון השגרה נעצר והזמן הזה נספר בנפרד. לחצו על מה שקרה.', unpCustom: 'משהו אחר', unpCustomPh: 'כתבו מה קרה', unpStart: 'התחלה', unpBack: 'חזרה לשגרה', unpBackSay: 'חוזרים לשגרה', unpClockStopped: 'שעון השגרה נעצר', unpTotal: 'בלתי מתוכנן',
+  unp_toilet: 'שירותים', unp_spill: 'נשפך משהו', unp_forgot: 'שכחתי משהו', unp_call: 'שיחה / הודעה', unp_sibling: 'אח/ות / משפחה', unp_unwell: 'לא מרגישים טוב', unp_lost: 'מחפשים משהו', unp_other: 'משהו אחר',
+  patTitle: '{name} קרה ב-{hits} מתוך {runs} ההרצות האחרונות', patBody: 'בדרך כלל בערך {t}, סביב “{task}”. מאחר שזה חוזר, אפשר לתכנן את זה או להסתכל מקרוב.', patAdd: 'הוספה לשגרה ({t})', patAdded: '“{name}” נוסף לשגרה', patLook: 'להסתכל מקרוב', invWatching: 'עוקבים אחרי זה',
+  invWhy: 'למה לדעתי זה קורה?', invBefore: 'מה קורה רגע לפני?', invIdea: 'דבר קטן אחד לנסות', invFactRate: 'קרה ב-{hits} מתוך {runs} ההרצות האחרונות', invFactAvg: 'לוקח בערך {t} בכל פעם', invFactTask: 'בדרך כלל סביב “{task}”', invSince: 'מאז שהתחלתם לעקוב: לפני {b} הרצות, אחרי {a} הרצות',
+  invHint: 'הסתכלו על זה בסקרנות, לא באשמה. מספיקות תשובות קצרות - האפליקציה תמשיך לספור ותראה אם זה משתנה.', invExamples: 'רעיונות: ללכת לפני תחילת השגרה, להכין דברים מהערב, להקדים את המשימה, להגדיר תזכורת.', invStop: 'להפסיק לעקוב', invSave: 'שמירה והמשך מעקב', invSaved: 'נשמר - אמשיך לעקוב',
+  unpStatsTitle: 'הפרעות בלתי מתוכננות', unpCount: 'פעמים', unpTime: 'זמן כולל', unpRuns: 'הרצות עם הפרעה', kind_insight: 'תובנה',
+
   leaveLine2: 'יציאה ב-{time}', gearCount2: '🎒 {n}',
   calmTitle: 'פינת רוגע', calmIntro: 'דקה להירגע. בחרו תרגיל ועקבו אחרי העיגול.', calmKind: 'תרגיל', calmBreath: 'נשימה', calmGround: '5-4-3-2-1', calmScan: 'סריקת גוף', calmPattern: 'קצב נשימה', calmLength: 'משך', calmMin: '{n} דק׳',
   calmStart: 'התחלה', calmStop: 'עצירה', calmWell: 'כל הכבוד', calmAgain: 'שוב', calmBack: 'חזרה', calmNote: 'זה לא כלי רפואי - רק רגע להאט. אם התחושות נשארות חזקות מאוד, פנו למישהו שאתם סומכים עליו.',

@@ -33,3 +33,16 @@ export function signal(kind, mode, volume = 80) {
     else try { navigator.vibrate?.(p.vib); } catch { /* unsupported */ }
   }
 }
+
+const RINGS = {
+  alarm: [[988, 0, 0.18], [988, 0.28, 0.18], [1318, 0.56, 0.35], [988, 1.2, 0.18], [988, 1.48, 0.18], [1318, 1.76, 0.35]],
+  gentle: [[523, 0, 0.5], [659, 0.55, 0.5], [784, 1.1, 0.8]],
+  ringtone: [[880, 0, 0.15], [1100, 0.2, 0.15], [880, 0.4, 0.15], [1100, 0.6, 0.15], [880, 1.4, 0.15], [1100, 1.6, 0.15], [880, 1.8, 0.15], [1100, 2, 0.15]],
+  rising: [[440, 0, 0.3], [523, 0.5, 0.3], [659, 1, 0.3], [784, 1.5, 0.3], [988, 2, 0.5]],
+};
+/** A wake-up ring in the browser (the Android app plays real system sounds instead). volume 0-100. */
+export function playRing(sound, volume = 80, vibrate = true) {
+  const p = Object.hasOwn(RINGS, sound) ? RINGS[sound] : RINGS.alarm;
+  if (volume > 0) { unlockAudio(); if (ctx) { const now = ctx.currentTime; p.forEach(([f, off, d], i) => beepAt(f, now + off, d, (volume / 100) ** 2 * 0.8 * (sound === 'rising' ? 0.4 + 0.15 * i : 1))); } }
+  if (vibrate) { if (native.available) native.vibrate([300, 150, 300, 150, 600]); else try { navigator.vibrate?.([300, 150, 300, 150, 600]); } catch { /* unsupported */ } }
+}

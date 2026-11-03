@@ -1,27 +1,32 @@
 // Browser-only start reminders (the Android app uses real AlarmManager alarms instead).
 // Honest limitation: these only fire while the page is open, which the editor tells the user.
-import { nextFire } from './alarms.js';
-import { signal } from './audio.js';
+import { nextRing } from './wake.js';
+import { playRing } from './audio.js';
+import { speakText } from './speech.js';
 import { native } from './native.js';
 import * as S from './store.js';
-import { t } from './i18n.js';
+import { t, getLang } from './i18n.js';
 
 export async function requestWebNotifications() {
   try { if ('Notification' in globalThis && Notification.permission === 'default') await Notification.requestPermission(); } catch { /* ignore */ }
 }
 
 let timer = null;
-export function scheduleWebReminders(onOpen) {
+/** The next wake-up ring (any routine). onRing(tpl, { ring, final, mode }) is called when it is due - the page decides what to show. */
+export function scheduleWebReminders(onRing) {
   clearTimeout(timer);
   if (native.available) return; // native alarms own this
-  const { templates, settings } = S.get();
   let best = null;
-  for (const tpl of templates) { const at = nextFire(tpl.alarm); if (at && (!best || at < best.at)) best = { tpl, at }; }
+  for (const tpl of S.get().templates) { const n = nextRing(tpl.alarm); if (n && (!best || n.at < best.at)) best = { tpl, ...n }; }
   if (!best) return;
   const ms = Math.min(best.at - Date.now(), 2 ** 31 - 1);
   timer = setTimeout(() => {
-    signal('end', settings.mode === 'silent' ? 'silent' : 'both', best.tpl.alarm.volume);
-    try { if (Notification.permission === 'granted') new Notification(best.tpl.name, { body: t('start'), icon: 'icons/icon-192.png' }).onclick = () => onOpen(best.tpl.id); } catch { /* ignore */ }
-    scheduleWebReminders(onOpen);
+    const { ring, tpl, final } = best, s = S.get().settings;
+    if (s.mode !== 'silent') playRing(ring.sound, ring.volume, ring.vibrate);
+    const text = ring.text || t('alarmDefaultText', { name: tpl.name });
+    if (ring.speak) setTimeout(() => speakText(text, { lang: getLang(), voiceURI: s.voiceURI, preset: ring.voice }), 1800);
+    try { if (Notification.permission === 'granted') new Notification(tpl.name, { body: text, icon: 'icons/icon-192.png' }).onclick = () => onRing(tpl, { ring, final, mode: final ? tpl.alarm.startMode : 'offer', open: true }); } catch { /* ignore */ }
+    onRing(tpl, { ring, final, mode: final ? tpl.alarm.startMode : 'offer', open: false, text });
+    scheduleWebReminders(onRing);
   }, Math.max(ms, 1000));
 }

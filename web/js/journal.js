@@ -5,7 +5,7 @@ import * as Lock from './lock.js';
 import { uid, cleanText, clamp } from './util.js';
 import { sanitizeMood } from './mood.js';
 
-export const KINDS = ['note', 'voice', 'thought', 'gratitude', 'mood', 'park', 'calm'];
+export const KINDS = ['note', 'voice', 'thought', 'gratitude', 'mood', 'park', 'calm', 'insight'];
 export const MAX_ENTRIES = 2000, MAX_AUDIO_BYTES = 6 * 1024 * 1024, MAX_AUDIO_SEC = 180;
 const sessions = new Map();           // profileId -> private key, in MEMORY only
 const str = (v, m) => cleanText(v, m);

@@ -25,4 +25,5 @@
     <string name="widget_next">Next routine</string>
     <string name="widget_start">Start</string>
     <string name="widget_open">Open</string>
+    <string name="alarm_title_n">Time to start: %1$s (%2$d/%3$d)</string>
 </resources>

@@ -25,6 +25,7 @@ import { sprintPlan, sprintState } from '../sprints.js';
 import { openCapture, openPark, moodRow } from './capture.js';
 import { calmPanel } from './calm.js';
 import { modal } from './common.js';
+import { openUnplannedSheet, patternCards, reasonName } from './unplanned.js';
 
 const clock = (ms) => new Date(ms).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 const taskIcon = (tk) => iconNode(tk);
@@ -85,6 +86,7 @@ export async function renderRunner(root, id, nav) {
   let alerted = false; let lastCur = -1; const srMarks = new Set(), leaveMemo = newLeaveMemo();
   const leaveEl = h('p', { class: 'leave-line', hidden: true });
   const feat = S.features();                                       // which helpers this person has switched on (focus areas)
+  const intrEl = h('div', { class: 'intr-banner', role: 'status', hidden: true });
   const sprintEl = h('div', { class: 'sprint-line', role: 'status', 'aria-live': 'polite', hidden: true });
   const transEl = h('div', { class: 'transition-banner', role: 'status', 'aria-live': 'polite', hidden: true });
   let transTimer, sprintKey = '', bodyAt = Date.now(), bodyN = 0; const warnedNext = new Set();
@@ -129,6 +131,12 @@ export async function renderRunner(root, id, nav) {
     stop = calmPanel(host, { compact: true, onClose: () => m.close() });
     m.el.addEventListener('close', () => { stop(); if (wasRunning && run.status === 'paused') { run = E.resume(run, Date.now()); persist(); paintStatic(); paintLive(); } });
   }
+  function startUnplanned() {
+    openUnplannedSheet((reason) => { run = E.startInterruption(run, Date.now(), reason); persist(); paintStatic(); paintLive(); });
+  }
+  function endUnplanned() {
+    const label = run.interrupt?.label; run = E.endInterruption(run, Date.now()); persist(); paintStatic(); paintLive(); announce(t('unpBackSay', { name: label || '' }));
+  }
   const act = (fn) => { run = fn(run, Date.now()); afterChange(); };
   const doComplete = () => {
     const cur = run.tasks[run.current], now = Date.now();
@@ -155,13 +163,18 @@ export async function renderRunner(root, id, nav) {
     taskName.textContent = cur?.name || ''; ti.replaceChildren(cur ? taskIcon(cur) : '');
     if (cur && run.current !== lastCur) { lastCur = run.current; announceTask(cur); }
     ring.classList.toggle('calm', calm(run)); ring.classList.toggle('pie', feat.timerPie);
-    ring.classList.toggle('paused', paused); pausedBadge.hidden = !paused;
+    ring.classList.toggle('paused', paused); pausedBadge.hidden = !paused || !!run.interrupt;
     list.replaceChildren(...run.tasks.map((tk, i) => h('li', { class: `${i === run.current && E.isActive(run) ? 'cur' : ''} ${tk.done ? 'done' : ''} ${tk.skipped ? 'skip' : ''}` },
       h('label', {}, h('input', { type: 'checkbox', checked: tk.done, onchange: () => { if (i === run.current) doComplete(); else { run = E.toggleTask(run, i, Date.now()); afterChange(); } } }),
         h('span', { class: 'cb' }, icon('check', 16)), h('span', { class: 'ti-s', 'aria-hidden': 'true' }, taskIcon(tk)), h('span', { class: 'nm' }, tk.name || '—'),
         h('span', { class: 'du' }, tk.done || tk.skipped ? fmtDur(tk.actualSec || 0) : fmtDur(tk.plannedSec))),
       st().coachButton && !tk.done && !tk.skipped ? h('button', { class: 'tip-btn', type: 'button', 'aria-label': t('tipFor', { name: tk.name || '' }), title: t('tipBtn'), onclick: () => coach.show('any', tk.name) }, '💡') : null)));
     pushWidget();
+    list.toggleAttribute('inert', !!run.interrupt);
+    if (run.interrupt) {
+      setChildren(controls, h('div', { class: 'main-btns' }, h('button', { class: 'btn primary xl', type: 'button', onclick: endUnplanned }, icon('play', 22), t('unpBack'))));
+      return;
+    }
     controls.replaceChildren(
       h('div', { class: 'main-btns' },
         h('button', { class: 'btn primary xl', type: 'button', onclick: doComplete }, icon('check', 22), t('doneNext')),
@@ -171,6 +184,7 @@ export async function renderRunner(root, id, nav) {
         st().coachButton ? h('button', { class: 'btn tip-main', type: 'button', onclick: () => coach.show('any', cur?.name) }, '💡', t('tipBtn')) : null,
         feat.journal ? h('button', { class: 'btn', type: 'button', 'aria-label': t('jNoteFor', { task: cur?.name || '' }), onclick: () => openCapture({ routine: run.templateName, task: cur?.name || '' }) }, '🎙️', t('jQuick')) : null,
         feat.parkingLot ? h('button', { class: 'btn', type: 'button', onclick: () => openPark({ routine: run.templateName, task: cur?.name || '' }) }, '🅿️', t('parkTitle')) : null,
+        h('button', { class: 'btn', type: 'button', disabled: paused, onclick: startUnplanned }, '⚡', t('unpBtn')),
         feat.calmCorner ? h('button', { class: 'btn', type: 'button', onclick: openCalm }, '🌬️', t('calmTitle')) : null,
         h('button', { class: 'btn', type: 'button', onclick: () => act(E.skipCurrent) }, icon('skip', 18), t('skip')),
         h('button', { class: 'btn danger', type: 'button', onclick: async () => { if (await confirmBox(t('stopConfirm'), t('stop'), true)) act(E.finish); } }, icon('stop', 18), t('stop'))));
@@ -179,6 +193,8 @@ export async function renderRunner(root, id, nav) {
   function paintLive() {
     if (!E.isActive(run)) return;
     const now = Date.now(), cur = run.tasks[run.current], left = E.remainingSec(run, now), total = cur.plannedSec + cur.extraSec, over = left < 0;
+    intrEl.hidden = !run.interrupt;
+    if (run.interrupt) setChildren(intrEl, h('span', { 'aria-hidden': 'true' }, run.interrupt.emoji), h('strong', {}, ` ${reasonName(run.interrupt)} `), h('span', { class: 'intr-time' }, fmtDur((now - run.interrupt.startedAt) / 1000)), h('small', {}, ` · ${t('unpClockStopped')}`));
     time.textContent = fmtDur(Math.ceil(over ? -left : left));
     sub.textContent = run.status === 'paused' ? t('paused') : over ? (calm(run) ? t('calmLeft') : t('over')) : t('left');
     ring.style.setProperty('--p', String(clamp(1 - left / total, 0, 1)));
@@ -220,7 +236,7 @@ export async function renderRunner(root, id, nav) {
     if (le === 'leaveNow') { const lateMin = Math.round((E.etaMs(run, Date.now()) - leaveAtOf()) / 60000); if (lateMin > 0) alertParents({ kind: 'late', name: run.templateName, minutes: lateMin }, run.profileId); }
     if (!alerted && E.paceDiffSec(run, Date.now()) >= 300) { alerted = true; alertParents({ kind: 'overtime', name: run.templateName, minutes: Math.round(E.paceDiffSec(run, Date.now()) / 60) }, run.profileId); }
     if (s.srAnnounce) { const cur = run.tasks[run.current], left = E.remainingSec(run, Date.now()); if (left <= 60 && left > 0 && !srMarks.has(cur.id)) { srMarks.add(cur.id); announce(`${cur.name}: ${fmtHuman(Math.ceil(left), units())} ${t('left')}`); } }
-    if (s.coachAuto && !calm(run)) { const sit = coachTrigger(run, Date.now(), memo); if (sit) coach.show(sit, run.tasks[run.current]?.name); }
+    if (s.coachAuto && !calm(run) && !run.interrupt) { const sit = coachTrigger(run, Date.now(), memo); if (sit) coach.show(sit, run.tasks[run.current]?.name); }
     paintLive();
   }
 
@@ -228,6 +244,7 @@ export async function renderRunner(root, id, nav) {
     if (E.isActive(run)) { persist(); paintStatic(); paintLive(); pushActive(); return; }
     await S.saveActive(null); await S.saveRun(run); setAwake('run', false); pushWidget();
     renderSummary();
+    { const tpl = S.getTemplate(run.templateId), slot = root.querySelector('.pattern-slot'); if (tpl && slot) { const c = patternCards(tpl, nav, () => {}); if (c) slot.replaceChildren(c); } }
     celebrationFor(run).then((card) => { const slot = root.querySelector('.celebrate-slot'); if (card && slot) slot.replaceChildren(card); }).catch(() => {});
     afterRun(run.profileId).then(celebrateGoals).catch(() => {});
   }
@@ -247,7 +264,8 @@ export async function renderRunner(root, id, nav) {
         dRow(t('startedAt'), clock(run.startedAt)), dRow(t('wall'), fmtHuman(s.wallSec, u)),
         dRow(t('planned'), fmtHuman(s.plannedSec, u)), dRow(t('estimated'), fmtHuman(s.estSec, u)), dRow(t('actual'), fmtHuman(s.actualSec, u)),
         dRow(t('difference'), `${s.deltaSec > 0 ? '+' : ''}${fmtHuman(s.deltaSec, u)}`, s.deltaSec > 0 ? 'bad' : 'good'),
-        s.pausedSec ? dRow(t('pausedTotal'), fmtHuman(s.pausedSec, u)) : null, (run.gear || []).length ? dRow(`🎒 ${t('gear')}`, `${run.gear.filter((g) => g.done).length}/${run.gear.length}`) : null, dRow(t('tasksDone'), `${s.done}/${s.total}`), s.skipped ? dRow(t('tasksSkipped'), String(s.skipped)) : null),
+        s.pausedSec ? dRow(t('pausedTotal'), fmtHuman(s.pausedSec, u)) : null, s.unplannedCount ? dRow(`⚡ ${t('unpTotal')}`, `${fmtHuman(s.unplannedSec, u)} (${s.unplannedCount}×)`) : null, (run.gear || []).length ? dRow(`🎒 ${t('gear')}`, `${run.gear.filter((g) => g.done).length}/${run.gear.length}`) : null, dRow(t('tasksDone'), `${s.done}/${s.total}`), s.skipped ? dRow(t('tasksSkipped'), String(s.skipped)) : null),
+      (run.unplanned || []).length ? h('ul', { class: 'unp-list' }, run.unplanned.map((x) => h('li', {}, `${x.emoji} ${reasonName(x)} · ${fmtHuman(x.sec, u)}${x.task ? ` · ${x.task}` : ''}`))) : null, h('div', { class: 'pattern-slot' }),
       h('h2', {}, t('perTask')),
       h('table', { class: 'tbl' }, h('thead', {}, h('tr', {}, h('th', {}, t('colTask')), h('th', {}, t('colPlanned')), h('th', {}, t('colActual')))),
         h('tbody', {}, run.tasks.map((x) => h('tr', { class: x.actualSec > x.plannedSec ? 'over' : '' }, h('td', {}, `${taskIcon(x)} ${x.name || '—'}${x.skipped ? ` (${t('skippedTag')})` : ''}`), h('td', {}, fmtDur(x.plannedSec)), h('td', {}, fmtDur(x.actualSec)))))),
@@ -260,7 +278,7 @@ export async function renderRunner(root, id, nav) {
 
   root.replaceChildren(h('div', { class: 'run' },
     h('div', { class: 'run-top', style: { '--accent': run.color || '#6c5ce7' } }, h('span', { class: 'emoji' }, run.icon), h('h1', { class: 'run-title' }, run.templateName)),
-    bubble, coachHost, transEl, gearBox, pw.el, head, leaveEl, h('div', { class: 'ring-wrap' }, ring, pausedBadge), sprintEl, taskName, pace, controls, list));
+    bubble, coachHost, transEl, intrEl, gearBox, pw.el, head, leaveEl, h('div', { class: 'ring-wrap' }, ring, pausedBadge), sprintEl, taskName, pace, controls, list));
   paintStatic(); paintLive(); paintGear();
   if (fresh) say('start');
   timer = setInterval(loop, 250);

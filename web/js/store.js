@@ -2,7 +2,8 @@
 import { db, isPersistent } from './db.js';
 import { LIMITS } from './config.js';
 import { cleanText, clamp, uid, move } from './util.js';
-import { defaultAlarm, nextFire } from './alarms.js';
+import { defaultAlarm } from './alarms.js';
+import { normalizeAlarm, nativeRings } from './wake.js';
 import { native } from './native.js';
 import { t, units, getLang } from './i18n.js';
 import { suggestIcon } from './taskIcons.js';
@@ -14,6 +15,7 @@ import { sanitizeAvatar, avatarEmoji, avatarFromMascot, defaultAvatar } from './
 import { toolsFor } from './focus.js';
 import { widgetItems } from './widgetData.js';
 import { sanitizeMood } from './mood.js';
+import { sanitizeUnplanned, sanitizeWatch } from './unplanned.js';
 import { eraseJournal } from './journal.js';
 import { newProfile, normalizeProfile, runsOf, MAX_PROFILES } from './profiles.js';
 
@@ -31,7 +33,7 @@ export const COLORS = ['#6c5ce7', '#0984e3', '#00b894', '#e17055', '#e84393', '#
 export const MASCOTS = ['🦊', '🐼', '🦄', '🐯', '🐸', '🤖', '🐶', '🐱'];
 export const ICONS = ['🌅', '☀️', '🎒', '🪥', '👕', '🥣', '🏃', '📚', '🧘', '🐶', '🚌', '⏰'];
 
-const state = { templates: [], runs: [], profiles: [], settings: { ...DEFAULT_SETTINGS }, ready: false };
+const state = { templates: [], runs: [], watch: [], profiles: [], settings: { ...DEFAULT_SETTINGS }, ready: false };
 const subs = new Set();
 export const subscribe = (fn) => { subs.add(fn); return () => subs.delete(fn); };
 const emit = () => subs.forEach((f) => f(state));
@@ -62,9 +64,7 @@ export function normalizeTemplate(tpl) {
     tasks: (Array.isArray(tpl.tasks) ? tpl.tasks : []).slice(0, LIMITS.maxTasks).map((x) => ({
       id: typeof x?.id === 'string' && x.id ? x.id.slice(0, 64) : uid(), name: cleanText(x?.name, LIMITS.maxName), icon: cleanText(x?.icon, 8), photo: isSafePhoto(x?.photo) ? x.photo : '',
       sec: clamp(Math.round(Number(x?.sec)) || 1, 1, LIMITS.maxTaskSec), est: clamp(Math.round(Number(x?.est)) || 0, 0, LIMITS.maxTaskSec) })),
-    alarm: { enabled: !!a.enabled, time: /^\d{2}:\d{2}$/.test(a.time) ? a.time : '07:00',
-      days: (Array.isArray(a.days) ? a.days : []).filter((d) => Number.isInteger(d) && d >= 0 && d <= 6),
-      volume: clamp(Math.round(a.volume) || 0, 0, 100), vibrate: !!a.vibrate, durationSec: clamp(Math.round(a.durationSec) || 30, 5, 600) },
+    alarm: normalizeAlarm(a),
   };
 }
 
@@ -74,7 +74,7 @@ export function sanitizeRun(r) {
   return {
     id: String(r.id).slice(0, 64), profileId: typeof r.profileId === 'string' ? r.profileId.slice(0, 64) : '', templateId: String(r.templateId ?? '').slice(0, 64), templateName: cleanText(r.templateName, LIMITS.maxName),
     icon: cleanText(r.icon, 8), color: /^#[0-9a-fA-F]{6}$/.test(r.color) ? r.color : COLORS[0],
-    startedAt: n(r.startedAt), endedAt: n(r.endedAt), status: r.status === 'done' ? 'done' : 'stopped', mood: sanitizeMood(r.mood), current: 0, pausedMs: n(r.pausedMs),
+    startedAt: n(r.startedAt), endedAt: n(r.endedAt), status: r.status === 'done' ? 'done' : 'stopped', mood: sanitizeMood(r.mood), unplanned: sanitizeUnplanned(r.unplanned), current: 0, pausedMs: n(r.pausedMs),
     plannedTotal: n(r.plannedTotal, 1e7), estTotal: n(r.estTotal, 1e7), actualTotal: n(r.actualTotal, 1e7),
     tasks: r.tasks.slice(0, LIMITS.maxTasks).map((x) => ({ id: String(x?.id ?? '').slice(0, 64), name: cleanText(x?.name, LIMITS.maxName), icon: cleanText(x?.icon, 8),
       plannedSec: n(x?.plannedSec, LIMITS.maxTaskSec), estSec: n(x?.estSec, LIMITS.maxTaskSec), extraSec: n(x?.extraSec, LIMITS.maxTaskSec), actualSec: n(x?.actualSec, LIMITS.maxTaskSec),
@@ -96,9 +96,19 @@ export async function init() {
   }
   if (!state.profiles.some((p) => p.id === state.settings.activeProfile)) state.settings.activeProfile = state.profiles[0].id;
   mirrorActiveProfile();
+  state.watch = sanitizeWatch(await db.get('kv', 'watch'));
   state.ready = true;
   emit();
 }
+
+// ── "look closer" at a recurring unplanned interruption (kept on this device) ──
+export const watchList = () => state.watch;
+export async function addWatch(w) {
+  const clean = sanitizeWatch([{ ...w, id: w.id || undefined }])[0]; if (!clean) return null;
+  state.watch = [...state.watch.filter((x) => !(x.templateId === clean.templateId && x.key === clean.key)), clean].slice(-20);
+  await db.put('kv', state.watch, 'watch'); emit(); return clean;
+}
+export async function removeWatch(id) { state.watch = state.watch.filter((x) => x.id !== id); await db.put('kv', state.watch, 'watch'); emit(); }
 
 // ── profiles ──
 export const profiles = () => state.profiles;
@@ -178,6 +188,7 @@ export async function saveTemplate(tpl, { touch = true } = {}) {
 }
 export async function deleteTemplate(id) {
   state.templates = state.templates.filter((x) => x.id !== id);
+  if (state.watch.some((x) => x.templateId === id)) { state.watch = state.watch.filter((x) => x.templateId !== id); await db.put('kv', state.watch, 'watch'); }
   await db.del('templates', id);
   emit(); syncNative();
 }
@@ -302,10 +313,7 @@ export async function importBackup(text, { mode = 'merge', settings = true } = {
 // ── mirror to native shell (alarms + widget); no-ops in the browser ──
 export function syncNative() {
   if (!native.available) return;
-  native.setAlarms(state.templates.filter((x) => x.alarm?.enabled && nextFire(x.alarm)).map((x) => {
-    const [hour, minute] = x.alarm.time.split(':').map(Number);
-    return { id: x.id, templateId: x.id, name: x.name, hour, minute, days: x.alarm.days, volume: x.alarm.volume, vibrate: x.alarm.vibrate, durationSec: x.alarm.durationSec };
-  }));
+  native.setAlarms(state.templates.flatMap((x) => nativeRings(x, getLang())).slice(0, 190));
   const dayName = (d) => new Date(2024, 0, 7 + d).toLocaleDateString(getLang(), { weekday: 'short' });   // 2024-01-07 was a Sunday
   native.setWidget(widgetItems(state.templates, new Date().getDay(), { units: units(), day: dayName, leave: (tm) => t('leaveLine2', { time: tm }), gear: (n) => t('gearCount2', { n }) }));
 }

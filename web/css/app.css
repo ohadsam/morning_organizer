@@ -10,7 +10,7 @@
 
 * { box-sizing: border-box; }
 html { -webkit-text-size-adjust: 100%; }
-body { margin: 0; background: var(--bg); color: var(--text); font-size: 16px; line-height: 1.45; min-height: 100dvh; padding-block-end: calc(var(--nav-h) + env(safe-area-inset-bottom)); -webkit-tap-highlight-color: transparent; }
+body { margin: 0; background: var(--bg); color: var(--text); font-size: calc(16px * var(--fs, 1)); line-height: 1.45; min-height: 100dvh; padding-block-end: calc(var(--nav-h) + env(safe-area-inset-bottom)); -webkit-tap-highlight-color: transparent; }
 body[data-view="run"] { padding-block-end: 0; }
 body[data-view="run"] #nav { display: none; }
 main { max-width: 760px; margin-inline: auto; padding: 16px 16px 24px; padding-block-start: calc(16px + env(safe-area-inset-top)); outline: none; }
@@ -149,3 +149,42 @@ dialog header { display: flex; align-items: center; justify-content: space-betwe
 .card h2 { margin-block-start: 0; }
 
 .radio { display: flex; align-items: center; gap: 10px; min-height: 44px; cursor: pointer; } .radio input { width: 22px; height: 22px; accent-color: var(--brand); }
+
+/* ── v1.4: accessibility, leave line, calm mode, photos ── */
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+:root[data-colors="safe"] { --good: #0072b2; --bad: #d55e00; --warn: #e69f00; }
+:root[data-colors="safe"] .kv.good strong::before, :root[data-colors="safe"] .tbl tr:not(.over) td:last-child::before { content: "▼ "; }
+:root[data-colors="safe"] .kv.bad strong::before, :root[data-colors="safe"] .tbl tr.over td:last-child::before { content: "▲ "; }
+:root[data-contrast="high"] { --muted: #3a3752; --line: #6a6785; } :root[data-contrast="high"][data-theme="dark"] { --muted: #d6d3ee; --line: #8a86ad; }
+@media (prefers-color-scheme: dark) { :root[data-contrast="high"]:not([data-theme="light"]) { --muted: #d6d3ee; --line: #8a86ad; } }
+:root[data-contrast="high"] .btn, :root[data-contrast="high"] input, :root[data-contrast="high"] select, :root[data-contrast="high"] .card { border-width: 2px; border-color: var(--text); }
+.leave-line { font-weight: 700; font-variant-numeric: tabular-nums; } .leave-line.ok { color: var(--good); } .leave-line.late { color: var(--bad); }
+.ring.calm.warn, .ring.calm.over { --brand: var(--good); animation: none; } .ring.calm.over .big-time { color: var(--text); }
+.ti img, .task-icon img { width: 1em; height: 1em; border-radius: 22%; object-fit: cover; vertical-align: middle; } .ring .ti img { width: 2.6rem; height: 2.6rem; }
+.ti-s img { width: 1.3rem; height: 1.3rem; border-radius: 22%; object-fit: cover; }
+
+/* ── v1.5: family ── */
+.family-card { display: grid; gap: 10px; } .bar { height: 12px; border-radius: 99px; background: var(--surface-2); overflow: hidden; } .bar i { display: block; height: 100%; background: var(--brand); border-radius: inherit; transition: width .4s; }
+.goal { display: grid; gap: 4px; background: var(--surface-2); border-radius: 14px; padding: 10px; } .transports { display: grid; gap: 6px; border-top: 1px dashed var(--line); padding-top: 8px; }
+.chip.solid.off { opacity: .8; } .cheers { margin: 0; padding-inline-start: 1.2em; } .family-card h3 { margin: .4em 0 .2em; font-size: .95rem; }
+#nav a { font-size: .68rem; }
+
+/* ── v1.6: UX polish ── */
+:root[data-accent] { --brand: var(--user-accent); }
+@media (prefers-color-scheme: dark) { :root[data-accent]:not([data-theme="light"]) { --brand: color-mix(in srgb, var(--user-accent) 62%, #fff); } }
+:root[data-accent][data-theme="dark"] { --brand: color-mix(in srgb, var(--user-accent) 62%, #fff); }
+:root[data-accent] .hero { background: linear-gradient(135deg, var(--user-accent), color-mix(in srgb, var(--user-accent) 55%, #fff)); }
+/* settings: collapsible groups */
+.settings-group { padding: 0; margin-block: 10px; overflow: hidden; } .settings-group > summary { list-style: none; cursor: pointer; padding: 12px 14px; display: flex; align-items: center; justify-content: space-between; min-height: 52px; }
+.settings-group > summary::-webkit-details-marker { display: none; } .settings-group > summary h2 { margin: 0; font-size: 1.05rem; }
+.settings-group > summary::after { content: "▾"; color: var(--muted); transition: transform .2s; } .settings-group[open] > summary::after { transform: rotate(180deg); }
+.settings-group > .stack { padding: 0 14px 14px; } .settings-group > summary:focus-visible { outline-offset: -3px; }
+/* run: the big buttons stay reachable, the ring leaves room for them */
+.run-title { font-size: 1rem; margin: 0; } .ring { width: min(62vw, 36vh, 280px); }
+.main-btns { position: sticky; bottom: calc(8px + env(safe-area-inset-bottom)); z-index: 6; background: color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter: blur(6px); border-radius: 22px; padding: 6px; box-shadow: 0 -6px 18px rgba(0, 0, 0, .08); }
+/* simple (kids) mode: big targets, nothing else */
+.routine-actions.simple .start { min-height: 56px; font-size: 1.15rem; flex: 1; } .gate-q { font-size: 1.4rem; font-weight: 800; text-align: center; margin: 8px 0; }
+/* wide screens: two columns of routines */
+@media (min-width: 900px) { main { max-width: 980px; } #app .stack:has(> .routine) { grid-template-columns: 1fr 1fr; } }
+/* status chips: tinted background + normal text colour stay readable with ANY routine/accent colour (white-on-colour failed contrast) */
+.chip.solid { background: color-mix(in srgb, var(--accent) 20%, var(--surface)); color: var(--text); border: 1px solid var(--accent); font-weight: 700; }

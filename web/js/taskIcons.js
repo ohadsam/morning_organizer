@@ -7,7 +7,7 @@ const MAP = [
   [/exercise|sport|run|yoga|ספורט|התעמל|ריצה|יוגה/i, '🏃'], [/bed|sleep|מיטה|לישון|סדר/i, '🛏️'], [/out|leave|door|bus|יוצא|דלת|אוטובוס|יציאה/i, '🚪'],
 ];
 export const DEFAULT_ICON = '⭐';
-export const PICKER_ICONS = ['⏰', '🚿', '🪥', '👕', '🥣', '☕', '🎒', '👟', '💇', '📝', '📚', '🐶', '💧', '🏃', '🛏️', '🚪', '🧸', '🎨', '🎵', '⭐'];
+export const PICKER_ICONS = ['🦷', '🧼', '🚽', '🧦', '👖', '🧥', '🍎', '🥪', '🥛', '🍌', '🧃', '🥕', '🐱', '🐰', '🦁', '🐼', '🌈', '☀️', '🌙', '🚗', '🚌', '🚲', '⚽', '🎹', '🧩', '✏️', '🎨', '🧸', '💤', '🧘', '⏰', '🚿', '🪥', '👕', '🥣', '☕', '🎒', '👟', '💇', '📝', '📚', '🐶', '💧', '🏃', '🛏️', '🚪', '🧸', '🎨', '🎵', '⭐'];
 export function suggestIcon(name) {
   const s = String(name || '');
   for (const [re, ic] of MAP) if (re.test(s)) return ic;

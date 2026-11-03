@@ -1,10 +1,10 @@
 // Offline-first service worker. VERSION is kept equal to version.json by scripts/bump-version.mjs (a unit test enforces it).
-const VERSION = '1.3.0';
+const VERSION = '1.6.0';
 const CACHE = `morning-organizer-${VERSION}`;
 const SHELL = ['./', 'index.html', 'manifest.webmanifest', 'version.json', 'icon.svg', 'css/app.css',
   'js/app.js', 'js/theme-boot.js', 'js/config.js', 'js/util.js', 'js/i18n.js', 'js/db.js', 'js/store.js', 'js/engine.js', 'js/stats.js', 'js/share.js',
-  'js/alarms.js', 'js/feedback.js', 'js/coach.js', 'js/coachTips.js', 'js/speech.js', 'js/taskIcons.js', 'js/awake.js', 'js/audio.js', 'js/native.js', 'js/reminders.js', 'js/ui/common.js', 'js/ui/home.js', 'js/ui/editor.js', 'js/ui/runner.js',
-  'js/ui/stats.js', 'js/ui/settings.js', 'js/ui/share.js', 'js/ui/guide.js', 'js/ui/fx.js', 'js/ui/backup.js', 'js/ui/coach.js', 'js/ui/welcome.js', 'js/ui/progress.js', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/icon-maskable-512.png'];
+  'js/alarms.js', 'js/leave.js', 'js/link.js', 'js/rewards.js', 'js/rtc.js', 'js/family.js', 'js/transports.js', 'js/a11y.js', 'js/photo.js', 'js/feedback.js', 'js/coach.js', 'js/coachTips.js', 'js/speech.js', 'js/taskIcons.js', 'js/awake.js', 'js/audio.js', 'js/native.js', 'js/reminders.js', 'js/ui/common.js', 'js/ui/home.js', 'js/ui/editor.js', 'js/ui/runner.js',
+  'js/ui/stats.js', 'js/ui/settings.js', 'js/ui/share.js', 'js/ui/guide.js', 'js/ui/fx.js', 'js/ui/gate.js', 'js/ui/family.js', 'js/ui/incoming.js', 'js/ui/backup.js', 'js/ui/coach.js', 'js/ui/welcome.js', 'js/ui/progress.js', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/icon-maskable-512.png'];
 
 self.addEventListener('install', (e) => { e.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL)).then(() => self.skipWaiting())); });
 self.addEventListener('activate', (e) => {

@@ -7,10 +7,10 @@ const PREFIX_RAW = 'M1.', PREFIX_DEFLATE = 'M2.';
 const MIME = 'application/vnd.morningorganizer+json';
 export const NFC_MIME = MIME;
 
-const b64u = (bytes) => { let s = ''; for (const b of bytes) s += String.fromCharCode(b); return btoa(s).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); };
-const unb64u = (str) => { const s = atob(str.replace(/-/g, '+').replace(/_/g, '/')); return Uint8Array.from(s, (c) => c.charCodeAt(0)); };
+export const b64u = (bytes) => { let s = ''; for (const b of bytes) s += String.fromCharCode(b); return btoa(s).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); };
+export const unb64u = (str) => { const s = atob(str.replace(/-/g, '+').replace(/_/g, '/')); return Uint8Array.from(s, (c) => c.charCodeAt(0)); };
 
-async function pipe(bytes, stream) {
+export async function pipe(bytes, stream) {
   const out = new Blob([bytes]).stream().pipeThrough(stream);
   return new Uint8Array(await new Response(out).arrayBuffer());
 }
@@ -104,3 +104,13 @@ export async function readBackupText(text) {
   try { return new TextDecoder('utf-8', { fatal: true }).decode(bytes); } catch { throw new Error('bad-data'); }
 }
 export const looksLikeBackup = (text) => /MB[01]\.[A-Za-z0-9_-]{20,}/.test(String(text ?? '').slice(0, 256 * 1024 + 64));
+
+/** Inflate raw-deflate bytes, aborting if the output would exceed `max` bytes (zip-bomb safe). */
+export async function inflateBounded(bytes, max) {
+  if (typeof DecompressionStream !== 'function') throw new Error('unsupported');
+  const reader = new Blob([bytes]).stream().pipeThrough(new DecompressionStream('deflate-raw')).getReader();
+  const chunks = []; let total = 0;
+  for (;;) { const { done, value } = await reader.read(); if (done) break; total += value.length; if (total > max) { await reader.cancel(); throw new Error('too-big'); } chunks.push(value); }
+  const out = new Uint8Array(total); let o = 0; for (const c of chunks) { out.set(c, o); o += c.length; }
+  return out;
+}

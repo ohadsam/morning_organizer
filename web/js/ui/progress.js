@@ -1,7 +1,8 @@
 // The in-app progress widget: one segment per task (width ∝ planned time), the current one filling live, a buddy walking along the bar.
 import { h, clamp, fmtDur } from '../util.js';
 import { t } from '../i18n.js';
-import { elapsedMs, remainingSec, isActive } from '../engine.js';
+import { elapsedMs, remainingSec, isActive, etaMs } from '../engine.js';
+export { etaMs };
 
 /** Overall completion 0..1, weighted by planned time. */
 export function overallProgress(run, now) {
@@ -13,16 +14,6 @@ export function overallProgress(run, now) {
     return s;
   }, 0);
   return clamp(got / total, 0, 1);
-}
-
-/** Wall-clock time the routine should end if the rest goes exactly to plan. */
-export function etaMs(run, now) {
-  let rest = 0;
-  run.tasks.forEach((x, i) => {
-    if (x.done || x.skipped) return;
-    rest += i === run.current ? Math.max(0, remainingSec(run, now)) : x.plannedSec;
-  });
-  return now + rest * 1000;
 }
 
 export function progressWidget(run, { mascot = '🦊', compact = false } = {}) {

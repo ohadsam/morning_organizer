@@ -2,14 +2,17 @@
 // Timing is derived from timestamps, never from counting ticks, so throttled background timers can't drift it.
 import { uid } from './util.js';
 
-export function createRun(tpl, now) {
+/** opts.scale < 1 gives a "quick" run (every task shortened, kept in 5 s steps); opts.mode is stored on the run ('normal' | 'quick' | 'calm'). */
+export function createRun(tpl, now, opts = {}) {
+  const k = opts.scale && opts.scale > 0 && opts.scale < 1 ? opts.scale : 1;
+  const sc = (v) => (k === 1 ? v : Math.max(5, Math.round((v * k) / 5) * 5));
   const tasks = tpl.tasks.map((t) => ({
-    id: t.id, name: t.name, icon: t.icon || '', plannedSec: t.sec, estSec: t.est || t.sec, extraSec: 0,
+    id: t.id, name: t.name, icon: t.icon || '', photo: t.photo || '', plannedSec: sc(t.sec), estSec: sc(t.est || t.sec), extraSec: 0,
     accumMs: 0, actualSec: 0, startedAt: null, endedAt: null,
     done: false, skipped: false, warned: false, ended: false,
   }));
   const run = {
-    id: uid(), templateId: tpl.id, templateName: tpl.name, icon: tpl.icon, color: tpl.color,
+    id: uid(), mode: opts.mode || 'normal', leaveBy: tpl.leaveBy || '', templateId: tpl.id, templateName: tpl.name, icon: tpl.icon, color: tpl.color,
     startedAt: now, endedAt: null, status: 'running', current: 0, segStart: now, pausedAt: null, pausedMs: 0,
     tasks, plannedTotal: sum(tasks, 'plannedSec'), estTotal: sum(tasks, 'estSec'), actualTotal: 0,
   };
@@ -112,4 +115,14 @@ export function paceDiffSec(run, now) {
   const planUpTo = run.tasks.slice(0, run.current).reduce((s, x) => s + x.plannedSec, 0) + (total - left);
   const spent = run.tasks.reduce((s, x, i) => s + (i === run.current ? elapsedMs(run, i, now) / 1000 : x.actualSec), 0);
   return Math.round(spent - planUpTo);
+}
+
+/** Wall-clock ms at which the routine ends if everything from here goes exactly to plan. */
+export function etaMs(run, now) {
+  let rest = 0;
+  run.tasks.forEach((x, i) => {
+    if (x.done || x.skipped) return;
+    rest += i === run.current ? Math.max(0, remainingSec(run, now)) : x.plannedSec + x.extraSec;
+  });
+  return now + rest * 1000;
 }

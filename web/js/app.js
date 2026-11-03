@@ -11,11 +11,15 @@ import { renderStats } from './ui/stats.js';
 import { renderSettings, applyTheme } from './ui/settings.js';
 import { renderGuide } from './ui/guide.js';
 import { icon, toast } from './ui/common.js';
-import { openImport, importCode } from './ui/share.js';
-import { openBackupImport } from './ui/backup.js';
-import { looksLikeBackup } from './share.js';
+import { openImport } from './ui/share.js';
 import { setAwake } from './awake.js';
+import { applyA11y } from './a11y.js';
 import { openWelcome } from './ui/welcome.js';
+import { renderFamily } from './ui/family.js';
+import { routeIncoming } from './ui/incoming.js';
+import { initFamily } from './family.js';
+import { isUnlocked, requestGate } from './ui/gate.js';
+import { initTransports } from './transports.js';
 
 const root = document.getElementById('app');
 let cleanup = () => {}, version = '0';
@@ -25,32 +29,35 @@ async function route() {
   cleanup(); cleanup = () => {};
   const [, page, arg] = (location.hash.replace(/^#/, '') || '/').split('/');
   const view = page || 'home';
+  // Simple (kids) mode: only routines and running them are open; everything else needs the grown-up gate.
+  if (S.get().settings.simpleMode && !['home', 'run'].includes(view) && !isUnlocked() && !(await requestGate())) { if (location.hash !== '#/') location.hash = '#/'; else drawNav('home'); return; }
   document.body.dataset.view = view;
   root.scrollTo?.(0, 0); window.scrollTo(0, 0);
   if (view === 'import') { const code = decodeURIComponent(arg || ''); history.replaceState(null, '', '#/'); nav('#/'); openImport(code); return; }
   try {
     cleanup = (await ({
       home: () => renderHome(root, nav), edit: () => renderEditor(root, arg, nav), run: () => renderRunner(root, arg, nav),
-      stats: () => renderStats(root, arg, nav), settings: () => renderSettings(root, version), guide: () => renderGuide(root),
+      stats: () => renderStats(root, arg, nav), family: () => renderFamily(root), settings: () => renderSettings(root, version), guide: () => renderGuide(root),
     }[view] ?? (() => renderHome(root, nav)))()) || (() => {});
   } catch (e) { console.error(e); root.replaceChildren(h('p', { class: 'empty' }, t('error'))); }
   drawNav(view);
 }
 
 function drawNav(view) {
-  const tabs = [['home', 'home', '#/'], ['stats', 'chart', '#/stats'], ['guide', 'book', '#/guide'], ['settings', 'gear', '#/settings']];
+  const simple = S.get().settings.simpleMode;
+  const tabs = simple ? [['home', 'home', '#/'], ['settings', 'gear', '#/settings']] : [['home', 'home', '#/'], ['stats', 'chart', '#/stats'], ['family', 'users', '#/family'], ['guide', 'book', '#/guide'], ['settings', 'gear', '#/settings']];
   const active = { edit: 'home', run: 'home' }[view] ?? view;
-  document.getElementById('nav').replaceChildren(...tabs.map(([key, ic, href]) => h('a', { href, class: key === active ? 'on' : '', 'aria-current': key === active ? 'page' : null }, icon(ic, 24), h('span', {}, t(key === 'home' ? 'home' : key)))));
+  document.getElementById('nav').replaceChildren(...tabs.map(([key, ic, href]) => h('a', { href, class: key === active ? 'on' : '', 'aria-current': key === active ? 'page' : null }, icon(ic, 24), h('span', {}, t(key === 'family' ? 'tabFamily' : key)))));
 }
 
 async function boot() {
   try {
-    await S.init();
+    await S.init(); await initFamily();
   } catch (e) { console.error(e); }
   const st = S.get().settings;
   setLang(st.lang); applyTheme(st.theme);
   document.title = t('appName');
-  setAwake('app', st.keepAwakeApp);
+  setAwake('app', st.keepAwakeApp); applyA11y(st);
   try { version = (await (await fetch('version.json', { cache: 'no-cache' })).json()).version; } catch { /* offline first load */ }
   await S.seedIfNeeded();
   S.syncNative();
@@ -62,9 +69,9 @@ async function boot() {
     if (!ev) return;
     if (ev.type === 'start' && S.getTemplate(ev.templateId)) nav(`#/run/${ev.templateId}`);
     if (ev.type === 'saved') toast(t(ev.status === 'ok' ? 'savedFile' : 'saveFailed'));
-    if (ev.type === 'import' && looksLikeBackup(ev.text)) { nav('#/settings'); openBackupImport(ev.text); return; }
-    if (ev.type === 'import') { try { await importCode(ev.text); nav('#/'); } catch { toast(t('importBad')); } }
+    if (ev.type === 'import') await routeIncoming(ev.text);
   };
+  initTransports();
   onNativeEvent(handle);
   await handle(native.takePending());
 

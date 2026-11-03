@@ -24,6 +24,9 @@ class NativeBridge(private val activity: MainActivity) {
 
     @JavascriptInterface fun setWidget(json: String) { if (json.length <= MAX_JSON) RoutineWidget.save(ctx, json) }
 
+    /** Snapshot of the routine in progress for the progress widget. */
+    @JavascriptInterface fun setProgress(json: String) { if (json.length <= 4096) RunWidget.save(ctx, json) }
+
     @JavascriptInterface fun keepAwake(on: Boolean) = activity.setKeepAwake(on)
 
     @JavascriptInterface fun vibrate(patternJson: String) {
@@ -45,6 +48,17 @@ class NativeBridge(private val activity: MainActivity) {
 
     @JavascriptInterface fun nfcWrite(text: String) { if (text.length <= 900) activity.armNfcWrite(text) }
     @JavascriptInterface fun nfcCancel() = activity.armNfcWrite(null)
+
+    // ── Bluetooth link between a parent phone and a child phone (see BtLink) ──
+    @JavascriptInterface fun btStatus(): String = activity.bt.status()
+    @JavascriptInterface fun btPaired(): String = activity.bt.paired()
+    @JavascriptInterface fun btListen() = activity.bt.listen()
+    @JavascriptInterface fun btConnect(address: String) = activity.bt.connect(address.take(32))
+    @JavascriptInterface fun btSend(text: String): Boolean = activity.bt.send(text)
+    @JavascriptInterface fun btClose() = activity.bt.close()
+    @JavascriptInterface fun requestBluetooth() {
+        if (Build.VERSION.SDK_INT >= 31 && !activity.bt.hasPermission()) activity.runOnUiThread { activity.requestPermissions(arrayOf(Manifest.permission.BLUETOOTH_CONNECT), 2) }
+    }
 
     /** setAlarmClock needs no exact-alarm permission, so this is always true; kept so the web app can ask. */
     @JavascriptInterface fun canScheduleExactAlarms(): Boolean = true

@@ -471,7 +471,7 @@ await step('v1.10: journal password (hash+salt), add while locked, wrong passwor
   assert.ok(!raw.includes('plain secret one') && !raw.includes('abcd') && !raw.includes('Zebraphant42'), 'secrets must not be stored in the clear');
   // lock now, add a note while locked, reload: locked screen
   await page.click('details.lock-card summary').catch(() => {}); await page.click('button:has-text("Lock now")'); await page.waitForSelector('.lock-screen');
-  await page.click('.toolbar button:has-text("New note")'); await page.fill('dialog textarea', 'added while locked'); await page.click('dialog footer button:has-text("Save")'); await page.waitForSelector('.toast, #toast:not([hidden])');
+  await page.click('.toolbar button:has-text("New note")'); await page.fill('dialog textarea', 'added while locked'); await page.click('dialog footer button:has-text("Save")'); await page.waitForSelector('#toast:has-text("stays locked")'); // wait for the write before reloading
   await page.reload(); await page.waitForSelector('.lock-screen'); assert.equal(await page.locator('text=added while locked').count(), 0);
   await page.fill('.lock-screen input[type=password]', 'nope'); await page.click('.lock-screen button:has-text("Unlock")'); await page.waitForSelector('.lock-screen .err:not(:empty)');
   // forgot password -> questions -> new password

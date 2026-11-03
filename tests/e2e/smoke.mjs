@@ -279,7 +279,7 @@ await step('UX: settings are collapsible groups (3 open by default), state is re
   const { page } = await newPage({ collapsed: true }); await page.goto(base + '#/settings'); await page.waitForSelector('details.settings-group');
   assert.equal(await page.locator('details.settings-group[open]').count(), 3); assert.ok(await page.locator('details.settings-group').count() >= 9);
   await page.click('details.settings-group:not([open]) summary >> nth=0'); const open1 = await page.locator('details.settings-group[open]').count(); assert.equal(open1, 4);
-  await page.waitForFunction(() => Object.values(JSON.parse(localStorage.getItem('mo.sg') || '{}')).includes(true)); // the toggle event persists asynchronously
+  await page.waitForFunction(() => Object.values(JSON.parse(localStorage.getItem('mo.sg') || '{}')).filter(Boolean).length >= 4); // toggle events persist asynchronously (the 3 default-open groups write first)
   await page.reload(); await page.waitForSelector('details.settings-group'); assert.equal(await page.locator('details.settings-group[open]').count(), 4, 'open/closed state survives reload');
   await page.locator('.swatches[role=radiogroup] .swatch').nth(1).click(); await page.waitForFunction(() => document.documentElement.dataset.accent === '1');
   await page.goto(base + '#/'); await page.waitForSelector('.routine'); assert.equal(await page.evaluate(() => getComputedStyle(document.querySelector('.btn.primary')).backgroundColor), 'rgb(91, 75, 213)');

@@ -27,6 +27,7 @@ export const native = {
   nfcPhoneSupported: () => call('nfcPhoneSupported') === true,
   nfcOffer: (text) => call('nfcOffer', text) === true, nfcOfferStop: () => call('nfcOfferStop'),
   nfcReceive: (seconds = 60) => call('nfcReceive', seconds), nfcReceiveStop: () => call('nfcReceiveStop'),
+  dictationAvailable: () => call('dictationAvailable') === true, dictationStart: (lang) => call('dictationStart', lang), dictationStop: () => call('dictationStop'),
   scanQr: () => call('scanQr'),
   nfcWrite: (text) => call('nfcWrite', text),
   nfcCancel: () => call('nfcCancel'),

@@ -2,7 +2,9 @@ package com.morningorganizer.app
 
 import android.annotation.SuppressLint
 import android.app.PendingIntent
+import android.Manifest
 import android.content.Context
+import android.content.pm.PackageManager
 import android.content.Intent
 import android.content.IntentFilter
 import android.net.Uri
@@ -16,6 +18,7 @@ import android.os.Build
 import android.os.Bundle
 import android.view.WindowManager
 import android.webkit.RenderProcessGoneDetail
+import android.webkit.PermissionRequest
 import android.webkit.ValueCallback
 import android.webkit.WebChromeClient
 import android.webkit.WebResourceRequest
@@ -45,7 +48,18 @@ class MainActivity : ComponentActivity() {
     private var jsReady = false
     val nfcReader by lazy { NfcReaderLink(this) { deliver(it) } }
     val bt by lazy { BtLink(applicationContext) { deliver(it) } }
+    val dictation by lazy { DictationLink(this) { deliver(it) } }
     private var pendingSave: String? = null
+    private var micRequest: PermissionRequest? = null
+    private val micWaiters = mutableListOf<(Boolean) -> Unit>()
+    private val micPermission = registerForActivityResult(ActivityResultContracts.RequestPermission()) { ok ->
+        micRequest?.let { if (ok) it.grant(arrayOf(PermissionRequest.RESOURCE_AUDIO_CAPTURE)) else it.deny() }; micRequest = null
+        val waiting = micWaiters.toList(); micWaiters.clear(); waiting.forEach { it(ok) }
+    }
+    private fun hasMic() = checkSelfPermission(Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED
+    /** Runs [done] with whether the microphone may be used, asking the person first when needed. Main thread. */
+    fun withMic(done: (Boolean) -> Unit) { if (hasMic()) done(true) else { micWaiters.add(done); micPermission.launch(Manifest.permission.RECORD_AUDIO) } }
+
     private var fileCallback: ValueCallback<Array<Uri>>? = null
 
     // Backup export: the system "save as" picker. No storage permission needed.
@@ -82,6 +96,16 @@ class MainActivity : ComponentActivity() {
         }
         web.addJavascriptInterface(NativeBridge(this), "MorningNative")
         web.webChromeClient = object : WebChromeClient() {
+            // getUserMedia({audio}) for voice notes: only our own origin, only the microphone (never the camera).
+            override fun onPermissionRequest(request: PermissionRequest) {
+                runOnUiThread {
+                    val audioOnly = request.resources.isNotEmpty() && request.resources.all { it == PermissionRequest.RESOURCE_AUDIO_CAPTURE }
+                    if (request.origin.host != HOST || !audioOnly) { request.deny(); return@runOnUiThread }
+                    if (hasMic()) request.grant(arrayOf(PermissionRequest.RESOURCE_AUDIO_CAPTURE))
+                    else { micRequest?.deny(); micRequest = request; micPermission.launch(Manifest.permission.RECORD_AUDIO) }
+                }
+            }
+
             override fun onShowFileChooser(view: WebView, callback: ValueCallback<Array<Uri>>, params: FileChooserParams): Boolean {
                 fileCallback?.onReceiveValue(null); fileCallback = callback
                 return try { pickDoc.launch(arrayOf("application/json", "text/plain", "*/*")); true } catch (_: Exception) { fileCallback = null; false }
@@ -104,6 +128,7 @@ class MainActivity : ComponentActivity() {
         })
         if (savedInstanceState == null) web.loadUrl("https://$HOST/index.html") else web.restoreState(savedInstanceState)
         handleIntent(intent)
+        Shortcuts.publish(this)
     }
 
     override fun onSaveInstanceState(outState: Bundle) { super.onSaveInstanceState(outState); web.saveState(outState) }
@@ -119,9 +144,9 @@ class MainActivity : ComponentActivity() {
         adapter.enableForegroundDispatch(this, pi, arrayOf(mime, IntentFilter(NfcAdapter.ACTION_TAG_DISCOVERED)), null)
     }
 
-    override fun onPause() { nfcReader.stop(); NfcOffer.clear(); nfc?.disableForegroundDispatch(this); web.onPause(); super.onPause() }
+    override fun onPause() { dictation.stop(); nfcReader.stop(); NfcOffer.clear(); nfc?.disableForegroundDispatch(this); web.onPause(); super.onPause() }
 
-    override fun onDestroy() { bt.close(); web.destroy(); super.onDestroy() }
+    override fun onDestroy() { dictation.stop(); bt.close(); web.destroy(); super.onDestroy() }
 
     fun setKeepAwake(on: Boolean) = runOnUiThread {
         if (on) window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON) else window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
@@ -148,7 +173,9 @@ class MainActivity : ComponentActivity() {
     private fun handleIntent(i: Intent?) {
         i ?: return
         val templateId = i.getStringExtra(EXTRA_TEMPLATE)
+        val route = i.getStringExtra(EXTRA_ROUTE)
         when {
+            route != null -> { i.removeExtra(EXTRA_ROUTE); if (route in Shortcuts.ROUTES) deliver(JSONObject().put("type", "route").put("hash", route)) }
             templateId != null -> { i.removeExtra(EXTRA_TEMPLATE); deliver(JSONObject().put("type", "start").put("templateId", templateId)) }
             i.action == Intent.ACTION_SEND && i.type == "text/plain" -> {
                 val text = i.getStringExtra(Intent.EXTRA_TEXT)?.take(256 * 1024)
@@ -193,6 +220,10 @@ class MainActivity : ComponentActivity() {
         private const val HOST = "appassets.androidplatform.net"
         private const val NFC_MIME = "application/vnd.morningorganizer+json"
         private const val EXTRA_TEMPLATE = "templateId"
+        private const val EXTRA_ROUTE = "route"
+
+        /** Intent that opens the app on one of the allow-listed screens (launcher shortcuts). */
+        fun routeIntent(ctx: Context, route: String): Intent = Intent(ctx, MainActivity::class.java).setAction(Intent.ACTION_VIEW).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP).putExtra(EXTRA_ROUTE, route)
 
         /** Intent that opens the app and starts [templateId] (or just opens it when null). */
         fun startIntent(ctx: Context, templateId: String?): Intent =

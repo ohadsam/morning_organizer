@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.10.0
+- **Choose what you want help with**: six areas (focus, calm, time sense, remembering, motivation, habits) switch on matching helpers; every helper stays individually switchable; a **parent can set the child's areas and helpers** over the family link; the coach picks tips that match the chosen areas.
+- **Calm corner** (breathing patterns, 5-4-3-2-1 grounding, body scan) from home or mid-routine (the clock pauses while you breathe).
+- **Focus tools in the run screen**: sprints with movement breaks, parking lot for stray thoughts, next-task heads-up with a soft chime, pie timer, quiet work buddy.
+- **Journal** (📓): notes, **voice notes recorded during tasks**, thought checks (CBT, kid-friendly wording), "3 good things", parked thoughts, mood faces after a routine with a mood-vs-time insight in Stats.
+- **Optional journal password**: PBKDF2-SHA256 (210,000 iterations) with a random salt; entries and voice notes are encrypted (a per-entry AES-GCM key wrapped with RSA-OAEP), so a note can be added while locked; **password reset through security questions** (answers never stored, they protect a second copy of the key); brute-force throttling; a way to erase the journal if both are lost.
+- **Speech-to-text suggestions** (opt-in): the Android app uses the phone's recognizer (offline preferred); browsers use the Web Speech API after an explicit privacy notice. The transcript is only a suggestion the person edits.
+- **Reward menu**: spend stars on rewards, a parent can set the menu and gets "would like" requests.
+- Launcher shortcuts for the calm corner and the journal (Android); microphone permission only when recording or dictating.
+- Fixed: the "send to child" dialog title was missing its text.
+
 ## 1.9.0
 - **26 new coach tips (61 total)**, each in two languages and three tones: attention and executive-function support (getting started / task initiation, working memory, switching between tasks, body doubling, 3-minute sprints, fidget and movement, making time visible, estimate-then-compare), more CBT (mini thought record, all-or-nothing words, testing predictions), more mindfulness (4-7-8 breathing, body scan, wall push, naming feelings, "worry radio").
 - **Three new tip categories** (🚦 getting started, 🧩 remembering, 🔀 switching tasks); the coach picks by situation (late / stuck / any).

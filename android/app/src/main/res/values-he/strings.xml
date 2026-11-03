@@ -17,4 +17,6 @@
     <string name="alarm_stop">עצור</string>
     <string name="share_via">שיתוף שגרה</string>
     <string name="nfc_hint">קרבו את הטלפון לתג NFC</string>
+    <string name="shortcut_calm">פינת רוגע</string>
+    <string name="shortcut_journal">יומן</string>
 </resources>

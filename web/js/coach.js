@@ -2,6 +2,7 @@
 import { TIPS, CATEGORIES } from './coachTips.js';
 import { audience, personalize } from './feedback.js';
 import { paceDiffSec } from './engine.js';
+import { tipWeights } from './focus.js';
 
 export { audience, CATEGORIES };
 export const TIP_COOLDOWN_MS = 90_000;
@@ -10,14 +11,16 @@ export const TIP_COOLDOWN_MS = 90_000;
  * Pick a tip. Prefers tips written for the exact situation (70%), never repeats until the pool is exhausted
  * (`seen` is a Set of ids, mutated). -> { id, cat, text } | null
  */
-export function pickTip({ situation = 'any', lang = 'en', age = null, gender = 'other', name = '', seen = new Set(), rnd = Math.random } = {}) {
+export function pickTip({ situation = 'any', lang = 'en', age = null, gender = 'other', name = '', seen = new Set(), areas = [], rnd = Math.random } = {}) {
   const tier = audience(age), l = lang === 'he' ? 1 : 0;
   const exact = TIPS.filter((x) => x.sit === situation), any = TIPS.filter((x) => x.sit === 'any'), all = situation === 'any' ? TIPS : [...exact, ...any];
   let fresh = (list) => list.filter((x) => !seen.has(x.id));
   if (!fresh(all).length) seen.clear();
   const useExact = situation !== 'any' && fresh(exact).length && rnd() < 0.7;
   const pool = fresh(useExact ? exact : all);
-  const tip = pool[Math.min(pool.length - 1, Math.floor(rnd() * pool.length))];
+  const w = tipWeights(areas), wt = (x) => (Object.hasOwn(w, x.cat) ? w[x.cat] : 1), sum = pool.reduce((a, x) => a + wt(x), 0);
+  let r = rnd() * sum, tip = pool.at(-1);
+  for (const x of pool) { r -= wt(x); if (r < 0) { tip = x; break; } }
   seen.add(tip.id);
   return { id: tip.id, cat: tip.cat, text: personalize(tip.text[tier][l], { name, gender }) };
 }

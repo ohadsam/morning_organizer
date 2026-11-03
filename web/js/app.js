@@ -21,6 +21,9 @@ import { initFamily, unlinkProfile, setAlertHook } from './family.js';
 import { setProfileDeleteHook } from './ui/avatar.js';
 import { isUnlocked, requestGate } from './ui/gate.js';
 import { initTransports } from './transports.js';
+import { renderCalm } from './ui/calm.js';
+import { renderJournal } from './ui/journal.js';
+import { lockAll } from './journal.js';
 
 const root = document.getElementById('app');
 let cleanup = () => {}, version = '0';
@@ -39,6 +42,7 @@ async function route() {
     const views = {
       home: () => renderHome(root, nav), edit: () => renderEditor(root, arg, nav), run: () => renderRunner(root, arg, nav),
       stats: () => renderStats(root, arg, nav), family: () => renderFamily(root), settings: () => renderSettings(root, version), guide: () => renderGuide(root),
+      calm: () => renderCalm(root, nav), journal: () => renderJournal(root, nav),
     };
     // The route comes from the address bar: look it up as OWN data only ("#/constructor" or "#/__proto__" must fall back to home).
     const out = await (Object.hasOwn(views, view) ? views[view] : views.home)();
@@ -58,7 +62,7 @@ async function boot() {
   try {
     await S.init(); await initFamily(); setProfileDeleteHook(unlinkProfile);
     setAlertHook(({ link, alert }) => {
-      const who = link.child?.profile?.name || link.peer?.name || '?', text = t(alert.kind === 'overtime' ? 'alertBehind' : 'alertLate', { name: who, routine: alert.name, min: alert.minutes });
+      const who = link.child?.profile?.name || link.peer?.name || '?', text = alert.kind === 'redeem' ? t('redeemAlert', { name: who, title: alert.name }) : t(alert.kind === 'overtime' ? 'alertBehind' : 'alertLate', { name: who, routine: alert.name, min: alert.minutes });
       toast(`🔔 ${text}`);
       if (native.available) native.notify(t('family'), text);
       else try { if (Notification.permission === 'granted') new Notification(t('family'), { body: text, icon: 'icons/icon-192.png' }); } catch { /* not allowed */ }
@@ -82,11 +86,15 @@ async function boot() {
     if (ev.type === 'qrfail') toast(t('scanUnsupported'));
     if (ev.type === 'saved') toast(t(ev.status === 'ok' ? 'savedFile' : 'saveFailed'));
     if (ev.type === 'import') await routeIncoming(ev.text);
+    if (ev.type === 'route' && ['#/calm', '#/journal'].includes(ev.hash)) nav(ev.hash);
   };
   initTransports();
   onNativeEvent(handle);
   await handle(native.takePending());
 
+  // The journal re-locks when the app goes to the background for a while.
+  let hiddenAt = 0;
+  document.addEventListener('visibilitychange', () => { if (document.hidden) hiddenAt = Date.now(); else if (hiddenAt && Date.now() - hiddenAt > 60_000) { lockAll(); if (location.hash === '#/journal') route(); } });
   window.addEventListener('hashchange', route);
   await route();
   document.getElementById('boot')?.remove();

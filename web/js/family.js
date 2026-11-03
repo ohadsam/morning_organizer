@@ -8,7 +8,9 @@ import { createOffer, createAnswer, rtcSupported } from './rtc.js';
 import { streak, totalStars, finished } from './stats.js';
 import { cleanText, clamp } from './util.js';
 import { sanitizeAvatar, shareableAvatar, avatarEmoji } from './avatar.js';
-import { publicProfile } from './profiles.js';
+import { publicProfile, sanitizeTools } from './profiles.js';
+import { sanitizeAreas } from './focus.js';
+import { sanitizeMenu } from './menu.js';
 
 export const INVITE_TTL_MS = 24 * 3600 * 1000;
 const state = { links: [], invites: [], live: new Map(), offers: new Map(), ready: false };
@@ -112,12 +114,23 @@ async function dispatch(link, msg) {
       link.child.alerts = [a, ...(link.child.alerts || [])].slice(0, 10);
       if (link.child.alertsOn !== false) { alertHook?.({ link, alert: a }); }
     }
+    else if (msg.t === 'redeem') {
+      const r = { title: cleanText(p.title, 40), emoji: cleanText(p.emoji, 8) || '🎁', cost: clamp(Math.round(Number(p.cost)) || 0, 0, 999), id: cleanText(p.id, 64), at: Date.now() };
+      if (r.title && r.id) { link.child.requests = [r, ...(link.child.requests || []).filter((x) => x.id !== r.id)].slice(0, 10); alertHook?.({ link, alert: { kind: 'redeem', name: r.title, minutes: 0, at: r.at } }); }
+    }
     else if (msg.t === 'goalDone') { link.child.goalDone = { title: cleanText(p.title, 40), at: Date.now() }; }
     else if (msg.t === 'rtc-answer') { const off = state.offers.get(link.id); if (off && typeof p.sdp === 'string') { await off.accept(p.sdp); off.channel.opened.then(() => setLive(link.id, off.channel)); } }
   } else {
     if (msg.t === 'welcome') { link.parent.name = cleanText(p.parentName, 30) || link.parent.name; link.parent.goal = sanitizeGoal(p.goal); }
     else if (msg.t === 'cheer') { link.parent.cheers = [{ text: cleanText(p.text, 120), emoji: cleanText(p.emoji, 8), at: Date.now() }, ...(link.parent.cheers || [])].slice(0, 20); }
     else if (msg.t === 'goal') { link.parent.goal = sanitizeGoal(p.goal); }
+    else if (msg.t === 'focus') { // the parent chooses which helpers this child gets; the child can still fine-tune them later
+      const pid = linkProfileId(link); await S.patchProfile(pid, { focus: sanitizeAreas(p.areas), focusSet: true, tools: sanitizeTools(p.tools) });
+    } else if (msg.t === 'menu') { await S.patchProfile(linkProfileId(link), { menu: sanitizeMenu(p.menu) }); }
+    else if (msg.t === 'given') {
+      const prof = S.profiles().find((x) => x.id === linkProfileId(link)), id = cleanText(p.id, 64);
+      if (prof && id) await S.patchProfile(prof.id, { redeemed: prof.redeemed.map((r) => (r.id === id ? { ...r, given: true } : r)) });
+    }
     else if (msg.t === 'assign') {
       const list = (Array.isArray(p.templates) ? p.templates : []).slice(0, 10).filter((x) => x && typeof x === 'object').map((x) => ({ ...x, from: link.parent.name, favorite: false }));
       const r = await S.importBackup(JSON.stringify({ app: 'morning-organizer', v: 1, templates: list, runs: [] }), { mode: 'merge', settings: false });
@@ -179,6 +192,19 @@ export async function clearGoal(linkId) { const link = linkById(linkId); link.ch
 export async function assignRoutines(linkId, templateIds) {
   const templates = S.get().templates.filter((x) => templateIds.includes(x.id)).slice(0, 10).map((x) => ({ ...x, tasks: x.tasks.map((k) => ({ ...k, photo: '' })) }));
   return send(linkId, 'assign', { templates });
+}
+/** The parent picks the child's help areas and helpers (focus.js). */
+export async function setFocus(linkId, { areas, tools }) {
+  const link = linkById(linkId); link.child.focus = { areas: sanitizeAreas(areas), tools: sanitizeTools(tools) };
+  return send(linkId, 'focus', { areas: link.child.focus.areas, tools: link.child.focus.tools });
+}
+export async function sendMenu(linkId, menu) { const link = linkById(linkId); link.child.menu = sanitizeMenu(menu); return send(linkId, 'menu', { menu: link.child.menu }); }
+export async function markGiven(linkId, id) { const link = linkById(linkId); link.child.requests = (link.child.requests || []).filter((r) => r.id !== id); return send(linkId, 'given', { id }); }
+/** Child side: ask the parent for a reward (the stars were already spent locally). */
+export async function sendRedeem(item, profileId = S.activeProfile().id) {
+  const out = [];
+  for (const l of allChildLinks().filter((x) => linkProfileId(x) === profileId)) { try { out.push(await send(l.id, 'redeem', { id: item.id, title: item.title, emoji: item.emoji, cost: item.cost })); } catch { /* the child still has the reward noted */ } }
+  return out;
 }
 export const cheer = (linkId, text, emoji = '⭐') => send(linkId, 'cheer', { text: cleanText(text, 120), emoji });
 /** When a profile is deleted its links go with it. */

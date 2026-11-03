@@ -19,7 +19,7 @@ const dismissWelcome = async (page) => { try { await page.waitForSelector('dialo
 async function newPage(opts = {}) {
   const ctx = await browser.newContext({ viewport: { width: 390, height: 800 }, locale: opts.locale || 'en-US', serviceWorkers: 'block', ...opts.ctx });
   // settings groups are collapsible (state remembered); most steps need every field reachable, so start with all groups open
-  if (!opts.collapsed) await ctx.addInitScript(() => { try { localStorage.setItem('mo.sg', JSON.stringify(Object.fromEntries(['look', 'profile', 'buddy', 'pace', 'a11y', 'coach', 'voice', 'alerts', 'defaults', 'sync', 'app'].map((k) => [k, true])))); } catch { /* blocked */ } });
+  if (!opts.collapsed) await ctx.addInitScript(() => { try { localStorage.setItem('mo.sg', JSON.stringify(Object.fromEntries(['look', 'profile', 'helpers', 'buddy', 'pace', 'a11y', 'coach', 'voice', 'alerts', 'defaults', 'sync', 'app'].map((k) => [k, true])))); } catch { /* blocked */ } });
   const page = await ctx.newPage(); const errors = [];
   page.on('pageerror', (e) => errors.push(e.message)); page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); });
   if (process.env.SLOW) await (await ctx.newCDPSession(page)).send('Emulation.setCPUThrottlingRate', { rate: +process.env.SLOW }); // SLOW=6 emulates a slow CI machine
@@ -250,6 +250,18 @@ await step('family: invite -> join -> approve -> LIVE link (WebRTC, no server) -
   // the child tells the parent it is running late (live link) -> alert card on the parent's dashboard
   await C.page.evaluate(async () => { const F = await import('./js/family.js'); await F.alertParents({ kind: 'late', name: 'Kids morning', minutes: 7 }); });
   await P.page.waitForSelector('.family-card:has-text("7 min late")', { timeout: 15000 });
+  // v1.10: the parent chooses the child's help areas (live) -> the child's Helpers show them; the parent also sets a reward menu
+  await P.page.goto(base + '#/family'); await P.page.click('button:has-text("What would you like help with?")');
+  await P.page.check('dialog .area-pick:has-text("Calm & feelings") input'); await P.page.click('dialog footer button:has-text("Save")');
+  await C.page.goto(base + '#/'); await C.page.waitForSelector('.focus-card', { state: 'detached', timeout: 15000 }); // the parent's choice arrives live
+  await C.page.goto(base + '#/settings'); await C.page.waitForSelector('.chip:has-text("Calm & feelings")');
+  await P.page.goto(base + '#/family'); await P.page.click('button:has-text("Rewards")'); await P.page.click('dialog button:has-text("Add reward")');
+  await P.page.fill('dialog .menu-row input[type=text]', 'Ice cream trip'); await P.page.fill('dialog .menu-row input[type=number]', '1'); await P.page.dispatchEvent('dialog .menu-row input[type=number]', 'change'); await P.page.dispatchEvent('dialog .menu-row input[type=text]', 'change');
+  await P.page.click('dialog footer button:has-text("Save")');
+  await closeDialogs(C.page); await C.page.goto(base + '#/'); await C.page.waitForSelector('.quick'); await closeDialogs(C.page); await C.page.click('.quick button:has-text("Rewards")'); await C.page.waitForSelector('dialog .menu-item:has-text("Ice cream trip")', { timeout: 15000 });
+  await C.page.click('dialog .menu-item button:has-text("Get")'); await C.page.click('dialog footer button:has-text("Get")');
+  await P.page.goto(base + '#/family'); await P.page.waitForSelector('.family-card:has-text("Ice cream trip")', { timeout: 15000 }); await P.page.click('.family-card button:has-text("Given")');
+  await C.page.waitForTimeout(1500); await closeDialogs(C.page); await C.page.click('.quick button:has-text("Rewards")'); await C.page.click('dialog details summary'); await C.page.waitForSelector('dialog li:has-text("given")', { timeout: 15000 });
   assert.deepEqual(P.errors, []); assert.deepEqual(C.errors, []);
 });
 
@@ -425,6 +437,89 @@ await step('settings: theme toggle, APK link points at the latest release, guide
 await step('no horizontal scroll at 320px wide', async () => {
   const { page } = await newPage({ ctx: { viewport: { width: 320, height: 640 } } }); await page.goto(base); await page.waitForSelector('.routine');
   for (const h of ['#/', '#/stats', '#/settings', '#/guide']) { await page.goto(base + h); await page.waitForTimeout(150); assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), `overflow on ${h}`); }
+});
+
+// ── v1.10: helpers, calm corner, journal ──
+await step('v1.10: choose help areas -> focus tools appear in the run; parking lot saves a thought; calm corner pauses the clock', async () => {
+  const { page, errors } = await newPage(); await page.goto(base); await page.waitForSelector('.focus-card');
+  assert.equal(await page.locator('.quick button:has-text("Rewards")').count(), 0);
+  await page.click('.focus-card button.primary'); await page.waitForSelector('dialog .area-grid'); await page.check('dialog .area-pick:has-text("Focus & attention") input'); await page.check('dialog .area-pick:has-text("Motivation") input');
+  await page.click('dialog footer button:has-text("Save")'); await page.waitForSelector('.focus-card', { state: 'detached' }); assert.equal(await page.locator('.quick button:has-text("Rewards")').count(), 1);
+  await page.locator('.routine .start').first().click(); await page.waitForSelector('.ring');
+  await page.click('.row-btns button:has-text("Parking lot")'); await page.fill('dialog input[type=text]', 'ask about the trip'); await page.click('dialog footer button:has-text("Park it")');
+  await page.click('.row-btns button:has-text("Calm corner")'); await page.waitForSelector('dialog .calm-menu'); await page.waitForSelector('.paused-badge:not([hidden])');
+  await page.click('dialog button:has-text("Start")'); await page.waitForSelector('dialog .calm-label:has-text("Breathe in")'); await page.click('dialog button:has-text("Stop")'); await closeDialogs(page);
+  await page.waitForSelector('.paused-badge', { state: 'hidden' });
+  await page.goto(base + '#/journal'); await page.waitForSelector('.entry:has-text("ask about the trip")'); assert.deepEqual(errors, []);
+});
+
+await step('v1.10: calm corner page runs a breathing exercise and offers a mood face at the end', async () => {
+  const { page, errors } = await newPage({ ctx: { reducedMotion: 'reduce' } }); await page.goto(base + '#/calm'); await page.waitForSelector('.calm-menu');
+  await page.click('button:has-text("Box")'); await page.click('button:has-text("Start")'); await page.waitForSelector('.calm-label'); await page.waitForTimeout(600);
+  assert.match(await page.textContent('.calm-label'), /Breathe in/); await page.click('button:has-text("Stop")'); await page.waitForSelector('.calm-menu'); assert.deepEqual(errors, []);
+});
+
+await step('v1.10: journal password (hash+salt), add while locked, wrong password, forgot via questions, encrypted at rest, erase', async () => {
+  const { page, errors } = await newPage(); await page.goto(base + '#/journal'); await page.waitForSelector('.journal-page');
+  await page.click('.toolbar button:has-text("New note")'); await page.fill('dialog textarea', 'plain secret one'); await page.click('dialog footer button:has-text("Save")'); await page.waitForSelector('.entry:has-text("plain secret one")');
+  await page.click('details.lock-card summary'); await page.click('button:has-text("Add a password")'); await page.waitForSelector('dialog .qa');
+  const pws = page.locator('dialog input[type=password]'); await pws.nth(0).fill('abcd'); await pws.nth(1).fill('abcd');
+  const ans = page.locator('dialog .qa input[type=text]'); // [custom, answer] per question
+  await ans.nth(1).fill('Zebraphant42'); await ans.nth(3).fill('Quixotic Lane 9'); await page.click('dialog footer button:has-text("Turn on")'); await page.waitForSelector('dialog', { state: 'detached' });
+  // at rest: no plaintext anywhere in IndexedDB
+  const raw = await page.evaluate(() => new Promise((res) => { const r = indexedDB.open('morning-organizer'); r.onsuccess = () => { const tx = r.result.transaction(['journal', 'kv'], 'readonly'); const out = []; for (const n of ['journal', 'kv']) tx.objectStore(n).getAll().onsuccess = (e) => out.push(JSON.stringify(e.target.result)); tx.oncomplete = () => res(out.join('')); }; }));
+  assert.ok(!raw.includes('plain secret one') && !raw.includes('abcd') && !raw.includes('Zebraphant42'), 'secrets must not be stored in the clear');
+  // lock now, add a note while locked, reload: locked screen
+  await page.click('details.lock-card summary').catch(() => {}); await page.click('button:has-text("Lock now")'); await page.waitForSelector('.lock-screen');
+  await page.click('.toolbar button:has-text("New note")'); await page.fill('dialog textarea', 'added while locked'); await page.click('dialog footer button:has-text("Save")'); await page.waitForSelector('.toast, #toast:not([hidden])');
+  await page.reload(); await page.waitForSelector('.lock-screen'); assert.equal(await page.locator('text=added while locked').count(), 0);
+  await page.fill('.lock-screen input[type=password]', 'nope'); await page.click('.lock-screen button:has-text("Unlock")'); await page.waitForSelector('.lock-screen .err:not(:empty)');
+  // forgot password -> questions -> new password
+  await page.click('.lock-screen button:has-text("Forgot password")'); await page.waitForSelector('dialog input[type=text]');
+  const fa = page.locator('dialog input[type=text]'); await fa.nth(0).fill('zebraphant 42'); await fa.nth(1).fill('quixotic lane 9'); await page.fill('dialog input[type=password]', 'newpass1'); await page.click('dialog footer button:has-text("Reset password")');
+  await page.waitForSelector('dialog', { state: 'detached' }); await page.waitForSelector('.lock-screen', { state: 'detached' }).catch(() => {});
+  await page.reload(); await page.waitForSelector('.lock-screen'); await page.fill('.lock-screen input[type=password]', 'newpass1'); await page.click('.lock-screen button:has-text("Unlock")');
+  await page.waitForSelector('.entry:has-text("plain secret one")'); assert.equal(await page.locator('.entry:has-text("added while locked")').count(), 1);
+  // turn the password off again -> plain, then there is simply no lock
+  await page.click('details.lock-card summary'); await page.click('button:has-text("Turn off password")'); await page.fill('dialog input[type=password]', 'newpass1'); await page.click('dialog footer button:has-text("Turn off password")');
+  await page.click('details.lock-card summary'); await page.waitForSelector('button:has-text("Add a password")'); assert.deepEqual(errors, []);
+});
+
+await step('v1.10: voice note recorded in a run (fake microphone), kept on the device, playable; dictation asks for consent first', async () => {
+  const mic = await chromium.launch({ args: ['--use-fake-device-for-media-stream', '--use-fake-ui-for-media-stream'] });
+  const ctx = await mic.newContext({ viewport: { width: 390, height: 800 }, locale: 'en-US', serviceWorkers: 'block', permissions: ['microphone'] });
+  const page = await ctx.newPage(); const errors = []; page.on('pageerror', (e) => errors.push(e.message));
+  await page.goto(base + '#/settings'); await dismissWelcome(page); await page.waitForSelector('select'); await page.selectOption('select >> nth=0', 'en'); await page.waitForFunction(() => document.documentElement.lang === 'en');
+  await page.goto(base); await page.waitForSelector('.routine'); await page.locator('.routine .start').first().click(); await page.waitForSelector('.ring');
+  await page.click('.row-btns button:has-text("Quick note")'); await page.click('dialog button:has-text("Record voice")'); await page.waitForSelector('dialog button:has-text("Stop recording")'); await page.waitForTimeout(1500);
+  await page.click('dialog button:has-text("Stop recording")'); await page.waitForSelector('dialog :text("Recorded")'); await page.click('dialog footer button:has-text("Save")'); await page.waitForSelector('dialog', { state: 'detached' });
+  await page.goto(base + '#/journal'); await page.waitForSelector('.entry:has-text("Voice note")'); await page.click('.entry button:has-text("Play")'); await page.waitForSelector('.entry audio');
+  assert.deepEqual(errors, []); await mic.close();
+});
+
+await step('v1.10: axe finds no violations on calm corner, journal (open + locked), capture sheets, focus picker, reward menu', async () => {
+  const bad = [];
+  for (const [lang, scheme] of [['he', 'light'], ['en', 'dark']]) {
+    const { page } = await newPage({ lang, ctx: { colorScheme: scheme } }); await page.goto(base); if (lang === 'he') await dismissWelcome(page);
+    const L = `${lang}/${scheme}`;
+    await page.goto(base + '#/calm'); await page.waitForSelector('.calm-menu'); bad.push(...await audit(page, `${L}/calm`));
+    await page.goto(base + '#/journal'); await page.waitForSelector('.journal-page'); bad.push(...await audit(page, `${L}/journal-empty`));
+    await page.click('.toolbar button >> nth=0'); await page.waitForSelector('dialog'); bad.push(...await audit(page, `${L}/note-sheet`)); await closeDialogs(page);
+    await page.click('.toolbar button >> nth=2'); await page.waitForSelector('dialog'); bad.push(...await audit(page, `${L}/thought`)); await closeDialogs(page);
+    await page.click('.toolbar button >> nth=3'); await page.waitForSelector('dialog'); bad.push(...await audit(page, `${L}/gratitude`)); await closeDialogs(page);
+    await page.click('.toolbar button >> nth=4'); await page.waitForSelector('dialog'); bad.push(...await audit(page, `${L}/park`)); await closeDialogs(page);
+    await page.click('details.lock-card summary'); await page.click('details.lock-card .btn.primary'); await page.waitForSelector('dialog .qa'); bad.push(...await audit(page, `${L}/lock-setup`));
+    const pws = page.locator('dialog input[type=password]'); await pws.nth(0).fill('abcd'); await pws.nth(1).fill('abcd'); const a = page.locator('dialog .qa input[type=text]'); await a.nth(1).fill('Zebraphant42'); await a.nth(3).fill('Quixotic Lane 9');
+    await page.click('dialog footer .primary'); await page.waitForSelector('dialog', { state: 'detached' });
+    await page.click('details.lock-card summary').catch(() => {}); await page.click('details.lock-card .btn >> nth=0'); await page.waitForSelector('.lock-screen'); bad.push(...await audit(page, `${L}/journal-locked`));
+    await page.click('.lock-screen .btn >> nth=1'); await page.waitForSelector('dialog'); bad.push(...await audit(page, `${L}/forgot`)); await closeDialogs(page);
+    await page.goto(base + '#/'); await page.waitForSelector('.focus-card'); bad.push(...await audit(page, `${L}/home-focus-card`));
+    await page.click('.focus-card button.primary'); await page.waitForSelector('dialog .area-grid'); bad.push(...await audit(page, `${L}/focus-picker`)); await page.check('dialog .area-pick >> nth=4 >> input'); await page.click('dialog footer .primary');
+    await page.waitForSelector('.quick'); await page.click('.quick button >> nth=-1'); await page.waitForSelector('dialog .menu-item, dialog .empty'); bad.push(...await audit(page, `${L}/reward-menu`)); await page.click('dialog button:has(+ *) >> nth=-1').catch(() => {}); await closeDialogs(page);
+    await page.goto(base + '#/settings'); await page.waitForSelector('details.settings-group'); bad.push(...await audit(page, `${L}/settings-helpers`));
+  }
+  if (bad.length) console.error([...new Set(bad)].join('\n'));
+  assert.deepEqual(bad, []);
 });
 
 await browser.close(); server.close();

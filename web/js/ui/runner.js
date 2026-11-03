@@ -21,6 +21,10 @@ import { leaveStatus, leaveEvent, newLeaveMemo } from '../leave.js';
 import { gearFor } from '../schedule.js';
 import { celebrationFor } from './progressUi.js';
 import { coachTrigger, newMemo } from '../coach.js';
+import { sprintPlan, sprintState } from '../sprints.js';
+import { openCapture, openPark, moodRow } from './capture.js';
+import { calmPanel } from './calm.js';
+import { modal } from './common.js';
 
 const clock = (ms) => new Date(ms).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 const taskIcon = (tk) => iconNode(tk);
@@ -80,6 +84,31 @@ export async function renderRunner(root, id, nav) {
 
   let alerted = false; let lastCur = -1; const srMarks = new Set(), leaveMemo = newLeaveMemo();
   const leaveEl = h('p', { class: 'leave-line', hidden: true });
+  const feat = S.features();                                       // which helpers this person has switched on (focus areas)
+  const sprintEl = h('div', { class: 'sprint-line', role: 'status', 'aria-live': 'polite', hidden: true });
+  const transEl = h('div', { class: 'transition-banner', role: 'status', 'aria-live': 'polite', hidden: true });
+  let transTimer, sprintKey = '', bodyAt = Date.now(), bodyN = 0; const warnedNext = new Set();
+  function showTransition(text, ms = 7000) {
+    if (!feat.transition) return;
+    const nx = run.tasks[run.current]; if (!nx) return;
+    setChildren(transEl, h('span', { class: 'tb-ic', 'aria-hidden': 'true' }, taskIcon(nx)), h('span', {}, text)); transEl.hidden = false;
+    signal('warn', st().mode, Math.min(st().volume, 50)); if (st().srAnnounce) announce(text);
+    clearTimeout(transTimer); transTimer = setTimeout(() => { transEl.hidden = true; }, ms);
+  }
+  function paintSprints(cur, now) {
+    const plan = feat.sprints ? sprintPlan(cur.plannedSec + cur.extraSec) : { enabled: false };
+    sprintEl.hidden = !plan.enabled || run.status !== 'running'; if (sprintEl.hidden) return;
+    const ss = sprintState(E.elapsedMs(run, run.current, now) / 1000, plan), key = `${run.current}:${ss.index}:${ss.inBreak}`;
+    sprintEl.className = `sprint-line ${ss.inBreak ? 'break' : ''}`;
+    setChildren(sprintEl, h('span', { 'aria-hidden': 'true' }, Array.from({ length: plan.total }, (_, i) => (i < ss.index || (i === ss.index && ss.done) ? '●' : i === ss.index ? '◐' : '○')).join(' ')),
+      h('strong', {}, ss.inBreak ? ` ${t('sprintBreak', { s: Math.ceil(ss.breakLeft) })}` : ` ${t('sprintN', { n: ss.index + 1, total: plan.total })}`));
+    if (key !== sprintKey) { const first = sprintKey === ''; sprintKey = key; if (!first && !calm(run)) { signal('warn', st().mode, Math.min(st().volume, 40)); if (ss.inBreak) native.vibrate([0, 100]); announce(ss.inBreak ? t('sprintBreakSay') : t('sprintN', { n: ss.index + 1, total: plan.total })); } }
+  }
+  function bodyDouble(now) {   // a quiet companion: a short friendly line every few minutes, never a pressure message
+    if (!feat.bodyDouble || run.status !== 'running' || calm(run) || now - bodyAt < 240_000) return;
+    bodyAt = now; bodyN++; bubble.replaceChildren(h('span', { class: 'bm' }, avatarNode(st().avatar, { size: 44, anim: 'idle' })), h('span', { class: 'bt' }, `${t(`buddy${(bodyN % 4) + 1}`)} 🤝`)); bubble.hidden = false;
+    clearTimeout(bubbleTimer); bubbleTimer = setTimeout(() => { bubble.hidden = true; }, 5000);
+  }
   const gearBox = h('details', { class: 'card gear-card', hidden: true });
   function paintGear() {
     const items = run.gear || []; gearBox.hidden = !items.length; if (!items.length) return;
@@ -92,12 +121,20 @@ export async function renderRunner(root, id, nav) {
     if (st().announceTasks) setTimeout(() => speakWithSettings(msg), fresh ? 1800 : 300); // after the "start" encouragement
     if (st().srAnnounce) announce(`${msg}, ${fmtHuman(cur.plannedSec + cur.extraSec, units())}`);
   }
+  /** The calm corner over the run: the clock pauses while you breathe (nothing is "lost"), and resumes when you come back. */
+  function openCalm() {
+    const wasRunning = run.status === 'running'; if (wasRunning) { run = E.pause(run, Date.now()); persist(); paintStatic(); paintLive(); }
+    const host = h('div', {}); let stop = () => {}; let m;
+    m = modal(`🌬️ ${t('calmTitle')}`, host, []);
+    stop = calmPanel(host, { compact: true, onClose: () => m.close() });
+    m.el.addEventListener('close', () => { stop(); if (wasRunning && run.status === 'paused') { run = E.resume(run, Date.now()); persist(); paintStatic(); paintLive(); } });
+  }
   const act = (fn) => { run = fn(run, Date.now()); afterChange(); };
   const doComplete = () => {
     const cur = run.tasks[run.current], now = Date.now();
     const ev = taskEvent(E.elapsedMs(run, run.current, now) / 1000, cur.plannedSec + cur.extraSec);
     run = E.completeCurrent(run, now);
-    if (E.isActive(run)) say(ev);
+    if (E.isActive(run)) { say(ev); showTransition(t('nextUp', { task: run.tasks[run.current]?.name || '' })); }
     afterChange();
   };
   const togglePause = () => {
@@ -117,7 +154,7 @@ export async function renderRunner(root, id, nav) {
     const cur = run.tasks[run.current], paused = run.status === 'paused';
     taskName.textContent = cur?.name || ''; ti.replaceChildren(cur ? taskIcon(cur) : '');
     if (cur && run.current !== lastCur) { lastCur = run.current; announceTask(cur); }
-    ring.classList.toggle('calm', calm(run));
+    ring.classList.toggle('calm', calm(run)); ring.classList.toggle('pie', feat.timerPie);
     ring.classList.toggle('paused', paused); pausedBadge.hidden = !paused;
     list.replaceChildren(...run.tasks.map((tk, i) => h('li', { class: `${i === run.current && E.isActive(run) ? 'cur' : ''} ${tk.done ? 'done' : ''} ${tk.skipped ? 'skip' : ''}` },
       h('label', {}, h('input', { type: 'checkbox', checked: tk.done, onchange: () => { if (i === run.current) doComplete(); else { run = E.toggleTask(run, i, Date.now()); afterChange(); } } }),
@@ -132,6 +169,9 @@ export async function renderRunner(root, id, nav) {
       h('div', { class: 'row-btns' },
         h('button', { class: 'btn', type: 'button', onclick: () => { E.addTime(run, 60); persist(); paintLive(); pushWidget(); } }, icon('plus', 18), t('addMinute')),
         st().coachButton ? h('button', { class: 'btn tip-main', type: 'button', onclick: () => coach.show('any', cur?.name) }, '💡', t('tipBtn')) : null,
+        feat.journal ? h('button', { class: 'btn', type: 'button', 'aria-label': t('jNoteFor', { task: cur?.name || '' }), onclick: () => openCapture({ routine: run.templateName, task: cur?.name || '' }) }, '🎙️', t('jQuick')) : null,
+        feat.parkingLot ? h('button', { class: 'btn', type: 'button', onclick: () => openPark({ routine: run.templateName, task: cur?.name || '' }) }, '🅿️', t('parkTitle')) : null,
+        feat.calmCorner ? h('button', { class: 'btn', type: 'button', onclick: openCalm }, '🌬️', t('calmTitle')) : null,
         h('button', { class: 'btn', type: 'button', onclick: () => act(E.skipCurrent) }, icon('skip', 18), t('skip')),
         h('button', { class: 'btn danger', type: 'button', onclick: async () => { if (await confirmBox(t('stopConfirm'), t('stop'), true)) act(E.finish); } }, icon('stop', 18), t('stop'))));
   }
@@ -155,6 +195,12 @@ export async function renderRunner(root, id, nav) {
       leaveEl.textContent = `${t('leaveLine', { leave: clock(ls.leaveAt), eta: clock(E.etaMs(run, now)) })} · ${late ? t('lateBy', { t: tm(ls.marginSec) }) : t('spare', { t: tm(ls.marginSec) })}`;
     }
     head.replaceChildren(h('span', {}, `${t('startedAt')} ${clock(run.startedAt)}`), h('span', {}, `${t('plannedEnd')} ${clock(run.startedAt + planned * 1000)}`), h('span', {}, `${t('elapsed')} ${fmtDur((now - run.startedAt) / 1000)}`));
+    paintSprints(cur, now); bodyDouble(now);
+    const nx = run.tasks[run.current + 1];
+    if (nx && left <= 30 && left > 0 && run.status === 'running' && !warnedNext.has(cur.id) && total >= 90) {
+      warnedNext.add(cur.id);
+      if (feat.transition) { setChildren(transEl, h('span', { class: 'tb-ic', 'aria-hidden': 'true' }, taskIcon(nx)), h('span', {}, t('nextSoon', { task: nx.name || '' }))); transEl.hidden = false; signal('warn', st().mode, Math.min(st().volume, 50)); clearTimeout(transTimer); transTimer = setTimeout(() => { transEl.hidden = true; }, 7000); }
+    }
     pw.update(run, now);
   }
 
@@ -195,6 +241,8 @@ export async function renderRunner(root, id, nav) {
     root.replaceChildren(h('div', { class: 'summary' },
       h('div', { class: 'big-emoji' }, avatarNode(st().avatar, { size: 110, anim: done ? 'dance' : 'think' })), h('h1', {}, done ? t('allDone') : t('stopped')), starRow,
       h('p', { class: 'muted' }, run.templateName), h('div', { class: 'celebrate-slot' }), bubble,
+      feat.moodCheck ? h('div', { class: 'card center' }, h('strong', {}, t('moodAsk')), moodRow(async (v) => { run.mood = v; await S.setRunMood(run.id, v); }, run.mood || null)) : null,
+      feat.journal ? h('button', { class: 'btn', type: 'button', onclick: () => openCapture({ routine: run.templateName }) }, `📝 ${t('jAfter')}`) : null,
       h('div', { class: 'card kvs' },
         dRow(t('startedAt'), clock(run.startedAt)), dRow(t('wall'), fmtHuman(s.wallSec, u)),
         dRow(t('planned'), fmtHuman(s.plannedSec, u)), dRow(t('estimated'), fmtHuman(s.estSec, u)), dRow(t('actual'), fmtHuman(s.actualSec, u)),
@@ -212,9 +260,9 @@ export async function renderRunner(root, id, nav) {
 
   root.replaceChildren(h('div', { class: 'run' },
     h('div', { class: 'run-top', style: { '--accent': run.color || '#6c5ce7' } }, h('span', { class: 'emoji' }, run.icon), h('h1', { class: 'run-title' }, run.templateName)),
-    bubble, coachHost, gearBox, pw.el, head, leaveEl, h('div', { class: 'ring-wrap' }, ring, pausedBadge), taskName, pace, controls, list));
+    bubble, coachHost, transEl, gearBox, pw.el, head, leaveEl, h('div', { class: 'ring-wrap' }, ring, pausedBadge), sprintEl, taskName, pace, controls, list));
   paintStatic(); paintLive(); paintGear();
   if (fresh) say('start');
   timer = setInterval(loop, 250);
-  return () => { clearInterval(timer); clearTimeout(bubbleTimer); coach.hide(); document.removeEventListener('visibilitychange', onVis); setAwake('run', false); if (E.isActive(run)) persist(); };
+  return () => { clearInterval(timer); clearTimeout(bubbleTimer); clearTimeout(transTimer); coach.hide(); document.removeEventListener('visibilitychange', onVis); setAwake('run', false); if (E.isActive(run)) persist(); };
 }

@@ -17,4 +17,6 @@
     <string name="alarm_stop">Stop</string>
     <string name="share_via">Share routine</string>
     <string name="nfc_hint">Hold the phone against an NFC tag</string>
+    <string name="shortcut_calm">Calm corner</string>
+    <string name="shortcut_journal">Journal</string>
 </resources>

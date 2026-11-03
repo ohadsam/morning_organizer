@@ -6,6 +6,7 @@ import { iconBtn, confirmBox, toast } from './common.js';
 import { weeklyReport, heatmap, toCsv } from '../weekly.js';
 import { native } from '../native.js';
 import { achievementsCard } from './progressUi.js';
+import { moodStats, MOODS } from '../mood.js';
 
 const NS = 'http://www.w3.org/2000/svg';
 const svg = (tag, attrs = {}, ...kids) => { const e = document.createElementNS(NS, tag); for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v); e.append(...kids); return e; };
@@ -33,6 +34,14 @@ export function lineChart(points) {
   return g;
 }
 
+/** How the person felt after routines, and what that says about time. Only shown once a few faces were picked. */
+function moodCard(runs) {
+  const m = moodStats(runs); if (m.n < 2) return null;
+  return h('section', { class: 'card mood-card' }, h('h2', {}, `🙂 ${t('moodStatsTitle')}`),
+    h('div', { class: 'tiles' }, MOODS.map((x) => h('div', { class: 'tile' }, h('small', {}, x.emoji), h('strong', {}, String(m.byMood[x.v]?.n || 0))))),
+    m.insight ? h('p', { class: 'chip solid' }, t(m.insight.type === 'happyFaster' ? 'moodHappyFaster' : 'moodHappySlower', { pct: m.insight.pct })) : h('p', { class: 'note' }, t('moodNeedMore')));
+}
+
 function insightText(i) {
   const u = units(), f = (s) => fmtHuman(s, u);
   switch (i.type) {
@@ -51,7 +60,7 @@ export function renderStats(root, templateId, nav) {
     if (!templateId) {
       const items = templates.map((x) => ({ x, n: ST.finished(runs, x.id).length }));
       const hasRuns = items.some((i) => i.n);
-      root.replaceChildren(h('h1', {}, t('statsTitle')), hasRuns ? overview(runs) : null, hasRuns ? achievementsCard(runs) : null,
+      root.replaceChildren(h('h1', {}, t('statsTitle')), hasRuns ? overview(runs) : null, hasRuns ? achievementsCard(runs) : null, hasRuns ? moodCard(runs) : null,
         hasRuns ? h('div', { class: 'stack' }, items.filter((i) => i.n).map(({ x, n }) =>
           h('a', { class: 'card link-card', href: `#/stats/${x.id}`, style: { '--accent': x.color } }, h('span', { class: 'emoji' }, x.icon), h('span', { class: 'routine-text' }, h('strong', {}, x.name), h('small', {}, t('runsCount', { n })))))) : h('p', { class: 'empty' }, t('noStats')));
       return;

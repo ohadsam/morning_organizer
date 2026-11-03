@@ -18,7 +18,7 @@ export function createCoach(host) {
   const hide = () => { clearTimeout(hideTimer); stopSpeaking(); host.replaceChildren(); host.hidden = true; };
   function show(situation = 'any', taskName = '') {
     const s = S.get().settings;
-    const tip = pickTip({ situation, lang: getLang(), age: s.age, gender: s.gender, name: s.personName, seen });
+    const tip = pickTip({ situation, lang: getLang(), age: s.age, gender: s.gender, name: s.personName, seen, areas: S.activeProfile().focus });
     if (!tip) return;
     const cat = CATEGORIES[tip.cat];
     host.replaceChildren(h('article', { class: `coach-card ${cat.breath ? 'has-breath' : ''}`, 'aria-label': t('coach') },

@@ -1,6 +1,6 @@
 # ☀️ Morning Organizer · מארגן בוקר
 
-Build morning routines (for kids or anyone), time every task, and watch yourself get faster. Works as an **installable PWA** and as a **native Android app** (same UI, plus alarms and a home-screen widget). No server, no account, no tracking - data stays on your device. Hebrew (RTL) and English.
+Build morning routines (for kids or anyone), time every task, and watch yourself get faster. Works as an **installable PWA** and as a **native Android app** (same UI, plus alarms and a home-screen widget). No server, no account, no tracking - data stays on your device. Hebrew (RTL, default) and English.
 
 **Use it:** `https://ohadsam.github.io/morning_organizer/` · **Android APK (always the latest):** [releases/latest](https://github.com/ohadsam/morning_organizer/releases/latest/download/morning-organizer.apk) (also offered inside the PWA under Settings).
 
@@ -10,6 +10,9 @@ Build morning routines (for kids or anyone), time every task, and watch yourself
 - **Summary & statistics** - planned vs. estimated vs. actual, per task; chart of every run over time; averages; **insights** (shorten / extend tasks, net effect on the total frame, "you are getting faster") with one-tap *Apply*.
 - **Start alarm** - time, weekdays, volume, vibration, ring length (real alarms in the Android app).
 - **Share without a server** - code/link, system share sheet (Bluetooth, Nearby Share, WhatsApp…), NFC tags; import from code, link, file or tag.
+- **Personal & encouraging** - name, age, gender (Hebrew masculine/feminine forms), a buddy, cheerful messages, stars, 🔥 streaks, confetti, optional read-aloud with voice styles.
+- **Mindful coach** - 💡 on every task: 35 short CBT / mindfulness tips (breathing, grounding, thought checking, letting thoughts pass…), automatic when you run late or get stuck.
+- **Move data between the website and the app** - backup file or sync code, merge or replace.
 - **Android widget** - favourite routines, one tap to start.
 - Light/dark, offline, backup/restore, keyboard accessible.
 

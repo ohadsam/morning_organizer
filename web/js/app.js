@@ -12,7 +12,10 @@ import { renderSettings, applyTheme } from './ui/settings.js';
 import { renderGuide } from './ui/guide.js';
 import { icon, toast } from './ui/common.js';
 import { openImport, importCode } from './ui/share.js';
+import { openBackupImport } from './ui/backup.js';
+import { looksLikeBackup } from './share.js';
 import { setAwake } from './awake.js';
+import { openWelcome } from './ui/welcome.js';
 
 const root = document.getElementById('app');
 let cleanup = () => {}, version = '0';
@@ -58,6 +61,8 @@ async function boot() {
   const handle = async (ev) => {
     if (!ev) return;
     if (ev.type === 'start' && S.getTemplate(ev.templateId)) nav(`#/run/${ev.templateId}`);
+    if (ev.type === 'saved') toast(t(ev.status === 'ok' ? 'savedFile' : 'saveFailed'));
+    if (ev.type === 'import' && looksLikeBackup(ev.text)) { nav('#/settings'); openBackupImport(ev.text); return; }
     if (ev.type === 'import') { try { await importCode(ev.text); nav('#/'); } catch { toast(t('importBad')); } }
   };
   onNativeEvent(handle);
@@ -66,6 +71,7 @@ async function boot() {
   window.addEventListener('hashchange', route);
   await route();
   document.getElementById('boot')?.remove();
+  if (!S.get().settings.profileDone) openWelcome();
 
   if ('serviceWorker' in navigator && !native.available && location.protocol.startsWith('http')) {
     navigator.serviceWorker.register('sw.js').then((reg) => {

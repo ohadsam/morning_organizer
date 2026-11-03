@@ -1,6 +1,6 @@
 {
-  "name": "Morning Organizer - מארגן בוקר",
-  "short_name": "Morning",
+  "name": "מארגן בוקר - Morning Organizer",
+  "short_name": "מארגן בוקר",
   "description": "Build morning routines, time every task and see your progress.",
   "start_url": "./",
   "scope": "./",
@@ -8,7 +8,8 @@
   "orientation": "portrait",
   "background_color": "#f6f4ff",
   "theme_color": "#6c5ce7",
-  "lang": "en",
+  "lang": "he",
+  "dir": "rtl",
   "icons": [
     { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
     { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png" },

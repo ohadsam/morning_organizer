@@ -6,10 +6,12 @@ import { defaultAlarm, nextFire } from './alarms.js';
 import { native } from './native.js';
 import { t } from './i18n.js';
 import { suggestIcon } from './taskIcons.js';
+import { PRESETS } from './speech.js';
 
 export const DEFAULT_SETTINGS = Object.freeze({
-  lang: 'auto', theme: 'auto', mode: 'both', volume: 80, warnSec: 10, defTaskSec: 300, defEstSec: 0,
-  autoAdvance: false, keepAwake: true, keepAwakeApp: false, personName: '', mascot: '🦊', feedback: true, speak: false, seeded: false,
+  lang: 'he', theme: 'auto', mode: 'both', volume: 80, warnSec: 10, defTaskSec: 300, defEstSec: 0,
+  autoAdvance: false, keepAwake: true, keepAwakeApp: false, personName: '', mascot: '🦊', feedback: true, speak: false, age: null, gender: 'other', profileDone: false,
+  coachButton: true, coachAuto: false, coachSpeak: false, voiceURI: '', voicePreset: 'natural', seeded: false,
 });
 export const COLORS = ['#6c5ce7', '#0984e3', '#00b894', '#e17055', '#e84393', '#fdcb6e', '#2d3436'];
 export const MASCOTS = ['🦊', '🐼', '🦄', '🐯', '🐸', '🤖', '🐶', '🐱'];
@@ -81,14 +83,17 @@ export async function seedIfNeeded() {
   await updateSettings({ seeded: true });
 }
 export async function addSamples() {
-  const mk = (name, icon, color, items) => ({ ...newTemplate(name), icon, color, builtin: true,
-    tasks: items.map(([k, min]) => ({ id: uid(), name: t(k), icon: suggestIcon(t(k)), sec: min * 60, est: 0 })) });
-  await saveTemplate(mk(t('sample1'), '🎒', '#0984e3', [['s_wake', 2], ['s_bath', 4], ['s_dress', 5], ['s_eat', 15], ['s_bag', 3], ['s_shoes', 2]]));
-  await saveTemplate(mk(t('sample2'), '🌅', '#e17055', [['s_shower', 8], ['s_dress', 5], ['s_coffee', 10], ['s_plan', 5]]));
+  // Fixed ids: the same sample on the website and in the app is the SAME routine, so a manual-sync merge never duplicates it.
+  const mk = (id, name, icon, color, items) => ({ ...newTemplate(name), id, icon, color, builtin: true,
+    tasks: items.map(([k, min], i) => ({ id: `${id}-${i}`, name: t(k), icon: suggestIcon(t(k)), sec: min * 60, est: 0 })) });
+  const samples = [mk('sample-kids', t('sample1'), '🎒', '#0984e3', [['s_wake', 2], ['s_bath', 4], ['s_dress', 5], ['s_eat', 15], ['s_bag', 3], ['s_shoes', 2]]),
+    mk('sample-adult', t('sample2'), '🌅', '#e17055', [['s_shower', 8], ['s_dress', 5], ['s_coffee', 10], ['s_plan', 5]])];
+  const base = Date.now(); // distinct timestamps keep the list order (kids first) after reloads (IndexedDB returns rows by id)
+  for (const [i, x] of samples.entries()) if (!getTemplate(x.id)) await saveTemplate({ ...x, createdAt: base + i });
 }
 
-export async function saveTemplate(tpl) {
-  const clean = normalizeTemplate({ ...tpl, updatedAt: Date.now() });
+export async function saveTemplate(tpl, { touch = true } = {}) {
+  const clean = normalizeTemplate({ ...tpl, updatedAt: touch ? Date.now() : tpl.updatedAt });
   const i = state.templates.findIndex((x) => x.id === clean.id);
   if (i < 0 && state.templates.length >= LIMITS.maxTemplates) throw new Error('limit');
   if (i < 0) state.templates.push(clean); else state.templates[i] = clean;
@@ -111,6 +116,10 @@ export const reorderTasks = (tpl, from, to) => ({ ...tpl, tasks: move(tpl.tasks,
 export async function updateSettings(patch) {
   if ('personName' in patch) patch = { ...patch, personName: cleanText(patch.personName, 30) };
   if ('mascot' in patch && !MASCOTS.includes(patch.mascot)) delete patch.mascot;
+  if ('age' in patch) { const n = Math.round(Number(patch.age)); patch = { ...patch, age: Number.isFinite(n) && n >= 3 && n <= 120 ? n : null }; }
+  if ('gender' in patch && !['female', 'male', 'other'].includes(patch.gender)) delete patch.gender;
+  if ('voicePreset' in patch && !(patch.voicePreset in PRESETS)) delete patch.voicePreset;
+  if ('voiceURI' in patch) patch = { ...patch, voiceURI: String(patch.voiceURI || '').slice(0, 200) };
   state.settings = { ...state.settings, ...patch };
   await db.put('kv', state.settings, 'settings');
   emit();
@@ -140,18 +149,49 @@ export const loadActive = () => db.get('kv', 'activeRun');
 export function exportAll() {
   return JSON.stringify({ app: 'morning-organizer', v: 1, templates: state.templates, runs: state.runs, settings: state.settings });
 }
-export async function importAll(text) {
+/** Keep only known settings with the right type and sane ranges (a backup is untrusted input). */
+export function sanitizeSettings(raw) {
+  const out = {};
+  if (!raw || typeof raw !== 'object') return out;
+  const ENUM = { lang: ['auto', 'he', 'en'], theme: ['auto', 'light', 'dark'], mode: ['both', 'beep', 'vibrate', 'silent'] };
+  for (const [k, def] of Object.entries(DEFAULT_SETTINGS)) {
+    if (k === 'seeded' || !(k in raw)) continue;
+    const v = raw[k];
+    if (ENUM[k]) { if (ENUM[k].includes(v)) out[k] = v; }
+    else if (typeof def === 'boolean') { if (typeof v === 'boolean') out[k] = v; }
+    else if (k === 'age') { if (v === null || Number.isFinite(Number(v))) out[k] = v; }
+    else if (typeof def === 'number') { if (Number.isFinite(v)) out[k] = clamp(v, 0, 86400); }
+    else if (typeof def === 'string') { if (typeof v === 'string') out[k] = v.slice(0, 200); }
+  }
+  return out;
+}
+
+/**
+ * Import a backup JSON string. mode 'merge' (default): the newer copy of each routine wins, history is added by id.
+ * mode 'replace': this device becomes an exact copy. Deletions are not propagated by a merge.
+ * -> { added, updated, skipped, runs, reload }
+ */
+export async function importBackup(text, { mode = 'merge', settings = true } = {}) {
   let d; try { d = JSON.parse(text); } catch { throw new Error('bad-data'); }
   if (d?.app !== 'morning-organizer' || !Array.isArray(d.templates)) throw new Error('bad-data');
-  let n = 0;
+  const res = { added: 0, updated: 0, skipped: 0, runs: 0, reload: false };
+  if (mode === 'replace') { for (const x of [...state.templates]) await deleteTemplate(x.id); await clearRuns(); }
   for (const raw of d.templates.slice(0, LIMITS.maxTemplates)) {
     if (!raw || typeof raw !== 'object') continue;
-    await saveTemplate({ ...newTemplate(), ...raw, id: typeof raw.id === 'string' ? raw.id.slice(0, 64) : uid() }); n++;
+    const id = typeof raw.id === 'string' && raw.id ? raw.id.slice(0, 64) : uid(), have = getTemplate(id), stamp = Number(raw.updatedAt) || 0;
+    if (have && have.updatedAt >= stamp) { res.skipped++; continue; }
+    await saveTemplate({ ...newTemplate(), ...raw, id, updatedAt: stamp || Date.now() }, { touch: false });
+    if (have) res.updated++; else res.added++;
   }
   for (const r of (Array.isArray(d.runs) ? d.runs : []).slice(0, LIMITS.maxRuns)) {
-    if (r && typeof r.id === 'string' && Array.isArray(r.tasks) && Number.isFinite(r.startedAt) && Number.isFinite(r.endedAt) && !state.runs.some((x) => x.id === r.id)) await saveRun(sanitizeRun(r));
+    if (r && typeof r.id === 'string' && Array.isArray(r.tasks) && Number.isFinite(r.startedAt) && Number.isFinite(r.endedAt) && !state.runs.some((x) => x.id === r.id)) { await saveRun(sanitizeRun(r)); res.runs++; }
   }
-  return n;
+  if (settings && d.settings) {
+    const patch = sanitizeSettings(d.settings);
+    res.reload = ('lang' in patch && patch.lang !== state.settings.lang) || ('theme' in patch && patch.theme !== state.settings.theme);
+    await updateSettings(patch);
+  }
+  return res;
 }
 
 // ── mirror to native shell (alarms + widget); no-ops in the browser ──

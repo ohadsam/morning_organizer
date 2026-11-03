@@ -14,6 +14,8 @@ export const native = {
   keepAwake: (on) => call('keepAwake', !!on),
   /** Opens the system share sheet (Bluetooth, Nearby Share, WhatsApp...). */
   share: (title, text) => call('share', title, text),
+  /** Opens the system "save as" picker and writes `text` to the chosen file. Result arrives as a {type:'saved'} event. */
+  saveFile: (name, text) => call('saveFile', name, text),
   nfcWrite: (text) => call('nfcWrite', text),
   nfcCancel: () => call('nfcCancel'),
   canExactAlarms: () => call('canScheduleExactAlarms') !== false,

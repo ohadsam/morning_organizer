@@ -41,6 +41,7 @@ npm test           # node:test unit tests (engine, stats, share, alarms, i18n pa
 npm run e2e        # Playwright: boot, RTL, editor, drag, run with fake clock, stats, share, settings, 320 px overflow
 ```
 New logic ⇒ new unit test; new user flow ⇒ new e2e step; every fixed bug ⇒ a regression test. If e2e fails right at boot, suspect a bad import / stray `*/` in a new module: `node -e "import('./web/js/x.js')"`.
+Gotcha (real): `page.addInitScript` only applies on the next document load - `reload()` first (a hash `goto` does not reload). e2e starts in Hebrew/RTL (the default): `newPage()` switches to English via Settings unless `{ lang: 'he' }`.
 Gotcha (real): `el.replaceChildren(null)` renders the text "null" and arrays render `[object HTMLDivElement]` - use `setChildren()` from `util.js` or `h()` which flatten and skip null.
 
 ## 7. Android verification = CI
@@ -50,6 +51,9 @@ No Android SDK in the sandbox (`dl.google.com` blocked), so Kotlin is only compi
 Commit on the working branch, push, wait for **web** + **android** green. On `main` the *release* job publishes `morning-organizer.apk` as the latest release and `pages.yml` deploys the PWA - verify both (release exists with the APK asset; Pages URL serves the new `version.json`). Don't claim "done" before that.
 
 ## Known limitations (don't re-report as new)
+- Website ↔ app sync is manual (sync code / file): a merge never deletes routines, Replace gives an exact copy. Automatic sync would need a cloud store (Gist/Drive) - not built.
+- Sample routines have fixed ids (`sample-kids`, `sample-adult`) so merges don't duplicate them; keep it that way.
+- Voice "characters" are pitch/speed presets of the device voice; Hebrew needs an installed Hebrew TTS voice.
 - Web alarms only ring while the page is open (browsers can't schedule background alarms); the Android app is the reliable path.
 - Bluetooth/Nearby sharing goes through the system share sheet (no raw RFCOMM); NFC = tag write/read (Web NFC in Chrome Android, native in the APK), not phone-to-phone Beam (removed from Android).
 - Starting a routine while a different one is in progress replaces the in-progress run (the home screen shows a Resume card so it is hard to do by accident).

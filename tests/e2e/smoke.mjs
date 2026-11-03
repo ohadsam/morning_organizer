@@ -11,10 +11,17 @@ const browser = await chromium.launch();
 let failures = 0;
 const step = async (name, fn) => { try { await fn(); console.log('✓', name); } catch (e) { failures++; console.error('✗', name, '\n  ', e.message.split('\n').slice(0, 4).join(' / '), '\n  ', (e.stack.split('\n').find((l) => l.includes('smoke.mjs')) || '').trim()); } };
 
+const dismissWelcome = async (page) => { try { await page.waitForSelector('dialog.welcome', { timeout: 4000 }); await page.click('dialog.welcome footer button >> nth=0'); await page.waitForSelector('dialog.welcome', { state: 'detached' }); } catch { /* not shown */ } };
+// The app is Hebrew/RTL by default; most steps below assert English text, so switch the language through the real Settings UI first.
 async function newPage(opts = {}) {
   const ctx = await browser.newContext({ viewport: { width: 390, height: 800 }, locale: opts.locale || 'en-US', serviceWorkers: 'block', ...opts.ctx });
   const page = await ctx.newPage(); const errors = [];
   page.on('pageerror', (e) => errors.push(e.message)); page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); });
+  if (opts.clock) await page.clock.install();
+  if (opts.lang !== 'he') {
+    await page.goto(base + '#/settings'); await dismissWelcome(page); await page.waitForSelector('select');
+    await page.selectOption('select >> nth=0', 'en'); await page.waitForFunction(() => document.documentElement.lang === 'en'); await page.waitForTimeout(150);
+  }
   return { page, errors, ctx };
 }
 const shot = async (page, name) => { if (shots) await page.screenshot({ path: `${shots}/${name}.png` }); };
@@ -25,9 +32,12 @@ await step('boots in English, seeds sample routines, no console errors', async (
   assert.equal(await page.getAttribute('html', 'dir'), 'ltr'); assert.deepEqual(errors, []); await shot(page, 'home-en');
 });
 
-await step('Hebrew locale is RTL and fully translated', async () => {
-  const { page, errors } = await newPage({ locale: 'he-IL' }); await page.goto(base);
-  await page.waitForSelector('.routine'); assert.equal(await page.getAttribute('html', 'dir'), 'rtl');
+await step('Hebrew + RTL is the default (fresh install), welcome dialog personalises, fully translated', async () => {
+  const { page, errors } = await newPage({ lang: 'he', locale: 'en-US' }); await page.goto(base);
+  await page.waitForSelector('dialog.welcome'); assert.equal(await page.getAttribute('html', 'dir'), 'rtl'); assert.equal(await page.getAttribute('html', 'lang'), 'he');
+  await shot(page, 'welcome-he'); await page.fill('dialog.welcome input[type=text]', 'נועה'); await page.fill('dialog.welcome input[type=number]', '8'); await page.selectOption('dialog.welcome select', 'female');
+  await page.click('dialog.welcome footer button >> nth=1'); await page.waitForSelector('dialog.welcome', { state: 'detached' });
+  await page.waitForSelector('.routine'); assert.match(await page.textContent('.hero'), /בוקר טוב, נועה/);
   assert.match(await page.textContent('h1'), /מארגן בוקר/); assert.deepEqual(errors, []); await shot(page, 'home-he');
   await page.click('.routine-main'); await page.waitForSelector('.task'); await shot(page, 'editor-he');
 });
@@ -56,7 +66,7 @@ await step('drag handle reorders tasks (pointer events)', async () => {
 });
 
 await step('run: countdown, 10s warning class, overtime, done, summary, statistics', async () => {
-  const { page, errors } = await newPage(); await page.clock.install(); await page.goto(base); await page.waitForSelector('.routine');
+  const { page, errors } = await newPage({ clock: true }); await page.goto(base); await page.waitForSelector('.routine');
   // build a 20s + 15s routine through the real UI
   await page.click('text=New routine'); await page.waitForSelector('.task'); await page.fill('.field input[type=text]', 'Zed');
   const d = page.locator('.task .dur').first().locator('input'); await d.nth(0).fill('0'); await d.nth(1).fill('20');
@@ -76,7 +86,7 @@ await step('run: countdown, 10s warning class, overtime, done, summary, statisti
 });
 
 await step('v1.1: name + buddy, encouragement bubble, progress widget, pause, active-run card, stars/streak, keep-awake chip', async () => {
-  const { page, errors } = await newPage(); await page.clock.install(); await page.goto(base + '#/settings'); await page.waitForSelector('h1');
+  const { page, errors } = await newPage({ clock: true }); await page.goto(base + '#/settings'); await page.waitForSelector('h1');
   await page.fill('input[aria-describedby="pn-hint"]', 'Dana'); await page.dispatchEvent('input[aria-describedby="pn-hint"]', 'change');
   await page.click('button[aria-label="🐼"]'); await page.waitForTimeout(100);
   await page.goto(base + '#/'); await page.waitForSelector('.routine'); assert.match(await page.textContent('.hero'), /Good morning, Dana/);
@@ -99,10 +109,76 @@ await step('v1.1: name + buddy, encouragement bubble, progress widget, pause, ac
 });
 
 await step('Hebrew encouragement without a name reads naturally and icons are shown', async () => {
-  const { page, errors } = await newPage({ locale: 'he-IL' }); await page.goto(base); await page.waitForSelector('.routine');
+  const { page, errors } = await newPage({ lang: 'he' }); await page.goto(base); await dismissWelcome(page); await page.waitForSelector('.routine');
   await page.locator('.routine .start').first().click(); await page.waitForSelector('.bubble .bt');
   const txt = await page.textContent('.bubble .bt'); assert.ok(!/[{}]|undefined|null/.test(txt), txt); assert.ok(await page.locator('.ring .ti').textContent());
   await shot(page, 'run-he'); assert.deepEqual(errors, []);
+});
+
+await step('v1.2: mindful coach - tip button (task + main), age/gender personalisation, auto tips when late/stuck, voice settings', async () => {
+  const { page, errors } = await newPage({ clock: true }); await page.goto(base + '#/settings'); await page.waitForSelector('h1');
+  await page.fill('input[aria-describedby="pn-hint"]', 'Dana'); await page.dispatchEvent('input[aria-describedby="pn-hint"]', 'change');
+  await page.fill('input[type=number][max="120"]', '8'); await page.dispatchEvent('input[type=number][max="120"]', 'change');
+  await page.selectOption('.two select', 'female'); await page.waitForTimeout(150);
+  await page.locator('label.switch', { hasText: 'Automatic tips' }).locator('input').check(); await page.waitForTimeout(150);
+  assert.ok(await page.locator('text=Voice style').count(), 'voice controls present'); await shot(page, 'settings-coach');
+  await page.goto(base + '#/'); await page.waitForSelector('.routine'); await page.locator('.routine .start').first().click(); await page.waitForSelector('.ring');
+  assert.ok(await page.locator('.checklist .tip-btn').count() >= 5, 'per-task tip buttons');
+  await page.click('.tip-main'); await page.waitForSelector('.coach-card'); const t1 = await page.textContent('.coach-text'); assert.ok(t1.length > 20 && !/[{}]/.test(t1), t1);
+  await page.click('text=Another tip'); const t2 = await page.textContent('.coach-text'); assert.notEqual(t1, t2); await shot(page, 'coach-tip');
+  await page.locator('.checklist .tip-btn').nth(2).click(); assert.match(await page.textContent('.coach-head'), /Tip for/);
+  await page.click('.coach-card .icon-btn'); assert.ok(!(await page.isVisible('.coach-card')));
+  await page.clock.runFor(137_000); await page.waitForSelector('.coach-card'); // 2:00 task + 15 s overtime -> automatic tip
+  await page.click('.coach-card .icon-btn'); await page.click('.pause-btn'); await page.clock.runFor(125_000);
+  await page.waitForSelector('.coach-card'); assert.deepEqual(errors, []);
+});
+
+await step('Hebrew coach tips follow gender (no raw tokens, slash form only for neutral)', async () => {
+  const { page, errors } = await newPage({ lang: 'he' }); await page.goto(base); await dismissWelcome(page); await page.waitForSelector('.routine');
+  await page.goto(base + '#/settings'); await page.waitForSelector('.two select'); await page.selectOption('.two select', 'male'); await page.waitForTimeout(150);
+  await page.goto(base + '#/'); await page.waitForSelector('.routine'); await page.locator('.routine .start').first().click(); await page.waitForSelector('.ring');
+  for (let i = 0; i < 8; i++) { await page.click('.tip-main'); const txt = await page.textContent('.coach-text'); assert.ok(!/[{}|]/.test(txt) && !/\/[א-ת]/.test(txt), txt); }
+  await shot(page, 'coach-he'); assert.deepEqual(errors, []);
+});
+
+await step('voice: encouragement is spoken with the chosen voice style and the personalised text; text-only when off', async () => {
+  const { page, errors } = await newPage();
+  await page.addInitScript(() => {
+    window.__spoken = [];
+    window.SpeechSynthesisUtterance = class { constructor(t) { this.text = t; } };
+    Object.defineProperty(window, 'speechSynthesis', { configurable: true, value: { getVoices: () => [], speak(u) { window.__spoken.push({ text: u.text, pitch: u.pitch, rate: u.rate, lang: u.lang }); }, cancel() {}, addEventListener() {}, removeEventListener() {} } });
+  });
+  await page.reload(); await page.waitForSelector('h1'); // init script applies on the next document load
+  await page.fill('input[aria-describedby="pn-hint"]', 'Dana'); await page.dispatchEvent('input[aria-describedby="pn-hint"]', 'change');
+  await page.locator('label.switch', { hasText: 'Read encouragement aloud' }).locator('input').check();
+  await page.selectOption('label.field:has-text("Voice style") select', 'robot'); await page.waitForTimeout(200);
+  await page.goto(base + '#/'); await page.waitForSelector('.routine'); await page.locator('.routine .start').first().click(); await page.waitForSelector('.bubble .bt');
+  const spoken = await page.evaluate(() => window.__spoken); assert.ok(spoken.length >= 1, 'start message spoken');
+  const bubbleText = (await page.textContent('.bubble .bt')).replace(/\s*\p{Extended_Pictographic}\uFE0F?\s*$/u, '').trim();
+  assert.equal(spoken[0].text.trim(), bubbleText); assert.equal(spoken[0].pitch, 0.1); assert.equal(spoken[0].lang, 'en-US');
+  await page.goto(base + '#/settings'); await page.locator('label.switch', { hasText: 'Read encouragement aloud' }).locator('input').uncheck(); await page.waitForTimeout(150);
+  await page.evaluate(() => { window.__spoken.length = 0; }); await page.goto(base + '#/'); await page.waitForSelector('.active-run'); await page.click('.active-run .primary'); await page.waitForSelector('.ring');
+  await page.click('text=Done ✓'); await page.waitForSelector('.bubble .bt'); assert.equal((await page.evaluate(() => window.__spoken)).length, 0, 'text-only when voice is off');
+  assert.deepEqual(errors, []);
+});
+
+await step('manual sync: export a sync code on one "device", import (merge) on another, then replace; settings come along', async () => {
+  const a = await newPage(); await a.ctx.grantPermissions(['clipboard-read', 'clipboard-write']);
+  await a.page.goto(base + '#/settings'); await a.page.waitForSelector('h1');
+  await a.page.fill('input[aria-describedby="pn-hint"]', 'Dana'); await a.page.dispatchEvent('input[aria-describedby="pn-hint"]', 'change'); await a.page.waitForTimeout(150);
+  await a.page.goto(base + '#/'); await a.page.waitForSelector('.routine'); await a.page.click('text=New routine'); await a.page.waitForSelector('.task');
+  await a.page.fill('.field input[type=text]', 'Synced routine'); await a.page.waitForTimeout(500);
+  await a.page.goto(base + '#/settings'); await a.page.click('text=Copy sync code'); await a.page.waitForTimeout(200);
+  const code = await a.page.evaluate(() => navigator.clipboard.readText()); assert.match(code, /^MB1\./);
+  const b = await newPage(); await b.page.goto(base + '#/settings'); await b.page.waitForSelector('h1');
+  await b.page.click('text=Import backup'); await b.page.fill('dialog textarea', `code: ${code}`); await b.page.click('dialog footer button');
+  await b.page.waitForSelector('.toast:has-text("Added 1")'); await b.page.goto(base + '#/'); await b.page.waitForSelector('.routine');
+  assert.ok(await b.page.locator('.routine', { hasText: 'Synced routine' }).count()); assert.equal(await b.page.locator('.routine').count(), 3, 'samples have fixed ids, so merge does not duplicate them');
+  await b.page.goto(base + '#/settings'); assert.equal(await b.page.inputValue('input[aria-describedby="pn-hint"]'), 'Dana');
+  await b.page.click('text=Import backup'); await b.page.fill('dialog textarea', code); await b.page.check('input[value=replace]'); await b.page.click('dialog footer button'); await b.page.click('dialog:has-text("Replace all") footer button >> nth=1');
+  await b.page.waitForSelector('.toast:has-text("unchanged")'); await b.page.goto(base + '#/'); await b.page.waitForSelector('.routine'); assert.equal(await b.page.locator('.routine').count(), 3, 'replace mirrors the source');
+  await b.page.click('text=Import'); await b.page.fill('dialog textarea', 'MB1.garbage-garbage-garbage'); assert.ok(true);
+  assert.deepEqual(a.errors, []); assert.deepEqual(b.errors, []);
 });
 
 await step('run survives reload (crash-safe) and checklist ticking works', async () => {

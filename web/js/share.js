@@ -79,3 +79,28 @@ export function sanitizeWire(w) {
 }
 
 export const shareLink = (code) => `${PAGES_URL}#/import/${code}`;
+
+// ── whole-backup transport (manual sync between the website and the Android app) ──
+// "MB1." + base64url(deflate(json)); a plain .json file is also accepted everywhere.
+export async function packBackup(json) {
+  const bytes = new TextEncoder().encode(json);
+  if (typeof CompressionStream === 'function') { try { return 'MB1.' + b64u(await pipe(bytes, new CompressionStream('deflate-raw'))); } catch { /* fall back */ } }
+  return 'MB0.' + b64u(bytes);
+}
+const BACKUP_MAX = 32 * 1024 * 1024;
+/** Accepts a sync code (MB1./MB0.) or plain JSON text; returns the JSON string. Inflated size is bounded (zip-bomb safe). */
+export async function readBackupText(text) {
+  const raw = String(text ?? '').trim();
+  const m = raw.match(/MB[01]\.[A-Za-z0-9_-]+/);
+  if (!m) { if (raw.length > BACKUP_MAX) throw new Error('too-big'); return raw; }
+  let bytes = unb64u(m[0].slice(4));
+  if (m[0].startsWith('MB1.')) {
+    if (typeof DecompressionStream !== 'function') throw new Error('unsupported');
+    const reader = new Blob([bytes]).stream().pipeThrough(new DecompressionStream('deflate-raw')).getReader();
+    const chunks = []; let total = 0;
+    for (;;) { const { done, value } = await reader.read(); if (done) break; total += value.length; if (total > BACKUP_MAX) { await reader.cancel(); throw new Error('too-big'); } chunks.push(value); }
+    bytes = new Uint8Array(total); let o = 0; for (const c of chunks) { bytes.set(c, o); o += c.length; }
+  }
+  try { return new TextDecoder('utf-8', { fatal: true }).decode(bytes); } catch { throw new Error('bad-data'); }
+}
+export const looksLikeBackup = (text) => /MB[01]\.[A-Za-z0-9_-]{20,}/.test(String(text ?? '').slice(0, 256 * 1024 + 64));

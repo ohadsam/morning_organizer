@@ -14,11 +14,3 @@ export function confetti(parent, count = 34) {
   parent.append(layer);
   setTimeout(() => layer.remove(), 5000);
 }
-
-/** Speaks a message (opt-in). Uses the device's own voice; nothing leaves the device. */
-export function speak(text, lang) {
-  try {
-    const s = globalThis.speechSynthesis; if (!s) return;
-    s.cancel(); const u = new SpeechSynthesisUtterance(text); u.lang = lang === 'he' ? 'he-IL' : 'en-US'; u.rate = 0.95; s.speak(u);
-  } catch { /* no voices: fine */ }
-}

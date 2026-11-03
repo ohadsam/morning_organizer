@@ -104,3 +104,12 @@ export function summarize(run) {
     skipped: run.tasks.filter((t) => t.skipped).length, total: run.tasks.length,
   };
 }
+
+/** Seconds the person is behind (+) or ahead (-) of the plan right now: time actually spent minus planned time up to this point. */
+export function paceDiffSec(run, now) {
+  const cur = run.tasks[run.current]; if (!cur) return 0;
+  const left = remainingSec(run, now), total = cur.plannedSec + cur.extraSec;
+  const planUpTo = run.tasks.slice(0, run.current).reduce((s, x) => s + x.plannedSec, 0) + (total - left);
+  const spent = run.tasks.reduce((s, x, i) => s + (i === run.current ? elapsedMs(run, i, now) / 1000 : x.actualSec), 0);
+  return Math.round(spent - planUpTo);
+}

@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { POOLS, EMOJI, choose, fill, taskEvent } from '../../web/js/feedback.js';
+import { POOLS, EMOJI, choose, fill, personalize, taskEvent } from '../../web/js/feedback.js';
 import { suggestIcon, DEFAULT_ICON } from '../../web/js/taskIcons.js';
 import { stars, streak, totalStars } from '../../web/js/stats.js';
 import * as E from '../../web/js/engine.js';
@@ -11,7 +11,7 @@ test('every event has >=3 messages in both languages and an emoji pool; no unres
     assert.ok(EMOJI[ev]?.length, ev);
     for (const lang of ['en', 'he']) {
       assert.ok(POOLS[lang][ev]?.length >= 3, `${lang}/${ev}`);
-      for (const m of POOLS[lang][ev]) for (const name of ['', 'Dana', 'דנה']) { const out = fill(m, name); assert.ok(!/[{}]/.test(out) && out.length > 3, `${lang}/${ev}: ${out}`); }
+      for (const m of POOLS[lang][ev]) for (const name of ['', 'Dana', 'דנה']) for (const gender of ['male', 'female', 'other']) { const out = personalize(m, { name, gender }); assert.ok(!/[{}]/.test(out) && out.length > 3, `${lang}/${ev}: ${out}`); }
     }
   }
   assert.deepEqual(Object.keys(POOLS.en), Object.keys(POOLS.he));

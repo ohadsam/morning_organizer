@@ -9,7 +9,9 @@ import { setAwake } from '../awake.js';
 import { signal, unlockAudio } from '../audio.js';
 import { icon, confirmBox } from './common.js';
 import { progressWidget } from './progress.js';
-import { confetti, speak } from './fx.js';
+import { confetti } from './fx.js';
+import { createCoach, speakWithSettings } from './coach.js';
+import { coachTrigger, newMemo } from '../coach.js';
 
 const clock = (ms) => new Date(ms).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 const taskIcon = (tk) => tk.icon || suggestIcon(tk.name);
@@ -34,16 +36,23 @@ export async function renderRunner(root, id, nav) {
   const lastPick = {};
   const bubble = h('div', { class: 'bubble', role: 'status', 'aria-live': 'polite', hidden: true });
   let bubbleTimer;
+  // Text and voice are independent settings: bubble shown if `feedback`, spoken (same personalised text, same voice/style) if `speak`.
   function say(event) {
-    if (!st().feedback) return;
-    const c = choose(event, { name: st().personName, lang: getLang(), last: lastPick[event] ?? -1 });
+    const { feedback, speak } = st();
+    if (!feedback && !speak) return;
+    const c = choose(event, { name: st().personName, lang: getLang(), gender: st().gender, age: st().age, last: lastPick[event] ?? -1 });
     if (!c) return; lastPick[event] = c.index;
-    bubble.replaceChildren(h('span', { class: 'bm' }, st().mascot), h('span', { class: 'bt' }, `${c.text} ${c.emoji}`));
-    bubble.hidden = false; bubble.classList.remove('pop'); void bubble.offsetWidth; bubble.classList.add('pop');
-    clearTimeout(bubbleTimer); bubbleTimer = setTimeout(() => { bubble.hidden = true; }, 4200);
-    if (st().speak) speak(c.text, getLang());
+    if (feedback) {
+      bubble.replaceChildren(h('span', { class: 'bm' }, st().mascot), h('span', { class: 'bt' }, `${c.text} ${c.emoji}`));
+      bubble.hidden = false; bubble.classList.remove('pop'); void bubble.offsetWidth; bubble.classList.add('pop');
+      clearTimeout(bubbleTimer); bubbleTimer = setTimeout(() => { bubble.hidden = true; }, 4200);
+    }
+    // "time's up" is announced after the end beep so the two don't talk over each other
+    if (speak) { if (event === 'over') setTimeout(() => speakWithSettings(c.text), 1000); else speakWithSettings(c.text); }
   }
 
+  const coachHost = h('div', { class: 'coach-host', hidden: true });
+  const coach = createCoach(coachHost), memo = newMemo();
   const pw = progressWidget(run, { mascot: st().mascot });
   const ring = h('div', { class: 'ring', role: 'timer' });
   const ti = h('div', { class: 'ti', 'aria-hidden': 'true' });
@@ -74,13 +83,15 @@ export async function renderRunner(root, id, nav) {
     list.replaceChildren(...run.tasks.map((tk, i) => h('li', { class: `${i === run.current && E.isActive(run) ? 'cur' : ''} ${tk.done ? 'done' : ''} ${tk.skipped ? 'skip' : ''}` },
       h('label', {}, h('input', { type: 'checkbox', checked: tk.done, onchange: () => { if (i === run.current) doComplete(); else { run = E.toggleTask(run, i, Date.now()); afterChange(); } } }),
         h('span', { class: 'cb' }, icon('check', 16)), h('span', { class: 'ti-s', 'aria-hidden': 'true' }, taskIcon(tk)), h('span', { class: 'nm' }, tk.name || '—'),
-        h('span', { class: 'du' }, tk.done || tk.skipped ? fmtDur(tk.actualSec || 0) : fmtDur(tk.plannedSec))))));
+        h('span', { class: 'du' }, tk.done || tk.skipped ? fmtDur(tk.actualSec || 0) : fmtDur(tk.plannedSec))),
+      st().coachButton && !tk.done && !tk.skipped ? h('button', { class: 'tip-btn', type: 'button', 'aria-label': t('tipFor', { name: tk.name || '' }), title: t('tipBtn'), onclick: () => coach.show('any', tk.name) }, '💡') : null)));
     controls.replaceChildren(
       h('div', { class: 'main-btns' },
         h('button', { class: 'btn primary xl', type: 'button', onclick: doComplete }, icon('check', 22), t('doneNext')),
         h('button', { class: `btn xl pause-btn ${paused ? 'resume' : ''}`, type: 'button', 'aria-pressed': String(paused), onclick: togglePause }, icon(paused ? 'play' : 'pause', 22), paused ? t('resume') : t('pause'))),
       h('div', { class: 'row-btns' },
         h('button', { class: 'btn', type: 'button', onclick: () => { E.addTime(run, 60); persist(); paintLive(); } }, icon('plus', 18), t('addMinute')),
+        st().coachButton ? h('button', { class: 'btn tip-main', type: 'button', onclick: () => coach.show('any', cur?.name) }, '💡', t('tipBtn')) : null,
         h('button', { class: 'btn', type: 'button', onclick: () => act(E.skipCurrent) }, icon('skip', 18), t('skip')),
         h('button', { class: 'btn danger', type: 'button', onclick: async () => { if (await confirmBox(t('stopConfirm'), t('stop'), true)) act(E.finish); } }, icon('stop', 18), t('stop'))));
   }
@@ -93,9 +104,7 @@ export async function renderRunner(root, id, nav) {
     ring.style.setProperty('--p', String(clamp(1 - left / total, 0, 1)));
     const w = st().warnSec;
     ring.classList.toggle('over', over); ring.classList.toggle('warn', !over && w > 0 && left <= w && run.status === 'running');
-    const planUpTo = run.tasks.slice(0, run.current).reduce((s, x) => s + x.plannedSec, 0) + (total - left);
-    const doneSoFar = run.tasks.reduce((s, x, i) => s + (i === run.current ? E.elapsedMs(run, i, now) / 1000 : x.actualSec), 0);
-    const diff = Math.round(doneSoFar - planUpTo);
+    const diff = E.paceDiffSec(run, now);
     pace.textContent = Math.abs(diff) < 10 ? t('onPlan') : `${fmtHuman(Math.abs(diff), units())} ${diff > 0 ? t('behind') : t('ahead')}`;
     const planned = run.tasks.reduce((s, x) => s + x.plannedSec + x.extraSec, 0);
     head.replaceChildren(h('span', {}, `${t('startedAt')} ${clock(run.startedAt)}`), h('span', {}, `${t('plannedEnd')} ${clock(run.startedAt + planned * 1000)}`), h('span', {}, `${t('elapsed')} ${fmtDur((now - run.startedAt) / 1000)}`));
@@ -111,6 +120,7 @@ export async function renderRunner(root, id, nav) {
       if (ev === 'end' && s.autoAdvance) { doComplete(); return; }
       persist();
     }
+    if (s.coachAuto) { const sit = coachTrigger(run, Date.now(), memo); if (sit) coach.show(sit, run.tasks[run.current]?.name); }
     paintLive();
   }
 
@@ -121,7 +131,7 @@ export async function renderRunner(root, id, nav) {
   }
 
   function renderSummary() {
-    clearInterval(timer);
+    clearInterval(timer); coach.hide();
     const s = E.summarize(run), u = units(), n = stars(run);
     const dRow = (k, v, cls = '') => h('div', { class: `kv ${cls}` }, h('span', {}, k), h('strong', {}, v));
     const done = run.status === 'done';
@@ -146,9 +156,9 @@ export async function renderRunner(root, id, nav) {
 
   root.replaceChildren(h('div', { class: 'run' },
     h('div', { class: 'run-top', style: { '--accent': run.color || '#6c5ce7' } }, h('span', { class: 'emoji' }, run.icon), h('strong', {}, run.templateName)),
-    bubble, pw.el, head, h('div', { class: 'ring-wrap' }, ring, pausedBadge), taskName, pace, controls, list));
+    bubble, coachHost, pw.el, head, h('div', { class: 'ring-wrap' }, ring, pausedBadge), taskName, pace, controls, list));
   paintStatic(); paintLive();
   if (fresh) say('start');
   timer = setInterval(loop, 250);
-  return () => { clearInterval(timer); clearTimeout(bubbleTimer); document.removeEventListener('visibilitychange', onVis); setAwake('run', false); if (E.isActive(run)) persist(); };
+  return () => { clearInterval(timer); clearTimeout(bubbleTimer); coach.hide(); document.removeEventListener('visibilitychange', onVis); setAwake('run', false); if (E.isActive(run)) persist(); };
 }

@@ -40,6 +40,9 @@ class NativeBridge(private val activity: MainActivity) {
         activity.runOnUiThread { activity.startActivity(Intent.createChooser(send, activity.getString(R.string.share_via))) }
     }
 
+    /** Opens the system "save as" picker and writes the text to the chosen file (WebView cannot download blobs itself). */
+    @JavascriptInterface fun saveFile(name: String, text: String) { if (text.length <= MAX_FILE) activity.saveTextFile(name.take(80).ifBlank { "backup.json" }, text) }
+
     @JavascriptInterface fun nfcWrite(text: String) { if (text.length <= 900) activity.armNfcWrite(text) }
     @JavascriptInterface fun nfcCancel() = activity.armNfcWrite(null)
 
@@ -55,5 +58,5 @@ class NativeBridge(private val activity: MainActivity) {
     /** A routine to start / text to import that arrived before the page was ready. Returns "" when nothing is pending. */
     @JavascriptInterface fun takePendingIntent(): String = activity.takePending()
 
-    private companion object { const val MAX_JSON = 256 * 1024 }
+    private companion object { const val MAX_JSON = 256 * 1024; const val MAX_FILE = 16 * 1024 * 1024 }
 }

@@ -23,6 +23,12 @@ Share creates a code and a link. Send it with the system share sheet (Bluetooth,
 ## Encouragement, stars and screen
 Settings → Name and My buddy: the app cheers you on by name with cheerful messages, emojis and little animations (turn off or have them read aloud in Settings). Finish a routine to earn up to 3 stars (all done within the plan = 3). Finishing at least one routine a day builds a 🔥 streak shown on the home screen. Pause is the big button next to Done: the clock stops and the paused time is shown in the summary. The ☀️ chip on the home screen (or Settings) keeps the screen on while the app is open so you can tap progress any time.
 
+## Mindful coach and voice
+Settings → About you: add your name, age and gender - messages and tips then speak to you (Hebrew uses the right masculine/feminine forms) in a tone that fits your age. Tap 💡 Tip (next to Pause) or the 💡 on any task to get a short CBT / mindfulness idea: breathing, grounding, checking worried thoughts, letting thoughts pass, kindness to yourself, focus, time pressure. Tap "Another tip" for a new one. Switch on "Automatic tips" and the coach offers a tip when a task runs over, you are 3+ minutes behind, or you stayed paused for 2 minutes. Under Settings → Voice choose whether encouragement and tips are text only or also spoken automatically (same tone, name and gender forms), then pick a voice and a style (deep, high, robot, chipmunk, giant, sleepy, superhero, fairy). Styles change pitch and speed of your phone's voice; install a Hebrew voice in the phone's Text-to-speech settings if none is found. The coach gives general wellbeing ideas, not treatment. If worry feels overwhelming, talk to a trusted adult or a professional.
+
+## Moving data between the app and the website
+The website (PWA) and the Android app keep their data separately. To move routines, history and settings between them: Settings → Move data → Save backup file / Copy sync code / Send…, then on the other one → Import backup (file, or paste the code). Merge keeps the newest version of every routine and adds missing history; it never deletes. Replace makes this device an exact copy of the backup. Tick "Also import settings" to bring your name, voice and preferences too.
+
 ## Android app and widget
 Settings → Download Android app always gives the latest APK. Allow “install unknown apps” for your browser once. Long-press the home screen → Widgets → Morning Organizer to start a favourite routine in one tap.
 

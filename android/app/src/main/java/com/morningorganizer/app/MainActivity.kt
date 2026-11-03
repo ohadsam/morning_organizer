@@ -16,6 +16,8 @@ import android.os.Build
 import android.os.Bundle
 import android.view.WindowManager
 import android.webkit.RenderProcessGoneDetail
+import android.webkit.ValueCallback
+import android.webkit.WebChromeClient
 import android.webkit.WebResourceRequest
 import android.webkit.WebResourceResponse
 import android.webkit.WebSettings
@@ -23,6 +25,7 @@ import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.activity.ComponentActivity
 import androidx.activity.OnBackPressedCallback
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.webkit.WebViewAssetLoader
 import org.json.JSONObject
 
@@ -37,6 +40,22 @@ class MainActivity : ComponentActivity() {
     private val lock = Any()
     private var pending: JSONObject? = null
     private var jsReady = false
+    private var pendingSave: String? = null
+    private var fileCallback: ValueCallback<Array<Uri>>? = null
+
+    // Backup export: the system "save as" picker. No storage permission needed.
+    private val createDoc = registerForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri ->
+        val text = pendingSave; pendingSave = null
+        val ok = uri != null && text != null && runCatching {
+            contentResolver.openOutputStream(uri, "wt")?.use { it.write(text.toByteArray(Charsets.UTF_8)) } ?: error("no stream")
+        }.isSuccess
+        deliver(JSONObject().put("type", "saved").put("status", if (ok) "ok" else "fail"))
+    }
+
+    // Backup import: WebView needs the host to answer <input type=file>.
+    private val pickDoc = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        fileCallback?.onReceiveValue(if (uri != null) arrayOf(uri) else null); fileCallback = null
+    }
 
     @SuppressLint("SetJavaScriptEnabled", "AddJavascriptInterface")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -54,6 +73,12 @@ class MainActivity : ComponentActivity() {
             setSupportMultipleWindows(false)
         }
         web.addJavascriptInterface(NativeBridge(this), "MorningNative")
+        web.webChromeClient = object : WebChromeClient() {
+            override fun onShowFileChooser(view: WebView, callback: ValueCallback<Array<Uri>>, params: FileChooserParams): Boolean {
+                fileCallback?.onReceiveValue(null); fileCallback = callback
+                return try { pickDoc.launch(arrayOf("application/json", "text/plain", "*/*")); true } catch (_: Exception) { fileCallback = null; false }
+            }
+        }
         web.webViewClient = object : WebViewClient() {
             override fun shouldInterceptRequest(view: WebView, request: WebResourceRequest): WebResourceResponse? = loader.shouldInterceptRequest(request.url)
 
@@ -96,6 +121,8 @@ class MainActivity : ComponentActivity() {
 
     fun armNfcWrite(text: String?) { nfcWriteText = text }
 
+    fun saveTextFile(name: String, text: String) { pendingSave = text; runOnUiThread { createDoc.launch(name) } }
+
     fun takePending(): String = synchronized(lock) {
         jsReady = true
         val p = pending; pending = null; p?.toString() ?: ""
@@ -108,7 +135,7 @@ class MainActivity : ComponentActivity() {
         when {
             templateId != null -> { i.removeExtra(EXTRA_TEMPLATE); deliver(JSONObject().put("type", "start").put("templateId", templateId)) }
             i.action == Intent.ACTION_SEND && i.type == "text/plain" -> {
-                val text = i.getStringExtra(Intent.EXTRA_TEXT)?.take(64 * 1024)
+                val text = i.getStringExtra(Intent.EXTRA_TEXT)?.take(256 * 1024)
                 if (text != null) deliver(JSONObject().put("type", "import").put("text", text))
                 i.action = null
             }

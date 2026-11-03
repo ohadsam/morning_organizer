@@ -15,29 +15,48 @@ export const POOLS = {
     runDone: ['Amazing, {name} - everything is done!', 'Champion! The whole routine is complete!', 'What a morning, {name}!', 'Super job, {name}!'],
     runStopped: ['That’s okay, {name}. Tomorrow is a new chance!', 'Good try, {name} - every start counts!', 'Well, you started - that’s what matters!'],
   },
+  // Hebrew is gendered: {male|female} tokens are resolved by personalize() from the profile.
   he: {
-    start: ['יאללה, {name}!', 'אתם מסוגלים, {name}!', 'יום מעולה מתחיל עכשיו, {name}!', 'מוכנים, לכו!'],
-    warn: ['כמעט שם, {name}!', 'עוד כמה שניות!', 'אפשר, {name}!', 'מסיימים בכוח!'],
-    over: ['עוד קצת, {name} - אפשר!', 'נשימה עמוקה, ואז מסיימים!', 'כמעט סיימנו - לא מוותרים!', 'זה בסדר, קחו את הזמן שצריך.'],
-    taskEarly: ['וואו, זה היה מהר, {name}!', 'כוכב על - לפני הזמן!', 'מהירות מדהימה, {name}!', 'היום אתם עפים!'],
-    taskDone: ['כל הכבוד, {name}!', 'עבודה מצוינת!', 'הצלחה, {name}!', 'עוד משימה בוצעה!'],
-    taskLate: ['זה בסדר, {name} - עוברים למשימה הבאה!', 'בלי לחץ, כל צעד נחשב!', 'ניסיון מצוין, {name} - ממשיכים!', 'הכול טוב - עשיתם את זה!'],
+    start: ['יאללה, {name}!', '{אתה מסוגל|את מסוגלת}, {name}!', 'יום מעולה מתחיל עכשיו, {name}!', '{מוכן|מוכנה}? {לך|לכי}!'],
+    warn: ['כמעט שם, {name}!', 'עוד כמה שניות!', 'אפשר, {name}!', '{סיים|סיימי} בכוח!'],
+    over: ['עוד קצת, {name} - אפשר!', 'נשימה עמוקה, ואז מסיימים!', 'כמעט סיימנו - לא מוותרים!', 'זה בסדר, {קח|קחי} את הזמן שצריך.'],
+    taskEarly: ['וואו, זה היה מהר, {name}!', '{כוכב|כוכבת} על - לפני הזמן!', 'מהירות מדהימה, {name}!', 'היום {אתה עף|את עפה}!'],
+    taskDone: ['כל הכבוד, {name}!', 'עבודה מצוינת!', 'הצלחת, {name}!', 'עוד משימה בוצעה!'],
+    taskLate: ['זה בסדר, {name} - עוברים למשימה הבאה!', 'בלי לחץ, כל צעד נחשב!', 'ניסיון מצוין, {name} - ממשיכים!', 'הכול טוב - עשית את זה!'],
     paused: ['נשימה עמוקה, {name}. אנחנו מחכים.', 'מושהה - ממשיכים כשמוכנים.', 'בלי לחץ, {name}.'],
-    resumed: ['ברוכים השבים, {name}!', 'חוזרים לעניינים - אפשר!', 'יאללה, ממשיכים!'],
-    runDone: ['מדהים, {name} - הכול הושלם!', 'אלופים! כל השגרה הושלמה!', 'איזה בוקר, {name}!', 'עבודה מעולה, {name}!'],
-    runStopped: ['זה בסדר, {name}. מחר יום חדש!', 'ניסיון יפה, {name} - כל התחלה נחשבת!', 'התחלתם - וזה מה שחשוב!'],
+    resumed: ['{ברוך|ברוכה} שובך, {name}!', 'חוזרים לעניינים - אפשר!', 'יאללה, ממשיכים!'],
+    runDone: ['מדהים, {name} - הכול הושלם!', '{אלוף|אלופה}! כל השגרה הושלמה!', 'איזה בוקר, {name}!', 'עבודה מעולה, {name}!'],
+    runStopped: ['זה בסדר, {name}. מחר יום חדש!', 'ניסיון יפה, {name} - כל התחלה נחשבת!', 'התחלת - וזה מה שחשוב!'],
   },
+};
+/** Extra, more playful lines mixed in for young children (age <= 11). */
+export const KID_EXTRA = {
+  en: { start: ['Superhero mode: ON! 🦸'], taskEarly: ['Zoom! Faster than a rocket! 🚀'], taskDone: ['High five! ✋'], taskLate: ['Even turtles get there - slow and steady! 🐢'], runDone: ['Legend of the morning! 👑'] },
+  he: { start: ['מצב {גיבור|גיבורת} על: פעיל! 🦸'], taskEarly: ['וווש! מהר יותר מרקטה! 🚀'], taskDone: ['כיף חמש! ✋'], taskLate: ['גם צבים מגיעים - לאט ובטוח! 🐢'], runDone: ['אגדת הבוקר! 👑'] },
 };
 export const EMOJI = {
   start: ['🚀', '🌞', '💪'], warn: ['⏳', '🔥', '👀'], over: ['🌬️', '💫', '🤗'], taskEarly: ['⚡', '🌟', '🏅'], taskDone: ['✅', '👏', '🎯'],
   taskLate: ['🌈', '🤝', '🍀'], paused: ['🧘', '☁️', '🫶'], resumed: ['🔄', '💪', '🌤️'], runDone: ['🎉', '🏆', '🥳'], runStopped: ['🌈', '🌱', '🫶'],
 };
 
+/** Resolve {male|female} / {male|female|neutral} tokens. Unspecified gender -> "male/female" so nobody is mis-addressed. */
+export function gendered(msg, gender = 'other') {
+  return msg.replace(/\{([^{}|]*)\|([^{}|]*)(?:\|([^{}|]*))?\}/g, (_, m, f, n) =>
+    gender === 'male' ? m : gender === 'female' ? f : (n ?? (m === f ? m : `${m}/${f}`)));
+}
 /** Fill {name}; with no name, drop it together with its punctuation so the sentence stays natural. */
 export function fill(msg, name) {
   const n = cleanText(name, 30);
   if (n) return msg.replaceAll('{name}', n);
   return msg.replace(/^\{name\},?\s*/, '').replace(/,?\s*\{name\}/g, '').replace(/\s+([!?.])/g, '$1').trim();
+}
+export const personalize = (msg, { name = '', gender = 'other' } = {}) => fill(gendered(msg, gender), name);
+
+/** Audience tier from age: kid <= 11, teen 12-17, adult 18+ (unknown age -> adult: friendly but not childish). */
+export function audience(age) {
+  const n = Number(age);
+  if (!Number.isFinite(n) || n <= 0) return 'adult';
+  return n <= 11 ? 'kid' : n <= 17 ? 'teen' : 'adult';
 }
 
 /** Classify a finished task relative to its plan. */
@@ -48,11 +67,12 @@ export function taskEvent(actualSec, plannedSec) {
 }
 
 /** -> { text, emoji, index }. `last` (index of the previous pick for this event) is avoided so the same line never repeats back-to-back. */
-export function choose(event, { name = '', lang = 'en', last = -1, rnd = Math.random } = {}) {
-  const pool = POOLS[lang]?.[event] ?? POOLS.en[event];
-  if (!pool) return null;
+export function choose(event, { name = '', lang = 'en', gender = 'other', age = null, last = -1, rnd = Math.random } = {}) {
+  const base = POOLS[lang]?.[event] ?? POOLS.en[event];
+  if (!base) return null;
+  const pool = audience(age) === 'kid' ? [...base, ...(KID_EXTRA[lang]?.[event] ?? [])] : base;
   let i = Math.floor(rnd() * pool.length);
   if (pool.length > 1 && i === last) i = (i + 1) % pool.length;
   const em = EMOJI[event];
-  return { text: fill(pool[i], name), emoji: em[Math.floor(rnd() * em.length)], index: i };
+  return { text: personalize(pool[i], { name, gender }), emoji: em[Math.floor(rnd() * em.length)], index: i };
 }

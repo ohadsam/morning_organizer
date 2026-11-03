@@ -18,6 +18,8 @@
                                                       ─► RoutineWidget (RemoteViews, favourites)    BootReceiver (re-arm)    NFC read/write + share sheet
 ```
 
+* **Coach & voice.** `feedback.js` (encouragement + gender/age personalisation, pure) and `coach.js`/`coachTips.js` (35 tips × 3 audience tiers × 2 languages, trigger rules, pure) feed `ui/runner.js`/`ui/coach.js`; `speech.js` wraps the device TTS (styles = pitch/rate presets).
+* **Manual sync (website ↔ app).** The two keep separate IndexedDB stores; `share.js` packs a whole backup into a sync code (`MB1.`), `store.importBackup` merges (newest `updatedAt` wins, history unioned by id, settings whitelisted) or replaces. In the APK, `NativeBridge.saveFile` + `MainActivity` (CreateDocument / OpenDocument file chooser) do what the WebView cannot.
 * **No server.** Data: IndexedDB (`templates`, `runs`, `kv`). Sharing: self-contained code `M2.<base64url(deflate(json))>` via share sheet / link / NFC.
 * **One codebase for UI.** The APK has no UI code of its own; Gradle packages `web/` as assets. Native adds only what browsers cannot: reliable alarms, widget, NFC from the app, vibration.
 * **Time.** Run timing is derived from timestamps (`engine.js`), never from tick counts, so throttled/background timers cannot drift; the active run is persisted so it survives reloads.

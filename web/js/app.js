@@ -12,6 +12,7 @@ import { renderSettings, applyTheme } from './ui/settings.js';
 import { renderGuide } from './ui/guide.js';
 import { icon, toast } from './ui/common.js';
 import { openImport, importCode } from './ui/share.js';
+import { setAwake } from './awake.js';
 
 const root = document.getElementById('app');
 let cleanup = () => {}, version = '0';
@@ -46,6 +47,7 @@ async function boot() {
   const st = S.get().settings;
   setLang(st.lang); applyTheme(st.theme);
   document.title = t('appName');
+  setAwake('app', st.keepAwakeApp);
   try { version = (await (await fetch('version.json', { cache: 'no-cache' })).json()).version; } catch { /* offline first load */ }
   await S.seedIfNeeded();
   S.syncNative();

@@ -9,7 +9,7 @@ if (shots) mkdirSync(shots, { recursive: true });
 const server = await serve('web', 0); const base = `http://localhost:${server.address().port}/`;
 const browser = await chromium.launch();
 let failures = 0;
-const step = async (name, fn) => { try { await fn(); console.log('✓', name); } catch (e) { failures++; console.error('✗', name, '\n  ', e.message.split('\n')[0]); } };
+const step = async (name, fn) => { try { await fn(); console.log('✓', name); } catch (e) { failures++; console.error('✗', name, '\n  ', e.message.split('\n').slice(0, 4).join(' / '), '\n  ', (e.stack.split('\n').find((l) => l.includes('smoke.mjs')) || '').trim()); } };
 
 async function newPage(opts = {}) {
   const ctx = await browser.newContext({ viewport: { width: 390, height: 800 }, locale: opts.locale || 'en-US', serviceWorkers: 'block', ...opts.ctx });
@@ -73,6 +73,36 @@ await step('run: countdown, 10s warning class, overtime, done, summary, statisti
   await page.click('text=Done ✓'); await page.click('text=Done ✓'); await page.waitForSelector('.summary');
   await page.goto(base + '#/stats'); await page.click('.link-card'); await page.waitForSelector('svg.chart'); await shot(page, 'stats');
   assert.deepEqual(errors, []);
+});
+
+await step('v1.1: name + buddy, encouragement bubble, progress widget, pause, active-run card, stars/streak, keep-awake chip', async () => {
+  const { page, errors } = await newPage(); await page.clock.install(); await page.goto(base + '#/settings'); await page.waitForSelector('h1');
+  await page.fill('input[aria-describedby="pn-hint"]', 'Dana'); await page.dispatchEvent('input[aria-describedby="pn-hint"]', 'change');
+  await page.click('button[aria-label="🐼"]'); await page.waitForTimeout(100);
+  await page.goto(base + '#/'); await page.waitForSelector('.routine'); assert.match(await page.textContent('.hero'), /Good morning, Dana/);
+  await page.locator('.routine .start').first().click(); await page.waitForSelector('.ring');
+  assert.match(await page.textContent('.bubble'), /🐼/); assert.ok(await page.locator('.bubble .bt').textContent(), 'bubble text');
+  assert.equal(await page.locator('.pw .seg').count(), 6); assert.equal(await page.getAttribute('.pw-track', 'aria-valuenow'), '0');
+  await page.click('.pause-btn'); assert.ok(await page.locator('.ring.paused').count()); assert.ok(await page.isVisible('.paused-badge'));
+  await page.clock.runFor(30_000); await page.click('.pause-btn'); assert.ok(!(await page.locator('.ring.paused').count()));
+  assert.match(await page.textContent('.pw-foot'), /⏸ 0:30/); await shot(page, 'run-progress');
+  await page.click('text=Done ✓'); assert.equal(await page.locator('.pw .seg.done').count(), 1); assert.notEqual(await page.getAttribute('.pw-track', 'aria-valuenow'), '0');
+  await page.goto(base + '#/'); await page.waitForSelector('.active-run'); await shot(page, 'home-active');
+  assert.equal(await page.locator('.active-run .pw-track').count(), 1);
+  await page.click('.active-run .primary'); await page.waitForSelector('.ring'); assert.equal(await page.locator('.pw .seg.done').count(), 1);
+  for (let i = 0; i < 5; i++) await page.click('text=Done ✓');
+  await page.waitForSelector('.summary'); assert.equal(await page.locator('.star.on').count(), 3); assert.ok(await page.locator('.confetti').count());
+  assert.match(await page.textContent('.summary'), /Paused/); await shot(page, 'summary-stars');
+  await page.goto(base + '#/'); await page.waitForSelector('.routine'); assert.match(await page.textContent('.chips'), /1-day streak/); assert.match(await page.textContent('.chips'), /3 stars/);
+  await page.click('.btn-chip'); await page.waitForSelector('.btn-chip[aria-pressed="true"]'); assert.match(await page.textContent('.btn-chip'), /Screen stays on/);
+  assert.deepEqual(errors, []);
+});
+
+await step('Hebrew encouragement without a name reads naturally and icons are shown', async () => {
+  const { page, errors } = await newPage({ locale: 'he-IL' }); await page.goto(base); await page.waitForSelector('.routine');
+  await page.locator('.routine .start').first().click(); await page.waitForSelector('.bubble .bt');
+  const txt = await page.textContent('.bubble .bt'); assert.ok(!/[{}]|undefined|null/.test(txt), txt); assert.ok(await page.locator('.ring .ti').textContent());
+  await shot(page, 'run-he'); assert.deepEqual(errors, []);
 });
 
 await step('run survives reload (crash-safe) and checklist ticking works', async () => {

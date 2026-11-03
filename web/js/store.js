@@ -5,12 +5,14 @@ import { cleanText, clamp, uid, move } from './util.js';
 import { defaultAlarm, nextFire } from './alarms.js';
 import { native } from './native.js';
 import { t } from './i18n.js';
+import { suggestIcon } from './taskIcons.js';
 
 export const DEFAULT_SETTINGS = Object.freeze({
   lang: 'auto', theme: 'auto', mode: 'both', volume: 80, warnSec: 10, defTaskSec: 300, defEstSec: 0,
-  autoAdvance: false, keepAwake: true, seeded: false,
+  autoAdvance: false, keepAwake: true, keepAwakeApp: false, personName: '', mascot: '🦊', feedback: true, speak: false, seeded: false,
 });
 export const COLORS = ['#6c5ce7', '#0984e3', '#00b894', '#e17055', '#e84393', '#fdcb6e', '#2d3436'];
+export const MASCOTS = ['🦊', '🐼', '🦄', '🐯', '🐸', '🤖', '🐶', '🐱'];
 export const ICONS = ['🌅', '☀️', '🎒', '🪥', '👕', '🥣', '🏃', '📚', '🧘', '🐶', '🚌', '⏰'];
 
 const state = { templates: [], runs: [], settings: { ...DEFAULT_SETTINGS }, ready: false };
@@ -21,7 +23,7 @@ export const get = () => state;
 export const getTemplate = (id) => state.templates.find((x) => x.id === id);
 
 export function newTask(settings = state.settings, name = '') {
-  return { id: uid(), name, sec: settings.defTaskSec, est: settings.defEstSec || 0 };
+  return { id: uid(), name, icon: '', sec: settings.defTaskSec, est: settings.defEstSec || 0 };
 }
 export function newTemplate(name = '') {
   const now = Date.now();
@@ -37,7 +39,7 @@ export function normalizeTemplate(tpl) {
     ...tpl, name: cleanText(tpl.name, LIMITS.maxName), icon: cleanText(tpl.icon, 8) || '⏰',
     color: /^#[0-9a-fA-F]{6}$/.test(tpl.color) ? tpl.color : COLORS[0],
     tasks: (tpl.tasks || []).slice(0, LIMITS.maxTasks).map((x) => ({
-      id: x.id || uid(), name: cleanText(x.name, LIMITS.maxName),
+      id: x.id || uid(), name: cleanText(x.name, LIMITS.maxName), icon: cleanText(x.icon, 8),
       sec: clamp(Math.round(Number(x.sec)) || 1, 1, LIMITS.maxTaskSec), est: clamp(Math.round(Number(x.est)) || 0, 0, LIMITS.maxTaskSec) })),
     alarm: { enabled: !!a.enabled, time: /^\d{2}:\d{2}$/.test(a.time) ? a.time : '07:00',
       days: (a.days || []).filter((d) => Number.isInteger(d) && d >= 0 && d <= 6),
@@ -62,7 +64,7 @@ export async function seedIfNeeded() {
 }
 export async function addSamples() {
   const mk = (name, icon, color, items) => ({ ...newTemplate(name), icon, color, builtin: true,
-    tasks: items.map(([k, min]) => ({ id: uid(), name: t(k), sec: min * 60, est: 0 })) });
+    tasks: items.map(([k, min]) => ({ id: uid(), name: t(k), icon: suggestIcon(t(k)), sec: min * 60, est: 0 })) });
   await saveTemplate(mk(t('sample1'), '🎒', '#0984e3', [['s_wake', 2], ['s_bath', 4], ['s_dress', 5], ['s_eat', 15], ['s_bag', 3], ['s_shoes', 2]]));
   await saveTemplate(mk(t('sample2'), '🌅', '#e17055', [['s_shower', 8], ['s_dress', 5], ['s_coffee', 10], ['s_plan', 5]]));
 }
@@ -89,6 +91,8 @@ export const duplicateTemplate = (id) => {
 export const reorderTasks = (tpl, from, to) => ({ ...tpl, tasks: move(tpl.tasks, from, to) });
 
 export async function updateSettings(patch) {
+  if ('personName' in patch) patch = { ...patch, personName: cleanText(patch.personName, 30) };
+  if ('mascot' in patch && !MASCOTS.includes(patch.mascot)) delete patch.mascot;
   state.settings = { ...state.settings, ...patch };
   await db.put('kv', state.settings, 'settings');
   emit();

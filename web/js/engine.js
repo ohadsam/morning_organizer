@@ -4,13 +4,13 @@ import { uid } from './util.js';
 
 export function createRun(tpl, now) {
   const tasks = tpl.tasks.map((t) => ({
-    id: t.id, name: t.name, plannedSec: t.sec, estSec: t.est || t.sec, extraSec: 0,
+    id: t.id, name: t.name, icon: t.icon || '', plannedSec: t.sec, estSec: t.est || t.sec, extraSec: 0,
     accumMs: 0, actualSec: 0, startedAt: null, endedAt: null,
     done: false, skipped: false, warned: false, ended: false,
   }));
   const run = {
     id: uid(), templateId: tpl.id, templateName: tpl.name, icon: tpl.icon, color: tpl.color,
-    startedAt: now, endedAt: null, status: 'running', current: 0, segStart: now, pausedAt: null,
+    startedAt: now, endedAt: null, status: 'running', current: 0, segStart: now, pausedAt: null, pausedMs: 0,
     tasks, plannedTotal: sum(tasks, 'plannedSec'), estTotal: sum(tasks, 'estSec'), actualTotal: 0,
   };
   if (!tasks.length) return finish(run, now);
@@ -45,7 +45,7 @@ export function tick(run, now, warnAtSec = 10) {
 
 export function pause(run, now) { if (run.status === 'running') { run.status = 'paused'; run.pausedAt = now; } return run; }
 export function resume(run, now) {
-  if (run.status === 'paused') { run.segStart += now - run.pausedAt; run.pausedAt = null; run.status = 'running'; }
+  if (run.status === 'paused') { run.pausedMs = (run.pausedMs || 0) + (now - run.pausedAt); run.segStart += now - run.pausedAt; run.pausedAt = null; run.status = 'running'; }
   return run;
 }
 /** Add (or remove) time on the current task without changing the planned figure used in statistics. */
@@ -57,6 +57,7 @@ export function addTime(run, sec, now = Date.now()) {
 
 function closeCurrent(run, now, state) {
   const t = cur(run);
+  if (run.pausedAt) run.pausedMs = (run.pausedMs || 0) + (now - run.pausedAt); // finishing/advancing while paused still counts the pause
   t.actualSec = Math.round(elapsedMs(run, run.current, now) / 1000);
   t.accumMs = t.actualSec * 1000;
   t.endedAt = now; t.done = state === 'done'; t.skipped = state === 'skipped';
@@ -99,7 +100,7 @@ export function summarize(run) {
   const wallSec = Math.round(((run.endedAt ?? Date.now()) - run.startedAt) / 1000);
   return {
     plannedSec: run.plannedTotal, estSec: run.estTotal, actualSec: run.actualTotal, wallSec,
-    deltaSec: run.actualTotal - run.plannedTotal, done: run.tasks.filter((t) => t.done).length,
+    deltaSec: run.actualTotal - run.plannedTotal, pausedSec: Math.round((run.pausedMs || 0) / 1000), done: run.tasks.filter((t) => t.done).length,
     skipped: run.tasks.filter((t) => t.skipped).length, total: run.tasks.length,
   };
 }

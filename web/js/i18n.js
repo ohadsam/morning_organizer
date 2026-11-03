@@ -44,6 +44,10 @@ export const STR = {
     sample1: 'Kids morning', sample2: 'Quick start (adult)', s_wake: 'Wake up & stretch', s_bath: 'Bathroom & teeth', s_dress: 'Get dressed', s_eat: 'Breakfast',
     s_bag: 'Pack school bag', s_shoes: 'Shoes & out the door', s_shower: 'Shower', s_coffee: 'Coffee', s_plan: 'Plan the day',
     guideTitle: 'User guide', u_h: 'h', u_m: 'm', u_s: 's', today: 'Today', day0: 'Sun', day1: 'Mon', day2: 'Tue', day3: 'Wed', day4: 'Thu', day5: 'Fri', day6: 'Sat',
+    greetName: 'Good morning, {name}! 🌞', streakDays: '{n}-day streak', starsTotal: '{n} stars', personName: 'Name', personNameHint: 'Used in encouraging messages. Leave empty to skip the name.',
+    mascot: 'My buddy', feedbackOn: 'Encouraging messages', feedbackOnHint: 'Cheerful messages while you go.', speakOn: 'Read messages aloud', keepAwakeApp: 'Keep screen on while the app is open',
+    keepAwakeAppHint: 'Uses more battery.', screenOn: 'Screen stays on', screenOff: 'Screen may turn off', progress: 'Progress', eta: 'Expected finish {time}', pausedTotal: 'Paused',
+    tasksProgress: '{done}/{total} tasks', continueRun: 'Continue “{name}”', activeRun: 'In progress', pausedBig: 'Paused - no rush', taskIcon: 'Task icon', pickIcon: 'Choose an icon', starsEarned: 'Stars',
     close: 'Close', loading: 'Loading…', error: 'Something went wrong', storageFail: 'Storage unavailable - changes will not be kept.',
   },
   he: {
@@ -89,6 +93,10 @@ export const STR = {
     sample1: 'בוקר לילדים', sample2: 'התחלה מהירה (מבוגרים)', s_wake: 'קמים ומתמתחים', s_bath: 'שירותים ושיניים', s_dress: 'מתלבשים', s_eat: 'ארוחת בוקר',
     s_bag: 'מסדרים תיק', s_shoes: 'נעליים ויוצאים', s_shower: 'מקלחת', s_coffee: 'קפה', s_plan: 'תכנון היום',
     guideTitle: 'מדריך למשתמש', u_h: 'ש׳', u_m: 'ד׳', u_s: 'ש״נ', today: 'היום', day0: 'א׳', day1: 'ב׳', day2: 'ג׳', day3: 'ד׳', day4: 'ה׳', day5: 'ו׳', day6: 'ש׳',
+    greetName: 'בוקר טוב, {name}! 🌞', streakDays: 'רצף של {n} ימים', starsTotal: '{n} כוכבים', personName: 'שם', personNameHint: 'משמש בהודעות עידוד. אפשר להשאיר ריק.',
+    mascot: 'החבר שלי', feedbackOn: 'הודעות עידוד', feedbackOnHint: 'הודעות שמחות תוך כדי.', speakOn: 'הקראת הודעות', keepAwakeApp: 'השאר מסך דלוק כל עוד האפליקציה פתוחה',
+    keepAwakeAppHint: 'צורך יותר סוללה.', screenOn: 'המסך נשאר דלוק', screenOff: 'המסך עלול להיכבות', progress: 'התקדמות', eta: 'סיום צפוי {time}', pausedTotal: 'הושהה',
+    tasksProgress: '{done}/{total} משימות', continueRun: 'המשך “{name}”', activeRun: 'בתהליך', pausedBig: 'מושהה - בלי לחץ', taskIcon: 'אייקון משימה', pickIcon: 'בחירת אייקון', starsEarned: 'כוכבים',
     close: 'סגירה', loading: 'טוען…', error: 'משהו השתבש', storageFail: 'האחסון לא זמין - שינויים לא יישמרו.',
   },
 };

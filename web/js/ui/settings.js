@@ -3,6 +3,7 @@ import { t, setLang } from '../i18n.js';
 import * as S from '../store.js';
 import { signal, unlockAudio } from '../audio.js';
 import { native } from '../native.js';
+import { setAwake } from '../awake.js';
 import { APK_URL } from '../config.js';
 import { toast, icon } from './common.js';
 
@@ -37,6 +38,11 @@ export function renderSettings(root, version) {
         select(t('language'), st.lang, [['auto', t('langAuto')], ['he', 'עברית'], ['en', 'English']], async (v) => { await S.updateSettings({ lang: v }); try { localStorage.setItem('mo.lang', v); } catch { /* blocked */ } setLang(v); location.reload(); }),
         select(t('theme'), st.theme, [['auto', t('themeAuto')], ['light', t('themeLight')], ['dark', t('themeDark')]], (v) => { applyTheme(v); try { localStorage.setItem('mo.theme', v); } catch { /* blocked */ } set({ theme: v }); })),
       h('section', { class: 'card stack' },
+        h('label', { class: 'field' }, h('span', { class: 'lbl' }, t('personName')), h('input', { type: 'text', maxLength: 30, value: st.personName, autocomplete: 'off', 'aria-describedby': 'pn-hint', onchange: (e) => set({ personName: e.target.value }) }), h('small', { class: 'hint', id: 'pn-hint' }, t('personNameHint'))),
+        h('div', { class: 'field' }, h('span', { class: 'lbl' }, t('mascot')), h('div', { class: 'swatches', role: 'radiogroup', 'aria-label': t('mascot') }, S.MASCOTS.map((m) => h('button', { type: 'button', class: `emoji-pick ${st.mascot === m ? 'on' : ''}`, role: 'radio', 'aria-checked': String(st.mascot === m), 'aria-label': m, onclick: () => set({ mascot: m }, true) }, m)))),
+        toggle(t('feedbackOn'), t('feedbackOnHint'), st.feedback, (v) => set({ feedback: v }, true)),
+        st.feedback ? toggle(t('speakOn'), '', st.speak, (v) => set({ speak: v })) : null),
+      h('section', { class: 'card stack' },
         select(t('soundMode'), st.mode, [['both', t('mBoth')], ['beep', t('mBeep')], ['vibrate', t('mVibrate')], ['silent', t('mSilent')]], (v) => set({ mode: v })),
         h('label', { class: 'field' }, h('span', { class: 'lbl' }, `${t('volume')}: ${st.volume}%`), h('input', { type: 'range', min: 0, max: 100, value: st.volume, oninput: (e) => { e.target.previousSibling.textContent = `${t('volume')}: ${e.target.value}%`; S.updateSettings({ volume: +e.target.value }); } })),
         select(t('warnBefore'), st.warnSec, [[0, t('warnOff')], [5, t('warnSec', { n: 5 })], [10, t('warnSec', { n: 10 })], [15, t('warnSec', { n: 15 })], [30, t('warnSec', { n: 30 })]], (v) => set({ warnSec: +v })),
@@ -45,7 +51,8 @@ export function renderSettings(root, version) {
         minSec(t('defTask'), st.defTaskSec, (v) => set({ defTaskSec: v })),
         minSec(t('defEst'), st.defEstSec, (v) => set({ defEstSec: v }), true),
         toggle(t('autoAdvance'), t('autoAdvanceHint'), st.autoAdvance, (v) => set({ autoAdvance: v })),
-        toggle(t('keepAwake'), '', st.keepAwake, (v) => set({ keepAwake: v }))),
+        toggle(t('keepAwake'), '', st.keepAwake, (v) => set({ keepAwake: v })),
+        toggle(t('keepAwakeApp'), t('keepAwakeAppHint'), st.keepAwakeApp, (v) => { setAwake('app', v); set({ keepAwakeApp: v }); })),
       h('section', { class: 'card stack' }, h('h2', {}, t('data')),
         h('div', { class: 'toolbar wrap' },
           h('button', { class: 'btn', type: 'button', onclick: () => {

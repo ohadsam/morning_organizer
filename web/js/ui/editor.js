@@ -4,6 +4,8 @@ import * as S from '../store.js';
 import { icon, iconBtn, toast } from './common.js';
 import { requestWebNotifications } from '../reminders.js';
 import { native } from '../native.js';
+import { suggestIcon, PICKER_ICONS } from '../taskIcons.js';
+import { modal } from './common.js';
 
 /** minutes + seconds inputs bound to one number of seconds. */
 function durationInput(label, sec, onChange, { allowEmpty = false, ph = '' } = {}) {
@@ -29,7 +31,8 @@ export function renderEditor(root, id, nav) {
     const row = h('li', { class: 'task', dataset: { id: task.id } },
       h('button', { class: 'handle', type: 'button', 'aria-label': t('dragHandle'), title: t('dragHandle') }, icon('drag', 20)),
       h('div', { class: 'task-body' },
-        h('input', { class: 'task-name', type: 'text', maxLength: 80, value: task.name, placeholder: t('taskName'), 'aria-label': t('taskName'), oninput: (e) => change(() => { task.name = e.target.value; }) }),
+        h('div', { class: 'task-top' }, h('button', { class: 'task-icon', type: 'button', 'aria-label': `${t('taskIcon')}: ${task.icon || suggestIcon(task.name)}`, title: t('pickIcon'), onclick: (e) => pickIcon(task, e.currentTarget) }, task.icon || suggestIcon(task.name)),
+        h('input', { class: 'task-name', type: 'text', maxLength: 80, value: task.name, placeholder: t('taskName'), 'aria-label': t('taskName'), oninput: (e) => change(() => { task.name = e.target.value; if (!task.icon) row.querySelector('.task-icon').textContent = suggestIcon(task.name); }) })),
         h('div', { class: 'task-times' },
           durationInput(t('duration'), task.sec, (v) => change(() => { task.sec = Math.max(1, v); })),
           durationInput(t('estimate'), task.est, (v) => change(() => { task.est = v; }), { allowEmpty: true, ph: '=' }))),
@@ -42,6 +45,10 @@ export function renderEditor(root, id, nav) {
       if (e.key === 'ArrowUp' || e.key === 'ArrowDown') { e.preventDefault(); const to = i + (e.key === 'ArrowUp' ? -1 : 1); moveTask(i, to, true); }
     });
     return row;
+  }
+  function pickIcon(task, btn) {
+    const m = modal(t('pickIcon'), h('div', { class: 'swatches' }, PICKER_ICONS.map((ic) => h('button', { type: 'button', class: 'emoji-pick', 'aria-label': ic, onclick: () => { task.icon = ic; btn.textContent = ic; save(); m.close(); } }, ic))),
+      [{ label: t('cancel') }]);
   }
   function moveTask(from, to, refocus) {
     if (to < 0 || to >= tpl.tasks.length) return;

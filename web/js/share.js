@@ -17,7 +17,7 @@ async function pipe(bytes, stream) {
 
 /** The minimal, id-free wire format. */
 export function toWire(tpl) {
-  return { v: 1, n: tpl.name, i: tpl.icon, c: tpl.color, t: tpl.tasks.map((t) => [t.name, t.sec, t.est || 0]) };
+  return { v: 1, n: tpl.name, i: tpl.icon, c: tpl.color, t: tpl.tasks.map((t) => [t.name, t.sec, t.est || 0, t.icon || '']) };
 }
 
 export async function encode(tpl) {
@@ -64,7 +64,7 @@ export function sanitizeWire(w) {
     const sec = Math.round(Number(a[1]));
     const est = Math.round(Number(a[2]));
     return {
-      id: uid(), name: cleanText(a[0], LIMITS.maxName) || '?',
+      id: uid(), name: cleanText(a[0], LIMITS.maxName) || '?', icon: cleanText(a[3], 8),
       sec: Number.isFinite(sec) ? Math.min(Math.max(sec, 1), LIMITS.maxTaskSec) : 60,
       est: Number.isFinite(est) && est > 0 ? Math.min(est, LIMITS.maxTaskSec) : 0,
     };

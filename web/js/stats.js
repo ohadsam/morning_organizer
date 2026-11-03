@@ -64,3 +64,22 @@ export function totals(runs) {
   return { count: runs.length, avgActual: avg(runs.map((r) => r.actualTotal)), best: runs.length ? Math.min(...runs.map((r) => r.actualTotal)) : 0,
     onTime: runs.filter((r) => r.actualTotal <= r.plannedTotal).length };
 }
+
+/** 0-3 stars for one run: everything done within plan = 3, within +15% = 2, done = 1, stopped early = 0. */
+export function stars(run) {
+  if (run.status !== 'done') return 0;
+  if (run.actualTotal <= run.plannedTotal) return 3;
+  return run.actualTotal <= run.plannedTotal * 1.15 ? 2 : 1;
+}
+export const totalStars = (runs) => runs.reduce((s, r) => s + stars(r), 0);
+
+const dayKey = (ms) => { const d = new Date(ms); return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`; };
+/** Consecutive days (ending today, or yesterday if today has no run yet) with at least one completed run. */
+export function streak(runs, nowMs = Date.now()) {
+  const days = new Set(runs.filter((r) => r.status === 'done' && r.endedAt).map((r) => dayKey(r.endedAt)));
+  const d = new Date(nowMs); d.setHours(12, 0, 0, 0);
+  if (!days.has(dayKey(d.getTime()))) d.setDate(d.getDate() - 1);
+  let n = 0;
+  while (days.has(dayKey(d.getTime()))) { n++; d.setDate(d.getDate() - 1); }
+  return n;
+}

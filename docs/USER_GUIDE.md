@@ -20,6 +20,9 @@ In the editor switch on “Remind me to start”, choose time, days, volume, vib
 ## Sharing
 Share creates a code and a link. Send it with the system share sheet (Bluetooth, Nearby Share, WhatsApp), copy it, or write it to an NFC tag. Import accepts a code, link, text file or an NFC tag. There is no server: everything is transferred directly and checked on arrival.
 
+## Encouragement, stars and screen
+Settings → Name and My buddy: the app cheers you on by name with cheerful messages, emojis and little animations (turn off or have them read aloud in Settings). Finish a routine to earn up to 3 stars (all done within the plan = 3). Finishing at least one routine a day builds a 🔥 streak shown on the home screen. Pause is the big button next to Done: the clock stops and the paused time is shown in the summary. The ☀️ chip on the home screen (or Settings) keeps the screen on while the app is open so you can tap progress any time.
+
 ## Android app and widget
 Settings → Download Android app always gives the latest APK. Allow “install unknown apps” for your browser once. Long-press the home screen → Widgets → Morning Organizer to start a favourite routine in one tap.
 

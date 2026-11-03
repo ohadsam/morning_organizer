@@ -15,6 +15,7 @@ import { openImport, importCode } from './ui/share.js';
 import { openBackupImport } from './ui/backup.js';
 import { looksLikeBackup } from './share.js';
 import { setAwake } from './awake.js';
+import { applyA11y } from './a11y.js';
 import { openWelcome } from './ui/welcome.js';
 
 const root = document.getElementById('app');
@@ -50,7 +51,7 @@ async function boot() {
   const st = S.get().settings;
   setLang(st.lang); applyTheme(st.theme);
   document.title = t('appName');
-  setAwake('app', st.keepAwakeApp);
+  setAwake('app', st.keepAwakeApp); applyA11y(st);
   try { version = (await (await fetch('version.json', { cache: 'no-cache' })).json()).version; } catch { /* offline first load */ }
   await S.seedIfNeeded();
   S.syncNative();

@@ -61,6 +61,11 @@ export const STR = {
     exportFile: 'Save backup file', exportCode: 'Copy sync code', exportSend: 'Send…', importBackupBtn: 'Import backup', importBackupTitle: 'Import backup', importBackupHint: 'Paste a sync code or choose a backup file.',
     modeMerge: 'Merge (keep the newest)', modeReplace: 'Replace everything on this device', withSettings: 'Also import settings (name, voice, …)',
     importSummary: 'Added {a}, updated {u}, unchanged {s} routines · {r} new runs', replaceConfirm: 'Replace all routines and history on this device with this backup?', syncTooBig: 'Too big to send as text - save a file instead.', savedFile: 'Backup saved', saveFailed: 'Could not save the file',
+    leaveBy: 'Leave by', leaveHint: 'Optional. We show whether you will make it and warn you before.', suggestStart: 'Suggest start time', startBy: 'Start by {time}', leaveLine: 'Leave {leave} · finish ≈ {eta}', spare: '{t} to spare', lateBy: '{t} late',
+    paceMode: 'Pace', paceNormal: 'Normal', paceQuick: 'Quick (-30%)', paceCalm: 'Calm (no time pressure)', paceHint: 'Quick shortens every task; Calm hides the warnings and the red “over” state.', calmLeft: 'take your time',
+    announceTasks: 'Say the next task out loud', announceHint: 'Reads “Now: …” when each task starts (needs the Voice settings).', nowTask: 'Now: {task}',
+    a11y: 'Accessibility', fontSize: 'Text size', colorSafe: 'Color-blind friendly colors', contrastHigh: 'High contrast', srAnnounce: 'Screen-reader announcements', srHint: 'Announces the current task and time milestones (for TalkBack).',
+    addPhoto: 'Add a photo', removePhoto: 'Remove photo', photoBad: 'This photo could not be used.', stickers: 'Stickers',
     close: 'Close', loading: 'Loading…', error: 'Something went wrong', storageFail: 'Storage unavailable - changes will not be kept.',
   },
   he: {
@@ -123,6 +128,11 @@ export const STR = {
     exportFile: 'שמירת קובץ גיבוי', exportCode: 'העתקת קוד סנכרון', exportSend: 'שליחה…', importBackupBtn: 'ייבוא גיבוי', importBackupTitle: 'ייבוא גיבוי', importBackupHint: 'הדביקו קוד סנכרון או בחרו קובץ גיבוי.',
     modeMerge: 'מיזוג (שומר את החדש יותר)', modeReplace: 'החלפת הכול במכשיר זה', withSettings: 'לייבא גם הגדרות (שם, קול, …)',
     importSummary: 'נוספו {a}, עודכנו {u}, ללא שינוי {s} שגרות · {r} הרצות חדשות', replaceConfirm: 'להחליף את כל השגרות וההיסטוריה במכשיר זה בגיבוי הזה?', syncTooBig: 'גדול מדי לשליחה כטקסט - שמרו קובץ במקום.', savedFile: 'הגיבוי נשמר', saveFailed: 'לא ניתן היה לשמור את הקובץ',
+    leaveBy: 'שעת יציאה', leaveHint: 'אופציונלי. נראה אם תספיקו ונזהיר מראש.', suggestStart: 'הצע שעת התחלה', startBy: 'להתחיל עד {time}', leaveLine: 'יציאה {leave} · סיום משוער {eta}', spare: 'נשארו {t}', lateBy: 'איחור של {t}',
+    paceMode: 'קצב', paceNormal: 'רגיל', paceQuick: 'מהיר (-30%)', paceCalm: 'רגוע (בלי לחץ זמן)', paceHint: 'מהיר מקצר כל משימה; רגוע מסתיר אזהרות ואת מצב החריגה האדום.', calmLeft: 'בלי לחץ',
+    announceTasks: 'הקראת המשימה הבאה בקול', announceHint: 'אומר “עכשיו: …” בתחילת כל משימה (דורש את הגדרות הקול).', nowTask: 'עכשיו: {task}',
+    a11y: 'נגישות', fontSize: 'גודל טקסט', colorSafe: 'צבעים ידידותיים לעיוורון צבעים', contrastHigh: 'ניגודיות גבוהה', srAnnounce: 'הכרזות לקורא מסך', srHint: 'מכריז על המשימה הנוכחית ועל אבני דרך בזמן (ל-TalkBack).',
+    addPhoto: 'הוספת תמונה', removePhoto: 'הסרת תמונה', photoBad: 'לא ניתן להשתמש בתמונה הזו.', stickers: 'סטיקרים',
     close: 'סגירה', loading: 'טוען…', error: 'משהו השתבש', storageFail: 'האחסון לא זמין - שינויים לא יישמרו.',
   },
 };

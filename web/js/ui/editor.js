@@ -5,6 +5,8 @@ import { icon, iconBtn, toast } from './common.js';
 import { requestWebNotifications } from '../reminders.js';
 import { native } from '../native.js';
 import { suggestIcon, PICKER_ICONS } from '../taskIcons.js';
+import { resizeToDataUrl } from '../photo.js';
+import { suggestStart, validLeaveBy } from '../leave.js';
 import { modal } from './common.js';
 
 /** minutes + seconds inputs bound to one number of seconds. */
@@ -16,6 +18,9 @@ function durationInput(label, sec, onChange, { allowEmpty = false, ph = '' } = {
   m.addEventListener('input', fire); s.addEventListener('input', fire);
   return h('label', { class: 'dur' }, h('span', { class: 'lbl' }, label), h('span', { class: 'dur-in' }, m, h('i', {}, t('minutes')), s, h('i', {}, t('seconds'))));
 }
+
+/** Task picture if it has a photo, else its emoji. */
+export const iconNode = (task) => (task.photo ? h('img', { src: task.photo, alt: '' }) : (task.icon || suggestIcon(task.name)));
 
 export function renderEditor(root, id, nav) {
   const orig = S.getTemplate(id);
@@ -31,8 +36,8 @@ export function renderEditor(root, id, nav) {
     const row = h('li', { class: 'task', dataset: { id: task.id } },
       h('button', { class: 'handle', type: 'button', 'aria-label': t('dragHandle'), title: t('dragHandle') }, icon('drag', 20)),
       h('div', { class: 'task-body' },
-        h('div', { class: 'task-top' }, h('button', { class: 'task-icon', type: 'button', 'aria-label': `${t('taskIcon')}: ${task.icon || suggestIcon(task.name)}`, title: t('pickIcon'), onclick: (e) => pickIcon(task, e.currentTarget) }, task.icon || suggestIcon(task.name)),
-        h('input', { class: 'task-name', type: 'text', maxLength: 80, value: task.name, placeholder: t('taskName'), 'aria-label': t('taskName'), oninput: (e) => change(() => { task.name = e.target.value; if (!task.icon) row.querySelector('.task-icon').textContent = suggestIcon(task.name); }) })),
+        h('div', { class: 'task-top' }, h('button', { class: 'task-icon', type: 'button', 'aria-label': `${t('taskIcon')}: ${task.icon || suggestIcon(task.name)}`, title: t('pickIcon'), onclick: (e) => pickIcon(task, e.currentTarget) }, iconNode(task)),
+        h('input', { class: 'task-name', type: 'text', maxLength: 80, value: task.name, placeholder: t('taskName'), 'aria-label': t('taskName'), oninput: (e) => change(() => { task.name = e.target.value; if (!task.icon && !task.photo) row.querySelector('.task-icon').textContent = suggestIcon(task.name); }) })),
         h('div', { class: 'task-times' },
           durationInput(t('duration'), task.sec, (v) => change(() => { task.sec = Math.max(1, v); })),
           durationInput(t('estimate'), task.est, (v) => change(() => { task.est = v; }), { allowEmpty: true, ph: '=' }))),
@@ -47,7 +52,15 @@ export function renderEditor(root, id, nav) {
     return row;
   }
   function pickIcon(task, btn) {
-    const m = modal(t('pickIcon'), h('div', { class: 'swatches' }, PICKER_ICONS.map((ic) => h('button', { type: 'button', class: 'emoji-pick', 'aria-label': ic, onclick: () => { task.icon = ic; btn.textContent = ic; save(); m.close(); } }, ic))),
+    const refresh = () => { btn.replaceChildren(iconNode(task)); save(); m.close(); };
+    const file = h('input', { type: 'file', accept: 'image/*', hidden: true, onchange: async (e) => {
+      const f = e.target.files[0]; e.target.value = '';
+      try { task.photo = await resizeToDataUrl(f); refresh(); } catch { toast(t('photoBad')); }
+    } });
+    const m = modal(t('pickIcon'), h('div', { class: 'stack' },
+      h('div', { class: 'swatches' }, PICKER_ICONS.map((ic) => h('button', { type: 'button', class: 'emoji-pick', 'aria-label': ic, onclick: () => { task.icon = ic; task.photo = ''; refresh(); } }, ic))),
+      h('div', { class: 'toolbar wrap' }, h('button', { class: 'btn', type: 'button', onclick: () => file.click() }, '📷 ', t('addPhoto')),
+        task.photo ? h('button', { class: 'btn danger', type: 'button', onclick: () => { task.photo = ''; refresh(); } }, t('removePhoto')) : null), file),
       [{ label: t('cancel') }]);
   }
   function moveTask(from, to, refocus) {
@@ -116,6 +129,13 @@ export function renderEditor(root, id, nav) {
     h('p', { class: 'note' }, t('dragHint')), h('p', { class: 'note' }, t('estimateHint')),
     list,
     h('button', { class: 'btn add', type: 'button', onclick: () => { const nt = S.newTask(); nt.name = ''; change(() => tpl.tasks.push(nt), true); list.lastElementChild?.querySelector('.task-name')?.focus(); } }, icon('plus', 18), t('addTask')),
+    h('h2', {}, t('leaveBy')),
+    h('div', { class: 'card stack' }, h('p', { class: 'note' }, t('leaveHint')),
+      h('div', { class: 'row' }, h('input', { type: 'time', value: tpl.leaveBy || '', 'aria-label': t('leaveBy'), oninput: (e) => { tpl.leaveBy = validLeaveBy(e.target.value); save(); } }),
+        h('button', { class: 'btn', type: 'button', onclick: () => {
+          const at = suggestStart(tpl.leaveBy, S.totalSec(tpl)); if (!at) return;
+          tpl.alarm.time = at; save(); drawAlarm(); toast(t('startBy', { time: at }));
+        } }, t('suggestStart')))),
     h('h2', {}, t('alarm')), alarmBox,
     h('div', { class: 'sticky-actions' },
       h('button', { class: 'btn', type: 'button', onclick: () => { save.flush(); nav('#/'); } }, t('save')),

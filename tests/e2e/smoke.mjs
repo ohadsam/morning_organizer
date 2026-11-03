@@ -181,6 +181,33 @@ await step('manual sync: export a sync code on one "device", import (merge) on a
   assert.deepEqual(a.errors, []); assert.deepEqual(b.errors, []);
 });
 
+await step('v1.4: leave-by line, quick/calm pace, accessibility settings, task photo, announce channel', async () => {
+  const { page, errors } = await newPage({ clock: true }); await page.goto(base + '#/'); await page.waitForSelector('.routine');
+  // leave-by + suggest start in the editor
+  await page.locator('.routine-main').first().click(); await page.waitForSelector('.task');
+  await page.fill('input[type=time][aria-label="Leave by"]', '23:59'); await page.click('text=Suggest start time'); await page.waitForSelector('.toast:has-text("Start by")');
+  // photo on the first task: a real PNG goes through canvas resize
+  const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAIAAACQkWg2AAAAFklEQVR4nGO4Y2NDEmIY1TCqYfhqAABhl1QQ50OvrwAAAABJRU5ErkJggg==', 'base64');
+  await page.locator('.task-icon').first().click(); await page.setInputFiles('dialog input[type=file]', { name: 'p.png', mimeType: 'image/png', buffer: png });
+  await page.waitForSelector('.task-icon img'); await page.waitForTimeout(500);
+  await page.goto(base + '#/settings'); await page.waitForSelector('h1');
+  await page.selectOption('label.field:has-text("Text size") select', '150'); await page.waitForFunction(() => getComputedStyle(document.body).fontSize === '24px');
+  await page.locator('label.switch', { hasText: 'Color-blind' }).locator('input').check(); await page.waitForFunction(() => document.documentElement.dataset.colors === 'safe');
+  await page.locator('label.switch', { hasText: 'High contrast' }).locator('input').check(); await page.waitForFunction(() => document.documentElement.dataset.contrast === 'high');
+  await page.locator('label.switch', { hasText: 'Screen-reader' }).locator('input').check();
+  await page.selectOption('label.field:has-text("Pace") select', 'quick'); await page.waitForTimeout(200);
+  await page.goto(base + '#/'); await page.waitForSelector('.routine'); await page.locator('.routine .start').first().click(); await page.waitForSelector('.ring');
+  assert.ok(await page.locator('.ring .ti img').count(), 'photo shown in the run'); assert.match(await page.textContent('.leave-line'), /Leave 11:59/);
+  assert.match(await page.textContent('.big-time'), /1:2\d/, 'quick = 2:00 -> 1:25 (-30%, 5 s steps)'); assert.ok((await page.textContent('#sr')).length > 3, 'screen-reader live region announced something');
+  // calm mode: finish this run, switch to Calm, overrun a task - no pressure wording and no automatic tips
+  await page.click('button.danger:has-text("Finish")'); await page.click('dialog footer button >> nth=1'); await page.waitForSelector('.summary');
+  await page.goto(base + '#/settings'); await page.selectOption('label.field:has-text("Pace") select', 'calm'); await page.waitForTimeout(200);
+  await page.goto(base + '#/'); await page.waitForSelector('.routine'); await page.locator('.routine .start').first().click(); await page.waitForSelector('.ring.calm');
+  await page.clock.runFor(125_000); await page.waitForFunction(() => document.querySelector('.ring .sub')?.textContent === 'take your time');
+  assert.ok(!(await page.locator('.coach-card').count()), 'no automatic tips under calm');
+  assert.deepEqual(errors, []);
+});
+
 await step('run survives reload (crash-safe) and checklist ticking works', async () => {
   const { page } = await newPage(); await page.goto(base); await page.waitForSelector('.routine');
   await page.locator('.routine .start').first().click(); await page.waitForSelector('.ring'); await page.locator('.checklist li').nth(2).locator('.cb').click();

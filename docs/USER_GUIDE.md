@@ -29,6 +29,9 @@ Settings → About you: add your name, age and gender - messages and tips then s
 ## Moving data between the app and the website
 The website (PWA) and the Android app keep their data separately. To move routines, history and settings between them: Settings → Move data → Save backup file / Copy sync code / Send…, then on the other one → Import backup (file, or paste the code). Merge keeps the newest version of every routine and adds missing history; it never deletes. Replace makes this device an exact copy of the backup. Tick "Also import settings" to bring your name, voice and preferences too.
 
+## Leave time, pace and accessibility
+In the editor set "Leave by": the run shows whether you will make it (spare time or late) and warns 10 and 5 minutes before. "Suggest start time" sets the start alarm so you finish exactly in time. Settings → Pace: Quick shortens every task by 30%; Calm hides warnings and red "over" states so there is no time pressure. "Say the next task out loud" reads "Now: …" at each task. Settings → Accessibility: text size, color-blind friendly colors, high contrast and screen-reader announcements (TalkBack). Tasks can have a sticker or your own photo (tap the task icon).
+
 ## Android app and widget
 Settings → Download Android app always gives the latest APK. Allow “install unknown apps” for your browser once. Long-press the home screen → Widgets → Morning Organizer to start a favourite routine in one tap.
 

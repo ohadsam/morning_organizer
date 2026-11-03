@@ -11,10 +11,14 @@ import { icon, confirmBox } from './common.js';
 import { progressWidget } from './progress.js';
 import { confetti } from './fx.js';
 import { createCoach, speakWithSettings } from './coach.js';
+import { iconNode } from './editor.js';
+import { announce } from '../a11y.js';
+import { leaveStatus, leaveEvent, newLeaveMemo } from '../leave.js';
 import { coachTrigger, newMemo } from '../coach.js';
 
 const clock = (ms) => new Date(ms).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-const taskIcon = (tk) => tk.icon || suggestIcon(tk.name);
+const taskIcon = (tk) => iconNode(tk);
+const calm = (r) => r.mode === 'calm';
 
 export async function renderRunner(root, id, nav) {
   let run = await S.loadActive();
@@ -22,7 +26,8 @@ export async function renderRunner(root, id, nav) {
   if (!run || run.templateId !== id || !E.isActive(run)) {
     const tpl = S.getTemplate(id);
     if (!tpl || !tpl.tasks.length) { nav('#/'); return () => {}; }
-    run = E.createRun(tpl, Date.now()); fresh = true;
+    const pm = S.get().settings.paceMode;
+    run = E.createRun(tpl, Date.now(), { scale: pm === 'quick' ? 0.7 : 1, mode: pm }); fresh = true;
   }
   const st = () => S.get().settings;
   unlockAudio();
@@ -38,10 +43,11 @@ export async function renderRunner(root, id, nav) {
   let bubbleTimer;
   // Text and voice are independent settings: bubble shown if `feedback`, spoken (same personalised text, same voice/style) if `speak`.
   function say(event) {
-    const { feedback, speak } = st();
-    if (!feedback && !speak) return;
+    const { feedback, speak, srAnnounce } = st();
+    if (!feedback && !speak && !srAnnounce) return;
     const c = choose(event, { name: st().personName, lang: getLang(), gender: st().gender, age: st().age, last: lastPick[event] ?? -1 });
     if (!c) return; lastPick[event] = c.index;
+    if (st().srAnnounce) announce(c.text);
     if (feedback) {
       bubble.replaceChildren(h('span', { class: 'bm' }, st().mascot), h('span', { class: 'bt' }, `${c.text} ${c.emoji}`));
       bubble.hidden = false; bubble.classList.remove('pop'); void bubble.offsetWidth; bubble.classList.add('pop');
@@ -62,6 +68,13 @@ export async function renderRunner(root, id, nav) {
   const list = h('ul', { class: 'checklist' }), controls = h('div', { class: 'run-controls' }), pace = h('p', { class: 'pace' });
   ring.append(ti, time, sub);
 
+  let lastCur = -1; const srMarks = new Set(), leaveMemo = newLeaveMemo();
+  const leaveEl = h('p', { class: 'leave-line', hidden: true });
+  function announceTask(cur) {
+    const msg = t('nowTask', { task: cur.name || '' });
+    if (st().announceTasks) setTimeout(() => speakWithSettings(msg), fresh ? 1800 : 300); // after the "start" encouragement
+    if (st().srAnnounce) announce(`${msg}, ${fmtHuman(cur.plannedSec + cur.extraSec, units())}`);
+  }
   const act = (fn) => { run = fn(run, Date.now()); afterChange(); };
   const doComplete = () => {
     const cur = run.tasks[run.current], now = Date.now();
@@ -78,7 +91,9 @@ export async function renderRunner(root, id, nav) {
 
   function paintStatic() {
     const cur = run.tasks[run.current], paused = run.status === 'paused';
-    taskName.textContent = cur?.name || ''; ti.textContent = cur ? taskIcon(cur) : '';
+    taskName.textContent = cur?.name || ''; ti.replaceChildren(cur ? taskIcon(cur) : '');
+    if (cur && run.current !== lastCur) { lastCur = run.current; announceTask(cur); }
+    ring.classList.toggle('calm', calm(run));
     ring.classList.toggle('paused', paused); pausedBadge.hidden = !paused;
     list.replaceChildren(...run.tasks.map((tk, i) => h('li', { class: `${i === run.current && E.isActive(run) ? 'cur' : ''} ${tk.done ? 'done' : ''} ${tk.skipped ? 'skip' : ''}` },
       h('label', {}, h('input', { type: 'checkbox', checked: tk.done, onchange: () => { if (i === run.current) doComplete(); else { run = E.toggleTask(run, i, Date.now()); afterChange(); } } }),
@@ -100,27 +115,39 @@ export async function renderRunner(root, id, nav) {
     if (!E.isActive(run)) return;
     const now = Date.now(), cur = run.tasks[run.current], left = E.remainingSec(run, now), total = cur.plannedSec + cur.extraSec, over = left < 0;
     time.textContent = fmtDur(Math.ceil(over ? -left : left));
-    sub.textContent = run.status === 'paused' ? t('paused') : over ? t('over') : t('left');
+    sub.textContent = run.status === 'paused' ? t('paused') : over ? (calm(run) ? t('calmLeft') : t('over')) : t('left');
     ring.style.setProperty('--p', String(clamp(1 - left / total, 0, 1)));
     const w = st().warnSec;
     ring.classList.toggle('over', over); ring.classList.toggle('warn', !over && w > 0 && left <= w && run.status === 'running');
     const diff = E.paceDiffSec(run, now);
     pace.textContent = Math.abs(diff) < 10 ? t('onPlan') : `${fmtHuman(Math.abs(diff), units())} ${diff > 0 ? t('behind') : t('ahead')}`;
     const planned = run.tasks.reduce((s, x) => s + x.plannedSec + x.extraSec, 0);
+    const ls = leaveStatus(run.leaveBy, run.startedAt, E.etaMs(run, now));
+    leaveEl.hidden = !ls;
+    if (ls) {
+      const late = ls.marginSec < 0, tm = (sec) => fmtHuman(Math.abs(sec), units());
+      leaveEl.className = `leave-line ${late ? 'late' : 'ok'}`;
+      leaveEl.textContent = `${t('leaveLine', { leave: clock(ls.leaveAt), eta: clock(E.etaMs(run, now)) })} · ${late ? t('lateBy', { t: tm(ls.marginSec) }) : t('spare', { t: tm(ls.marginSec) })}`;
+    }
     head.replaceChildren(h('span', {}, `${t('startedAt')} ${clock(run.startedAt)}`), h('span', {}, `${t('plannedEnd')} ${clock(run.startedAt + planned * 1000)}`), h('span', {}, `${t('elapsed')} ${fmtDur((now - run.startedAt) / 1000)}`));
     pw.update(run, now);
   }
 
+  const leaveAtOf = () => (run.leaveBy ? leaveStatus(run.leaveBy, run.startedAt, 0)?.leaveAt ?? null : null);
   let timer = null;
   function loop() {
     if (!E.isActive(run)) return;
     const s = st();
-    for (const ev of E.tick(run, Date.now(), s.warnSec)) {
+    for (const ev of E.tick(run, Date.now(), calm(run) ? 0 : s.warnSec)) {
+      if (s.srAnnounce && ev === 'end') announce(t('over'));
+      if (calm(run)) { if (ev === 'end') signal('warn', s.mode, s.volume); persist(); continue; } // calm: one soft beep, no pressure messages
       signal(ev, s.mode, s.volume); say(ev === 'warn' ? 'warn' : 'over');
       if (ev === 'end' && s.autoAdvance) { doComplete(); return; }
       persist();
     }
-    if (s.coachAuto) { const sit = coachTrigger(run, Date.now(), memo); if (sit) coach.show(sit, run.tasks[run.current]?.name); }
+    const le = leaveEvent(leaveAtOf(), Date.now(), leaveMemo); if (le && !calm(run)) say(le);
+    if (s.srAnnounce) { const cur = run.tasks[run.current], left = E.remainingSec(run, Date.now()); if (left <= 60 && left > 0 && !srMarks.has(cur.id)) { srMarks.add(cur.id); announce(`${cur.name}: ${fmtHuman(Math.ceil(left), units())} ${t('left')}`); } }
+    if (s.coachAuto && !calm(run)) { const sit = coachTrigger(run, Date.now(), memo); if (sit) coach.show(sit, run.tasks[run.current]?.name); }
     paintLive();
   }
 
@@ -156,7 +183,7 @@ export async function renderRunner(root, id, nav) {
 
   root.replaceChildren(h('div', { class: 'run' },
     h('div', { class: 'run-top', style: { '--accent': run.color || '#6c5ce7' } }, h('span', { class: 'emoji' }, run.icon), h('strong', {}, run.templateName)),
-    bubble, coachHost, pw.el, head, h('div', { class: 'ring-wrap' }, ring, pausedBadge), taskName, pace, controls, list));
+    bubble, coachHost, pw.el, head, leaveEl, h('div', { class: 'ring-wrap' }, ring, pausedBadge), taskName, pace, controls, list));
   paintStatic(); paintLive();
   if (fresh) say('start');
   timer = setInterval(loop, 250);

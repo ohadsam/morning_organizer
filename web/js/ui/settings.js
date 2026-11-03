@@ -6,6 +6,7 @@ import { native } from '../native.js';
 import { setAwake } from '../awake.js';
 import { PRESETS, voicesFor, ttsSupported } from '../speech.js';
 import { speakWithSettings } from './coach.js';
+import { applyA11y, FONT_SCALES } from '../a11y.js';
 import { saveBackupFile, copySyncCode, sendSyncCode, openBackupImport } from './backup.js';
 import { getLang } from '../i18n.js';
 import { APK_URL } from '../config.js';
@@ -64,6 +65,14 @@ export function renderSettings(root, version) {
       h('section', { class: 'card stack' },
         h('div', { class: 'field' }, h('span', { class: 'lbl' }, t('mascot')), h('div', { class: 'swatches', role: 'radiogroup', 'aria-label': t('mascot') }, S.MASCOTS.map((m) => h('button', { type: 'button', class: `emoji-pick ${st.mascot === m ? 'on' : ''}`, role: 'radio', 'aria-checked': String(st.mascot === m), 'aria-label': m, onclick: () => set({ mascot: m }, true) }, m)))),
         toggle(t('feedbackOn'), t('feedbackOnHint'), st.feedback, (v) => set({ feedback: v }))),
+      h('section', { class: 'card stack' }, h('h2', {}, t('paceMode')),
+        select(t('paceMode'), st.paceMode, [['normal', t('paceNormal')], ['quick', t('paceQuick')], ['calm', t('paceCalm')]], (v) => set({ paceMode: v })), h('small', { class: 'hint' }, t('paceHint')),
+        toggle(t('announceTasks'), t('announceHint'), st.announceTasks, (v) => set({ announceTasks: v }))),
+      h('section', { class: 'card stack' }, h('h2', {}, `♿ ${t('a11y')}`),
+        select(t('fontSize'), st.fontScale, FONT_SCALES.map((n) => [n, `${n}%`]), async (v) => { await set({ fontScale: +v }); applyA11y(S.get().settings); }),
+        toggle(t('colorSafe'), '', st.colorSafe, async (v) => { await set({ colorSafe: v }); applyA11y(S.get().settings); }),
+        toggle(t('contrastHigh'), '', st.contrast === 'high', async (v) => { await set({ contrast: v ? 'high' : 'normal' }); applyA11y(S.get().settings); }),
+        toggle(t('srAnnounce'), t('srHint'), st.srAnnounce, (v) => set({ srAnnounce: v }))),
       h('section', { class: 'card stack' }, h('h2', {}, `🧘 ${t('coach')}`),
         toggle(t('coachButton'), '', st.coachButton, (v) => set({ coachButton: v })),
         toggle(t('coachAuto'), t('coachAutoHint'), st.coachAuto, (v) => set({ coachAuto: v })),

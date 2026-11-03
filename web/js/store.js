@@ -7,10 +7,13 @@ import { native } from './native.js';
 import { t } from './i18n.js';
 import { suggestIcon } from './taskIcons.js';
 import { PRESETS } from './speech.js';
+import { validLeaveBy } from './leave.js';
+import { isSafePhoto } from './photo.js';
 
 export const DEFAULT_SETTINGS = Object.freeze({
   lang: 'he', theme: 'auto', mode: 'both', volume: 80, warnSec: 10, defTaskSec: 300, defEstSec: 0,
   autoAdvance: false, keepAwake: true, keepAwakeApp: false, personName: '', mascot: '🦊', feedback: true, speak: false, age: null, gender: 'other', profileDone: false,
+  paceMode: 'normal', announceTasks: false, fontScale: 100, colorSafe: false, contrast: 'normal', srAnnounce: false,
   coachButton: true, coachAuto: false, coachSpeak: false, voiceURI: '', voicePreset: 'natural', seeded: false,
 });
 export const COLORS = ['#6c5ce7', '#0984e3', '#00b894', '#e17055', '#e84393', '#fdcb6e', '#2d3436'];
@@ -25,12 +28,12 @@ export const get = () => state;
 export const getTemplate = (id) => state.templates.find((x) => x.id === id);
 
 export function newTask(settings = state.settings, name = '') {
-  return { id: uid(), name, icon: '', sec: settings.defTaskSec, est: settings.defEstSec || 0 };
+  return { id: uid(), name, icon: '', photo: '', sec: settings.defTaskSec, est: settings.defEstSec || 0 };
 }
 export function newTemplate(name = '') {
   const now = Date.now();
   return { id: uid(), name, icon: ICONS[0], color: COLORS[0], favorite: false, builtin: false,
-    tasks: [newTask()], alarm: defaultAlarm(), createdAt: now, updatedAt: now };
+    leaveBy: '', tasks: [newTask()], alarm: defaultAlarm(), createdAt: now, updatedAt: now };
 }
 export const totalSec = (tpl) => tpl.tasks.reduce((s, x) => s + x.sec, 0);
 
@@ -43,9 +46,9 @@ export function normalizeTemplate(tpl) {
     id: typeof tpl.id === 'string' && tpl.id ? tpl.id.slice(0, 64) : uid(),
     name: cleanText(tpl.name, LIMITS.maxName), icon: cleanText(tpl.icon, 8) || '⏰',
     color: /^#[0-9a-fA-F]{6}$/.test(tpl.color) ? tpl.color : COLORS[0], favorite: !!tpl.favorite, builtin: !!tpl.builtin,
-    createdAt: num(tpl.createdAt, Date.now()), updatedAt: num(tpl.updatedAt, Date.now()),
+    createdAt: num(tpl.createdAt, Date.now()), updatedAt: num(tpl.updatedAt, Date.now()), leaveBy: validLeaveBy(tpl.leaveBy),
     tasks: (Array.isArray(tpl.tasks) ? tpl.tasks : []).slice(0, LIMITS.maxTasks).map((x) => ({
-      id: typeof x?.id === 'string' && x.id ? x.id.slice(0, 64) : uid(), name: cleanText(x?.name, LIMITS.maxName), icon: cleanText(x?.icon, 8),
+      id: typeof x?.id === 'string' && x.id ? x.id.slice(0, 64) : uid(), name: cleanText(x?.name, LIMITS.maxName), icon: cleanText(x?.icon, 8), photo: isSafePhoto(x?.photo) ? x.photo : '',
       sec: clamp(Math.round(Number(x?.sec)) || 1, 1, LIMITS.maxTaskSec), est: clamp(Math.round(Number(x?.est)) || 0, 0, LIMITS.maxTaskSec) })),
     alarm: { enabled: !!a.enabled, time: /^\d{2}:\d{2}$/.test(a.time) ? a.time : '07:00',
       days: (Array.isArray(a.days) ? a.days : []).filter((d) => Number.isInteger(d) && d >= 0 && d <= 6),
@@ -117,6 +120,9 @@ export async function updateSettings(patch) {
   if ('personName' in patch) patch = { ...patch, personName: cleanText(patch.personName, 30) };
   if ('mascot' in patch && !MASCOTS.includes(patch.mascot)) delete patch.mascot;
   if ('age' in patch) { const n = Math.round(Number(patch.age)); patch = { ...patch, age: Number.isFinite(n) && n >= 3 && n <= 120 ? n : null }; }
+  if ('fontScale' in patch && ![100, 115, 130, 150].includes(patch.fontScale)) delete patch.fontScale;
+  if ('paceMode' in patch && !['normal', 'quick', 'calm'].includes(patch.paceMode)) delete patch.paceMode;
+  if ('contrast' in patch && !['normal', 'high'].includes(patch.contrast)) delete patch.contrast;
   if ('gender' in patch && !['female', 'male', 'other'].includes(patch.gender)) delete patch.gender;
   if ('voicePreset' in patch && !(patch.voicePreset in PRESETS)) delete patch.voicePreset;
   if ('voiceURI' in patch) patch = { ...patch, voiceURI: String(patch.voiceURI || '').slice(0, 200) };
@@ -127,6 +133,7 @@ export async function updateSettings(patch) {
 
 export async function saveRun(run) {
   const copy = structuredClone(run);
+  copy.tasks.forEach((x) => { delete x.photo; }); // history stays small
   state.runs.push(copy);
   if (state.runs.length > LIMITS.maxRuns) { // drop the oldest so storage stays bounded
     state.runs.sort((a, b) => a.startedAt - b.startedAt);
@@ -153,7 +160,7 @@ export function exportAll() {
 export function sanitizeSettings(raw) {
   const out = {};
   if (!raw || typeof raw !== 'object') return out;
-  const ENUM = { lang: ['auto', 'he', 'en'], theme: ['auto', 'light', 'dark'], mode: ['both', 'beep', 'vibrate', 'silent'] };
+  const ENUM = { lang: ['auto', 'he', 'en'], theme: ['auto', 'light', 'dark'], mode: ['both', 'beep', 'vibrate', 'silent'], paceMode: ['normal', 'quick', 'calm'], contrast: ['normal', 'high'], fontScale: [100, 115, 130, 150] };
   for (const [k, def] of Object.entries(DEFAULT_SETTINGS)) {
     if (k === 'seeded' || !(k in raw)) continue;
     const v = raw[k];

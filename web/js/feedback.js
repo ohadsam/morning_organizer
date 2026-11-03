@@ -13,6 +13,8 @@ export const POOLS = {
     paused: ['Take a breath, {name}. We’ll wait.', 'Paused - continue when you’re ready.', 'No rush at all, {name}.'],
     resumed: ['Welcome back, {name}!', 'Back to it - you’ve got this!', 'Here we go again!'],
     runDone: ['Amazing, {name} - everything is done!', 'Champion! The whole routine is complete!', 'What a morning, {name}!', 'Super job, {name}!'],
+    leaveSoon: ['Almost time to leave, {name}!', 'Keep an eye on the clock - departure is coming up.', 'Shoes and bag soon, {name}!'],
+    leaveNow: ['Time to head out, {name}!', 'It’s leaving time - you’ve got this!', 'Out the door we go, {name}!'],
     runStopped: ['That’s okay, {name}. Tomorrow is a new chance!', 'Good try, {name} - every start counts!', 'Well, you started - that’s what matters!'],
   },
   // Hebrew is gendered: {male|female} tokens are resolved by personalize() from the profile.
@@ -26,6 +28,8 @@ export const POOLS = {
     paused: ['נשימה עמוקה, {name}. אנחנו מחכים.', 'מושהה - ממשיכים כשמוכנים.', 'בלי לחץ, {name}.'],
     resumed: ['{ברוך|ברוכה} שובך, {name}!', 'חוזרים לעניינים - אפשר!', 'יאללה, ממשיכים!'],
     runDone: ['מדהים, {name} - הכול הושלם!', '{אלוף|אלופה}! כל השגרה הושלמה!', 'איזה בוקר, {name}!', 'עבודה מעולה, {name}!'],
+    leaveSoon: ['כמעט הזמן לצאת, {name}!', 'שימו עין על השעון - היציאה מתקרבת.', 'עוד מעט נעליים ותיק, {name}!'],
+    leaveNow: ['הגיע הזמן לצאת, {name}!', 'זמן יציאה - אפשר!', 'יוצאים לדרך, {name}!'],
     runStopped: ['זה בסדר, {name}. מחר יום חדש!', 'ניסיון יפה, {name} - כל התחלה נחשבת!', 'התחלת - וזה מה שחשוב!'],
   },
 };
@@ -36,7 +40,7 @@ export const KID_EXTRA = {
 };
 export const EMOJI = {
   start: ['🚀', '🌞', '💪'], warn: ['⏳', '🔥', '👀'], over: ['🌬️', '💫', '🤗'], taskEarly: ['⚡', '🌟', '🏅'], taskDone: ['✅', '👏', '🎯'],
-  taskLate: ['🌈', '🤝', '🍀'], paused: ['🧘', '☁️', '🫶'], resumed: ['🔄', '💪', '🌤️'], runDone: ['🎉', '🏆', '🥳'], runStopped: ['🌈', '🌱', '🫶'],
+  taskLate: ['🌈', '🤝', '🍀'], paused: ['🧘', '☁️', '🫶'], resumed: ['🔄', '💪', '🌤️'], runDone: ['🎉', '🏆', '🥳'], leaveSoon: ['⏰', '🚪', '👟'], leaveNow: ['🚪', '🚀', '👋'], runStopped: ['🌈', '🌱', '🫶'],
 };
 
 /** Resolve {male|female} / {male|female|neutral} tokens. Unspecified gender -> "male/female" so nobody is mis-addressed. */

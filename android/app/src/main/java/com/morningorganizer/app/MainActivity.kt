@@ -40,12 +40,16 @@ class MainActivity : ComponentActivity() {
     private val lock = Any()
     private var pending: JSONObject? = null
     private var jsReady = false
+    val nfcReader by lazy { NfcReaderLink(this) { deliver(it) } }
     val bt by lazy { BtLink(applicationContext) { deliver(it) } }
     private var pendingSave: String? = null
     private var fileCallback: ValueCallback<Array<Uri>>? = null
 
     // Backup export: the system "save as" picker. No storage permission needed.
-    private val createDoc = registerForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri ->
+    private var saveMime = "application/json"
+    private val createDoc = registerForActivityResult(object : ActivityResultContracts.CreateDocument("application/json") {
+        override fun createIntent(context: Context, input: String): Intent = super.createIntent(context, input).setType(saveMime)
+    }) { uri ->
         val text = pendingSave; pendingSave = null
         val ok = uri != null && text != null && runCatching {
             contentResolver.openOutputStream(uri, "wt")?.use { it.write(text.toByteArray(Charsets.UTF_8)) } ?: error("no stream")
@@ -112,7 +116,7 @@ class MainActivity : ComponentActivity() {
         adapter.enableForegroundDispatch(this, pi, arrayOf(mime, IntentFilter(NfcAdapter.ACTION_TAG_DISCOVERED)), null)
     }
 
-    override fun onPause() { nfc?.disableForegroundDispatch(this); web.onPause(); super.onPause() }
+    override fun onPause() { nfcReader.stop(); NfcOffer.clear(); nfc?.disableForegroundDispatch(this); web.onPause(); super.onPause() }
 
     override fun onDestroy() { bt.close(); web.destroy(); super.onDestroy() }
 
@@ -122,7 +126,7 @@ class MainActivity : ComponentActivity() {
 
     fun armNfcWrite(text: String?) { nfcWriteText = text }
 
-    fun saveTextFile(name: String, text: String) { pendingSave = text; runOnUiThread { createDoc.launch(name) } }
+    fun saveTextFile(name: String, text: String) { pendingSave = text; saveMime = if (name.endsWith(".csv", ignoreCase = true)) "text/csv" else "application/json"; runOnUiThread { createDoc.launch(name) } }
 
     fun takePending(): String = synchronized(lock) {
         jsReady = true

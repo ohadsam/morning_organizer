@@ -45,9 +45,9 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
         with: { gradle-version: '8.7' }
 
-      # Release signing is optional. Without the four secrets the APK is signed with a throw-away debug key:
-      # it installs, but a later build cannot update it. See docs/RELEASING.md for the one-time setup.
-      - name: Prepare signing (if secrets exist)
+      # Default signing = the committed shared key (stable in-place updates). Optional override with the four KEYSTORE_*
+      # secrets (a private key you control). See docs/RELEASING.md.
+      - name: Use private signing key (only if secrets exist)
         env:
           KS_B64: ${{ secrets.KEYSTORE_BASE64 }}
           KS_PASS: ${{ secrets.KEYSTORE_PASSWORD }}
@@ -64,7 +64,7 @@ jobs:
             } >> "$GITHUB_ENV"
             echo "signing=release" >> "$GITHUB_STEP_SUMMARY"
           else
-            echo "::warning::No signing secrets - APK is signed with the debug key and cannot update a differently-signed install."
+            echo "Using the committed shared signing key." >> "$GITHUB_STEP_SUMMARY"
           fi
 
       - name: Unit tests

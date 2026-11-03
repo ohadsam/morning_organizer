@@ -8,6 +8,7 @@
     <string name="widget_run_desc">Live progress of the routine in progress</string>
     <string name="run_idle">No routine running</string>
     <string name="run_idle_hint">Tap to open the app</string>
+    <string name="nfc_service_description">Hands an invitation or message to a phone held against this one</string>
     <string name="alarm_channel">Routine start alarms</string>
     <string name="alarm_title">Time to start: %1$s</string>
     <string name="alarm_text">Tap to start the routine</string>

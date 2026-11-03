@@ -85,6 +85,11 @@ export const STR = {
     cheers: 'Cheers', tabFamily: 'Family',
     appearance: 'Appearance', buddySection: 'Buddy & messages', alertsSection: 'Alerts & sounds', defaultsSection: 'Defaults', accent: 'Accent color', simpleMode: 'Simple mode for kids', simpleHint: 'Shows only the routines with big Start buttons and locks everything else behind a quick grown-up question.',
     gateTitle: 'Grown-ups only', gateQ: 'What is {a} × {b}?', gateWrong: 'Not quite - try again.', goalChip: '{emoji} {have}/{target}',
+    sample3: 'Bedtime', sample4: 'Homework time', sample5: 'After school', s_tidy: 'Tidy up toys', s_pajamas: 'Pajamas', s_teeth: 'Brush teeth', s_story: 'Story time', s_lights: 'Lights out', s_hands: 'Wash hands', s_snack: 'Snack',
+    s_homework: 'Homework', s_read: 'Reading', s_bagprep: 'Pack bag for tomorrow', s_unpack: 'Unpack the bag', s_lunch: 'Lunch', s_play: 'Free play', moreSamples: 'Add more example routines',
+    weekTitle: 'This week', weekRuns: '{n} routines', weekStarsN: '{n} stars', weekOnTime: '{n} on time', weekDays: '{n}/7 active days', weekFaster: '{t} faster per routine than last week', weekSlower: '{t} slower per routine than last week', weekShare: 'Share summary',
+    weekShareText: '{app} - my week: {runs} routines, {stars} stars, {onTime} on time, {days}/7 days{streak}', heatTitle: 'Last 5 weeks', heatCell: '{date}: {n}', exportCsv: 'Export history (CSV)', csvSaved: 'History exported', deletedUndo: 'Deleted “{name}”',
+    tapOffer: 'Tap phones together (NFC)', tapReceive: 'Receive by NFC tap', tapHold: 'Hold the phones back to back…', tapTimeout: 'No phone found - try again.', tapUnavailable: 'NFC is off or not available on this phone.', tapNoHce: 'This phone cannot hand things over by NFC tap.',
     close: 'Close', loading: 'Loading…', error: 'Something went wrong', storageFail: 'Storage unavailable - changes will not be kept.',
   },
   he: {
@@ -171,6 +176,11 @@ export const STR = {
     cheers: 'עידודים', tabFamily: 'משפחה',
     appearance: 'מראה', buddySection: 'חבר והודעות', alertsSection: 'התראות וצלילים', defaultsSection: 'ברירות מחדל', accent: 'צבע מבטא', simpleMode: 'מצב פשוט לילדים', simpleHint: 'מציג רק את השגרות עם כפתורי התחלה גדולים ונועל את כל השאר מאחורי שאלה קצרה למבוגרים.',
     gateTitle: 'למבוגרים בלבד', gateQ: 'כמה זה {a} × {b}?', gateWrong: 'לא בדיוק - נסו שוב.', goalChip: '{emoji} {have}/{target}',
+    sample3: 'שגרת שינה', sample4: 'זמן שיעורי בית', sample5: 'אחרי בית הספר', s_tidy: 'מסדרים צעצועים', s_pajamas: 'פיג׳מה', s_teeth: 'מצחצחים שיניים', s_story: 'זמן סיפור', s_lights: 'מכבים אור', s_hands: 'שוטפים ידיים', s_snack: 'חטיף',
+    s_homework: 'שיעורי בית', s_read: 'קריאה', s_bagprep: 'מסדרים תיק למחר', s_unpack: 'מפרקים את התיק', s_lunch: 'ארוחת צהריים', s_play: 'משחק חופשי', moreSamples: 'הוספת עוד שגרות לדוגמה',
+    weekTitle: 'השבוע', weekRuns: '{n} שגרות', weekStarsN: '{n} כוכבים', weekOnTime: '{n} בזמן', weekDays: '{n}/7 ימים פעילים', weekFaster: 'מהר יותר ב-{t} בכל שגרה לעומת שבוע שעבר', weekSlower: 'איטי יותר ב-{t} בכל שגרה לעומת שבוע שעבר', weekShare: 'שיתוף סיכום',
+    weekShareText: '{app} - השבוע שלי: {runs} שגרות, {stars} כוכבים, {onTime} בזמן, {days}/7 ימים{streak}', heatTitle: '5 השבועות האחרונים', heatCell: '{date}: {n}', exportCsv: 'ייצוא היסטוריה (CSV)', csvSaved: 'ההיסטוריה יוצאה', deletedUndo: 'נמחקה “{name}”',
+    tapOffer: 'הצמדת טלפונים (NFC)', tapReceive: 'קבלה בהצמדת NFC', tapHold: 'הצמידו את הטלפונים גב אל גב…', tapTimeout: 'לא נמצא טלפון - נסו שוב.', tapUnavailable: 'NFC כבוי או לא זמין בטלפון הזה.', tapNoHce: 'הטלפון הזה לא יכול להעביר בהצמדת NFC.',
     close: 'סגירה', loading: 'טוען…', error: 'משהו השתבש', storageFail: 'האחסון לא זמין - שינויים לא יישמרו.',
   },
 };

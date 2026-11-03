@@ -11,12 +11,7 @@ The PWA's *Download Android app* button points at `releases/latest/download/morn
 
 ## One-time setup (repository owner)
 1. **Pages**: Settings → Pages → Source: *GitHub Actions*.
-2. **Stable APK signature (recommended)** - without it every build is signed with a throw-away debug key and phones must uninstall before updating:
-   ```bash
-   keytool -genkeypair -v -keystore release.jks -alias morning -keyalg RSA -keysize 4096 -validity 36500
-   base64 -w0 release.jks   # paste into the secret below
-   ```
-   Add repository secrets `KEYSTORE_BASE64`, `KEYSTORE_PASSWORD`, `KEY_ALIAS` (and optionally `KEY_PASSWORD`). **Never commit the keystore** (`*.keystore`/`*.jks` are git-ignored). Back it up: losing it means users must reinstall.
+2. **APK signature - already handled.** `android/app/morning-organizer.keystore` is committed on purpose, so all builds share one signature and phones update in place (no uninstall). Trade-off: anyone can sign an APK with this key - acceptable for a side-loaded personal app, **not** for the Play Store. To use a private key instead, add repository secrets `KEYSTORE_BASE64` (`base64 -w0 your.jks`), `KEYSTORE_PASSWORD`, `KEY_ALIAS`, `KEY_PASSWORD`; CI then uses it (switching keys once forces a reinstall). **One-time:** the first APK signed with this key replaces earlier ones that used a throw-away debug key, so phones must uninstall once before installing it.
 3. Workflow permissions: Settings → Actions → General → *Read and write permissions* (needed by the release job).
 
 ## Shipping a change

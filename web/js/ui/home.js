@@ -22,7 +22,7 @@ function card(tpl, nav) {
       iconBtn('star', tpl.favorite ? t('unfavorite') : t('favorite'), () => S.toggleFavorite(tpl.id), tpl.favorite ? 'fav on' : 'fav'),
       simple ? null : iconBtn('share', t('share'), () => openShare(tpl)),
       simple ? null : iconBtn('copy', t('duplicate'), async () => { try { await S.duplicateTemplate(tpl.id); toast(t('saved')); } catch { toast(t('error')); } }),
-      simple ? null : iconBtn('trash', t('delete'), async () => { if (await confirmBox(t('confirmDelete', { name: tpl.name }), t('delete'), true)) { await S.deleteTemplate(tpl.id); toast(t('deleted')); } }),
+      simple ? null : iconBtn('trash', t('delete'), async () => { if (await confirmBox(t('confirmDelete', { name: tpl.name }), t('delete'), true)) { const undo = await S.deleteWithUndo(tpl.id); toast(t('deletedUndo', { name: tpl.name }), { label: t('undo'), fn: undo }); } }),
       h('button', { class: 'btn primary start', type: 'button', disabled: !tpl.tasks.length, onclick: () => nav(`#/run/${tpl.id}`) }, icon('play', 18), t('start'))));
 }
 

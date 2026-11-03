@@ -188,3 +188,9 @@ dialog header { display: flex; align-items: center; justify-content: space-betwe
 @media (min-width: 900px) { main { max-width: 980px; } #app .stack:has(> .routine) { grid-template-columns: 1fr 1fr; } }
 /* status chips: tinted background + normal text colour stay readable with ANY routine/accent colour (white-on-colour failed contrast) */
 .chip.solid { background: color-mix(in srgb, var(--accent) 20%, var(--surface)); color: var(--text); border: 1px solid var(--accent); font-weight: 700; }
+
+/* ── v1.7: weekly overview + heat-map ── */
+.week { display: grid; gap: 8px; margin-block-end: 14px; } .week h2 { margin: 0; }
+.heat-days, .heat { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; } .heat-days span { text-align: center; font-size: .75rem; color: var(--muted); }
+.heat i { aspect-ratio: 1; border-radius: 6px; background: var(--surface-2); border: 1px solid var(--line); } .heat i.l1 { background: color-mix(in srgb, var(--brand) 35%, var(--surface-2)); } .heat i.l2 { background: color-mix(in srgb, var(--brand) 65%, var(--surface-2)); } .heat i.l3 { background: var(--brand); }
+.heat i.future { opacity: .35; border-style: dashed; }

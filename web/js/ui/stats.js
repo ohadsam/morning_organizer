@@ -3,6 +3,8 @@ import { t, units, getLang } from '../i18n.js';
 import * as S from '../store.js';
 import * as ST from '../stats.js';
 import { iconBtn, confirmBox, toast } from './common.js';
+import { weeklyReport, heatmap, toCsv } from '../weekly.js';
+import { native } from '../native.js';
 
 const NS = 'http://www.w3.org/2000/svg';
 const svg = (tag, attrs = {}, ...kids) => { const e = document.createElementNS(NS, tag); for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v); e.append(...kids); return e; };
@@ -47,8 +49,9 @@ export function renderStats(root, templateId, nav) {
     const { templates, runs } = S.get();
     if (!templateId) {
       const items = templates.map((x) => ({ x, n: ST.finished(runs, x.id).length }));
-      root.replaceChildren(h('h1', {}, t('statsTitle')),
-        items.some((i) => i.n) ? h('div', { class: 'stack' }, items.filter((i) => i.n).map(({ x, n }) =>
+      const hasRuns = items.some((i) => i.n);
+      root.replaceChildren(h('h1', {}, t('statsTitle')), hasRuns ? overview(runs) : null,
+        hasRuns ? h('div', { class: 'stack' }, items.filter((i) => i.n).map(({ x, n }) =>
           h('a', { class: 'card link-card', href: `#/stats/${x.id}`, style: { '--accent': x.color } }, h('span', { class: 'emoji' }, x.icon), h('span', { class: 'routine-text' }, h('strong', {}, x.name), h('small', {}, t('runsCount', { n })))))) : h('p', { class: 'empty' }, t('noStats')));
       return;
     }
@@ -82,5 +85,28 @@ export function renderStats(root, templateId, nav) {
   };
   draw();
   return S.subscribe(draw);
+}
+/** This week + 5-week heat-map + CSV export. */
+function overview(runs) {
+  const now = Date.now(), w = weeklyReport(runs, now), u = units(), cells = heatmap(runs, now, 5), st = S.get().settings;
+  const dayName = new Intl.DateTimeFormat(getLang(), { weekday: 'narrow' });
+  const trend = w.deltaAvgSec === null || Math.abs(w.deltaAvgSec) < 15 ? null : (w.deltaAvgSec < 0 ? t('weekFaster', { t: fmtHuman(-w.deltaAvgSec, u) }) : t('weekSlower', { t: fmtHuman(w.deltaAvgSec, u) }));
+  const shareText = () => t('weekShareText', { app: t('appName'), runs: w.runs, stars: w.stars, onTime: w.onTime, days: w.activeDays, streak: '' }) + (st.personName ? ` (${st.personName})` : '');
+  const level = (c) => (c.future ? 'future' : c.count === 0 ? 'l0' : c.count === 1 ? 'l1' : c.count === 2 ? 'l2' : 'l3');
+  const dateFmt = new Intl.DateTimeFormat(getLang(), { day: 'numeric', month: 'short' });
+  return h('section', { class: 'card week' },
+    h('h2', {}, t('weekTitle')),
+    h('div', { class: 'tiles' }, tile(t('weekRuns', { n: w.runs }), `${w.runs}`), tile(t('stars'), `⭐ ${w.stars}`), tile(t('weekOnTime', { n: w.onTime }), `${w.onTime}/${w.done}`)),
+    h('p', { class: 'note' }, `${t('weekDays', { n: w.activeDays })}${trend ? ` · ${trend}` : ''}`),
+    h('div', { class: 'heat-days', 'aria-hidden': 'true' }, [0, 1, 2, 3, 4, 5, 6].map((d) => h('span', {}, dayName.format(new Date(2026, 10, 1 + d))))),
+    h('div', { class: 'heat', role: 'img', 'aria-label': t('heatTitle') }, cells.map((c) => h('i', { class: level(c), title: t('heatCell', { date: dateFmt.format(c.ms), n: c.count }) }))),
+    h('small', { class: 'hint' }, t('heatTitle')),
+    h('div', { class: 'toolbar wrap' },
+      h('button', { class: 'btn', type: 'button', onclick: async () => { const text = shareText(); if (native.available) native.share(t('appName'), text); else if (navigator.share) { try { await navigator.share({ title: t('appName'), text }); } catch { /* cancelled */ } } else { try { await navigator.clipboard.writeText(text); toast(t('shareCopied')); } catch { toast(text); } } } }, t('weekShare')),
+      h('button', { class: 'btn', type: 'button', onclick: () => {
+        const csv = toCsv(runs), name = `morning-organizer-history-${new Date().toISOString().slice(0, 10)}.csv`;
+        if (native.available) { native.saveFile(name, csv); return; }
+        const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' })), a = h('a', { href: url, download: name }); document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 5000); toast(t('csvSaved'));
+      } }, t('exportCsv'))));
 }
 const tile = (label, value, sub) => h('div', { class: 'tile' }, h('small', {}, label), h('strong', {}, value), sub ? h('small', {}, sub) : null);

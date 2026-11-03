@@ -68,6 +68,7 @@ async function boot() {
   const handle = async (ev) => {
     if (!ev) return;
     if (ev.type === 'start' && S.getTemplate(ev.templateId)) nav(`#/run/${ev.templateId}`);
+    if (ev.type === 'nfcrx') { if (ev.status === 'listening') toast(t('tapHold')); else if (ev.status === 'timeout') toast(t('tapTimeout')); else if (ev.status === 'unavailable') toast(t('tapUnavailable')); }
     if (ev.type === 'saved') toast(t(ev.status === 'ok' ? 'savedFile' : 'saveFailed'));
     if (ev.type === 'import') await routeIncoming(ev.text);
   };

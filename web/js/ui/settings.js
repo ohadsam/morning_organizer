@@ -109,7 +109,7 @@ export function renderSettings(root, version) {
           h('button', { class: 'btn', type: 'button', onclick: sendSyncCode }, icon('share', 18), t('exportSend'))),
         h('div', { class: 'toolbar wrap' },
           h('button', { class: 'btn primary', type: 'button', onclick: () => openBackupImport() }, t('importBackupBtn')),
-          h('button', { class: 'btn', type: 'button', onclick: async () => { await S.addSamples(); toast(t('saved')); } }, t('restoreSamples')))),
+          h('button', { class: 'btn', type: 'button', onclick: async () => { await S.addSamples(true); toast(t('saved')); } }, t('moreSamples')))),
       group('app', t('app'), false,
         native.available ? [h('p', {}, t('nativeActive')), h('p', { class: 'note' }, t('widgets'))] : [
           h('p', { class: 'note' }, t('apkNote')),

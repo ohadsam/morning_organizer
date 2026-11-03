@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.7.0
+- **Real phone-to-phone NFC** (Android app): hold two phones back to back to hand over an invitation or an encrypted message (card emulation + reader mode, offer expires after 60 s, locked phones offer nothing). Framing is unit-tested on the JVM.
+- **Weekly summary** (routines, stars, on-time, active days, trend vs last week) with share; **5-week heat-map**; **CSV export** of the whole history (formula-injection safe, Excel-friendly Hebrew).
+- **Undo** after deleting a routine; five example routines (bedtime, homework, after school added).
+- **APK signing**: committed shared signing key so every build updates the previous one in place (one-time uninstall needed when moving from the earlier debug-signed builds).
+
 ## 1.6.0
 - **UX pass, verified by an automated accessibility audit** (axe-core on every screen and dialog, Hebrew/light and English/dark, 150% text, accent colors - zero violations; the audit runs in CI).
 - **Settings reorganised** into collapsible groups (the app remembers which are open); **accent color** picker (all choices pass contrast).

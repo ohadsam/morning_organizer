@@ -8,7 +8,7 @@ import * as E from '../../web/js/engine.js';
 
 const GENDERS = ['male', 'female', 'other'], TIERS = ['kid', 'teen', 'adult'];
 test('tip library: unique ids, known categories/situations, every tier x language present, sensible length', () => {
-  assert.ok(TIPS.length >= 35); assert.equal(new Set(TIPS.map((x) => x.id)).size, TIPS.length);
+  assert.ok(TIPS.length >= 60); assert.equal(new Set(TIPS.map((x) => x.id)).size, TIPS.length);
   for (const tip of TIPS) {
     assert.ok(CATEGORIES[tip.cat], tip.id); assert.ok(['any', 'late', 'stuck'].includes(tip.sit), tip.id);
     for (const tier of TIERS) { assert.equal(tip.text[tier]?.length, 2, `${tip.id}/${tier}`); for (const txt of tip.text[tier]) assert.ok(txt.length > 25 && txt.length < 260, `${tip.id}/${tier}: ${txt.length}`); }
@@ -54,3 +54,15 @@ test('coachTrigger: overtime once per task, 90s cooldown, long pause once, behin
   assert.equal(coachTrigger(E.finish(r4, 500_000), 600_000, newMemo()), null, 'finished run');
 });
 test('voice presets are sane', () => { for (const p of Object.values(PRESETS)) { assert.ok(p.pitch >= 0 && p.pitch <= 2 && p.rate >= 0.1 && p.rate <= 10 && p.emoji); } assert.ok(Object.keys(PRESETS).length >= 8); });
+
+test('attention / executive-function categories are present and balanced (start, memory, switch + focus/time)', () => {
+  const by = (c) => TIPS.filter((x) => x.cat === c);
+  for (const [c, min] of Object.entries({ start: 4, memory: 4, switch: 3, focus: 8, time: 7, think: 8 })) assert.ok(by(c).length >= min, `${c}: ${by(c).length}`);
+  for (const c of ['start', 'memory', 'switch']) assert.ok(CATEGORIES[c]?.emoji, c);
+  for (const sit of ['any', 'late', 'stuck']) assert.ok(TIPS.filter((x) => x.sit === sit).length >= 15, sit);
+  // adults get the "why it works" register, kids get play: the tiers must really differ for every tip
+  for (const tip of TIPS) assert.notEqual(tip.text.kid[0], tip.text.adult[0], tip.id);
+});
+test('every event has several encouragement variants in both languages', () => {
+  for (const l of ['en', 'he']) for (const [ev, pool] of Object.entries(POOLS[l])) assert.ok(pool.length >= 6, `${l}/${ev}: ${pool.length}`);
+});

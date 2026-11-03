@@ -36,10 +36,13 @@ async function route() {
   root.scrollTo?.(0, 0); window.scrollTo(0, 0);
   if (view === 'import') { const code = decodeURIComponent(arg || ''); history.replaceState(null, '', '#/'); nav('#/'); openImport(code); return; }
   try {
-    cleanup = (await ({
+    const views = {
       home: () => renderHome(root, nav), edit: () => renderEditor(root, arg, nav), run: () => renderRunner(root, arg, nav),
       stats: () => renderStats(root, arg, nav), family: () => renderFamily(root), settings: () => renderSettings(root, version), guide: () => renderGuide(root),
-    }[view] ?? (() => renderHome(root, nav)))()) || (() => {});
+    };
+    // The route comes from the address bar: look it up as OWN data only ("#/constructor" or "#/__proto__" must fall back to home).
+    const out = await (Object.hasOwn(views, view) ? views[view] : views.home)();
+    cleanup = typeof out === 'function' ? out : () => {};
   } catch (e) { console.error(e); root.replaceChildren(h('p', { class: 'empty' }, t('error'))); }
   drawNav(view);
 }
@@ -47,7 +50,7 @@ async function route() {
 function drawNav(view) {
   const simple = S.get().settings.simpleMode;
   const tabs = simple ? [['home', 'home', '#/'], ['settings', 'gear', '#/settings']] : [['home', 'home', '#/'], ['stats', 'chart', '#/stats'], ['family', 'users', '#/family'], ['guide', 'book', '#/guide'], ['settings', 'gear', '#/settings']];
-  const active = { edit: 'home', run: 'home' }[view] ?? view;
+  const parentTab = { edit: 'home', run: 'home' }, active = Object.hasOwn(parentTab, view) ? parentTab[view] : view;
   document.getElementById('nav').replaceChildren(...tabs.map(([key, ic, href]) => h('a', { href, class: key === active ? 'on' : '', 'aria-current': key === active ? 'page' : null }, icon(ic, 24), h('span', {}, t(key === 'family' ? 'tabFamily' : key)))));
 }
 

@@ -388,6 +388,15 @@ await step('regression: a settings change that finishes after navigating away mu
   await page.waitForSelector('.hero'); await page.waitForTimeout(600); assert.ok(await page.locator('.hero').count(), 'the home page is still showing'); assert.equal(await page.locator('details.settings-group').count(), 0);
 });
 
+await step('regression: odd addresses (#/constructor, #/__proto__, #/toString) fall back to home and navigation keeps working', async () => {
+  const { page, errors } = await newPage(); await page.goto(base + '#/'); await page.waitForSelector('.routine');
+  for (const bad of ['constructor', '__proto__', 'toString', 'hasOwnProperty', 'edit/__proto__', 'run/constructor', 'stats/toString']) {
+    await page.evaluate((b) => { location.hash = `#/${b}`; }, bad); await page.waitForTimeout(150);
+    await page.evaluate(() => { location.hash = '#/settings'; }); await page.waitForSelector('details.settings-group'); await page.evaluate(() => { location.hash = '#/'; }); await page.waitForSelector('.routine');
+  }
+  assert.deepEqual(errors, []);
+});
+
 await step('run survives reload (crash-safe) and checklist ticking works', async () => {
   const { page } = await newPage(); await page.goto(base); await page.waitForSelector('.routine');
   await page.locator('.routine .start').first().click(); await page.waitForSelector('.ring'); await page.locator('.checklist li').nth(2).locator('.cb').click();

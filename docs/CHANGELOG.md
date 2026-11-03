@@ -7,7 +7,7 @@
 - **Routines by day** (Today / Other days, school-day and weekend presets) and **gear checklists** per day, counted in the summary.
 - **Parent features**: weekly goals ("5 on-time routines this week"), "child is running late" alerts over a live link (toast + system notification), per-child switch.
 - **QR codes** for invitations/messages (own generator, verified against an independent decoder) and QR scanning (Google code scanner in the app, BarcodeDetector in browsers).
-- Security fixes found by tests: prototype-key lookups (`__proto__`) for avatar ids and voice presets.
+- Fixes found by tests/review: prototype-key lookups (`__proto__`, `constructor`) for avatar ids, voice presets and the address-bar router (`#/constructor` broke navigation); a settings redraw that finished after you left the page could overwrite the page you were on.
 
 ## 1.7.1
 - **Hosting fix**: when GitHub Pages publishes the repository root ("deploy from a branch") visitors saw the README instead of the app. The root now has an `index.html` that opens `web/` (plus `.nojekyll`), so the app opens either way; an end-to-end step covers it. The app itself never needs a server - the `npm run serve` line in the README is only for developers.

@@ -322,6 +322,19 @@ await step('v1.7: weekly overview + 5-week heat-map + CSV export (accessible), u
   await page.goto(base + '#/'); await page.waitForFunction(() => document.querySelectorAll('.routine').length === 5); assert.deepEqual(errors, []);
 });
 
+await step('hosting: the repo ROOT (Pages "deploy from branch") redirects to the app under /web/, which boots, registers its service worker and works offline-first', async () => {
+  const root = await serve('.', 0); const rbase = `http://localhost:${root.address().port}/`;
+  const ctx = await browser.newContext({ viewport: { width: 390, height: 800 }, locale: 'en-US' }); await ctx.addInitScript(() => { try { localStorage.setItem('mo.lang', 'en'); } catch { /* blocked */ } });
+  const page = await ctx.newPage(); const errors = []; page.on('pageerror', (e) => errors.push(e.message)); page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); });
+  await page.goto(rbase); await page.waitForURL(/\/web\/(#.*)?$/); await page.waitForSelector('dialog.welcome, .routine');
+  assert.ok(!(await page.textContent('body')).includes('npm run'), 'the app page never shows developer instructions');
+  await dismissWelcome(page); await page.waitForSelector('.routine');
+  await page.waitForFunction(async () => !!(await navigator.serviceWorker.getRegistration()), null, { timeout: 15000 });
+  const scope = await page.evaluate(async () => (await navigator.serviceWorker.getRegistration()).scope); assert.match(scope, /\/web\/$/);
+  const manifest = await page.evaluate(async () => (await (await fetch('manifest.webmanifest')).json()).start_url); assert.equal(manifest, './');
+  assert.deepEqual(errors.filter((e) => !/service worker|Failed to load resource: the server responded with a status of 404 \(.*favicon/i.test(e)), []); await ctx.close(); root.close();
+});
+
 await step('run survives reload (crash-safe) and checklist ticking works', async () => {
   const { page } = await newPage(); await page.goto(base); await page.waitForSelector('.routine');
   await page.locator('.routine .start').first().click(); await page.waitForSelector('.ring'); await page.locator('.checklist li').nth(2).locator('.cb').click();

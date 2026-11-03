@@ -2,7 +2,7 @@
 
 Build morning routines (for kids or anyone), time every task, and watch yourself get faster. Works as an **installable PWA** and as a **native Android app** (same UI, plus alarms and a home-screen widget). No server, no account, no tracking - data stays on your device. Hebrew (RTL, default) and English.
 
-**Use it:** `https://ohadsam.github.io/morning_organizer/` · **Android APK (always the latest):** [releases/latest](https://github.com/ohadsam/morning_organizer/releases/latest/download/morning-organizer.apk) (also offered inside the PWA under Settings).
+**Use it:** open `https://ohadsam.github.io/morning_organizer/` in your browser (nothing to install or run - it is a plain static site; add it to the home screen to install the PWA) · **Android APK (always the latest):** [releases/latest](https://github.com/ohadsam/morning_organizer/releases/latest/download/morning-organizer.apk) (also offered inside the PWA under Settings).
 
 ## Features
 - **Routines & tasks** - duration in minutes + seconds (5.5 min = 5:30), your own *time estimate*, drag & drop (or arrows) to reorder, favourites, duplicate, delete, sample routines.

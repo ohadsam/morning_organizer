@@ -35,7 +35,7 @@ input[type=range] { width: 100%; accent-color: var(--brand); } input[type=checkb
 .lbl { display: block; font-size: .85rem; font-weight: 600; color: var(--muted); margin-block-end: 4px; }
 .field { display: block; margin-block: 12px; } .hint { display: block; font-size: .8rem; color: var(--muted); font-weight: 400; }
 .stack { display: grid; gap: 12px; } .row { display: flex; align-items: center; gap: 10px; } .between { justify-content: space-between; }
-.toolbar { display: flex; gap: 10px; margin-block: 12px; } .toolbar.wrap { flex-wrap: wrap; }
+.toolbar { display: flex; flex-wrap: wrap; gap: 10px; margin-block: 12px; } .toolbar.wrap { flex-wrap: wrap; }
 .card { background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow); padding: 14px; border: 1px solid var(--line); }
 .switch { justify-content: space-between; min-height: 44px; cursor: pointer; }
 .empty { text-align: center; color: var(--muted); padding: 32px 0; }
@@ -223,7 +223,7 @@ dialog header { display: flex; align-items: center; justify-content: space-betwe
 .buddy .avatar { margin-top: -4px; }
 
 /* ── v1.8: schedule + gear ── */
-.gear-row { display: grid; gap: 6px; border-bottom: 1px dashed var(--line); padding-bottom: 8px; } .gear-card { padding: 0; width: 100%; text-align: start; } .gear-card summary { padding: 10px 14px; cursor: pointer; font-weight: 700; min-height: 44px; display: flex; align-items: center; }
+.gear-row { display: grid; gap: 6px; border-bottom: 1px dashed var(--line); padding-bottom: 8px; } .gear-card, .plan-card { padding: 0; width: 100%; text-align: start; } .gear-card summary { padding: 10px 14px; cursor: pointer; font-weight: 700; min-height: 44px; display: flex; align-items: center; }
 .gear-list { list-style: none; margin: 0; padding: 0 14px 10px; display: grid; gap: 2px; } .stack.dim { opacity: .75; }
 
 /* achievements */

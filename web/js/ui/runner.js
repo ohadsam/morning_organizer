@@ -118,7 +118,7 @@ export async function renderRunner(root, id, nav) {
     setChildren(gearBox, h('summary', {}, `🎒 ${t('gearToday')} · ${t('gearCount', { done, total: items.length })}`), h('ul', { class: 'gear-list' }, items.map((g) => h('li', {}, h('label', { class: 'switch row' }, h('span', {}, `${g.icon || suggestIcon(g.name)} ${g.name}`), h('input', { type: 'checkbox', checked: g.done, onchange: (e) => { g.done = e.target.checked; persist(); paintGear(); } }))))));
     if (done < items.length) gearBox.open ||= fresh; // start open so it is seen once, stays as the person left it
   }
-  const planBox = h('details', { class: 'card gear-card', hidden: !(run.plans || S.getTemplate(run.templateId)?.plans || []).length });
+  const planBox = h('details', { class: 'card plan-card', hidden: !(run.plans || S.getTemplate(run.templateId)?.plans || []).length });
   const plans = (S.getTemplate(run.templateId)?.plans || []).slice(0, 5);
   if (plans.length) { setChildren(planBox, h('summary', {}, `🧠 ${t('plansTitle')}`), h('ul', { class: 'plan-list' }, plans.map((p) => h('li', {}, h('strong', {}, t('planIf')), ` ${p.when}, `, h('strong', {}, t('planThenWord')), ` ${p.then}`)))); planBox.open = fresh; }
   function announceTask(cur) {

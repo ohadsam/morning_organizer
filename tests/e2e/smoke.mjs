@@ -340,7 +340,7 @@ await step('v1.7: weekly overview + 5-week heat-map + CSV export (accessible), u
   await page.waitForFunction(() => document.querySelectorAll('.routine').length === 1); await page.click('#toast button:has-text("Undo")');
   await page.waitForFunction(() => document.querySelectorAll('.routine').length === 2);
   await page.goto(base + '#/settings'); await page.click('text=Add more example routines'); await page.waitForTimeout(300);
-  await page.goto(base + '#/'); await page.waitForFunction(() => document.querySelectorAll('.routine').length === 5); assert.deepEqual(errors, []);
+  await page.goto(base + '#/'); await page.waitForFunction(() => document.querySelectorAll('.routine').length === 6); assert.deepEqual(errors, []);
 });
 
 await step('hosting: the repo ROOT (Pages "deploy from branch") redirects to the app under /web/, which boots, registers its service worker and works offline-first', async () => {

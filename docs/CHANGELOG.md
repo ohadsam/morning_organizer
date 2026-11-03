@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.9.0
+- **26 new coach tips (61 total)**, each in two languages and three tones: attention and executive-function support (getting started / task initiation, working memory, switching between tasks, body doubling, 3-minute sprints, fidget and movement, making time visible, estimate-then-compare), more CBT (mini thought record, all-or-nothing words, testing predictions), more mindfulness (4-7-8 breathing, body scan, wall push, naming feelings, "worry radio").
+- **Three new tip categories** (🚦 getting started, 🧩 remembering, 🔀 switching tasks); the coach picks by situation (late / stuck / any).
+- **Encouragement doubled** (6-7 variants per event instead of 3-4) plus more playful lines for young children.
+- `docs/ROADMAP.md`: ideas for what to build next, with status.
+
 ## 1.8.0
 - **Avatars**: eight original animated characters (blink, wave, cheer, dance, sleep, alert, think - drawn in SVG, no external GIFs, offline), colours, emoji, your own photo or animated GIF (≤160 KB). The avatar reacts to what happens in a run. Photos/GIFs never leave the device.
 - **Several people per phone**: profiles with their own name/age/gender/avatar, history, stars, streak, badges and parent links; "Who is playing?" switcher.

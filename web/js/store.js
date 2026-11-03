@@ -4,7 +4,7 @@ import { LIMITS } from './config.js';
 import { cleanText, clamp, uid, move } from './util.js';
 import { defaultAlarm, nextFire } from './alarms.js';
 import { native } from './native.js';
-import { t } from './i18n.js';
+import { t, units, getLang } from './i18n.js';
 import { suggestIcon } from './taskIcons.js';
 import { PRESETS } from './speech.js';
 import { validLeaveBy } from './leave.js';
@@ -12,6 +12,7 @@ import { normDays } from './schedule.js';
 import { isSafePhoto } from './photo.js';
 import { sanitizeAvatar, avatarEmoji, avatarFromMascot, defaultAvatar } from './avatar.js';
 import { toolsFor } from './focus.js';
+import { widgetItems } from './widgetData.js';
 import { sanitizeMood } from './mood.js';
 import { eraseJournal } from './journal.js';
 import { newProfile, normalizeProfile, runsOf, MAX_PROFILES } from './profiles.js';
@@ -305,7 +306,7 @@ export function syncNative() {
     const [hour, minute] = x.alarm.time.split(':').map(Number);
     return { id: x.id, templateId: x.id, name: x.name, hour, minute, days: x.alarm.days, volume: x.alarm.volume, vibrate: x.alarm.vibrate, durationSec: x.alarm.durationSec };
   }));
-  const favs = state.templates.filter((x) => x.favorite);
-  native.setWidget((favs.length ? favs : state.templates).slice(0, 4).map((x) => ({ id: x.id, name: x.name, icon: x.icon, taskCount: x.tasks.length, totalSec: totalSec(x) })));
+  const dayName = (d) => new Date(2024, 0, 7 + d).toLocaleDateString(getLang(), { weekday: 'short' });   // 2024-01-07 was a Sunday
+  native.setWidget(widgetItems(state.templates, new Date().getDay(), { units: units(), day: dayName, leave: (tm) => t('leaveLine2', { time: tm }), gear: (n) => t('gearCount2', { n }) }));
 }
 export { isPersistent };

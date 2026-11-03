@@ -1,6 +1,7 @@
 // Strings for the "helpers" added in 1.10: calm corner, journal (optional password, voice notes, dictation), focus areas, sprints, reward menu.
 // Merged into the main dictionary by i18n.js. Hebrew uses neutral plural forms ("לחצו") so it fits any gender.
 export const EN = {
+  leaveLine2: 'Leave by {time}', gearCount2: '🎒 {n}',
   // calm corner
   calmTitle: 'Calm corner', calmIntro: 'A minute to settle. Pick an exercise and follow the circle.', calmKind: 'Exercise', calmBreath: 'Breathing', calmGround: '5-4-3-2-1', calmScan: 'Body scan', calmPattern: 'Breathing pattern', calmLength: 'Length', calmMin: '{n} min',
   calmStart: 'Start', calmStop: 'Stop', calmWell: 'Well done', calmAgain: 'Again', calmBack: 'Back', calmNote: 'Not a medical tool - just a moment to slow down. If feelings stay very strong, talk to someone you trust.',
@@ -50,6 +51,7 @@ export const EN = {
   menuEdit: 'Edit menu', menuHint: 'Things stars can buy. Each costs a number of stars.', menuAdd: 'Add reward', menuItem: 'Reward', menuCost: 'Stars', menuEmoji: 'Icon', menuRequests: 'Reward requests', menuMarkGiven: 'Given', redeemAlert: '{name} would like: {title}', sendToChild: 'Send to {name}',
 };
 export const HE = {
+  leaveLine2: 'יציאה ב-{time}', gearCount2: '🎒 {n}',
   calmTitle: 'פינת רוגע', calmIntro: 'דקה להירגע. בחרו תרגיל ועקבו אחרי העיגול.', calmKind: 'תרגיל', calmBreath: 'נשימה', calmGround: '5-4-3-2-1', calmScan: 'סריקת גוף', calmPattern: 'קצב נשימה', calmLength: 'משך', calmMin: '{n} דק׳',
   calmStart: 'התחלה', calmStop: 'עצירה', calmWell: 'כל הכבוד', calmAgain: 'שוב', calmBack: 'חזרה', calmNote: 'זה לא כלי רפואי - רק רגע להאט. אם התחושות נשארות חזקות מאוד, פנו למישהו שאתם סומכים עליו.',
   pat_slow: 'איטי (4-6)', pat_box: 'קופסה (4-4-4-4)', pat_relax478: 'הרפיה (4-7-8)', pat_sigh: 'אנחה (2+1, החוצה 6)', ph_in: 'שאפו', ph_out: 'נשפו', ph_hold: 'החזיקו',

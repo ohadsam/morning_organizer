@@ -9,6 +9,7 @@
 - **Speech-to-text suggestions** (opt-in): the Android app uses the phone's recognizer (offline preferred); browsers use the Web Speech API after an explicit privacy notice. The transcript is only a suggestion the person edits.
 - **Reward menu**: spend stars on rewards, a parent can set the menu and gets "would like" requests.
 - Launcher shortcuts for the calm corner and the journal (Android); microphone permission only when recording or dictating.
+- **Routine card widget** (Android): shows a saved routine with its tasks and settings summary, starts it with all saved settings, ‹ › switch to another routine per widget, live countdown while it runs.
 - Fixed: the "send to child" dialog title was missing its text.
 
 ## 1.9.0

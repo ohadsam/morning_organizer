@@ -51,6 +51,8 @@ Several people can share one phone: tap the avatar on the home screen (or Settin
 In the editor, "Schedule" sets which days a routine is for (school days, weekend or any days); the home screen lists today's routines first. "Gear to remember" adds things for certain days (PE kit, swimming bag): they appear as a checklist when you start and are counted in the summary. Badges (first routine, streaks, on time, early bird, speedy, comeback…) are earned automatically; new ones are celebrated on the summary screen and all of them are in Stats → Achievements.
 
 ## Android app and widget
+Routine card widget: add “Routine card” from the widgets list. It shows one saved routine with its tasks, durations, days, leave-by time and gear count; tap it (or ▶ Start) to run it in the app with all its saved settings. Use ‹ › on the widget to show a different routine (each widget remembers its own). While that routine runs the card becomes a live countdown with progress.
+
 Settings → Download Android app always gives the latest APK. Allow “install unknown apps” for your browser once. Long-press the home screen → Widgets → Morning Organizer to start a favourite routine in one tap.
 
 ## Helpers: calm, focus, journal and rewards

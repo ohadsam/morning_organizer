@@ -60,3 +60,13 @@ test('coach tips are weighted toward the chosen areas', async () => {
   for (let n = 0; n < 400; n++) { const rnd = () => ((i = (i * 1103515245 + 12345) % 2147483648) / 2147483648); if (cat.get(pickTip({ areas: ['calm'], rnd, seen: new Set() }).id) === 'breath') breath++; if (cat.get(pickTip({ rnd, seen: new Set() }).id) === 'breath') base++; }
   assert.ok(breath > base, `${breath} should exceed ${base}`);
 });
+
+test('widget data: today + favourites first, bounded tasks, settings summary line', async () => {
+  const { widgetItems } = await import('../../web/js/widgetData.js');
+  const mk = (id, over = {}) => ({ id, name: id, icon: '⏰', favorite: false, days: [], gear: [], leaveBy: '', tasks: Array.from({ length: 10 }, (_, i) => ({ name: `t${i}`, icon: '', sec: 60 })), ...over });
+  const labels = { units: { h: 'h', m: 'm', s: 's' }, day: (d) => `d${d}`, leave: (x) => `leave ${x}`, gear: (n) => `gear ${n}` };
+  const out = widgetItems([mk('a', { days: [3] }), mk('b'), mk('c', { favorite: true, leaveBy: '07:45', gear: [{}, {}] })], 1, labels);
+  assert.deepEqual(out.map((x) => x.id), ['c', 'b', 'a']);
+  assert.equal(out[0].tasks.length, 8); assert.equal(out[0].more, 2);
+  assert.match(out[0].meta, /10m · leave 07:45 · gear 2/); assert.match(out[2].meta, /d3/);
+});

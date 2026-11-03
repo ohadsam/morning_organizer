@@ -90,6 +90,10 @@
             <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE"/></intent-filter>
             <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_run_info"/>
         </receiver>
+        <receiver android:name=".RoutineCardWidget" android:exported="false" android:label="@string/widget_card_label">
+            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE"/></intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_card_info"/>
+        </receiver>
         <receiver android:name=".RoutineWidget" android:exported="false" android:label="@string/widget_label">
             <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE"/></intent-filter>
             <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_info"/>

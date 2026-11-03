@@ -194,7 +194,7 @@ export async function renderRunner(root, id, nav) {
   }
 
   root.replaceChildren(h('div', { class: 'run' },
-    h('div', { class: 'run-top', style: { '--accent': run.color || '#6c5ce7' } }, h('span', { class: 'emoji' }, run.icon), h('strong', {}, run.templateName)),
+    h('div', { class: 'run-top', style: { '--accent': run.color || '#6c5ce7' } }, h('span', { class: 'emoji' }, run.icon), h('h1', { class: 'run-title' }, run.templateName)),
     bubble, coachHost, pw.el, head, leaveEl, h('div', { class: 'ring-wrap' }, ring, pausedBadge), taskName, pace, controls, list));
   paintStatic(); paintLive();
   if (fresh) say('start');

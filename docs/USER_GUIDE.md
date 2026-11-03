@@ -38,6 +38,9 @@ Open the Family tab. On the parent's phone tap "Add a child" and give the invita
 ## Progress widget (Android)
 Add the "Routine progress" widget from the home screen: it shows the routine in progress, the current task, a live countdown and a progress bar, and opens the app when tapped.
 
+## Simple mode, accent color and settings
+Settings → Appearance → "Simple mode for kids" shows only the routines with big Start buttons. Everything else (editing, settings, statistics, family) is locked behind a quick grown-up question for 10 minutes at a time. Pick an accent color for the whole app, plus light/dark theme, text size, color-blind friendly colors and high contrast. Settings are grouped into sections you can collapse; the app remembers which are open.
+
 ## Android app and widget
 Settings → Download Android app always gives the latest APK. Allow “install unknown apps” for your browser once. Long-press the home screen → Widgets → Morning Organizer to start a favourite routine in one tap.
 

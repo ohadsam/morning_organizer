@@ -1,5 +1,6 @@
 // End-to-end smoke test in real Chromium against the static site. Usage: node tests/e2e/smoke.mjs [--shots dir]
 import { chromium } from 'playwright';
+import axe from 'axe-core';
 import assert from 'node:assert/strict';
 import { mkdirSync } from 'node:fs';
 import { serve } from '../../scripts/serve.mjs';
@@ -10,13 +11,15 @@ const server = await serve('web', 0); const base = `http://localhost:${server.ad
 // mDNS-obfuscated ICE candidates can't be resolved between two headless contexts; real phones on one Wi-Fi are fine.
 const browser = await chromium.launch({ args: ['--disable-features=WebRtcHideLocalIpsWithMdns'] });
 let failures = 0;
-const step = async (name, fn) => { try { await fn(); console.log('✓', name); } catch (e) { failures++; if (globalThis.__fam && shots) { await globalThis.__fam.P.page.screenshot({ path: `${shots}/fail-P.png` }); await globalThis.__fam.C.page.screenshot({ path: `${shots}/fail-C.png` }); } console.error('✗', name, '\n  ', e.message.split('\n').slice(0, 4).join(' / '), '\n  ', (e.stack.split('\n').find((l) => l.includes('smoke.mjs')) || '').trim()); } };
+const step = async (name, fn) => { if (process.env.ONLY && !name.includes(process.env.ONLY)) return; try { await fn(); console.log('✓', name); } catch (e) { failures++; if (globalThis.__fam && shots) { await globalThis.__fam.P.page.screenshot({ path: `${shots}/fail-P.png` }); await globalThis.__fam.C.page.screenshot({ path: `${shots}/fail-C.png` }); } console.error('✗', name, '\n  ', e.message.split('\n').slice(0, 4).join(' / '), '\n  ', (e.stack.split('\n').find((l) => l.includes('smoke.mjs')) || '').trim()); } };
 
 const closeDialogs = async (page) => { for (let i = 0; i < 4 && (await page.locator('dialog[open]').count()); i++) { await page.locator('dialog[open] header button').last().click(); await page.waitForTimeout(150); } };
 const dismissWelcome = async (page) => { try { await page.waitForSelector('dialog.welcome', { timeout: 4000 }); await page.click('dialog.welcome footer button >> nth=0'); await page.waitForSelector('dialog.welcome', { state: 'detached' }); } catch { /* not shown */ } };
 // The app is Hebrew/RTL by default; most steps below assert English text, so switch the language through the real Settings UI first.
 async function newPage(opts = {}) {
   const ctx = await browser.newContext({ viewport: { width: 390, height: 800 }, locale: opts.locale || 'en-US', serviceWorkers: 'block', ...opts.ctx });
+  // settings groups are collapsible (state remembered); most steps need every field reachable, so start with all groups open
+  if (!opts.collapsed) await ctx.addInitScript(() => { try { localStorage.setItem('mo.sg', JSON.stringify(Object.fromEntries(['look', 'profile', 'buddy', 'pace', 'a11y', 'coach', 'voice', 'alerts', 'defaults', 'sync', 'app'].map((k) => [k, true])))); } catch { /* blocked */ } });
   const page = await ctx.newPage(); const errors = [];
   page.on('pageerror', (e) => errors.push(e.message)); page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); });
   if (opts.clock) await page.clock.install();
@@ -244,6 +247,62 @@ await step('family: invite -> join -> approve -> LIVE link (WebRTC, no server) -
   await C.page.locator('.routine .start').first().click(); await C.page.waitForSelector('.ring'); for (let i = 0; i < 6; i++) await C.page.click('text=Done ✓');
   await C.page.waitForSelector('dialog:has-text("Goal reached")'); await P.page.goto(base + '#/family'); await P.page.waitForSelector('.family-card:has-text("Goal reached")', { timeout: 15000 });
   assert.deepEqual(P.errors, []); assert.deepEqual(C.errors, []);
+});
+
+// ── UX / accessibility ──
+const audit = async (page, label) => {
+  await page.evaluate(axe.source); const res = await page.evaluate(() => axe.run(document, { resultTypes: ['violations'] }));
+  return res.violations.map((v) => `${label}: ${v.id} (${v.impact}) ${v.nodes[0].html.slice(0, 90)}`);
+};
+await step('UX: axe-core finds NO accessibility violations - every screen and dialog, Hebrew/light and English/dark, big text, accent color', async () => {
+  const bad = [];
+  for (const [lang, scheme] of [['he', 'light'], ['en', 'dark']]) {
+    const { page } = await newPage({ lang, ctx: { colorScheme: scheme } }); await page.goto(base);
+    if (lang === 'he') { await page.waitForSelector('dialog.welcome'); bad.push(...await audit(page, `${lang}/${scheme}/welcome`)); await dismissWelcome(page); } // English was switched on (welcome dismissed) by newPage()
+    for (const hash of ['#/', '#/settings', '#/guide', '#/stats', '#/family']) { await page.goto(base + hash); await page.waitForTimeout(350); bad.push(...await audit(page, `${lang}/${scheme}/${hash}`)); }
+    await page.goto(base + '#/'); await page.waitForSelector('.routine'); await page.click('.hero .btn-chip >> nth=0').catch(() => {});
+    await page.locator('.routine-main').first().click(); await page.waitForSelector('.task'); bad.push(...await audit(page, `${lang}/${scheme}/editor`));
+    await page.goto(base + '#/'); await page.click('button[aria-label]:has(svg) >> nth=0').catch(() => {});
+    await page.locator('.routine .start').first().click(); await page.waitForSelector('.ring'); await page.click('.tip-main'); await page.waitForSelector('.coach-card'); await page.waitForTimeout(500);
+    bad.push(...await audit(page, `${lang}/${scheme}/run+coach`));
+    await page.goto(base + '#/family'); await page.click('.toolbar .btn.primary'); await page.waitForSelector('dialog'); bad.push(...await audit(page, `${lang}/${scheme}/invite-dialog`)); await closeDialogs(page);
+    // large text + an accent color must stay accessible too
+    await page.goto(base + '#/settings'); await page.selectOption('label.field:has-text("Text size") select, label.field:has-text("גודל טקסט") select', '150');
+    await page.click('.swatches[role=radiogroup] .swatch >> nth=-3').catch(() => {}); await page.waitForTimeout(300);
+    for (const hash of ['#/', '#/settings']) { await page.goto(base + hash); await page.waitForTimeout(300); bad.push(...await audit(page, `${lang}/${scheme}/big-text+accent ${hash}`)); }
+  }
+  if (bad.length) console.error([...new Set(bad)].join('\n'));
+  assert.deepEqual(bad, []);
+});
+
+await step('UX: settings are collapsible groups (3 open by default), state is remembered; accent color applies', async () => {
+  const { page } = await newPage({ collapsed: true }); await page.goto(base + '#/settings'); await page.waitForSelector('details.settings-group');
+  assert.equal(await page.locator('details.settings-group[open]').count(), 3); assert.ok(await page.locator('details.settings-group').count() >= 9);
+  await page.click('details.settings-group:not([open]) summary >> nth=0'); const open1 = await page.locator('details.settings-group[open]').count(); assert.equal(open1, 4);
+  await page.reload(); await page.waitForSelector('details.settings-group'); assert.equal(await page.locator('details.settings-group[open]').count(), 4, 'open/closed state survives reload');
+  await page.locator('.swatches[role=radiogroup] .swatch').nth(1).click(); await page.waitForFunction(() => document.documentElement.dataset.accent === '1');
+  await page.goto(base + '#/'); await page.waitForSelector('.routine'); assert.equal(await page.evaluate(() => getComputedStyle(document.querySelector('.btn.primary')).backgroundColor), 'rgb(91, 75, 213)');
+});
+
+await step('UX: simple (kids) mode - only routines, big Start, everything else behind the grown-up gate', async () => {
+  const { page, errors } = await newPage(); await page.goto(base + '#/settings'); await page.waitForSelector('details.settings-group');
+  const solve = async () => { const q = await page.textContent('.gate-q'); const [a, b] = q.match(/\d+/g).map(Number); return a * b; };
+  await page.locator('label.switch', { hasText: 'Simple mode' }).locator('input').check(); await page.waitForSelector('.gate-q');
+  await page.fill('dialog input[type=number]', '1'); await page.click('dialog footer button >> nth=1'); await page.waitForSelector('dialog .err'); // wrong answer
+  await page.fill('dialog input[type=number]', String(await solve())); await page.click('dialog footer button >> nth=1');
+  await page.waitForSelector('.hero'); await page.waitForSelector('.routine');
+  assert.equal(await page.locator('#nav a').count(), 2); assert.equal(await page.locator('.routine .icon-btn[aria-label="Delete"]').count(), 0); assert.equal(await page.locator('.toolbar .btn.primary:has-text("New routine")').count(), 0);
+  await page.waitForTimeout(100); await page.evaluate(() => { location.hash = '#/stats'; }); // direct navigation is gated too (unlock window is per page load)
+  await page.waitForSelector('.gate-q'); await page.click('dialog footer button >> nth=0'); await page.waitForSelector('.hero'); assert.equal(await page.evaluate(() => location.hash), '#/');
+  await shot(page, 'simple-mode');
+  await page.locator('.routine .start').first().click(); await page.waitForSelector('.ring'); assert.deepEqual(errors, []);
+});
+
+await step('UX: run screen keeps Done/Pause on screen (phone height) and the first routine opens in one tap', async () => {
+  const { page } = await newPage({ ctx: { viewport: { width: 390, height: 800 } } }); await page.goto(base + '#/'); await page.waitForSelector('.routine');
+  await page.locator('.routine .start').first().click(); await page.waitForSelector('.ring');
+  const box = await page.locator('.main-btns').boundingBox(); assert.ok(box.y >= 0 && box.y + box.height <= 800, `main buttons visible: ${JSON.stringify(box)}`);
+  assert.ok(box.height >= 56, 'big touch targets'); for (const sel of ['.main-btns .btn >> nth=0', '.main-btns .btn >> nth=1']) assert.ok((await page.locator(sel).boundingBox()).height >= 44);
 });
 
 await step('run survives reload (crash-safe) and checklist ticking works', async () => {

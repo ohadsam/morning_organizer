@@ -168,3 +168,23 @@ dialog header { display: flex; align-items: center; justify-content: space-betwe
 .goal { display: grid; gap: 4px; background: var(--surface-2); border-radius: 14px; padding: 10px; } .transports { display: grid; gap: 6px; border-top: 1px dashed var(--line); padding-top: 8px; }
 .chip.solid.off { opacity: .8; } .cheers { margin: 0; padding-inline-start: 1.2em; } .family-card h3 { margin: .4em 0 .2em; font-size: .95rem; }
 #nav a { font-size: .68rem; }
+
+/* ── v1.6: UX polish ── */
+:root[data-accent] { --brand: var(--user-accent); }
+@media (prefers-color-scheme: dark) { :root[data-accent]:not([data-theme="light"]) { --brand: color-mix(in srgb, var(--user-accent) 62%, #fff); } }
+:root[data-accent][data-theme="dark"] { --brand: color-mix(in srgb, var(--user-accent) 62%, #fff); }
+:root[data-accent] .hero { background: linear-gradient(135deg, var(--user-accent), color-mix(in srgb, var(--user-accent) 55%, #fff)); }
+/* settings: collapsible groups */
+.settings-group { padding: 0; margin-block: 10px; overflow: hidden; } .settings-group > summary { list-style: none; cursor: pointer; padding: 12px 14px; display: flex; align-items: center; justify-content: space-between; min-height: 52px; }
+.settings-group > summary::-webkit-details-marker { display: none; } .settings-group > summary h2 { margin: 0; font-size: 1.05rem; }
+.settings-group > summary::after { content: "▾"; color: var(--muted); transition: transform .2s; } .settings-group[open] > summary::after { transform: rotate(180deg); }
+.settings-group > .stack { padding: 0 14px 14px; } .settings-group > summary:focus-visible { outline-offset: -3px; }
+/* run: the big buttons stay reachable, the ring leaves room for them */
+.run-title { font-size: 1rem; margin: 0; } .ring { width: min(62vw, 36vh, 280px); }
+.main-btns { position: sticky; bottom: calc(8px + env(safe-area-inset-bottom)); z-index: 6; background: color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter: blur(6px); border-radius: 22px; padding: 6px; box-shadow: 0 -6px 18px rgba(0, 0, 0, .08); }
+/* simple (kids) mode: big targets, nothing else */
+.routine-actions.simple .start { min-height: 56px; font-size: 1.15rem; flex: 1; } .gate-q { font-size: 1.4rem; font-weight: 800; text-align: center; margin: 8px 0; }
+/* wide screens: two columns of routines */
+@media (min-width: 900px) { main { max-width: 980px; } #app .stack:has(> .routine) { grid-template-columns: 1fr 1fr; } }
+/* status chips: tinted background + normal text colour stay readable with ANY routine/accent colour (white-on-colour failed contrast) */
+.chip.solid { background: color-mix(in srgb, var(--accent) 20%, var(--surface)); color: var(--text); border: 1px solid var(--accent); font-weight: 700; }

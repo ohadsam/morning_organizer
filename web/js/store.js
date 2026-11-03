@@ -13,7 +13,7 @@ import { isSafePhoto } from './photo.js';
 export const DEFAULT_SETTINGS = Object.freeze({
   lang: 'he', theme: 'auto', mode: 'both', volume: 80, warnSec: 10, defTaskSec: 300, defEstSec: 0,
   autoAdvance: false, keepAwake: true, keepAwakeApp: false, personName: '', mascot: '🦊', feedback: true, speak: false, age: null, gender: 'other', profileDone: false,
-  paceMode: 'normal', announceTasks: false, fontScale: 100, colorSafe: false, contrast: 'normal', srAnnounce: false,
+  paceMode: 'normal', accent: '', simpleMode: false, announceTasks: false, fontScale: 100, colorSafe: false, contrast: 'normal', srAnnounce: false,
   coachButton: true, coachAuto: false, coachSpeak: false, voiceURI: '', voicePreset: 'natural', seeded: false,
 });
 export const COLORS = ['#6c5ce7', '#0984e3', '#00b894', '#e17055', '#e84393', '#fdcb6e', '#2d3436'];
@@ -123,6 +123,7 @@ export async function updateSettings(patch) {
   if ('fontScale' in patch && ![100, 115, 130, 150].includes(patch.fontScale)) delete patch.fontScale;
   if ('paceMode' in patch && !['normal', 'quick', 'calm'].includes(patch.paceMode)) delete patch.paceMode;
   if ('contrast' in patch && !['normal', 'high'].includes(patch.contrast)) delete patch.contrast;
+  if ('accent' in patch && !(patch.accent === '' || /^#[0-9a-f]{6}$/i.test(patch.accent))) delete patch.accent;
   if ('gender' in patch && !['female', 'male', 'other'].includes(patch.gender)) delete patch.gender;
   if ('voicePreset' in patch && !(patch.voicePreset in PRESETS)) delete patch.voicePreset;
   if ('voiceURI' in patch) patch = { ...patch, voiceURI: String(patch.voiceURI || '').slice(0, 200) };
@@ -165,6 +166,7 @@ export function sanitizeSettings(raw) {
     if (k === 'seeded' || !(k in raw)) continue;
     const v = raw[k];
     if (ENUM[k]) { if (ENUM[k].includes(v)) out[k] = v; }
+    else if (k === 'accent') { if (v === '' || /^#[0-9a-f]{6}$/i.test(v)) out[k] = v; }
     else if (typeof def === 'boolean') { if (typeof v === 'boolean') out[k] = v; }
     else if (k === 'age') { if (v === null || Number.isFinite(Number(v))) out[k] = v; }
     else if (typeof def === 'number') { if (Number.isFinite(v)) out[k] = clamp(v, 0, 86400); }

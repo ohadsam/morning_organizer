@@ -18,6 +18,7 @@ import { openWelcome } from './ui/welcome.js';
 import { renderFamily } from './ui/family.js';
 import { routeIncoming } from './ui/incoming.js';
 import { initFamily } from './family.js';
+import { isUnlocked, requestGate } from './ui/gate.js';
 import { initTransports } from './transports.js';
 
 const root = document.getElementById('app');
@@ -28,6 +29,8 @@ async function route() {
   cleanup(); cleanup = () => {};
   const [, page, arg] = (location.hash.replace(/^#/, '') || '/').split('/');
   const view = page || 'home';
+  // Simple (kids) mode: only routines and running them are open; everything else needs the grown-up gate.
+  if (S.get().settings.simpleMode && !['home', 'run'].includes(view) && !isUnlocked() && !(await requestGate())) { if (location.hash !== '#/') location.hash = '#/'; else drawNav('home'); return; }
   document.body.dataset.view = view;
   root.scrollTo?.(0, 0); window.scrollTo(0, 0);
   if (view === 'import') { const code = decodeURIComponent(arg || ''); history.replaceState(null, '', '#/'); nav('#/'); openImport(code); return; }
@@ -41,7 +44,8 @@ async function route() {
 }
 
 function drawNav(view) {
-  const tabs = [['home', 'home', '#/'], ['stats', 'chart', '#/stats'], ['family', 'users', '#/family'], ['guide', 'book', '#/guide'], ['settings', 'gear', '#/settings']];
+  const simple = S.get().settings.simpleMode;
+  const tabs = simple ? [['home', 'home', '#/'], ['settings', 'gear', '#/settings']] : [['home', 'home', '#/'], ['stats', 'chart', '#/stats'], ['family', 'users', '#/family'], ['guide', 'book', '#/guide'], ['settings', 'gear', '#/settings']];
   const active = { edit: 'home', run: 'home' }[view] ?? view;
   document.getElementById('nav').replaceChildren(...tabs.map(([key, ic, href]) => h('a', { href, class: key === active ? 'on' : '', 'aria-current': key === active ? 'page' : null }, icon(ic, 24), h('span', {}, t(key === 'family' ? 'tabFamily' : key)))));
 }

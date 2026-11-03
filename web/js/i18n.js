@@ -83,6 +83,8 @@ export const STR = {
     sendReport: 'Send my report', reportReady: 'A new report is ready', unlink: 'Unlink', unlinkConfirm: 'Remove this link? What was already received stays.', from: 'From {name}', fromParentTag: 'from {name}',
     rcvReport: 'Report from {name}', rcvAssign: '{n} routine(s) received from {name}', rcvCheer: 'Cheer from {name}', rcvGoal: 'New reward goal', rcvOk: 'Received', rcvBad: 'Could not read this message.', rcvReplay: 'Already received.', rcvUnknown: 'This message is for a link this phone does not have.',
     cheers: 'Cheers', tabFamily: 'Family',
+    appearance: 'Appearance', buddySection: 'Buddy & messages', alertsSection: 'Alerts & sounds', defaultsSection: 'Defaults', accent: 'Accent color', simpleMode: 'Simple mode for kids', simpleHint: 'Shows only the routines with big Start buttons and locks everything else behind a quick grown-up question.',
+    gateTitle: 'Grown-ups only', gateQ: 'What is {a} × {b}?', gateWrong: 'Not quite - try again.', goalChip: '{emoji} {have}/{target}',
     close: 'Close', loading: 'Loading…', error: 'Something went wrong', storageFail: 'Storage unavailable - changes will not be kept.',
   },
   he: {
@@ -167,6 +169,8 @@ export const STR = {
     sendReport: 'שליחת הדיווח שלי', reportReady: 'דיווח חדש מוכן', unlink: 'ניתוק קישור', unlinkConfirm: 'להסיר את הקישור? מה שכבר התקבל נשאר.', from: 'מאת {name}', fromParentTag: 'מאת {name}',
     rcvReport: 'דיווח מאת {name}', rcvAssign: 'התקבלו {n} שגרות מאת {name}', rcvCheer: 'עידוד מאת {name}', rcvGoal: 'יעד פרס חדש', rcvOk: 'התקבל', rcvBad: 'לא ניתן לקרוא את ההודעה.', rcvReplay: 'כבר התקבל.', rcvUnknown: 'ההודעה מיועדת לקישור שאין בטלפון הזה.',
     cheers: 'עידודים', tabFamily: 'משפחה',
+    appearance: 'מראה', buddySection: 'חבר והודעות', alertsSection: 'התראות וצלילים', defaultsSection: 'ברירות מחדל', accent: 'צבע מבטא', simpleMode: 'מצב פשוט לילדים', simpleHint: 'מציג רק את השגרות עם כפתורי התחלה גדולים ונועל את כל השאר מאחורי שאלה קצרה למבוגרים.',
+    gateTitle: 'למבוגרים בלבד', gateQ: 'כמה זה {a} × {b}?', gateWrong: 'לא בדיוק - נסו שוב.', goalChip: '{emoji} {have}/{target}',
     close: 'סגירה', loading: 'טוען…', error: 'משהו השתבש', storageFail: 'האחסון לא זמין - שינויים לא יישמרו.',
   },
 };

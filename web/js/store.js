@@ -16,13 +16,14 @@ import { toolsFor } from './focus.js';
 import { widgetItems } from './widgetData.js';
 import { sanitizeMood } from './mood.js';
 import { sanitizeUnplanned, sanitizeWatch } from './unplanned.js';
+import { sanitizeLibrary, mergeLibrary, upsert, fromTemplate, fromTask, MAX_ROUTINES as LIB_R, MAX_TASKS as LIB_T, IDEA_ROUTINES } from './library.js';
 import { eraseJournal } from './journal.js';
 import { newProfile, normalizeProfile, runsOf, MAX_PROFILES } from './profiles.js';
 
 export const DEFAULT_SETTINGS = Object.freeze({
   lang: 'he', theme: 'auto', mode: 'both', volume: 80, warnSec: 10, defTaskSec: 300, defEstSec: 0,
   autoAdvance: false, keepAwake: true, keepAwakeApp: false, personName: '', mascot: '🦊', feedback: true, speak: false, age: null, gender: 'other', profileDone: false,
-  paceMode: 'normal', accent: '', simpleMode: false, announceTasks: false, fontScale: 100, colorSafe: false, contrast: 'normal', srAnnounce: false,
+  textStyle: 'auto', timerStyle: 'auto', paceMode: 'normal', accent: '', simpleMode: false, announceTasks: false, fontScale: 100, colorSafe: false, contrast: 'normal', srAnnounce: false,
   coachButton: true, coachAuto: false, coachSpeak: false, voiceURI: '', voicePreset: 'natural', seeded: false,
   avatar: defaultAvatar(), activeProfile: '', transcribe: false,
 });
@@ -33,7 +34,7 @@ export const COLORS = ['#6c5ce7', '#0984e3', '#00b894', '#e17055', '#e84393', '#
 export const MASCOTS = ['🦊', '🐼', '🦄', '🐯', '🐸', '🤖', '🐶', '🐱'];
 export const ICONS = ['🌅', '☀️', '🎒', '🪥', '👕', '🥣', '🏃', '📚', '🧘', '🐶', '🚌', '⏰'];
 
-const state = { templates: [], runs: [], watch: [], profiles: [], settings: { ...DEFAULT_SETTINGS }, ready: false };
+const state = { templates: [], runs: [], watch: [], library: { routines: [], tasks: [] }, profiles: [], settings: { ...DEFAULT_SETTINGS }, ready: false };
 const subs = new Set();
 export const subscribe = (fn) => { subs.add(fn); return () => subs.delete(fn); };
 const emit = () => subs.forEach((f) => f(state));
@@ -46,7 +47,7 @@ export function newTask(settings = state.settings, name = '') {
 export function newTemplate(name = '') {
   const now = Date.now();
   return { id: uid(), name, icon: ICONS[0], color: COLORS[0], favorite: false, builtin: false,
-    leaveBy: '', from: '', days: [], gear: [], tasks: [newTask()], alarm: defaultAlarm(), createdAt: now, updatedAt: now };
+    leaveBy: '', from: '', days: [], gear: [], plans: [], tasks: [newTask()], alarm: defaultAlarm(), createdAt: now, updatedAt: now };
 }
 export const totalSec = (tpl) => tpl.tasks.reduce((s, x) => s + x.sec, 0);
 
@@ -60,6 +61,7 @@ export function normalizeTemplate(tpl) {
     name: cleanText(tpl.name, LIMITS.maxName), icon: cleanText(tpl.icon, 8) || '⏰',
     color: /^#[0-9a-fA-F]{6}$/.test(tpl.color) ? tpl.color : COLORS[0], favorite: !!tpl.favorite, builtin: !!tpl.builtin,
     createdAt: num(tpl.createdAt, Date.now()), updatedAt: num(tpl.updatedAt, Date.now()), leaveBy: validLeaveBy(tpl.leaveBy), from: cleanText(tpl.from, 30), days: normDays(tpl.days),
+    plans: (Array.isArray(tpl.plans) ? tpl.plans : []).filter((x) => x && typeof x === 'object' && cleanText(x.when, 80) && cleanText(x.then, 80)).slice(0, 5).map((x) => ({ id: typeof x.id === 'string' && x.id ? x.id.slice(0, 64) : uid(), when: cleanText(x.when, 80), then: cleanText(x.then, 80) })),
     gear: (Array.isArray(tpl.gear) ? tpl.gear : []).filter((g) => g && typeof g === 'object' && cleanText(g.name, 40)).slice(0, 20).map((g) => ({ id: typeof g.id === 'string' && g.id ? g.id.slice(0, 64) : uid(), name: cleanText(g.name, 40), icon: cleanText(g.icon, 8), days: normDays(g.days) })),
     tasks: (Array.isArray(tpl.tasks) ? tpl.tasks : []).slice(0, LIMITS.maxTasks).map((x) => ({
       id: typeof x?.id === 'string' && x.id ? x.id.slice(0, 64) : uid(), name: cleanText(x?.name, LIMITS.maxName), icon: cleanText(x?.icon, 8), photo: isSafePhoto(x?.photo) ? x.photo : '',
@@ -97,9 +99,39 @@ export async function init() {
   if (!state.profiles.some((p) => p.id === state.settings.activeProfile)) state.settings.activeProfile = state.profiles[0].id;
   mirrorActiveProfile();
   state.watch = sanitizeWatch(await db.get('kv', 'watch'));
+  state.library = sanitizeLibrary(await db.get('kv', 'library'));
   state.ready = true;
   emit();
 }
+
+// ── template library: reusable tasks and routines ──
+export const library = () => state.library;
+const persistLib = async () => { await db.put('kv', state.library, 'library'); emit(); };
+export async function saveToLibrary(kind, data) {
+  if (kind === 'task') { const e = fromTask(data); if (!e.name) return null; state.library = { ...state.library, tasks: upsert(state.library.tasks, e, LIB_T) }; }
+  else { const e = fromTemplate(data); if (!e.name || !e.tasks.length) return null; state.library = { ...state.library, routines: upsert(state.library.routines, e, LIB_R) }; }
+  await persistLib(); return true;
+}
+export async function updateLibraryItem(kind, id, patch) {
+  const key = kind === 'task' ? 'tasks' : 'routines', cur = state.library[key].find((e) => e.id === id); if (!cur) return;
+  state.library = sanitizeLibrary({ ...state.library, [key]: state.library[key].map((e) => (e.id === id ? { ...e, ...patch, id } : e)) }); await persistLib();
+}
+export async function removeLibraryItem(kind, id) {
+  const key = kind === 'task' ? 'tasks' : 'routines', before = state.library, item = before[key].find((e) => e.id === id); if (!item) return () => {};
+  state.library = { ...before, [key]: before[key].filter((e) => e.id !== id) }; await persistLib();
+  return async () => { state.library = { ...state.library, [key]: [...state.library[key], item] }; await persistLib(); };
+}
+/** A (not yet saved) routine built from a library entry: fresh ids, no alarm. */
+export function templateFromEntry(e, name = e.name) {
+  const base = newTemplate(name);
+  return { ...base, name, icon: e.icon || base.icon, color: e.color || base.color, days: e.days || [], leaveBy: e.leaveBy || '',
+    tasks: e.tasks.map((k) => ({ id: uid(), name: k.name, icon: k.icon, photo: '', sec: k.sec, est: k.est })),
+    gear: (e.gear || []).map((g) => ({ id: uid(), name: g.name, icon: g.icon || '', days: g.days || [] })), plans: (e.plans || []).map((p) => ({ id: uid(), when: p.when, then: p.then })) };
+}
+export async function createFromEntry(e, name) { const tpl = normalizeTemplate(templateFromEntry(e, name)); await saveTemplate(tpl); return tpl; }
+/** Built-in idea routines as library-shaped entries (names localised now). */
+export const ideaRoutines = () => IDEA_ROUTINES.map((r) => ({ id: r.id, name: t(r.nameKey), icon: r.icon, color: r.color, days: [], gear: [], plans: [], leaveBy: '', builtin: true,
+  tasks: r.items.map(([k, min]) => ({ name: t(k), icon: suggestIcon(t(k)), sec: Math.round(min * 60), est: 0 })) }));
 
 // ── "look closer" at a recurring unplanned interruption (kept on this device) ──
 export const watchList = () => state.watch;
@@ -160,12 +192,7 @@ export async function addSamples(all = false) {
   // Fixed ids: the same sample on the website and in the app is the SAME routine, so a manual-sync merge never duplicates it.
   const mk = (id, name, icon, color, items) => ({ ...newTemplate(name), id, icon, color, builtin: true,
     tasks: items.map(([k, min], i) => ({ id: `${id}-${i}`, name: t(k), icon: suggestIcon(t(k)), sec: Math.round(min * 60), est: 0 })) });
-  const samples = [mk('sample-kids', t('sample1'), '🎒', '#0984e3', [['s_wake', 2], ['s_bath', 4], ['s_dress', 5], ['s_eat', 15], ['s_bag', 3], ['s_shoes', 2]]),
-    mk('sample-adult', t('sample2'), '🌅', '#e17055', [['s_shower', 8], ['s_dress', 5], ['s_coffee', 10], ['s_plan', 5]])];
-  if (all) samples.push(
-    mk('sample-bedtime', t('sample3'), '🌙', '#6c5ce7', [['s_tidy', 5], ['s_pajamas', 3], ['s_teeth', 3], ['s_story', 10], ['s_lights', 1]]),
-    mk('sample-homework', t('sample4'), '📚', '#00b894', [['s_hands', 2], ['s_snack', 10], ['s_homework', 25], ['s_read', 15], ['s_bagprep', 3]]),
-    mk('sample-afterschool', t('sample5'), '🏠', '#e84393', [['s_unpack', 3], ['s_hands', 2], ['s_lunch', 20], ['s_play', 30]]));
+  const samples = ideaRoutines().filter((r) => all || IDEA_ROUTINES.find((d) => d.id === r.id)?.basic).map((r) => mk(r.id, r.name, r.icon, r.color, IDEA_ROUTINES.find((d) => d.id === r.id).items));
   const base = Date.now(); // distinct timestamps keep the list order (kids first) after reloads (IndexedDB returns rows by id)
   for (const [i, x] of samples.entries()) if (!getTemplate(x.id)) await saveTemplate({ ...x, createdAt: base + i });
 }
@@ -204,6 +231,8 @@ export async function updateSettings(patch) {
   if ('mascot' in patch && !MASCOTS.includes(patch.mascot)) delete patch.mascot;
   if ('age' in patch) { const n = Math.round(Number(patch.age)); patch = { ...patch, age: Number.isFinite(n) && n >= 3 && n <= 120 ? n : null }; }
   if ('fontScale' in patch && ![100, 115, 130, 150].includes(patch.fontScale)) delete patch.fontScale;
+  if ('textStyle' in patch && !['auto', 'playful', 'plain'].includes(patch.textStyle)) delete patch.textStyle;
+  if ('timerStyle' in patch && !['auto', 'ring', 'pie', 'bar'].includes(patch.timerStyle)) delete patch.timerStyle;
   if ('paceMode' in patch && !['normal', 'quick', 'calm'].includes(patch.paceMode)) delete patch.paceMode;
   if ('contrast' in patch && !['normal', 'high'].includes(patch.contrast)) delete patch.contrast;
   if ('accent' in patch && !(patch.accent === '' || /^#[0-9a-f]{6}$/i.test(patch.accent))) delete patch.accent;
@@ -252,13 +281,13 @@ export const saveActive = (run) => db.put('kv', run ? structuredClone(run) : nul
 export const loadActive = () => db.get('kv', 'activeRun');
 
 export function exportAll() {
-  return JSON.stringify({ app: 'morning-organizer', v: 1, templates: state.templates, runs: state.runs, profiles: state.profiles, settings: state.settings });
+  return JSON.stringify({ app: 'morning-organizer', v: 1, templates: state.templates, runs: state.runs, profiles: state.profiles, library: state.library, settings: state.settings });
 }
 /** Keep only known settings with the right type and sane ranges (a backup is untrusted input). */
 export function sanitizeSettings(raw) {
   const out = {};
   if (!raw || typeof raw !== 'object') return out;
-  const ENUM = { lang: ['auto', 'he', 'en'], theme: ['auto', 'light', 'dark'], mode: ['both', 'beep', 'vibrate', 'silent'], paceMode: ['normal', 'quick', 'calm'], contrast: ['normal', 'high'], fontScale: [100, 115, 130, 150] };
+  const ENUM = { lang: ['auto', 'he', 'en'], theme: ['auto', 'light', 'dark'], mode: ['both', 'beep', 'vibrate', 'silent'], paceMode: ['normal', 'quick', 'calm'], contrast: ['normal', 'high'], textStyle: ['auto', 'playful', 'plain'], timerStyle: ['auto', 'ring', 'pie', 'bar'], fontScale: [100, 115, 130, 150] };
   for (const [k, def] of Object.entries(DEFAULT_SETTINGS)) {
     if (k === 'seeded' || !(k in raw)) continue;
     const v = raw[k];
@@ -301,6 +330,11 @@ export async function importBackup(text, { mode = 'merge', settings = true } = {
     if (!state.profiles.length) state.profiles = [newProfile({})];
     if (!state.profiles.some((x) => x.id === state.settings.activeProfile)) state.settings.activeProfile = state.profiles[0].id;
     await persistProfiles(); mirrorActiveProfile();
+  }
+  if (d.library && typeof d.library === 'object') { // the template library: merge by id; "replace" makes the backup's library the whole library
+    const incoming = sanitizeLibrary(d.library), before = state.library.routines.length + state.library.tasks.length;
+    state.library = mode === 'replace' ? incoming : mergeLibrary(state.library, incoming); await persistLib();
+    res.library = state.library.routines.length + state.library.tasks.length - (mode === 'replace' ? 0 : before);
   }
   if (settings && d.settings) {
     const patch = sanitizeSettings(d.settings);

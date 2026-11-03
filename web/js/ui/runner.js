@@ -118,6 +118,9 @@ export async function renderRunner(root, id, nav) {
     setChildren(gearBox, h('summary', {}, `🎒 ${t('gearToday')} · ${t('gearCount', { done, total: items.length })}`), h('ul', { class: 'gear-list' }, items.map((g) => h('li', {}, h('label', { class: 'switch row' }, h('span', {}, `${g.icon || suggestIcon(g.name)} ${g.name}`), h('input', { type: 'checkbox', checked: g.done, onchange: (e) => { g.done = e.target.checked; persist(); paintGear(); } }))))));
     if (done < items.length) gearBox.open ||= fresh; // start open so it is seen once, stays as the person left it
   }
+  const planBox = h('details', { class: 'card plan-card', hidden: !(run.plans || S.getTemplate(run.templateId)?.plans || []).length });
+  const plans = (S.getTemplate(run.templateId)?.plans || []).slice(0, 5);
+  if (plans.length) { setChildren(planBox, h('summary', {}, `🧠 ${t('plansTitle')}`), h('ul', { class: 'plan-list' }, plans.map((p) => h('li', {}, h('strong', {}, t('planIf')), ` ${p.when}, `, h('strong', {}, t('planThenWord')), ` ${p.then}`)))); planBox.open = fresh; }
   function announceTask(cur) {
     const msg = t('nowTask', { task: cur.name || '' });
     if (st().announceTasks) setTimeout(() => speakWithSettings(msg), fresh ? 1800 : 300); // after the "start" encouragement
@@ -162,7 +165,7 @@ export async function renderRunner(root, id, nav) {
     const cur = run.tasks[run.current], paused = run.status === 'paused';
     taskName.textContent = cur?.name || ''; ti.replaceChildren(cur ? taskIcon(cur) : '');
     if (cur && run.current !== lastCur) { lastCur = run.current; announceTask(cur); }
-    ring.classList.toggle('calm', calm(run)); ring.classList.toggle('pie', feat.timerPie);
+    ring.classList.toggle('calm', calm(run)); { const ts = st().timerStyle, style = ts && ts !== 'auto' ? ts : feat.timerPie ? 'pie' : 'ring'; ring.classList.toggle('pie', style === 'pie'); ring.classList.toggle('bar', style === 'bar'); }
     ring.classList.toggle('paused', paused); pausedBadge.hidden = !paused || !!run.interrupt;
     list.replaceChildren(...run.tasks.map((tk, i) => h('li', { class: `${i === run.current && E.isActive(run) ? 'cur' : ''} ${tk.done ? 'done' : ''} ${tk.skipped ? 'skip' : ''}` },
       h('label', {}, h('input', { type: 'checkbox', checked: tk.done, onchange: () => { if (i === run.current) doComplete(); else { run = E.toggleTask(run, i, Date.now()); afterChange(); } } }),
@@ -278,7 +281,7 @@ export async function renderRunner(root, id, nav) {
 
   root.replaceChildren(h('div', { class: 'run' },
     h('div', { class: 'run-top', style: { '--accent': run.color || '#6c5ce7' } }, h('span', { class: 'emoji' }, run.icon), h('h1', { class: 'run-title' }, run.templateName)),
-    bubble, coachHost, transEl, intrEl, gearBox, pw.el, head, leaveEl, h('div', { class: 'ring-wrap' }, ring, pausedBadge), sprintEl, taskName, pace, controls, list));
+    bubble, coachHost, transEl, intrEl, planBox, gearBox, pw.el, head, leaveEl, h('div', { class: 'ring-wrap' }, ring, pausedBadge), sprintEl, taskName, pace, controls, list));
   paintStatic(); paintLive(); paintGear();
   if (fresh) say('start');
   timer = setInterval(loop, 250);

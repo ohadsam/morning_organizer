@@ -2,7 +2,9 @@ package com.morningorganizer.app
 
 import android.app.Notification
 import android.app.NotificationChannel
+import android.app.AlarmManager
 import android.app.NotificationManager
+import android.net.Uri
 import android.app.PendingIntent
 import android.app.Service
 import android.content.Context
@@ -27,12 +29,15 @@ import androidx.core.app.ServiceCompat
 class AlarmService : Service() {
     private var player: MediaPlayer? = null
     private var tts: TextToSpeech? = null
+    private var last: Intent? = null
     private val handler = Handler(Looper.getMainLooper())
 
     override fun onBind(intent: Intent?): IBinder? = null
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         if (intent?.action == ACTION_STOP) { stopSelf(); return START_NOT_STICKY }
+        if (intent?.action == ACTION_SNOOZE) { snooze(); stopSelf(); return START_NOT_STICKY }
+        last = intent?.let { Intent(it) }
         val templateId = intent?.getStringExtra("templateId") ?: run { stopSelf(); return START_NOT_STICKY }
         val name = intent.getStringExtra("name").orEmpty()
         val volume = intent.getIntExtra("volume", 80).coerceIn(0, 100)
@@ -71,9 +76,20 @@ class AlarmService : Service() {
         return START_NOT_STICKY
     }
 
+    /** Rings again in five minutes with the same settings (one-shot alarm clock entry, no extra permission). */
+    private fun snooze() {
+        val src = last ?: return
+        val templateId = src.getStringExtra("templateId") ?: return
+        val again = Intent(this, AlarmReceiver::class.java).setAction(AlarmReceiver.ACTION).setData(Uri.parse("alarm://snooze/${Uri.encode(templateId)}")).putExtras(src)
+        val pi = PendingIntent.getBroadcast(this, 5000 + templateId.hashCode(), again, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
+        val show = PendingIntent.getActivity(this, 6, MainActivity.startIntent(this, templateId, "offer", src.getStringExtra("text")), PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
+        (getSystemService(Context.ALARM_SERVICE) as AlarmManager).setAlarmClock(AlarmManager.AlarmClockInfo(System.currentTimeMillis() + SNOOZE_MS, show), pi)
+    }
+
     private fun buildNotification(templateId: String, name: String, text: String, start: String, n: Int, of: Int): Notification {
         // tapping the alarm (or the lock-screen takeover) opens the app on the offer or starts straight away, as chosen; the Start button always starts
         val open = PendingIntent.getActivity(this, 1, MainActivity.startIntent(this, templateId, start, text), PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
+        val snoozeIntent = PendingIntent.getService(this, 4, Intent(this, AlarmService::class.java).setAction(ACTION_SNOOZE), PendingIntent.FLAG_IMMUTABLE)
         val startNow = PendingIntent.getActivity(this, 3, MainActivity.startIntent(this, templateId), PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
         val stop = PendingIntent.getService(this, 2, Intent(this, AlarmService::class.java).setAction(ACTION_STOP), PendingIntent.FLAG_IMMUTABLE)
         return NotificationCompat.Builder(this, CHANNEL)
@@ -81,7 +97,7 @@ class AlarmService : Service() {
             .setContentTitle(if (of > 1) getString(R.string.alarm_title_n, name, n, of) else getString(R.string.alarm_title, name)).setContentText(text.ifBlank { getString(R.string.alarm_text) })
             .setCategory(NotificationCompat.CATEGORY_ALARM).setPriority(NotificationCompat.PRIORITY_MAX)
             .setContentIntent(open).setFullScreenIntent(open, true).setOngoing(true).setAutoCancel(true)
-            .addAction(0, getString(R.string.alarm_start), startNow).addAction(0, getString(R.string.alarm_stop), stop)
+            .addAction(0, getString(R.string.alarm_start), startNow).addAction(0, getString(R.string.alarm_snooze), snoozeIntent).addAction(0, getString(R.string.alarm_stop), stop)
             .build()
     }
 
@@ -126,6 +142,6 @@ class AlarmService : Service() {
     override fun onDestroy() { stopRinging(); tts?.stop(); tts?.shutdown(); tts = null; super.onDestroy() }
 
     companion object {
-        const val CHANNEL = "routine_alarm"; const val NOTIF_ID = 4201; const val ACTION_STOP = "com.morningorganizer.app.STOP"
+        const val CHANNEL = "routine_alarm"; const val NOTIF_ID = 4201; const val ACTION_STOP = "com.morningorganizer.app.STOP"; const val ACTION_SNOOZE = "com.morningorganizer.app.SNOOZE"; const val SNOOZE_MS = 5 * 60 * 1000L
     }
 }

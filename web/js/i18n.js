@@ -236,6 +236,7 @@ export const STR = {
 };
 
 import { EN as WB_EN, HE as WB_HE } from './wellbeing.js';
+import { PLAYFUL } from './playful.js';
 Object.assign(STR.en, WB_EN); Object.assign(STR.he, WB_HE);
 
 let lang = 'en';
@@ -251,8 +252,13 @@ export function setLang(pref) {
   if (typeof document !== 'undefined') { document.documentElement.lang = lang; document.documentElement.dir = isRtl() ? 'rtl' : 'ltr'; }
   return lang;
 }
+let playful = false;
+/** Playful wording on/off (see playful.js). Called by the app when the active person's age or the text-style setting changes. */
+export const setPlayful = (on) => { playful = !!on; };
+export const isPlayful = () => playful;
+export const shouldBePlayful = (style, age) => (style === 'playful' ? true : style === 'plain' ? false : Number.isFinite(age) && age !== null && age >= 3 && age <= 11);
 export function t(key, params) {
-  const s = STR[lang][key] ?? STR.en[key] ?? key;
+  const s = (playful && Object.hasOwn(PLAYFUL[lang], key) ? PLAYFUL[lang][key] : null) ?? STR[lang][key] ?? STR.en[key] ?? key;
   return params ? s.replace(/\{(\w+)\}/g, (_, k) => params[k] ?? '') : s;
 }
 export const units = () => ({ h: t('u_h'), m: t('u_m'), s: t('u_s') });

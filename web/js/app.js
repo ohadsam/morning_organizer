@@ -1,6 +1,6 @@
 // Entry point: boot, hash router, bottom navigation, service worker.
 import * as S from './store.js';
-import { setLang, t } from './i18n.js';
+import { setLang, t, setPlayful, isPlayful, shouldBePlayful } from './i18n.js';
 import { h } from './util.js';
 import { native, onNativeEvent } from './native.js';
 import { scheduleWebReminders } from './reminders.js';
@@ -22,6 +22,7 @@ import { setProfileDeleteHook } from './ui/avatar.js';
 import { isUnlocked, requestGate } from './ui/gate.js';
 import { initTransports } from './transports.js';
 import { handleRing } from './ui/offer.js';
+import { renderLibrary } from './ui/library.js';
 import { renderCalm } from './ui/calm.js';
 import { renderJournal } from './ui/journal.js';
 import { lockAll } from './journal.js';
@@ -43,7 +44,7 @@ async function route() {
     const views = {
       home: () => renderHome(root, nav), edit: () => renderEditor(root, arg, nav), run: () => renderRunner(root, arg, nav),
       stats: () => renderStats(root, arg, nav), family: () => renderFamily(root), settings: () => renderSettings(root, version), guide: () => renderGuide(root),
-      calm: () => renderCalm(root, nav), journal: () => renderJournal(root, nav),
+      calm: () => renderCalm(root, nav), library: () => renderLibrary(root, nav), journal: () => renderJournal(root, nav),
     };
     // The route comes from the address bar: look it up as OWN data only ("#/constructor" or "#/__proto__" must fall back to home).
     const out = await (Object.hasOwn(views, view) ? views[view] : views.home)();
@@ -55,7 +56,7 @@ async function route() {
 function drawNav(view) {
   const simple = S.get().settings.simpleMode;
   const tabs = simple ? [['home', 'home', '#/'], ['settings', 'gear', '#/settings']] : [['home', 'home', '#/'], ['stats', 'chart', '#/stats'], ['family', 'users', '#/family'], ['guide', 'book', '#/guide'], ['settings', 'gear', '#/settings']];
-  const parentTab = { edit: 'home', run: 'home' }, active = Object.hasOwn(parentTab, view) ? parentTab[view] : view;
+  const parentTab = { edit: 'home', run: 'home', library: 'home' }, active = Object.hasOwn(parentTab, view) ? parentTab[view] : view;
   document.getElementById('nav').replaceChildren(...tabs.map(([key, ic, href]) => h('a', { href, class: key === active ? 'on' : '', 'aria-current': key === active ? 'page' : null }, icon(ic, 24), h('span', {}, t(key === 'family' ? 'tabFamily' : key)))));
 }
 
@@ -70,13 +71,15 @@ async function boot() {
     });
   } catch (e) { console.error(e); }
   const st = S.get().settings;
-  setLang(st.lang); applyTheme(st.theme);
+  setLang(st.lang); applyTheme(st.theme); setPlayful(shouldBePlayful(st.textStyle, st.age));
   document.title = t('appName');
   setAwake('app', st.keepAwakeApp); applyA11y(st);
   try { version = (await (await fetch('version.json', { cache: 'no-cache' })).json()).version; } catch { /* offline first load */ }
   await S.seedIfNeeded();
   S.syncNative();
   const onRing = (tpl, r) => handleRing(tpl.id, r, nav);
+  // young children (or "playful" in Settings) get lighter wording everywhere; re-draw only when that actually flips
+  S.subscribe(() => { const { textStyle, age } = S.get().settings, on = shouldBePlayful(textStyle, age); if (on !== isPlayful()) { setPlayful(on); route(); } });
   S.subscribe(() => scheduleWebReminders(onRing));
   scheduleWebReminders(onRing);
 

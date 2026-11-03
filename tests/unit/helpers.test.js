@@ -85,3 +85,20 @@ test('wake chain: rings, schedule, next ring, native entries, sanitising', async
   assert.equal(late[1].hour, 0); assert.equal(late[1].minute, 10); assert.deepEqual(late[1].days, [0]);   // crosses midnight: Saturday -> Sunday
   assert.deepEqual(W.nativeRings({ id: 't', name: 'N', alarm: { enabled: false } }), []);
 });
+
+test('playful wording: same keys and placeholders as the plain text, switches by age/style', async () => {
+  const { STR, setLang, setPlayful, t, shouldBePlayful } = await import('../../web/js/i18n.js'), { PLAYFUL } = await import('../../web/js/playful.js');
+  const ph = (x) => (String(x).match(/\{\w+\}/g) || []).sort().join();
+  for (const lang of ['en', 'he']) for (const [k, v] of Object.entries(PLAYFUL[lang])) { assert.ok(k in STR[lang], `${lang}.${k} must exist`); assert.ok(v.trim(), k); assert.equal(ph(v), ph(STR[lang][k]), `placeholders of ${lang}.${k}`); }
+  assert.deepEqual(Object.keys(PLAYFUL.en).sort(), Object.keys(PLAYFUL.he).sort());
+  assert.equal(shouldBePlayful('auto', 8), true); assert.equal(shouldBePlayful('auto', 12), false); assert.equal(shouldBePlayful('auto', null), false); assert.equal(shouldBePlayful('plain', 6), false); assert.equal(shouldBePlayful('playful', 40), true);
+  setLang('en'); setPlayful(true); assert.equal(t('doneNext'), 'I did it! ✓'); assert.equal(t('streakDays', { n: 3 }), '3 days in a row! 🔥'); assert.equal(t('cancel'), 'Cancel'); setPlayful(false); assert.equal(t('doneNext'), 'Done ✓');
+});
+
+test('weekly digest: slowest steps and repeated interruptions, last 7 days only', async () => {
+  const { weeklyDigest, sanitizeReport } = await import('../../web/js/rewards.js'), now = Date.now(), day = 86_400_000;
+  const run = (ago, over, unp) => ({ endedAt: now - ago * day, tasks: [{ name: 'Shoes', done: true, plannedSec: 60, actualSec: 60 + over }, { name: 'Eat', done: true, plannedSec: 300, actualSec: 300 }], unplanned: unp ? [{ key: 'toilet', label: 'Toilet', emoji: '🚽', sec: 60 }] : [] });
+  const d = weeklyDigest([run(1, 90, true), run(2, 70, true), run(3, 80, false), run(20, 500, true)], now);
+  assert.deepEqual(d.slow, [{ name: 'Shoes', overSec: 80 }]); assert.equal(d.unp.length, 1); assert.equal(d.unp[0].n, 2);
+  assert.deepEqual(sanitizeReport({ digest: { slow: [{ name: 'x'.repeat(200), overSec: -5 }], unp: 5 } }).digest, { slow: [{ name: 'x'.repeat(80), overSec: 0 }], unp: [] });
+});

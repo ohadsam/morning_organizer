@@ -29,13 +29,13 @@ a { color: var(--brand); } [hidden] { display: none !important; }
 .btn.small { min-height: 36px; padding: 0 12px; font-size: .9rem; } .btn.link { background: none; border: 0; color: inherit; text-decoration: underline; min-height: 36px; }
 .icon-btn { min-width: 44px; padding: 0; background: transparent; border-color: transparent; } .icon-btn.dim { opacity: .35; }
 .fav.on { color: #f5b301; } .fav.on .icon { fill: currentColor; }
-input[type=text], input[type=number], input[type=time], select, textarea { font: inherit; color: var(--text); background: var(--surface); border: 1px solid var(--line); border-radius: 12px; min-height: 44px; padding: 0 12px; width: 100%; }
+input[type=text], input[type=search], input[type=password], input[type=number], input[type=time], select, textarea { font: inherit; color: var(--text); background: var(--surface); border: 1px solid var(--line); border-radius: 12px; min-height: 44px; padding: 0 12px; width: 100%; }
 textarea { padding: 10px 12px; resize: vertical; } textarea.code { font-family: ui-monospace, monospace; font-size: .8rem; word-break: break-all; direction: ltr; text-align: left; }
 input[type=range] { width: 100%; accent-color: var(--brand); } input[type=checkbox] { width: 22px; height: 22px; accent-color: var(--brand); }
 .lbl { display: block; font-size: .85rem; font-weight: 600; color: var(--muted); margin-block-end: 4px; }
 .field { display: block; margin-block: 12px; } .hint { display: block; font-size: .8rem; color: var(--muted); font-weight: 400; }
 .stack { display: grid; gap: 12px; } .row { display: flex; align-items: center; gap: 10px; } .between { justify-content: space-between; }
-.toolbar { display: flex; gap: 10px; margin-block: 12px; } .toolbar.wrap { flex-wrap: wrap; }
+.toolbar { display: flex; flex-wrap: wrap; gap: 10px; margin-block: 12px; } .toolbar.wrap { flex-wrap: wrap; }
 .card { background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow); padding: 14px; border: 1px solid var(--line); }
 .switch { justify-content: space-between; min-height: 44px; cursor: pointer; }
 .empty { text-align: center; color: var(--muted); padding: 32px 0; }
@@ -223,7 +223,7 @@ dialog header { display: flex; align-items: center; justify-content: space-betwe
 .buddy .avatar { margin-top: -4px; }
 
 /* ── v1.8: schedule + gear ── */
-.gear-row { display: grid; gap: 6px; border-bottom: 1px dashed var(--line); padding-bottom: 8px; } .gear-card { padding: 0; width: 100%; text-align: start; } .gear-card summary { padding: 10px 14px; cursor: pointer; font-weight: 700; min-height: 44px; display: flex; align-items: center; }
+.gear-row { display: grid; gap: 6px; border-bottom: 1px dashed var(--line); padding-bottom: 8px; } .gear-card, .plan-card { padding: 0; width: 100%; text-align: start; } .gear-card summary { padding: 10px 14px; cursor: pointer; font-weight: 700; min-height: 44px; display: flex; align-items: center; }
 .gear-list { list-style: none; margin: 0; padding: 0 14px 10px; display: grid; gap: 2px; } .stack.dim { opacity: .75; }
 
 /* achievements */
@@ -263,3 +263,22 @@ dialog header { display: flex; align-items: center; justify-content: space-betwe
 .intr-time { font-variant-numeric: tabular-nums; font-weight: 800; font-size: 1.3rem; }
 .reasons { display: flex; flex-wrap: wrap; gap: 8px; } .reason { flex: 1 1 40%; justify-content: center; }
 .unp-list { margin: 0; padding-inline-start: 1.2em; } .pattern { border-inline-start: 6px solid var(--warn); display: grid; gap: 6px; }
+
+/* ── time picker + task menu ── */
+.tp-row { display: inline-flex; align-items: center; gap: 6px; } .tp-step { min-width: 44px; min-height: 44px; font-size: 1.4rem; font-weight: 700; }
+.tp-val { min-width: 92px; min-height: 44px; padding: 0 12px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface-2); color: var(--text); font: inherit; font-weight: 700; font-variant-numeric: tabular-nums; cursor: pointer; }
+.tp-big { font-size: 2.4rem; font-weight: 800; font-variant-numeric: tabular-nums; } .tp-presets { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
+.task-menu-btn { align-self: flex-start; } .task-menu { gap: 6px; } .menu-item { justify-content: flex-start; gap: 12px; min-height: 48px; text-align: start; }
+.plan-row { display: grid; gap: 6px; padding-block: 6px; border-block-end: 1px dashed var(--line); } .plan-list { margin: 0; padding-inline-start: 1.2em; }
+/* bar timer: a filling bar instead of the ring, for people who read "how much is left" better in a line */
+.ring.bar { width: min(92vw, 420px); aspect-ratio: auto; min-height: 120px; border-radius: 24px; background: linear-gradient(to right, var(--brand) calc(var(--p) * 100%), var(--surface-2) 0); } .ring.bar::before { inset: 8px; border-radius: 18px; }
+:root[dir="rtl"] .ring.bar, [dir="rtl"] .ring.bar { background: linear-gradient(to left, var(--brand) calc(var(--p) * 100%), var(--surface-2) 0); }
+
+/* ── template library: big, easy tiles (also for children) ── */
+.tiles-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 10px; }
+.tile-btn { display: grid; justify-items: center; align-content: center; gap: 4px; min-height: 104px; padding: 10px 6px; border-radius: 16px; border: 2px solid var(--line); background: var(--surface); color: var(--text); font: inherit; cursor: pointer; text-align: center; }
+.tile-btn:hover, .tile-btn:focus-visible { border-color: var(--accent, var(--brand)); } .tile-btn:active { transform: scale(.97); }
+.tb-emoji { font-size: 2.2rem; line-height: 1; } .tile-btn small { color: var(--muted); } .tile-btn strong { font-size: .95rem; overflow-wrap: anywhere; }
+.lib-card { display: grid; gap: 8px; border-inline-start: 6px solid var(--accent, var(--brand)); } .lib-task { align-items: center; gap: 8px; flex-wrap: wrap; }
+.chips.filter .chip { background: var(--surface-2); color: var(--text); border: 2px solid var(--line); min-height: 40px; }
+.chips.filter .chip.on { background: color-mix(in srgb, var(--brand) 22%, var(--surface)); border-color: var(--brand); font-weight: 800; }

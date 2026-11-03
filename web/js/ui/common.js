@@ -11,7 +11,7 @@ const PATHS = {
   home: 'M4 11l8-7 8 7v9H5z', chart: 'M5 20V10M12 20V4M19 20v-7', gear: 'M12 15a3 3 0 100-6 3 3 0 000 6zM19 12l2-1-1-3-2 .5-1.5-1.5L17 5l-3-1-1 2h-2L10 4 7 5l.5 2L6 8.5 4 8 3 11l2 1v2l-2 1 1 3 2-.5L7.5 19 7 21l3 1 1-2h2l1 2 3-1-.5-2 1.5-1.5 2 .5 1-3-2-1z',
   book: 'M5 4h11a3 3 0 013 3v13H8a3 3 0 01-3-3zM5 17a3 3 0 013-3h11', download: 'M12 4v11M7 11l5 5 5-5M5 20h14', bell: 'M6 17V11a6 6 0 1112 0v6l2 2H4zM10 21h4',
   users: 'M9 11a3 3 0 100-6 3 3 0 000 6zM3 20c0-3 3-5 6-5s6 2 6 5M17 11a2.5 2.5 0 100-5M21 19c0-2-1.5-3.5-4-4',
-  nfc: 'M5 7c4 2 4 8 0 10M9 5c6 3 6 11 0 14M13 3c8 4 8 14 0 18', close: 'M6 6l12 12M18 6L6 18', plus1: 'M12 5v14M5 12h14', stop: 'M6 6h12v12H6z',
+  nfc: 'M5 7c4 2 4 8 0 10M9 5c6 3 6 11 0 14M13 3c8 4 8 14 0 18', close: 'M6 6l12 12M18 6L6 18', menu: 'M4 6h16M4 12h16M4 18h16', plus1: 'M12 5v14M5 12h14', stop: 'M6 6h12v12H6z',
 };
 export function icon(name, size = 22) {
   const s = document.createElementNS(NS, 'svg');

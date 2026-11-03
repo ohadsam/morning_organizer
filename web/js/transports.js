@@ -17,7 +17,7 @@ export function initTransports(onResult) {
     if (ev.state === 'listening') state = 'listening';
     else if (ev.state === 'connected') {
       state = 'connected'; peer = String(ev.peer || ''); open = true;
-      for (const l of F.childLinks()) F.setLive(l.id, btChannel); // the child announces itself with a report on every link it has
+      for (const l of F.allChildLinks()) F.setLive(l.id, btChannel); // the child announces itself with a report on every link it has
     } else if (ev.state === 'disconnected') { state = 'idle'; open = false; for (const l of F.getFamily().links) if (F.getFamily().live.get(l.id) === btChannel) F.dropLive(l.id); }
     else if (ev.state === 'error') { state = `error:${ev.reason || ''}`; open = false; }
     else if (ev.state === 'data') F.receive(String(ev.data || ''), btChannel).then((r) => onResult?.(r)).catch(() => {});

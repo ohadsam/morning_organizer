@@ -1,4 +1,4 @@
-import { h, fmtDur, fmtHuman, clamp } from '../util.js';
+import { h, fmtDur, fmtHuman, clamp, setChildren } from '../util.js';
 import { t, units, getLang } from '../i18n.js';
 import * as S from '../store.js';
 import * as E from '../engine.js';
@@ -10,18 +10,23 @@ import { signal, unlockAudio } from '../audio.js';
 import { icon, confirmBox } from './common.js';
 import { progressWidget, overallProgress } from './progress.js';
 import { native } from '../native.js';
+import { avatarNode, animate } from './avatar.js';
 import { confetti } from './fx.js';
 import { createCoach, speakWithSettings } from './coach.js';
 import { iconNode } from './editor.js';
-import { afterRun, pushActive } from '../family.js';
+import { afterRun, pushActive, alertParents } from '../family.js';
 import { celebrateGoals } from './family.js';
 import { announce } from '../a11y.js';
 import { leaveStatus, leaveEvent, newLeaveMemo } from '../leave.js';
+import { gearFor } from '../schedule.js';
+import { celebrationFor } from './progressUi.js';
 import { coachTrigger, newMemo } from '../coach.js';
 
 const clock = (ms) => new Date(ms).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 const taskIcon = (tk) => iconNode(tk);
 const calm = (r) => r.mode === 'calm';
+/** Which avatar animation goes with which encouragement event. */
+const BUBBLE_ANIM = { start: 'wave', warn: 'alert', over: 'think', taskEarly: 'dance', taskDone: 'cheer', taskLate: 'think', paused: 'sleep', resumed: 'wave', runDone: 'dance', runStopped: 'think', leaveSoon: 'alert', leaveNow: 'alert' };
 
 export async function renderRunner(root, id, nav) {
   let run = await S.loadActive();
@@ -30,7 +35,7 @@ export async function renderRunner(root, id, nav) {
     const tpl = S.getTemplate(id);
     if (!tpl || !tpl.tasks.length) { nav('#/'); return () => {}; }
     const pm = S.get().settings.paceMode;
-    run = E.createRun(tpl, Date.now(), { scale: pm === 'quick' ? 0.7 : 1, mode: pm }); fresh = true;
+    run = E.createRun(tpl, Date.now(), { scale: pm === 'quick' ? 0.7 : 1, mode: pm, gear: gearFor(tpl, new Date().getDay()) }); fresh = true; run.profileId = S.activeProfile().id;
   }
   const st = () => S.get().settings;
   unlockAudio();
@@ -52,7 +57,8 @@ export async function renderRunner(root, id, nav) {
     if (!c) return; lastPick[event] = c.index;
     if (st().srAnnounce) announce(c.text);
     if (feedback) {
-      bubble.replaceChildren(h('span', { class: 'bm' }, st().mascot), h('span', { class: 'bt' }, `${c.text} ${c.emoji}`));
+      bubble.replaceChildren(h('span', { class: 'bm' }, avatarNode(st().avatar, { size: 44, anim: BUBBLE_ANIM[event] || 'idle' })), h('span', { class: 'bt' }, `${c.text} ${c.emoji}`));
+      animate(buddyNode, BUBBLE_ANIM[event] || 'idle', 2200);
       bubble.hidden = false; bubble.classList.remove('pop'); void bubble.offsetWidth; bubble.classList.add('pop');
       clearTimeout(bubbleTimer); bubbleTimer = setTimeout(() => { bubble.hidden = true; }, 4200);
     }
@@ -62,7 +68,8 @@ export async function renderRunner(root, id, nav) {
 
   const coachHost = h('div', { class: 'coach-host', hidden: true });
   const coach = createCoach(coachHost), memo = newMemo();
-  const pw = progressWidget(run, { mascot: st().mascot });
+  const buddyNode = avatarNode(st().avatar, { size: 30 });
+  const pw = progressWidget(run, { mascot: st().mascot, buddyNode });
   const ring = h('div', { class: 'ring', role: 'timer' });
   const ti = h('div', { class: 'ti', 'aria-hidden': 'true' });
   const time = h('div', { class: 'big-time' }), sub = h('div', { class: 'sub' });
@@ -71,8 +78,15 @@ export async function renderRunner(root, id, nav) {
   const list = h('ul', { class: 'checklist' }), controls = h('div', { class: 'run-controls' }), pace = h('p', { class: 'pace' });
   ring.append(ti, time, sub);
 
-  let lastCur = -1; const srMarks = new Set(), leaveMemo = newLeaveMemo();
+  let alerted = false; let lastCur = -1; const srMarks = new Set(), leaveMemo = newLeaveMemo();
   const leaveEl = h('p', { class: 'leave-line', hidden: true });
+  const gearBox = h('details', { class: 'card gear-card', hidden: true });
+  function paintGear() {
+    const items = run.gear || []; gearBox.hidden = !items.length; if (!items.length) return;
+    const done = items.filter((g) => g.done).length;
+    setChildren(gearBox, h('summary', {}, `🎒 ${t('gearToday')} · ${t('gearCount', { done, total: items.length })}`), h('ul', { class: 'gear-list' }, items.map((g) => h('li', {}, h('label', { class: 'switch row' }, h('span', {}, `${g.icon || suggestIcon(g.name)} ${g.name}`), h('input', { type: 'checkbox', checked: g.done, onchange: (e) => { g.done = e.target.checked; persist(); paintGear(); } }))))));
+    if (done < items.length) gearBox.open ||= fresh; // start open so it is seen once, stays as the person left it
+  }
   function announceTask(cur) {
     const msg = t('nowTask', { task: cur.name || '' });
     if (st().announceTasks) setTimeout(() => speakWithSettings(msg), fresh ? 1800 : 300); // after the "start" encouragement
@@ -157,6 +171,8 @@ export async function renderRunner(root, id, nav) {
       persist();
     }
     const le = leaveEvent(leaveAtOf(), Date.now(), leaveMemo); if (le && !calm(run)) say(le);
+    if (le === 'leaveNow') { const lateMin = Math.round((E.etaMs(run, Date.now()) - leaveAtOf()) / 60000); if (lateMin > 0) alertParents({ kind: 'late', name: run.templateName, minutes: lateMin }, run.profileId); }
+    if (!alerted && E.paceDiffSec(run, Date.now()) >= 300) { alerted = true; alertParents({ kind: 'overtime', name: run.templateName, minutes: Math.round(E.paceDiffSec(run, Date.now()) / 60) }, run.profileId); }
     if (s.srAnnounce) { const cur = run.tasks[run.current], left = E.remainingSec(run, Date.now()); if (left <= 60 && left > 0 && !srMarks.has(cur.id)) { srMarks.add(cur.id); announce(`${cur.name}: ${fmtHuman(Math.ceil(left), units())} ${t('left')}`); } }
     if (s.coachAuto && !calm(run)) { const sit = coachTrigger(run, Date.now(), memo); if (sit) coach.show(sit, run.tasks[run.current]?.name); }
     paintLive();
@@ -166,7 +182,8 @@ export async function renderRunner(root, id, nav) {
     if (E.isActive(run)) { persist(); paintStatic(); paintLive(); pushActive(); return; }
     await S.saveActive(null); await S.saveRun(run); setAwake('run', false); pushWidget();
     renderSummary();
-    afterRun().then(celebrateGoals).catch(() => {});
+    celebrationFor(run).then((card) => { const slot = root.querySelector('.celebrate-slot'); if (card && slot) slot.replaceChildren(card); }).catch(() => {});
+    afterRun(run.profileId).then(celebrateGoals).catch(() => {});
   }
 
   function renderSummary() {
@@ -176,13 +193,13 @@ export async function renderRunner(root, id, nav) {
     const done = run.status === 'done';
     const starRow = h('div', { class: 'stars', role: 'img', 'aria-label': `${t('starsEarned')}: ${n}/3` }, [0, 1, 2].map((i) => h('span', { class: `star ${i < n ? 'on' : ''}`, style: { '--i': String(i) } }, '⭐')));
     root.replaceChildren(h('div', { class: 'summary' },
-      h('div', { class: 'big-emoji bounce' }, done ? '🎉' : st().mascot), h('h1', {}, done ? t('allDone') : t('stopped')), starRow,
-      h('p', { class: 'muted' }, run.templateName), bubble,
+      h('div', { class: 'big-emoji' }, avatarNode(st().avatar, { size: 110, anim: done ? 'dance' : 'think' })), h('h1', {}, done ? t('allDone') : t('stopped')), starRow,
+      h('p', { class: 'muted' }, run.templateName), h('div', { class: 'celebrate-slot' }), bubble,
       h('div', { class: 'card kvs' },
         dRow(t('startedAt'), clock(run.startedAt)), dRow(t('wall'), fmtHuman(s.wallSec, u)),
         dRow(t('planned'), fmtHuman(s.plannedSec, u)), dRow(t('estimated'), fmtHuman(s.estSec, u)), dRow(t('actual'), fmtHuman(s.actualSec, u)),
         dRow(t('difference'), `${s.deltaSec > 0 ? '+' : ''}${fmtHuman(s.deltaSec, u)}`, s.deltaSec > 0 ? 'bad' : 'good'),
-        s.pausedSec ? dRow(t('pausedTotal'), fmtHuman(s.pausedSec, u)) : null, dRow(t('tasksDone'), `${s.done}/${s.total}`), s.skipped ? dRow(t('tasksSkipped'), String(s.skipped)) : null),
+        s.pausedSec ? dRow(t('pausedTotal'), fmtHuman(s.pausedSec, u)) : null, (run.gear || []).length ? dRow(`🎒 ${t('gear')}`, `${run.gear.filter((g) => g.done).length}/${run.gear.length}`) : null, dRow(t('tasksDone'), `${s.done}/${s.total}`), s.skipped ? dRow(t('tasksSkipped'), String(s.skipped)) : null),
       h('h2', {}, t('perTask')),
       h('table', { class: 'tbl' }, h('thead', {}, h('tr', {}, h('th', {}, t('colTask')), h('th', {}, t('colPlanned')), h('th', {}, t('colActual')))),
         h('tbody', {}, run.tasks.map((x) => h('tr', { class: x.actualSec > x.plannedSec ? 'over' : '' }, h('td', {}, `${taskIcon(x)} ${x.name || '—'}${x.skipped ? ` (${t('skippedTag')})` : ''}`), h('td', {}, fmtDur(x.plannedSec)), h('td', {}, fmtDur(x.actualSec)))))),
@@ -195,8 +212,8 @@ export async function renderRunner(root, id, nav) {
 
   root.replaceChildren(h('div', { class: 'run' },
     h('div', { class: 'run-top', style: { '--accent': run.color || '#6c5ce7' } }, h('span', { class: 'emoji' }, run.icon), h('h1', { class: 'run-title' }, run.templateName)),
-    bubble, coachHost, pw.el, head, leaveEl, h('div', { class: 'ring-wrap' }, ring, pausedBadge), taskName, pace, controls, list));
-  paintStatic(); paintLive();
+    bubble, coachHost, gearBox, pw.el, head, leaveEl, h('div', { class: 'ring-wrap' }, ring, pausedBadge), taskName, pace, controls, list));
+  paintStatic(); paintLive(); paintGear();
   if (fresh) say('start');
   timer = setInterval(loop, 250);
   return () => { clearInterval(timer); clearTimeout(bubbleTimer); coach.hide(); document.removeEventListener('visibilitychange', onVis); setAwake('run', false); if (E.isActive(run)) persist(); };

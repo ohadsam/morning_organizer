@@ -1,6 +1,6 @@
 {
   "name": "morning-organizer",
-  "version": "1.7.1",
+  "version": "1.8.0",
   "private": true,
   "type": "module",
   "description": "Morning routine organizer - PWA + Android shell",
@@ -13,6 +13,7 @@
   },
   "devDependencies": {
     "axe-core": "^4.10.2",
+    "jsqr": "^1.4.0",
     "playwright": "1.63.0"
   }
 }

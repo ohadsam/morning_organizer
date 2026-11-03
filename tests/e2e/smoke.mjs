@@ -96,7 +96,7 @@ await step('v1.1: name + buddy, encouragement bubble, progress widget, pause, ac
   await page.click('button[aria-label="🐼"]'); await page.waitForTimeout(100);
   await page.goto(base + '#/'); await page.waitForSelector('.routine'); assert.match(await page.textContent('.hero'), /Good morning, Dana/);
   await page.locator('.routine .start').first().click(); await page.waitForSelector('.ring');
-  assert.match(await page.textContent('.bubble'), /🐼/); assert.ok(await page.locator('.bubble .bt').textContent(), 'bubble text');
+  assert.ok(await page.locator('.bubble .bm svg.avatar-char').count(), 'the encouragement bubble shows the (panda) avatar'); assert.match(await page.textContent('.bubble .bt'), /Dana|!/);
   assert.equal(await page.locator('.pw .seg').count(), 6); assert.equal(await page.getAttribute('.pw-track', 'aria-valuenow'), '0');
   await page.click('.pause-btn'); assert.ok(await page.locator('.ring.paused').count()); assert.ok(await page.isVisible('.paused-badge'));
   await page.clock.runFor(30_000); await page.click('.pause-btn'); assert.ok(!(await page.locator('.ring.paused').count()));
@@ -246,6 +246,9 @@ await step('family: invite -> join -> approve -> LIVE link (WebRTC, no server) -
   // reward goal reached on the child: 3 stars needed, one more perfect run earns it -> celebration + parent is told
   await C.page.locator('.routine .start').first().click(); await C.page.waitForSelector('.ring'); for (let i = 0; i < 6; i++) await C.page.click('text=Done ✓');
   await C.page.waitForSelector('dialog:has-text("Goal reached")'); await P.page.goto(base + '#/family'); await P.page.waitForSelector('.family-card:has-text("Goal reached")', { timeout: 15000 });
+  // the child tells the parent it is running late (live link) -> alert card on the parent's dashboard
+  await C.page.evaluate(async () => { const F = await import('./js/family.js'); await F.alertParents({ kind: 'late', name: 'Kids morning', minutes: 7 }); });
+  await P.page.waitForSelector('.family-card:has-text("7 min late")', { timeout: 15000 });
   assert.deepEqual(P.errors, []); assert.deepEqual(C.errors, []);
 });
 
@@ -262,7 +265,7 @@ await step('UX: axe-core finds NO accessibility violations - every screen and di
     for (const hash of ['#/', '#/settings', '#/guide', '#/stats', '#/family']) { await page.goto(base + hash); await page.waitForTimeout(350); bad.push(...await audit(page, `${lang}/${scheme}/${hash}`)); }
     await page.goto(base + '#/'); await page.waitForSelector('.routine'); await page.click('.hero .btn-chip >> nth=0').catch(() => {});
     await page.locator('.routine-main').first().click(); await page.waitForSelector('.task'); bad.push(...await audit(page, `${lang}/${scheme}/editor`));
-    await page.goto(base + '#/'); await page.click('button[aria-label]:has(svg) >> nth=0').catch(() => {});
+    await page.goto(base + '#/');
     await page.locator('.routine .start').first().click(); await page.waitForSelector('.ring'); await page.click('.tip-main'); await page.waitForSelector('.coach-card'); await page.waitForTimeout(500);
     bad.push(...await audit(page, `${lang}/${scheme}/run+coach`));
     await page.goto(base + '#/family'); await page.click('.toolbar .btn.primary'); await page.waitForSelector('dialog'); bad.push(...await audit(page, `${lang}/${scheme}/invite-dialog`)); await closeDialogs(page);
@@ -333,6 +336,48 @@ await step('hosting: the repo ROOT (Pages "deploy from branch") redirects to the
   const scope = await page.evaluate(async () => (await navigator.serviceWorker.getRegistration()).scope); assert.match(scope, /\/web\/$/);
   const manifest = await page.evaluate(async () => (await (await fetch('manifest.webmanifest')).json()).start_url); assert.equal(manifest, './');
   assert.deepEqual(errors.filter((e) => !/service worker|Failed to load resource: the server responded with a status of 404 \(.*favicon/i.test(e)), []); await ctx.close(); root.close();
+});
+
+await step('v1.8: avatars (animated characters, photo, GIF), several people on one phone with separate history, levels, accessible dialogs', async () => {
+  // reduced motion: continuously animated avatars are never "stable" for Playwright's click check (and this also proves the reduced-motion path works)
+  const { page, errors } = await newPage({ ctx: { reducedMotion: 'reduce' } }); await page.goto(base + '#/'); await page.waitForSelector('.routine');
+  assert.ok(await page.locator('.hero-buddy svg.avatar-char').count(), 'animated character in the hero'); assert.match(await page.textContent('.chips'), /Level 1/);
+  // avatar picker: locked characters, colours, animation preview, own GIF and photo
+  await page.goto(base + '#/settings'); await page.waitForSelector('details.settings-group'); await page.click('button:has-text("Avatar")');
+  await page.waitForSelector(".char-grid"); assert.ok((await page.locator(".char[disabled]").count()) >= 5, "higher characters are locked at level 1"); {
+    const v = await audit(page, 'avatar-picker'); if (v.length) console.error(v.join('\n')); assert.deepEqual(v, []); }
+  await page.click('.char:not([disabled]) >> nth=1'); await page.click('dialog .swatch >> nth=2'); await page.click('button[aria-label^="Animation: wave"]');
+  assert.equal(await page.getAttribute('.av-preview svg', 'data-anim'), 'wave');
+  const gif = Buffer.from('R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7', 'base64');
+  await page.setInputFiles('dialog input[accept="image/gif"]', { name: 'a.gif', mimeType: 'image/gif', buffer: gif }); await page.waitForSelector('.av-preview img.avatar-img');
+  await page.setInputFiles('dialog input[accept="image/gif"]', { name: 'big.gif', mimeType: 'image/gif', buffer: Buffer.concat([gif, Buffer.alloc(200 * 1024)]) }); await page.waitForSelector('dialog .note:has-text("too big")');
+  await page.click('dialog footer button:has-text("OK")'); await page.goto(base + '#/'); await page.waitForSelector('.hero-buddy img.avatar-img');
+  // a second person: own name, own history
+  await page.click('.hero-buddy'); await page.waitForSelector('.profile-grid'); assert.deepEqual(await audit(page, 'profile-switcher'), []);
+  await page.click('.profile-card.add'); await page.fill('dialog input[type=text]', 'Dan'); await page.fill('dialog input[type=number]', '7'); await page.click('dialog footer button:has-text("Save")');
+  await page.waitForFunction(() => document.querySelector('.hero')?.textContent.includes('Dan')); assert.ok(await page.locator('.hero-buddy svg.avatar-char').count(), 'new person starts with the default character');
+  await page.locator('.routine .start').first().click(); await page.waitForSelector('.ring'); for (let i = 0; i < 6; i++) await page.click('text=Done ✓'); await page.waitForSelector('.summary'); assert.ok(await page.locator('.summary .avatar').count());
+  await page.goto(base + '#/stats'); await page.waitForSelector('.week'); assert.match(await page.textContent('.week'), /1 routines/);
+  await page.goto(base + '#/'); await page.click('.hero-buddy'); await page.click('.profile-card:not(.on):not(.add)'); await page.waitForFunction(() => !document.querySelector('.hero')?.textContent.includes('Dan'));
+  await page.goto(base + '#/stats'); await page.waitForSelector('h1'); assert.ok(!(await page.locator('.week').count()), 'the first person has no history of their own'); await shot(page, 'profiles');
+  assert.deepEqual(errors, []);
+});
+
+await step('v1.9: schedule (today / other days), gear checklist, badges + celebration, achievements gallery, QR code for invitations', async () => {
+  const { page, errors } = await newPage(); await page.goto(base + '#/'); await page.waitForSelector('.routine');
+  await page.locator('.routine-main').first().click(); await page.waitForSelector('.task');
+  await page.click('button:has-text("School days")'); await page.click('button:has-text("Add an item")'); await page.fill('.gear-row input[type=text]', 'PE kit'); await page.waitForTimeout(500);
+  const dow = await page.evaluate(() => new Date().getDay()), school = dow >= 1 && dow <= 5;
+  await page.goto(base + '#/'); await page.waitForSelector('.routine');
+  const inSec = (h) => page.locator(`section:has(> h2:has-text("${h}")) .routine`).count();
+  if (school) { assert.equal(await inSec('Today'), 2); assert.equal(await inSec('Other days'), 0); } else { assert.equal(await inSec('Today'), 1); assert.equal(await inSec('Other days'), 1); } // 'school days' routine + one unscheduled routine
+  await page.locator('.routine .start').first().click(); await page.waitForSelector('.ring'); assert.match(await page.textContent('.gear-card'), /PE kit/);
+  await page.check('.gear-card input[type=checkbox]'); await page.waitForFunction(() => document.querySelector('.gear-card summary').textContent.includes('1/1'));
+  for (let i = 0; i < 6; i++) await page.click('text=Done ✓'); await page.waitForSelector('.summary'); assert.match(await page.textContent('.summary'), /Gear to remember\s*1\/1/);
+  await page.waitForSelector('.celebrate-slot .celebrate', { timeout: 10000 }); assert.match(await page.textContent('.celebrate-slot'), /New badge/); assert.match(await page.textContent('.celebrate-slot'), /First routine/);
+  await page.goto(base + '#/stats'); await page.waitForSelector('.badges'); assert.ok((await page.locator('.badge.on').count()) >= 1); assert.ok((await page.locator('.badge:not(.on)').count()) >= 10); { const v = await audit(page, 'stats+achievements'); if (v.length) console.error(v.join('\n')); assert.deepEqual(v, []); } await shot(page, 'achievements');
+  await page.goto(base + '#/family'); await page.click('text=Add a child'); await page.click('text=Create invitation'); await page.waitForSelector('dialog textarea.code'); await page.click('dialog button:has-text("Show QR code")');
+  await page.waitForSelector('.qr-box svg'); assert.ok((await page.locator('.qr-box svg path').getAttribute('d')).length > 500); { const v = await audit(page, 'qr dialog'); if (v.length) console.error(v.join('\n')); assert.deepEqual(v, []); } assert.deepEqual(errors, []);
 });
 
 await step('run survives reload (crash-safe) and checklist ticking works', async () => {

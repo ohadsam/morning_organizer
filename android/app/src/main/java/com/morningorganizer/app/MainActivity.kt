@@ -24,6 +24,9 @@ import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.activity.ComponentActivity
+import com.google.android.gms.codescanner.GmsBarcodeScannerOptions
+import com.google.android.gms.codescanner.GmsBarcodeScanning
+import com.google.mlkit.vision.barcode.common.Barcode
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.webkit.WebViewAssetLoader
@@ -122,6 +125,14 @@ class MainActivity : ComponentActivity() {
 
     fun setKeepAwake(on: Boolean) = runOnUiThread {
         if (on) window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON) else window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+    }
+
+    /** QR scan through Google's code scanner (its own UI, no camera permission). The text arrives like any other incoming text. */
+    fun scanQr() {
+        val options = GmsBarcodeScannerOptions.Builder().setBarcodeFormats(Barcode.FORMAT_QR_CODE).build()
+        GmsBarcodeScanning.getClient(this, options).startScan()
+            .addOnSuccessListener { b -> b.rawValue?.take(64 * 1024)?.let { deliver(JSONObject().put("type", "import").put("text", it)) } }
+            .addOnFailureListener { deliver(JSONObject().put("type", "qrfail")) }
     }
 
     fun armNfcWrite(text: String?) { nfcWriteText = text }

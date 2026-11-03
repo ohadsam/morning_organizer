@@ -17,7 +17,8 @@ import { applyA11y } from './a11y.js';
 import { openWelcome } from './ui/welcome.js';
 import { renderFamily } from './ui/family.js';
 import { routeIncoming } from './ui/incoming.js';
-import { initFamily } from './family.js';
+import { initFamily, unlinkProfile, setAlertHook } from './family.js';
+import { setProfileDeleteHook } from './ui/avatar.js';
 import { isUnlocked, requestGate } from './ui/gate.js';
 import { initTransports } from './transports.js';
 
@@ -52,7 +53,13 @@ function drawNav(view) {
 
 async function boot() {
   try {
-    await S.init(); await initFamily();
+    await S.init(); await initFamily(); setProfileDeleteHook(unlinkProfile);
+    setAlertHook(({ link, alert }) => {
+      const who = link.child?.profile?.name || link.peer?.name || '?', text = t(alert.kind === 'overtime' ? 'alertBehind' : 'alertLate', { name: who, routine: alert.name, min: alert.minutes });
+      toast(`🔔 ${text}`);
+      if (native.available) native.notify(t('family'), text);
+      else try { if (Notification.permission === 'granted') new Notification(t('family'), { body: text, icon: 'icons/icon-192.png' }); } catch { /* not allowed */ }
+    });
   } catch (e) { console.error(e); }
   const st = S.get().settings;
   setLang(st.lang); applyTheme(st.theme);
@@ -69,6 +76,7 @@ async function boot() {
     if (!ev) return;
     if (ev.type === 'start' && S.getTemplate(ev.templateId)) nav(`#/run/${ev.templateId}`);
     if (ev.type === 'nfcrx') { if (ev.status === 'listening') toast(t('tapHold')); else if (ev.status === 'timeout') toast(t('tapTimeout')); else if (ev.status === 'unavailable') toast(t('tapUnavailable')); }
+    if (ev.type === 'qrfail') toast(t('scanUnsupported'));
     if (ev.type === 'saved') toast(t(ev.status === 'ok' ? 'savedFile' : 'saveFailed'));
     if (ev.type === 'import') await routeIncoming(ev.text);
   };

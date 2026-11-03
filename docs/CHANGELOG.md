@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.8.0
+- **Avatars**: eight original animated characters (blink, wave, cheer, dance, sleep, alert, think - drawn in SVG, no external GIFs, offline), colours, emoji, your own photo or animated GIF (≤160 KB). The avatar reacts to what happens in a run. Photos/GIFs never leave the device.
+- **Several people per phone**: profiles with their own name/age/gender/avatar, history, stars, streak, badges and parent links; "Who is playing?" switcher.
+- **Levels and badges**: stars raise a level; levels unlock characters; 14 achievement badges with inline celebration and a gallery in Stats.
+- **Routines by day** (Today / Other days, school-day and weekend presets) and **gear checklists** per day, counted in the summary.
+- **Parent features**: weekly goals ("5 on-time routines this week"), "child is running late" alerts over a live link (toast + system notification), per-child switch.
+- **QR codes** for invitations/messages (own generator, verified against an independent decoder) and QR scanning (Google code scanner in the app, BarcodeDetector in browsers).
+- Security fixes found by tests: prototype-key lookups (`__proto__`) for avatar ids and voice presets.
+
 ## 1.7.1
 - **Hosting fix**: when GitHub Pages publishes the repository root ("deploy from a branch") visitors saw the README instead of the app. The root now has an `index.html` that opens `web/` (plus `.nojekyll`), so the app opens either way; an end-to-end step covers it. The app itself never needs a server - the `npm run serve` line in the README is only for developers.
 

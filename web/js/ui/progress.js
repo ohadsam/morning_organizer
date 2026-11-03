@@ -16,9 +16,9 @@ export function overallProgress(run, now) {
   return clamp(got / total, 0, 1);
 }
 
-export function progressWidget(run, { mascot = '🦊', compact = false } = {}) {
+export function progressWidget(run, { mascot = '🦊', compact = false, buddyNode = null } = {}) {
   const segs = run.tasks.map((x) => h('span', { class: 'seg', style: { 'flex-grow': String(Math.max(1, x.plannedSec)) }, title: x.name }, h('i', { class: 'fill' })));
-  const buddy = h('span', { class: 'buddy', 'aria-hidden': 'true' }, mascot);
+  const buddy = h('span', { class: 'buddy', 'aria-hidden': 'true' }, buddyNode ?? mascot);
   const pct = h('strong', { class: 'pw-pct' }), count = h('span', {}), eta = h('span', {}), paused = h('span', { class: 'pw-paused' });
   const track = h('div', { class: 'pw-track', role: 'progressbar', 'aria-valuemin': '0', 'aria-valuemax': '100', 'aria-label': t('progress') }, h('div', { class: 'segs' }, segs), buddy);
   const el = h('section', { class: `pw ${compact ? 'compact' : ''}` },

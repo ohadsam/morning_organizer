@@ -15,6 +15,7 @@ Build morning routines (for kids or anyone), time every task, and watch yourself
 - **Move data between the website and the app** - backup file or sync code, merge or replace.
 - **Family** - link a parent's and a child's phone (NFC tap / NFC tag / Bluetooth / Wi-Fi live link / share sheet, encrypted, no server): progress dashboard, routines, cheers and reward goals.
 - **Leave-by time, Quick/Calm pace, accessibility** (text size, color-blind palette, screen-reader announcements), task photos and stickers.
+- **Avatars & people** - animated characters (or your own photo/GIF), several people per phone, levels, badges, routines by day with gear checklists, QR/NFC/Bluetooth/Wi-Fi linking, parent alerts and weekly goals.
 - **Weekly summary, heat-map, CSV export, undo, more example routines.**
 - **Android widget** - favourite routines, one tap to start.
 - Light/dark, offline, backup/restore, keyboard accessible.

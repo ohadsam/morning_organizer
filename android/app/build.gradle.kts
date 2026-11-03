@@ -66,5 +66,6 @@ dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.activity)
     implementation(libs.androidx.webkit)
+    implementation(libs.androidx.codescanner) // Google's code scanner: no camera permission, no bundled model
     testImplementation(libs.junit)
 }

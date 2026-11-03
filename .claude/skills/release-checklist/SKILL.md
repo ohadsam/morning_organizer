@@ -43,6 +43,7 @@ npm run e2e        # (ONLY="axe-core" npm run e2e runs one step) Playwright: boo
 New logic ⇒ new unit test; new user flow ⇒ new e2e step; every fixed bug ⇒ a regression test. If e2e fails right at boot, suspect a bad import / stray `*/` in a new module: `node -e "import('./web/js/x.js')"`.
 Gotcha (real): untrusted keys must be checked with `Object.hasOwn(map, key)` - `key in map` / `map[key]` accept `__proto__`/`constructor` (found in avatar ids and voice presets). Continuously animated elements are never "stable" for Playwright clicks: use `reducedMotion: 'reduce'` for steps that click avatars.
 Gotcha (real): `page.addInitScript` only applies on the next document load - `reload()` first (a hash `goto` does not reload). e2e starts in Hebrew/RTL (the default): `newPage()` switches to English via Settings unless `{ lang: 'he' }`.
+Gotcha (real): glyphs like ‹ › in Android layouts do not mirror in RTL - put them in `values/` and `values-he/` strings. Native-only features (alarm chains, TTS, widgets, dictation) cannot be exercised here: say so in the report and rely on CI compile/lint.
 Gotcha (real): `el.replaceChildren(null)` renders the text "null" and arrays render `[object HTMLDivElement]` - use `setChildren()` from `util.js` or `h()` which flatten and skip null.
 
 ## 7. Android verification = CI

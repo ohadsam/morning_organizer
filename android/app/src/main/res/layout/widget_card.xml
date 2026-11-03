@@ -6,11 +6,11 @@
     android:background="@drawable/widget_bg">
     <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
         <TextView android:id="@+id/card_prev" android:layout_width="40dp" android:layout_height="40dp"
-            android:gravity="center" android:text="‹" android:textSize="26sp" android:textColor="@color/brand" android:contentDescription="@string/widget_prev"/>
+            android:gravity="center" android:text="@string/widget_prev_glyph" android:textSize="26sp" android:textColor="@color/brand" android:contentDescription="@string/widget_prev"/>
         <TextView android:id="@+id/card_title" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content"
             android:textColor="@color/widget_text" android:textSize="16sp" android:textStyle="bold" android:maxLines="1" android:ellipsize="end" android:gravity="center"/>
         <TextView android:id="@+id/card_next" android:layout_width="40dp" android:layout_height="40dp"
-            android:gravity="center" android:text="›" android:textSize="26sp" android:textColor="@color/brand" android:contentDescription="@string/widget_next"/>
+            android:gravity="center" android:text="@string/widget_next_glyph" android:textSize="26sp" android:textColor="@color/brand" android:contentDescription="@string/widget_next"/>
     </LinearLayout>
     <TextView android:id="@+id/card_meta" android:layout_width="match_parent" android:layout_height="wrap_content"
         android:textColor="@color/widget_text" android:textSize="12sp" android:maxLines="2" android:ellipsize="end" android:gravity="center"/>

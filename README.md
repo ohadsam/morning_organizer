@@ -8,7 +8,9 @@ Build morning routines (for kids or anyone), time every task, and watch yourself
 - **Routines & tasks** - duration in minutes + seconds (5.5 min = 5:30), your own *time estimate*, drag & drop (or arrows) to reorder, favourites, duplicate, delete, sample routines.
 - **Run mode** - countdown ring, short beep 10 s before the end, beep at the end (beep / vibrate / both / silent, volume), pause, +1 min, skip, finish, checklist, overtime counting, resumes after the app is closed. Start time, planned end, live pace vs. plan.
 - **Summary & statistics** - planned vs. estimated vs. actual, per task; chart of every run over time; averages; **insights** (shorten / extend tasks, net effect on the total frame, "you are getting faster") with one-tap *Apply*.
-- **Start alarm** - time, weekdays, volume, vibration, ring length (real alarms in the Android app).
+- **Wake-up alarms** - a chain of alarms (e.g. 7:00, 7:15, 7:20) each with its own sound, volume, message and spoken voice; then offer to start or start the routine automatically (real alarms in the Android app).
+- **Unplanned interruptions** - a ⚡ button counts surprises (toilet, spills...) separately, spots patterns, and offers to plan for them or look closer.
+- **Helpers** - help areas, calm corner, focus tools, journal with optional password and voice notes, reward menu, routine-card widget.
 - **Share without a server** - code/link, system share sheet (Bluetooth, Nearby Share, WhatsApp…), NFC tags; import from code, link, file or tag.
 - **Personal & encouraging** - name, age, gender (Hebrew masculine/feminine forms), a buddy, cheerful messages, stars, 🔥 streaks, confetti, optional read-aloud with voice styles.
 - **Mindful coach** - 💡 on every task: 60+ short CBT / mindfulness / attention-support tips (breathing, grounding, thought checking, letting thoughts pass, getting started, remembering, switching tasks, time sense…), automatic when you run late or get stuck.

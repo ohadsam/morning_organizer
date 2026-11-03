@@ -26,4 +26,6 @@
     <string name="widget_start">התחלה</string>
     <string name="widget_open">פתיחה</string>
     <string name="alarm_title_n">הגיע הזמן להתחיל: %1$s (%2$d/%3$d)</string>
+    <string name="widget_prev_glyph">›</string>
+    <string name="widget_next_glyph">‹</string>
 </resources>

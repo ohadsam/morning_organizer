@@ -11,17 +11,17 @@ export async function requestWebNotifications() {
   try { if ('Notification' in globalThis && Notification.permission === 'default') await Notification.requestPermission(); } catch { /* ignore */ }
 }
 
-let timer = null;
+let timer = null, lastFiredAt = 0;   // a timer can fire a few ms early: never ring the same moment twice
 /** The next wake-up ring (any routine). onRing(tpl, { ring, final, mode }) is called when it is due - the page decides what to show. */
 export function scheduleWebReminders(onRing) {
   clearTimeout(timer);
   if (native.available) return; // native alarms own this
   let best = null;
-  for (const tpl of S.get().templates) { const n = nextRing(tpl.alarm); if (n && (!best || n.at < best.at)) best = { tpl, ...n }; }
+  for (const tpl of S.get().templates) { const n = nextRing(tpl.alarm, new Date(Math.max(Date.now(), lastFiredAt + 1000))); if (n && (!best || n.at < best.at)) best = { tpl, ...n }; }
   if (!best) return;
   const ms = Math.min(best.at - Date.now(), 2 ** 31 - 1);
   timer = setTimeout(() => {
-    const { ring, tpl, final } = best, s = S.get().settings;
+    const { ring, tpl, final } = best, s = S.get().settings; lastFiredAt = best.at.getTime();
     if (s.mode !== 'silent') playRing(ring.sound, ring.volume, ring.vibrate);
     const text = ring.text || t('alarmDefaultText', { name: tpl.name });
     if (ring.speak) setTimeout(() => speakText(text, { lang: getLang(), voiceURI: s.voiceURI, preset: ring.voice }), 1800);

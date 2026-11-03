@@ -40,6 +40,7 @@ class MainActivity : ComponentActivity() {
     private val lock = Any()
     private var pending: JSONObject? = null
     private var jsReady = false
+    val bt by lazy { BtLink(applicationContext) { deliver(it) } }
     private var pendingSave: String? = null
     private var fileCallback: ValueCallback<Array<Uri>>? = null
 
@@ -113,7 +114,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onPause() { nfc?.disableForegroundDispatch(this); web.onPause(); super.onPause() }
 
-    override fun onDestroy() { web.destroy(); super.onDestroy() }
+    override fun onDestroy() { bt.close(); web.destroy(); super.onDestroy() }
 
     fun setKeepAwake(on: Boolean) = runOnUiThread {
         if (on) window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON) else window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)

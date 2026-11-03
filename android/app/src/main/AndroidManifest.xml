@@ -12,6 +12,11 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE"/>
     <!-- Sharing a routine with an NFC tag. Bluetooth / Nearby Share go through the system share sheet: no Bluetooth permission needed. -->
     <uses-permission android:name="android.permission.NFC"/>
+    <!-- Parent <-> child Bluetooth link (RFCOMM to an already-paired phone). Runtime permission on Android 12+. -->
+    <uses-permission android:name="android.permission.BLUETOOTH" android:maxSdkVersion="30"/>
+    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" android:maxSdkVersion="30"/>
+    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT"/>
+    <uses-feature android:name="android.hardware.bluetooth" android:required="false"/>
     <uses-feature android:name="android.hardware.nfc" android:required="false"/>
     <uses-feature android:name="android.hardware.touchscreen" android:required="false"/>
 
@@ -65,6 +70,10 @@
             <property android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE" android:value="alarm"/>
         </service>
 
+        <receiver android:name=".RunWidget" android:exported="false" android:label="@string/widget_run_label">
+            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE"/></intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_run_info"/>
+        </receiver>
         <receiver android:name=".RoutineWidget" android:exported="false" android:label="@string/widget_label">
             <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE"/></intent-filter>
             <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_info"/>

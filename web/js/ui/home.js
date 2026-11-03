@@ -15,7 +15,7 @@ function card(tpl, nav) {
     h('button', { class: 'routine-main', type: 'button', onclick: () => nav(`#/edit/${tpl.id}`), 'aria-label': `${t('edit')}: ${tpl.name}` },
       h('span', { class: 'emoji', 'aria-hidden': 'true' }, tpl.icon),
       h('span', { class: 'routine-text' }, h('strong', {}, tpl.name || t('untitled')),
-        h('small', {}, `${t('tasksCount', { n: tpl.tasks.length })} · ${fmtHuman(total, units())}`))),
+        h('small', {}, `${t('tasksCount', { n: tpl.tasks.length })} · ${fmtHuman(total, units())}${tpl.from ? ` · ${t('fromParentTag', { name: tpl.from })}` : ''}`))),
     h('div', { class: 'routine-actions' },
       iconBtn('star', tpl.favorite ? t('unfavorite') : t('favorite'), () => S.toggleFavorite(tpl.id), tpl.favorite ? 'fav on' : 'fav'),
       iconBtn('share', t('share'), () => openShare(tpl)),

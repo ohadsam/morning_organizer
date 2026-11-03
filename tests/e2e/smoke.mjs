@@ -7,10 +7,12 @@ import { serve } from '../../scripts/serve.mjs';
 const shots = process.argv.includes('--shots') ? process.argv[process.argv.indexOf('--shots') + 1] : null;
 if (shots) mkdirSync(shots, { recursive: true });
 const server = await serve('web', 0); const base = `http://localhost:${server.address().port}/`;
-const browser = await chromium.launch();
+// mDNS-obfuscated ICE candidates can't be resolved between two headless contexts; real phones on one Wi-Fi are fine.
+const browser = await chromium.launch({ args: ['--disable-features=WebRtcHideLocalIpsWithMdns'] });
 let failures = 0;
-const step = async (name, fn) => { try { await fn(); console.log('✓', name); } catch (e) { failures++; console.error('✗', name, '\n  ', e.message.split('\n').slice(0, 4).join(' / '), '\n  ', (e.stack.split('\n').find((l) => l.includes('smoke.mjs')) || '').trim()); } };
+const step = async (name, fn) => { try { await fn(); console.log('✓', name); } catch (e) { failures++; if (globalThis.__fam && shots) { await globalThis.__fam.P.page.screenshot({ path: `${shots}/fail-P.png` }); await globalThis.__fam.C.page.screenshot({ path: `${shots}/fail-C.png` }); } console.error('✗', name, '\n  ', e.message.split('\n').slice(0, 4).join(' / '), '\n  ', (e.stack.split('\n').find((l) => l.includes('smoke.mjs')) || '').trim()); } };
 
+const closeDialogs = async (page) => { for (let i = 0; i < 4 && (await page.locator('dialog[open]').count()); i++) { await page.locator('dialog[open] header button').last().click(); await page.waitForTimeout(150); } };
 const dismissWelcome = async (page) => { try { await page.waitForSelector('dialog.welcome', { timeout: 4000 }); await page.click('dialog.welcome footer button >> nth=0'); await page.waitForSelector('dialog.welcome', { state: 'detached' }); } catch { /* not shown */ } };
 // The app is Hebrew/RTL by default; most steps below assert English text, so switch the language through the real Settings UI first.
 async function newPage(opts = {}) {
@@ -206,6 +208,42 @@ await step('v1.4: leave-by line, quick/calm pace, accessibility settings, task p
   await page.clock.runFor(125_000); await page.waitForFunction(() => document.querySelector('.ring .sub')?.textContent === 'take your time');
   assert.ok(!(await page.locator('.coach-card').count()), 'no automatic tips under calm');
   assert.deepEqual(errors, []);
+});
+
+await step('family: invite -> join -> approve -> LIVE link (WebRTC, no server) -> report, cheer, reward goal, assigned routine', async () => {
+  const P = await newPage(), C = await newPage();
+  globalThis.__fam = { P, C };
+  const setProfile = async (pg, name, age) => { await pg.goto(base + '#/settings'); await pg.waitForSelector('h1'); await pg.fill('input[aria-describedby="pn-hint"]', name); await pg.dispatchEvent('input[aria-describedby="pn-hint"]', 'change');
+    if (age) { await pg.fill('input[type=number][max="120"]', String(age)); await pg.dispatchEvent('input[type=number][max="120"]', 'change'); } await pg.waitForTimeout(150); };
+  await setProfile(P.page, 'Mom'); await setProfile(C.page, 'Noa', 8);
+  // parent creates an invitation that also prepares a live connection
+  await P.page.goto(base + '#/family'); await P.page.click('text=Add a child'); await P.page.check('dialog input[type=checkbox]'); await P.page.click('text=Create invitation');
+  await P.page.waitForSelector('dialog textarea.code'); const invite = await P.page.inputValue('dialog textarea.code'); assert.match(invite, /^MP[01]\./); await shot(P.page, 'family-invite');
+  // child joins and gets a reply code
+  await C.page.goto(base + '#/family'); await C.page.click('button:has-text("Join a parent")'); await C.page.fill('dialog textarea', invite); await C.page.click('dialog footer button >> nth=0');
+  await C.page.waitForSelector('dialog:has-text("Linked!") textarea.code'); const reply = await C.page.inputValue('dialog:has-text("Linked!") textarea.code'); assert.match(reply, /^ML1\./);
+  // parent processes the reply and approves
+  await P.page.fill('dialog textarea[placeholder^="Paste your child"]', reply); await P.page.click('text=Process reply');
+  await P.page.waitForSelector('dialog:has-text("wants to join")'); await P.page.click('dialog:has-text("wants to join") footer button >> nth=1');
+  await P.page.waitForSelector('.family-card:has-text("Noa")'); await closeDialogs(P.page);
+  // the live data channel opens on both sides
+  await P.page.waitForSelector('.chip:has-text("● Live")', { timeout: 20000 }); await C.page.waitForSelector('.chip:has-text("● Live")', { timeout: 20000 });
+  // child finishes a routine -> parent gets stars + recent run instantly
+  await closeDialogs(C.page);
+  await C.page.goto(base + '#/'); await C.page.waitForSelector('.routine'); await C.page.locator('.routine .start').first().click(); await C.page.waitForSelector('.ring');
+  for (let i = 0; i < 6; i++) await C.page.click('text=Done ✓'); await C.page.waitForSelector('.summary');
+  await P.page.waitForSelector('.family-card:has-text("⭐ 3")', { timeout: 15000 }); assert.ok(await P.page.locator('.family-card table tr').count() >= 1); await shot(P.page, 'family-parent');
+  // parent cheers, sets a goal, assigns a new routine - all delivered live
+  await P.page.click('button:has-text("Send a cheer")'); await P.page.click('dialog button:has-text("Great job")');
+  await P.page.click('button:has-text("Reward goal")'); await P.page.fill('dialog input[type=text]', 'Ice cream'); await P.page.fill('dialog input[type=number]', '3'); await P.page.click('dialog footer button:has-text("Set goal")');
+  await P.page.goto(base + '#/'); await P.page.click('text=New routine'); await P.page.waitForSelector('.task'); await P.page.fill('.field input[type=text]', 'From Mom'); await P.page.waitForTimeout(500);
+  await P.page.goto(base + '#/family'); await P.page.click('button:has-text("Send a routine")'); await P.page.click('dialog label:has-text("From Mom") input'); await P.page.click('dialog footer button:has-text("Send")');
+  await C.page.goto(base + '#/family'); await C.page.waitForSelector('.family-card:has-text("Great job")', { timeout: 15000 }); await C.page.waitForSelector('.goal:has-text("Ice cream")'); await shot(C.page, 'family-child');
+  await C.page.goto(base + '#/'); await C.page.waitForSelector('.routine:has-text("From Mom")'); assert.match(await C.page.textContent('.routine:has-text("From Mom")'), /from Mom/);
+  // reward goal reached on the child: 3 stars needed, one more perfect run earns it -> celebration + parent is told
+  await C.page.locator('.routine .start').first().click(); await C.page.waitForSelector('.ring'); for (let i = 0; i < 6; i++) await C.page.click('text=Done ✓');
+  await C.page.waitForSelector('dialog:has-text("Goal reached")'); await P.page.goto(base + '#/family'); await P.page.waitForSelector('.family-card:has-text("Goal reached")', { timeout: 15000 });
+  assert.deepEqual(P.errors, []); assert.deepEqual(C.errors, []);
 });
 
 await step('run survives reload (crash-safe) and checklist ticking works', async () => {

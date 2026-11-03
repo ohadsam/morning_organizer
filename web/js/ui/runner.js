@@ -8,10 +8,13 @@ import { suggestIcon } from '../taskIcons.js';
 import { setAwake } from '../awake.js';
 import { signal, unlockAudio } from '../audio.js';
 import { icon, confirmBox } from './common.js';
-import { progressWidget } from './progress.js';
+import { progressWidget, overallProgress } from './progress.js';
+import { native } from '../native.js';
 import { confetti } from './fx.js';
 import { createCoach, speakWithSettings } from './coach.js';
 import { iconNode } from './editor.js';
+import { afterRun, pushActive } from '../family.js';
+import { celebrateGoals } from './family.js';
 import { announce } from '../a11y.js';
 import { leaveStatus, leaveEvent, newLeaveMemo } from '../leave.js';
 import { coachTrigger, newMemo } from '../coach.js';
@@ -89,6 +92,13 @@ export async function renderRunner(root, id, nav) {
     say(was === 'paused' ? 'resumed' : 'paused'); persist(); paintStatic(); paintLive();
   };
 
+  /** Snapshot for the Android home-screen widget (task change / pause / finish only - the widget counts down by itself). */
+  function pushWidget() {
+    if (!native.available) return;
+    const now = Date.now();
+    if (!E.isActive(run)) { native.setProgress({ active: false }); return; }
+    native.setProgress({ active: true, templateId: run.templateId, name: run.templateName, icon: run.icon, task: run.tasks[run.current]?.name || '', pct: overallProgress(run, now), paused: run.status === 'paused', remaining: Math.round(E.remainingSec(run, now)) });
+  }
   function paintStatic() {
     const cur = run.tasks[run.current], paused = run.status === 'paused';
     taskName.textContent = cur?.name || ''; ti.replaceChildren(cur ? taskIcon(cur) : '');
@@ -100,12 +110,13 @@ export async function renderRunner(root, id, nav) {
         h('span', { class: 'cb' }, icon('check', 16)), h('span', { class: 'ti-s', 'aria-hidden': 'true' }, taskIcon(tk)), h('span', { class: 'nm' }, tk.name || '—'),
         h('span', { class: 'du' }, tk.done || tk.skipped ? fmtDur(tk.actualSec || 0) : fmtDur(tk.plannedSec))),
       st().coachButton && !tk.done && !tk.skipped ? h('button', { class: 'tip-btn', type: 'button', 'aria-label': t('tipFor', { name: tk.name || '' }), title: t('tipBtn'), onclick: () => coach.show('any', tk.name) }, '💡') : null)));
+    pushWidget();
     controls.replaceChildren(
       h('div', { class: 'main-btns' },
         h('button', { class: 'btn primary xl', type: 'button', onclick: doComplete }, icon('check', 22), t('doneNext')),
         h('button', { class: `btn xl pause-btn ${paused ? 'resume' : ''}`, type: 'button', 'aria-pressed': String(paused), onclick: togglePause }, icon(paused ? 'play' : 'pause', 22), paused ? t('resume') : t('pause'))),
       h('div', { class: 'row-btns' },
-        h('button', { class: 'btn', type: 'button', onclick: () => { E.addTime(run, 60); persist(); paintLive(); } }, icon('plus', 18), t('addMinute')),
+        h('button', { class: 'btn', type: 'button', onclick: () => { E.addTime(run, 60); persist(); paintLive(); pushWidget(); } }, icon('plus', 18), t('addMinute')),
         st().coachButton ? h('button', { class: 'btn tip-main', type: 'button', onclick: () => coach.show('any', cur?.name) }, '💡', t('tipBtn')) : null,
         h('button', { class: 'btn', type: 'button', onclick: () => act(E.skipCurrent) }, icon('skip', 18), t('skip')),
         h('button', { class: 'btn danger', type: 'button', onclick: async () => { if (await confirmBox(t('stopConfirm'), t('stop'), true)) act(E.finish); } }, icon('stop', 18), t('stop'))));
@@ -152,9 +163,10 @@ export async function renderRunner(root, id, nav) {
   }
 
   async function afterChange() {
-    if (E.isActive(run)) { persist(); paintStatic(); paintLive(); return; }
-    await S.saveActive(null); await S.saveRun(run); setAwake('run', false);
+    if (E.isActive(run)) { persist(); paintStatic(); paintLive(); pushActive(); return; }
+    await S.saveActive(null); await S.saveRun(run); setAwake('run', false); pushWidget();
     renderSummary();
+    afterRun().then(celebrateGoals).catch(() => {});
   }
 
   function renderSummary() {

@@ -11,11 +11,17 @@ export const native = {
   setAlarms: (alarms) => call('setAlarms', json(alarms)),
   /** items: [{id, name, icon, taskCount, totalSec}] - favourites shown by the home-screen widget. */
   setWidget: (items) => call('setWidget', json(items)),
+  /** Snapshot for the Android progress widget: {active, templateId, name, icon, task, pct, paused, remaining}. */
+  setProgress: (o) => call('setProgress', json(o)),
   keepAwake: (on) => call('keepAwake', !!on),
   /** Opens the system share sheet (Bluetooth, Nearby Share, WhatsApp...). */
   share: (title, text) => call('share', title, text),
   /** Opens the system "save as" picker and writes `text` to the chosen file. Result arrives as a {type:'saved'} event. */
   saveFile: (name, text) => call('saveFile', name, text),
+  btStatus: () => call('btStatus') || 'none',
+  btPaired: () => { try { return JSON.parse(call('btPaired') || '[]'); } catch { return []; } },
+  btListen: () => call('btListen'), btConnect: (addr) => call('btConnect', addr), btSend: (text) => !!call('btSend', text), btClose: () => call('btClose'),
+  requestBluetooth: () => call('requestBluetooth'),
   nfcWrite: (text) => call('nfcWrite', text),
   nfcCancel: () => call('nfcCancel'),
   canExactAlarms: () => call('canScheduleExactAlarms') !== false,

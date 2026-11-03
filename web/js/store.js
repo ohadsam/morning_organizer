@@ -33,7 +33,7 @@ export function newTask(settings = state.settings, name = '') {
 export function newTemplate(name = '') {
   const now = Date.now();
   return { id: uid(), name, icon: ICONS[0], color: COLORS[0], favorite: false, builtin: false,
-    leaveBy: '', tasks: [newTask()], alarm: defaultAlarm(), createdAt: now, updatedAt: now };
+    leaveBy: '', from: '', tasks: [newTask()], alarm: defaultAlarm(), createdAt: now, updatedAt: now };
 }
 export const totalSec = (tpl) => tpl.tasks.reduce((s, x) => s + x.sec, 0);
 
@@ -46,7 +46,7 @@ export function normalizeTemplate(tpl) {
     id: typeof tpl.id === 'string' && tpl.id ? tpl.id.slice(0, 64) : uid(),
     name: cleanText(tpl.name, LIMITS.maxName), icon: cleanText(tpl.icon, 8) || '⏰',
     color: /^#[0-9a-fA-F]{6}$/.test(tpl.color) ? tpl.color : COLORS[0], favorite: !!tpl.favorite, builtin: !!tpl.builtin,
-    createdAt: num(tpl.createdAt, Date.now()), updatedAt: num(tpl.updatedAt, Date.now()), leaveBy: validLeaveBy(tpl.leaveBy),
+    createdAt: num(tpl.createdAt, Date.now()), updatedAt: num(tpl.updatedAt, Date.now()), leaveBy: validLeaveBy(tpl.leaveBy), from: cleanText(tpl.from, 30),
     tasks: (Array.isArray(tpl.tasks) ? tpl.tasks : []).slice(0, LIMITS.maxTasks).map((x) => ({
       id: typeof x?.id === 'string' && x.id ? x.id.slice(0, 64) : uid(), name: cleanText(x?.name, LIMITS.maxName), icon: cleanText(x?.icon, 8), photo: isSafePhoto(x?.photo) ? x.photo : '',
       sec: clamp(Math.round(Number(x?.sec)) || 1, 1, LIMITS.maxTaskSec), est: clamp(Math.round(Number(x?.est)) || 0, 0, LIMITS.maxTaskSec) })),

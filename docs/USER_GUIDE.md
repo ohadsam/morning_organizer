@@ -32,6 +32,12 @@ The website (PWA) and the Android app keep their data separately. To move routin
 ## Leave time, pace and accessibility
 In the editor set "Leave by": the run shows whether you will make it (spare time or late) and warns 10 and 5 minutes before. "Suggest start time" sets the start alarm so you finish exactly in time. Settings → Pace: Quick shortens every task by 30%; Calm hides warnings and red "over" states so there is no time pressure. "Say the next task out loud" reads "Now: …" at each task. Settings → Accessibility: text size, color-blind friendly colors, high contrast and screen-reader announcements (TalkBack). Tasks can have a sticker or your own photo (tap the task icon).
 
+## Family: parent and child phones
+Open the Family tab. On the parent's phone tap "Add a child" and give the invitation to the child's phone: write it to an NFC tag and tap, send it by Bluetooth / Nearby Share / a messenger, or copy it. On the child's phone tap "Join a parent", paste the invitation and send the reply back; the parent approves. An invitation works once and expires after 24 hours. Once linked, the parent sees the child's stars, streak, recent routines and what they are doing right now; sends routines, cheers and a reward goal (for example 20 stars = ice cream). When the goal is reached the child celebrates and the parent is told. There is no server: messages are encrypted and travel directly. With "Connect live (Wi-Fi)" (both phones on the same network) or the Android app's Bluetooth link (pair the phones first) updates are instant; otherwise each message is a code you pass on by NFC tag, share sheet or copy-paste.
+
+## Progress widget (Android)
+Add the "Routine progress" widget from the home screen: it shows the routine in progress, the current task, a live countdown and a progress bar, and opens the app when tapped.
+
 ## Android app and widget
 Settings → Download Android app always gives the latest APK. Allow “install unknown apps” for your browser once. Long-press the home screen → Widgets → Morning Organizer to start a favourite routine in one tap.
 

@@ -162,3 +162,9 @@ dialog header { display: flex; align-items: center; justify-content: space-betwe
 .ring.calm.warn, .ring.calm.over { --brand: var(--good); animation: none; } .ring.calm.over .big-time { color: var(--text); }
 .ti img, .task-icon img { width: 1em; height: 1em; border-radius: 22%; object-fit: cover; vertical-align: middle; } .ring .ti img { width: 2.6rem; height: 2.6rem; }
 .ti-s img { width: 1.3rem; height: 1.3rem; border-radius: 22%; object-fit: cover; }
+
+/* ── v1.5: family ── */
+.family-card { display: grid; gap: 10px; } .bar { height: 12px; border-radius: 99px; background: var(--surface-2); overflow: hidden; } .bar i { display: block; height: 100%; background: var(--brand); border-radius: inherit; transition: width .4s; }
+.goal { display: grid; gap: 4px; background: var(--surface-2); border-radius: 14px; padding: 10px; } .transports { display: grid; gap: 6px; border-top: 1px dashed var(--line); padding-top: 8px; }
+.chip.solid.off { opacity: .8; } .cheers { margin: 0; padding-inline-start: 1.2em; } .family-card h3 { margin: .4em 0 .2em; font-size: .95rem; }
+#nav a { font-size: .68rem; }

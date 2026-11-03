@@ -59,7 +59,9 @@ function group(key, title, open, ...kids) {
 export const ACCENTS = ['', '#5b4bd5', '#0b6fc4', '#0a7a5f', '#c2410c', '#be185d', '#334155'];
 
 export function renderSettings(root, version) {
+  let alive = true; // a redraw that finishes after the person already left this page must NOT overwrite the page they are on
   const draw = () => {
+    if (!alive) return;
     const st = S.get().settings;
     const set = async (p, redraw = false) => { await S.updateSettings(p); if (redraw) draw(); };
     root.replaceChildren(
@@ -126,5 +128,5 @@ export function renderSettings(root, version) {
         h('p', { class: 'note' }, `${t('version', { v: version })} · ${t('offline')}`)));
   };
   draw();
-  return () => {};
+  return () => { alive = false; };
 }

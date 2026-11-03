@@ -66,6 +66,7 @@ dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.activity)
     implementation(libs.androidx.webkit)
+    implementation(libs.androidx.fragment) // the code scanner pulls an old Fragment; ActivityResult launchers need >= 1.3 (lint InvalidFragmentVersionForActivityResult)
     implementation(libs.androidx.codescanner) // Google's code scanner: no camera permission, no bundled model
     testImplementation(libs.junit)
 }

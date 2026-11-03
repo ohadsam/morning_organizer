@@ -381,6 +381,13 @@ await step('v1.9: schedule (today / other days), gear checklist, badges + celebr
   await page.waitForSelector('.qr-box svg'); assert.ok((await page.locator('.qr-box svg path').getAttribute('d')).length > 500); { const v = await audit(page, 'qr dialog'); if (v.length) console.error(v.join('\n')); assert.deepEqual(v, []); } assert.deepEqual(errors, []);
 });
 
+await step('regression: a settings change that finishes after navigating away must not overwrite the page you are on', async () => {
+  const { page } = await newPage(); await page.goto(base + '#/settings'); await page.waitForSelector('details.settings-group');
+  // click a swatch (redraws settings after an async save) and leave in the same tick
+  await page.locator('details.settings-group .swatches[role=radiogroup] .swatch').nth(2).evaluate((el) => { el.click(); location.hash = '#/'; });
+  await page.waitForSelector('.hero'); await page.waitForTimeout(600); assert.ok(await page.locator('.hero').count(), 'the home page is still showing'); assert.equal(await page.locator('details.settings-group').count(), 0);
+});
+
 await step('run survives reload (crash-safe) and checklist ticking works', async () => {
   const { page } = await newPage(); await page.goto(base); await page.waitForSelector('.routine');
   await page.locator('.routine .start').first().click(); await page.waitForSelector('.ring'); await page.locator('.checklist li').nth(2).locator('.cb').click();

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent" android:layout_height="match_parent"
+    android:orientation="vertical" android:padding="10dp"
+    android:background="@drawable/widget_bg">
+    <TextView android:id="@+id/widget_title"
+        android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:text="@string/app_name" android:textColor="@color/widget_text"
+        android:textSize="14sp" android:textStyle="bold" android:paddingBottom="4dp"/>
+    <TextView android:id="@+id/widget_btn0" style="@style/WidgetBtn"/>
+    <TextView android:id="@+id/widget_btn1" style="@style/WidgetBtn"/>
+    <TextView android:id="@+id/widget_btn2" style="@style/WidgetBtn"/>
+    <TextView android:id="@+id/widget_btn3" style="@style/WidgetBtn"/>
+</LinearLayout>

@@ -1,0 +1,58 @@
+---
+name: release-checklist
+description: Run this after implementing any feature or fix in Morning Organizer (ohadsam/morning_organizer), before considering the work done. Covers the 5 specialist reviews (architecture, QA, UI/UX + RTL, security, performance), version bump, What's New, user guide, docs, skills, tests, CI as the Android verification gate, and shipping to main. Invoke by name ("run the release checklist") or whenever the user asks to finish/ship/wrap up a change here.
+---
+
+# Release checklist
+
+Morning Organizer = one **vanilla-JS web app** (`web/`, no build step, no runtime dependencies) used two ways:
+a **PWA** on GitHub Pages and a thin **Android WebView shell** (`android/`) that packages the same `web/` folder as assets.
+Do not skip or reorder steps; later steps assume earlier ones are done. If a step finds nothing, say so explicitly and move on.
+
+**First:** confirm the previous batch's checklist really finished (check the task list) - a green `main` and a half-finished checklist look identical.
+
+## 1. Five reviews - separate passes, in this order
+Re-read every changed file fresh for each pass; each pass has caught bugs the others missed.
+
+1. **System architecture.** Dependency direction is `ui/* → store/engine/stats/share → util/config`; `engine`, `stats`, `share`, `alarms`, `util` stay **pure** (no DOM, no storage, time passed in as `now`). Web code reaches Android only through `js/native.js`; Android code is reached only through `NativeBridge.kt`. New JS file → add it to `sw.js` SHELL (static check enforces). Any new persisted field → handled by `normalizeTemplate` and old data still loads. Update `docs/ARCHITECTURE.md` if a boundary moved.
+2. **QA / functional.** Walk the user journeys: create → edit (type, drag, arrows) → favourite → run (warn at N s, end, overtime, pause, +1 min, skip, tick ahead, finish) → summary → stats/insights/apply → share/import → alarm → settings → backup/restore. Edge cases: 0 tasks, 100 tasks, 24 h task, run interrupted by reload/kill, clock/timezone change, storage blocked (memory fallback), first launch offline, upgrade from previous version's data. Hebrew **and** English each time.
+3. **UI / UX + RTL.** Touch targets ≥ 44 px, one clear primary action per screen, labels on every icon button, focus visible, contrast in light **and** dark, no horizontal scroll at 320 px, keyboard path for drag & drop (arrows), `prefers-reduced-motion`. RTL: only CSS **logical** properties (`margin-inline-*`, `inset-inline-*`, `text-align: start`); directional icons flip; numbers/time stay LTR where needed (`.code`, chart). Screenshot every changed screen in `he` and `en` (`npm run e2e -- --shots <dir>`) and actually look at them.
+4. **Security.** All user/imported text goes through `h()` (text nodes) - never raw-HTML sinks (`scripts/static-checks.mjs` bans them). Everything arriving via import/NFC/share/restore is untrusted: `share.js#sanitizeWire` / `store.js#normalizeTemplate` clamp lengths, numbers, colours, strip control+bidi chars, regenerate ids; decompression is size-bounded. CSP in `index.html` stays `'self'` only (no CDN, no inline script/style). Service worker never touches cross-origin. Android: `NativeBridge` validates every argument and caps sizes; WebView only loads the asset origin (others → external browser); no file/content access; no cleartext; receivers/services `exported=false` unless the system must bind them; no secrets in the repo (keystore only via Actions secrets). Run the `security-review` skill on the diff.
+5. **Performance.** Rendering is rebuild-per-view - keep lists bounded (`LIMITS`), never re-render a whole view per timer tick (runner only touches `paintLive`), timers derive from timestamps (no drift when throttled), IndexedDB writes are batched/debounced (editor 350 ms), `runs` capped at `LIMITS.maxRuns`. No new dependency without a written reason (the shipped app has zero). Check `sw.js` precache stays small and APK size doesn't jump.
+
+Fix findings **before** moving on; re-run the affected pass if a fix was non-trivial. Write what each pass found (even "nothing") in the final report.
+
+## 2. Version + What's New
+`npm run bump -- patch|minor|major` updates `web/version.json` (single source; Gradle reads it), `web/sw.js`, `package.json`. Then add `## x.y.z` to `docs/CHANGELOG.md` (the unit test fails without it; the release notes are cut from it).
+
+## 3. User guide - always current
+Every user-visible change updates **both** `web/js/ui/guide.js` (en + he) and `docs/USER_GUIDE.md`. A test checks all section titles exist in both. New setting/screen/feature ⇒ guide text, even one sentence.
+
+## 4. Docs
+`README.md` (feature list, screenshots if UI changed), `docs/ARCHITECTURE.md`, `docs/RELEASING.md` if pipeline/setup changed. New strings go in **both** languages of `js/i18n.js` (parity test enforces keys + `{placeholders}`); Android strings in `values/` **and** `values-he/`.
+
+## 5. Skills
+If this run revealed a missing step or a wrong claim here, fix this file now (self-review of the checklist).
+
+## 6. Tests - must be green locally
+```
+npm run check      # syntax, banned APIs, CSP/SW consistency
+npm test           # node:test unit tests (engine, stats, share, alarms, i18n parity, version sync, guide)
+npm run e2e        # Playwright: boot, RTL, editor, drag, run with fake clock, stats, share, settings, 320 px overflow
+```
+New logic ⇒ new unit test; new user flow ⇒ new e2e step; every fixed bug ⇒ a regression test. If e2e fails right at boot, suspect a bad import / stray `*/` in a new module: `node -e "import('./web/js/x.js')"`.
+Gotcha (real): `el.replaceChildren(null)` renders the text "null" and arrays render `[object HTMLDivElement]` - use `setChildren()` from `util.js` or `h()` which flatten and skip null.
+
+## 7. Android verification = CI
+No Android SDK in the sandbox (`dl.google.com` blocked), so Kotlin is only compiled by GitHub Actions (`ci.yml` → *android*: unit tests, lint, release APK). Treat "push, wait, read the log" as mandatory (`get_job_logs` for failures). Pure logic that can be unit-tested on the JVM goes in `AlarmMath.kt`-style objects (no Android types) with tests in `android/app/src/test`.
+
+## 8. Ship
+Commit on the working branch, push, wait for **web** + **android** green. On `main` the *release* job publishes `morning-organizer.apk` as the latest release and `pages.yml` deploys the PWA - verify both (release exists with the APK asset; Pages URL serves the new `version.json`). Don't claim "done" before that.
+
+## Known limitations (don't re-report as new)
+- Web alarms only ring while the page is open (browsers can't schedule background alarms); the Android app is the reliable path.
+- Bluetooth/Nearby sharing goes through the system share sheet (no raw RFCOMM); NFC = tag write/read (Web NFC in Chrome Android, native in the APK), not phone-to-phone Beam (removed from Android).
+- Without signing secrets the APK uses a debug key (no in-place updates).
+
+## Done means
+All five reviews run and their fixes applied · version bumped · CHANGELOG + both guides updated · `check`/`test`/`e2e` green · CI green on the branch · (on main) release + Pages verified.

@@ -1,0 +1,15 @@
+{
+  "name": "morning-organizer",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Morning routine organizer - PWA + Android shell",
+  "scripts": {
+    "test": "node --test tests/unit/*.test.js",
+    "check": "node scripts/static-checks.mjs",
+    "e2e": "node tests/e2e/smoke.mjs",
+    "serve": "node scripts/serve.mjs",
+    "bump": "node scripts/bump-version.mjs"
+  },
+  "devDependencies": { "playwright": "1.63.0" }
+}

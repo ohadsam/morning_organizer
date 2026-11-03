@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">מארגן בוקר</string>
+    <string name="widget_label">שגרות בוקר</string>
+    <string name="widget_desc">הפעלת שגרה מועדפת בלחיצה אחת</string>
+    <string name="widget_empty">פתחו את האפליקציה כדי ליצור שגרה</string>
+    <string name="alarm_channel">התראות התחלת שגרה</string>
+    <string name="alarm_title">הגיע הזמן להתחיל: %1$s</string>
+    <string name="alarm_text">לחצו כדי להתחיל את השגרה</string>
+    <string name="alarm_start">התחל</string>
+    <string name="alarm_stop">עצור</string>
+    <string name="share_via">שיתוף שגרה</string>
+    <string name="nfc_hint">קרבו את הטלפון לתג NFC</string>
+</resources>

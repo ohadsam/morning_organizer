@@ -1,0 +1,25 @@
+# Architecture
+
+```
+            ┌──────────────────────────── web/ (single source of UI, no build, no runtime deps) ───────────────────────────┐
+ GitHub     │  index.html + CSP('self')   sw.js (offline)   manifest                                                        │
+ Pages ───► │  js/app.js  router ─► ui/{home,editor,runner,stats,settings,share,guide}.js   (DOM via h(), text nodes only)  │
+            │         │                      │                                                                              │
+            │         ▼                      ▼                                                                              │
+            │  store.js (state, normalize, backup)  ◄── engine.js (run state machine, pure, `now` injected)                 │
+            │     │   │                                  stats.js (series, insights, pure)    share.js (encode/decode/sanitize)│
+            │     ▼   ▼                                  alarms.js (next fire, pure)           i18n.js (he/en, RTL)           │
+            │  db.js (IndexedDB + memory fallback)       audio.js (beep/vibrate)  reminders.js (web-only alarms)             │
+            │                         native.js ── no-op in browsers ──────────────────────────┐                               │
+            └─────────────────────────────────────────────────────────────────────────────────┼───────────────────────────────┘
+                                                                                              ▼  window.MorningNative
+ APK (GitHub Releases, always latest)   android/  MainActivity (WebView on https://appassets.androidplatform.net, assets = ../web)
+                                         NativeBridge ─► AlarmStore/AlarmMath ─► AlarmManager.setAlarmClock ─► AlarmReceiver ─► AlarmService (sound+vibration)
+                                                      ─► RoutineWidget (RemoteViews, favourites)    BootReceiver (re-arm)    NFC read/write + share sheet
+```
+
+* **No server.** Data: IndexedDB (`templates`, `runs`, `kv`). Sharing: self-contained code `M2.<base64url(deflate(json))>` via share sheet / link / NFC.
+* **One codebase for UI.** The APK has no UI code of its own; Gradle packages `web/` as assets. Native adds only what browsers cannot: reliable alarms, widget, NFC from the app, vibration.
+* **Time.** Run timing is derived from timestamps (`engine.js`), never from tick counts, so throttled/background timers cannot drift; the active run is persisted so it survives reloads.
+* **Versioning.** `web/version.json` → PWA, service-worker cache name, APK `versionName/Code`.
+* **Trust boundaries.** (1) Imported/shared/restored data → `sanitizeWire`/`normalizeTemplate`. (2) Web → Android → `NativeBridge` argument validation. (3) CSP + escaped DOM building.

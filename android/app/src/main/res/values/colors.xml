@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="brand">#6C5CE7</color>
+    <color name="window_bg">#F6F4FF</color>
+    <color name="widget_bg">#FFFFFF</color>
+    <color name="widget_btn">#EFECFF</color>
+    <color name="widget_text">#1F1B3A</color>
+</resources>

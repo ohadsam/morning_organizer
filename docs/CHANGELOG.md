@@ -1,6 +1,9 @@
 # Changelog
 
 ## 1.10.0
+- **Easier task editing**: a time sheet (quick times, steppers, exact minutes/seconds) with − / + buttons on every task, and a **☰ task menu** (add below, duplicate, move up/down/top/bottom, picture, remove).
+- **Playful wording for young children**: under age 12 (or "Playful" in Settings) the whole app - tabs, buttons, settings, summaries - uses lighter, more fun texts in both languages.
+- **If-then plans** per routine (shown as a card when it starts), **timer look** (ring / pie / bar), **evening wind-down** sample routine, **weekly digest** for parents (slowest steps, repeated interruptions), **alarm snooze** (5 min) and a **Calm corner widget** (Android).
 - **Choose what you want help with**: six areas (focus, calm, time sense, remembering, motivation, habits) switch on matching helpers; every helper stays individually switchable; a **parent can set the child's areas and helpers** over the family link; the coach picks tips that match the chosen areas.
 - **Calm corner** (breathing patterns, 5-4-3-2-1 grounding, body scan) from home or mid-routine (the clock pauses while you breathe).
 - **Focus tools in the run screen**: sprints with movement breaks, parking lot for stray thoughts, next-task heads-up with a soft chime, pie timer, quiet work buddy.

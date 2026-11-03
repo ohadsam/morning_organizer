@@ -1,6 +1,6 @@
 // Entry point: boot, hash router, bottom navigation, service worker.
 import * as S from './store.js';
-import { setLang, t } from './i18n.js';
+import { setLang, t, setPlayful, isPlayful, shouldBePlayful } from './i18n.js';
 import { h } from './util.js';
 import { native, onNativeEvent } from './native.js';
 import { scheduleWebReminders } from './reminders.js';
@@ -70,13 +70,15 @@ async function boot() {
     });
   } catch (e) { console.error(e); }
   const st = S.get().settings;
-  setLang(st.lang); applyTheme(st.theme);
+  setLang(st.lang); applyTheme(st.theme); setPlayful(shouldBePlayful(st.textStyle, st.age));
   document.title = t('appName');
   setAwake('app', st.keepAwakeApp); applyA11y(st);
   try { version = (await (await fetch('version.json', { cache: 'no-cache' })).json()).version; } catch { /* offline first load */ }
   await S.seedIfNeeded();
   S.syncNative();
   const onRing = (tpl, r) => handleRing(tpl.id, r, nav);
+  // young children (or "playful" in Settings) get lighter wording everywhere; re-draw only when that actually flips
+  S.subscribe(() => { const { textStyle, age } = S.get().settings, on = shouldBePlayful(textStyle, age); if (on !== isPlayful()) { setPlayful(on); route(); } });
   S.subscribe(() => scheduleWebReminders(onRing));
   scheduleWebReminders(onRing);
 

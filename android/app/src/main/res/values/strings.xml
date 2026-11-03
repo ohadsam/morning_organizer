@@ -28,4 +28,6 @@
     <string name="alarm_title_n">Time to start: %1$s (%2$d/%3$d)</string>
     <string name="widget_prev_glyph">‹</string>
     <string name="widget_next_glyph">›</string>
+    <string name="alarm_snooze">Snooze 5 min</string>
+    <string name="widget_calm_desc">Open the calm corner in one tap</string>
 </resources>

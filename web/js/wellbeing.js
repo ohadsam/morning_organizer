@@ -1,6 +1,11 @@
 // Strings for the "helpers" added in 1.10: calm corner, journal (optional password, voice notes, dictation), focus areas, sprints, reward menu.
 // Merged into the main dictionary by i18n.js. Hebrew uses neutral plural forms ("לחצו") so it fits any gender.
 export const EN = {
+  plansTitle: 'If-then plans', plansHint: 'Decide ahead: “If this happens, then I do that.” It shows as a card when the routine starts.', planWhen: 'If…', planThen: 'then…', planWhenPh: 'e.g. I want to scroll my phone', planThenPh: 'e.g. I put it in the drawer', planAdd: 'Add a plan', planIf: 'If', planThenWord: 'then',
+  timerStyle: 'Timer look', timerAuto: 'Automatic', timerRing: 'Ring', timerPie: 'Pie', timerBar: 'Bar', sample6: 'Evening wind-down', s_clothes: 'Lay out tomorrow’s clothes', s_good3: '3 good things from today', s_breathe: 'Breathe and relax',
+  digestTitle: 'This week', digestSlow: '“{name}” usually runs about {t} over its time', digestUnp: '{emoji} {name} interrupted {n} times', digestNone: 'No pattern yet - it will appear after a few runs.',
+  textStyle: 'Wording', textAuto: 'Automatic (playful for young children)', textPlayful: 'Playful and fun', textPlain: 'Plain', textStyleHint: 'With an age under 12 the whole app uses lighter, more fun wording.',
+  tpQuick: 'Quick times', tpEdit: 'change time', tpLess: 'less', tpMore: 'more', tpSame: '= same as time', taskMenu: 'Task menu', menuAddBelow: 'Add a task below', menuDuplicate: 'Duplicate', menuToTop: 'Move to top', menuToBottom: 'Move to bottom',
   colDate: 'Date',
   alarmSound: 'Sound', snd_alarm: 'Alarm clock', snd_gentle: 'Gentle chime', snd_ringtone: 'Ringtone', snd_rising: 'Rising (gets louder)', alarmText: 'Message', alarmTextPh: 'e.g. Time to get up! Feet on the floor', alarmSpeak: 'Read the message aloud', alarmTest: 'Test this alarm',
   alarmRingN: 'Alarm {n} · {time}', alarmRingShort: 'Alarm {n}', alarmGap: 'Minutes after the previous alarm', alarmAddRing: 'Add another alarm', alarmRepCount: 'How many more alarms', alarmRepTimes: 'more alarms', alarmRepGap: 'Minutes between them', alarmRepEvery: 'min apart', alarmRepAdd: 'Add them',
@@ -64,6 +69,11 @@ export const EN = {
   menuEdit: 'Edit menu', menuHint: 'Things stars can buy. Each costs a number of stars.', menuAdd: 'Add reward', menuItem: 'Reward', menuCost: 'Stars', menuEmoji: 'Icon', menuRequests: 'Reward requests', menuMarkGiven: 'Given', redeemAlert: '{name} would like: {title}', sendToChild: 'Send to {name}',
 };
 export const HE = {
+  plansTitle: 'תוכניות אם-אז', plansHint: 'מחליטים מראש: “אם קורה כך, אז אני עושה כך.” זה מוצג ככרטיס בתחילת השגרה.', planWhen: 'אם…', planThen: 'אז…', planWhenPh: 'למשל: מתחשק לי לגלול בטלפון', planThenPh: 'למשל: אני שם אותו במגירה', planAdd: 'הוספת תוכנית', planIf: 'אם', planThenWord: 'אז',
+  timerStyle: 'מראה השעון', timerAuto: 'אוטומטי', timerRing: 'טבעת', timerPie: 'עוגה', timerBar: 'פס', sample6: 'הרגעה בערב', s_clothes: 'מכינים בגדים למחר', s_good3: '3 דברים טובים מהיום', s_breathe: 'נושמים ונרגעים',
+  digestTitle: 'השבוע', digestSlow: '“{name}” חורג בדרך כלל בערך {t} מהזמן שלו', digestUnp: '{emoji} {name} הפריע {n} פעמים', digestNone: 'עדיין אין דפוס - הוא יופיע אחרי כמה הרצות.',
+  textStyle: 'סגנון טקסטים', textAuto: 'אוטומטי (כיפי לילדים קטנים)', textPlayful: 'כיפי ומשעשע', textPlain: 'רגיל', textStyleHint: 'כשהגיל נמוך מ-12 כל האפליקציה משתמשת בניסוח קליל וכיפי יותר.',
+  tpQuick: 'זמנים מהירים', tpEdit: 'שינוי זמן', tpLess: 'פחות', tpMore: 'יותר', tpSame: '= כמו הזמן', taskMenu: 'תפריט משימה', menuAddBelow: 'הוספת משימה מתחת', menuDuplicate: 'שכפול', menuToTop: 'העברה להתחלה', menuToBottom: 'העברה לסוף',
   colDate: 'תאריך',
   alarmSound: 'צליל', snd_alarm: 'שעון מעורר', snd_gentle: 'צלצול עדין', snd_ringtone: 'רינגטון', snd_rising: 'עולה (מתחזק)', alarmText: 'הודעה', alarmTextPh: 'למשל: הגיע הזמן לקום! רגליים על הרצפה', alarmSpeak: 'הקראת ההודעה בקול', alarmTest: 'בדיקת השעון',
   alarmRingN: 'שעון {n} · {time}', alarmRingShort: 'שעון {n}', alarmGap: 'דקות אחרי השעון הקודם', alarmAddRing: 'הוספת שעון נוסף', alarmRepCount: 'כמה שעונים נוספים', alarmRepTimes: 'שעונים נוספים', alarmRepGap: 'דקות ביניהם', alarmRepEvery: 'דק׳ הפרש', alarmRepAdd: 'הוספה',

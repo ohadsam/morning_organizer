@@ -11,16 +11,7 @@ import { suggestStart, validLeaveBy } from '../leave.js';
 import { presetDays, normDays } from '../schedule.js';
 import { getLang } from '../i18n.js';
 import { modal } from './common.js';
-
-/** minutes + seconds inputs bound to one number of seconds. */
-function durationInput(label, sec, onChange, { allowEmpty = false, ph = '' } = {}) {
-  const empty = allowEmpty && !sec;
-  const m = h('input', { type: 'number', inputMode: 'numeric', min: 0, max: 1440, value: empty ? '' : Math.floor(sec / 60), placeholder: ph, 'aria-label': `${label} ${t('minutes')}` });
-  const s = h('input', { type: 'number', inputMode: 'numeric', min: 0, max: 59, value: empty ? '' : sec % 60, placeholder: ph ? '' : '', 'aria-label': `${label} ${t('seconds')}` });
-  const fire = () => { const v = Math.max(0, Math.floor(+m.value || 0) * 60 + Math.min(59, Math.floor(+s.value || 0))); onChange(v); };
-  m.addEventListener('input', fire); s.addEventListener('input', fire);
-  return h('label', { class: 'dur' }, h('span', { class: 'lbl' }, label), h('span', { class: 'dur-in' }, m, h('i', {}, t('minutes')), s, h('i', {}, t('seconds'))));
-}
+import { timeField } from './timePicker.js';
 
 /** Task picture if it has a photo, else its emoji. */
 export const iconNode = (task) => (task.photo ? h('img', { src: task.photo, alt: '' }) : (task.icon || suggestIcon(task.name)));
@@ -42,17 +33,27 @@ export function renderEditor(root, id, nav) {
         h('div', { class: 'task-top' }, h('button', { class: 'task-icon', type: 'button', 'aria-label': `${t('taskIcon')}: ${task.icon || suggestIcon(task.name)}`, title: t('pickIcon'), onclick: (e) => pickIcon(task, e.currentTarget) }, iconNode(task)),
         h('input', { class: 'task-name', type: 'text', maxLength: 80, value: task.name, placeholder: t('taskName'), 'aria-label': t('taskName'), oninput: (e) => change(() => { task.name = e.target.value; if (!task.icon && !task.photo) row.querySelector('.task-icon').textContent = suggestIcon(task.name); }) })),
         h('div', { class: 'task-times' },
-          durationInput(t('duration'), task.sec, (v) => change(() => { task.sec = Math.max(1, v); })),
-          durationInput(t('estimate'), task.est, (v) => change(() => { task.est = v; }), { allowEmpty: true, ph: '=' }))),
-      h('div', { class: 'task-ctl' },
-        iconBtn('up', t('moveUp'), () => moveTask(i, i - 1), i === 0 ? 'dim' : ''),
-        iconBtn('down', t('moveDown'), () => moveTask(i, i + 1), i === tpl.tasks.length - 1 ? 'dim' : ''),
-        iconBtn('trash', t('removeTask'), () => change(() => { tpl.tasks.splice(i, 1); }, true))));
+          timeField(t('duration'), task.sec, (v) => change(() => { task.sec = Math.max(1, v); })),
+          timeField(t('estimate'), task.est, (v) => change(() => { task.est = v; }), { allowEmpty: true, emptyLabel: t('tpSame') }))),
+      h('button', { class: 'btn icon-btn task-menu-btn', type: 'button', 'aria-haspopup': 'dialog', 'aria-label': `${t('taskMenu')}: ${task.name || t('newTask')}`, title: t('taskMenu'), onclick: () => openTaskMenu(i) }, icon('menu', 22)));
     row.querySelector('.handle').addEventListener('pointerdown', (e) => startDrag(e, row));
     row.querySelector('.handle').addEventListener('keydown', (e) => {
       if (e.key === 'ArrowUp' || e.key === 'ArrowDown') { e.preventDefault(); const to = i + (e.key === 'ArrowUp' ? -1 : 1); moveTask(i, to, true); }
     });
     return row;
+  }
+  /** The ☰ menu of a task: everything you can do with it, in one place. */
+  function openTaskMenu(i) {
+    const task = tpl.tasks[i]; let m;
+    const item = (emoji, label, fn, { danger = false, disabled = false } = {}) => h('button', { class: `btn menu-item ${danger ? 'danger' : ''}`, type: 'button', disabled, onclick: () => { m.close(); fn(); } }, h('span', { 'aria-hidden': 'true' }, emoji), label);
+    const last = tpl.tasks.length - 1;
+    m = modal(`☰ ${task.name || t('newTask')}`, h('div', { class: 'stack task-menu' },
+      item('➕', t('menuAddBelow'), () => { const nt = S.newTask(); nt.name = ''; change(() => tpl.tasks.splice(i + 1, 0, nt), true); list.children[i + 1]?.querySelector('.task-name')?.focus(); }),
+      item('⧉', t('menuDuplicate'), () => change(() => tpl.tasks.splice(i + 1, 0, { ...structuredClone(task), id: uid() }), true)),
+      item('⬆️', t('moveUp'), () => moveTask(i, i - 1), { disabled: i === 0 }), item('⬇️', t('moveDown'), () => moveTask(i, i + 1), { disabled: i === last }),
+      item('⏫', t('menuToTop'), () => moveTask(i, 0), { disabled: i === 0 }), item('⏬', t('menuToBottom'), () => moveTask(i, last), { disabled: i === last }),
+      item('🖼️', t('pickIcon'), () => pickIcon(task, list.children[i]?.querySelector('.task-icon'))),
+      item('🗑️', t('removeTask'), () => change(() => tpl.tasks.splice(i, 1), true), { danger: true })), [{ label: t('close') }]);
   }
   function pickIcon(task, btn) {
     const refresh = () => { btn.replaceChildren(iconNode(task)); save(); m.close(); };
@@ -109,6 +110,15 @@ export function renderEditor(root, id, nav) {
         iconBtn('trash', t('gearRemove'), () => { tpl.gear.splice(i, 1); save(); drawGear(); })), dayChips(g.days || [], (d) => { g.days = d; save(); drawGear(); }))),
       h('button', { class: 'btn add', type: 'button', onclick: () => { tpl.gear.push({ id: uid(), name: '', icon: '', days: [] }); save(); drawGear(); gearBox.querySelector('.gear-row:last-of-type input[type=text]')?.focus(); } }, icon('plus', 18), t('addGear')));
   }
+  const plansBox = h('section', { class: 'card stack' });
+  function drawPlans() {
+    tpl.plans ||= [];
+    setChildren(plansBox, h('p', { class: 'note' }, t('plansHint')), tpl.plans.map((p, i) => h('div', { class: 'plan-row' },
+      h('label', { class: 'field' }, h('span', { class: 'lbl' }, t('planWhen')), h('input', { type: 'text', maxLength: 80, value: p.when, placeholder: t('planWhenPh'), oninput: (e) => { p.when = e.target.value; save(); } })),
+      h('label', { class: 'field' }, h('span', { class: 'lbl' }, t('planThen')), h('input', { type: 'text', maxLength: 80, value: p.then, placeholder: t('planThenPh'), oninput: (e) => { p.then = e.target.value; save(); } })),
+      iconBtn('trash', t('delete'), () => { tpl.plans.splice(i, 1); save(); drawPlans(); }))),
+      tpl.plans.length < 5 ? h('button', { class: 'btn add', type: 'button', onclick: () => { tpl.plans.push({ id: uid(), when: '', then: '' }); save(); drawPlans(); plansBox.querySelector('.plan-row:last-of-type input')?.focus(); } }, icon('plus', 18), t('planAdd')) : null);
+  }
   const alarmEd = alarmEditor(tpl, save), alarmBox = alarmEd.el, drawAlarm = alarmEd.draw;
 
   function draw() {
@@ -134,6 +144,7 @@ export function renderEditor(root, id, nav) {
     h('button', { class: 'btn add', type: 'button', onclick: () => { const nt = S.newTask(); nt.name = ''; change(() => tpl.tasks.push(nt), true); list.lastElementChild?.querySelector('.task-name')?.focus(); } }, icon('plus', 18), t('addTask')),
     h('h2', {}, t('schedule')), scheduleBox,
     h('h2', {}, t('gear')), gearBox,
+    h('h2', {}, t('plansTitle')), plansBox,
     h('h2', {}, t('leaveBy')),
     h('div', { class: 'card stack' }, h('p', { class: 'note' }, t('leaveHint')),
       h('div', { class: 'row' }, h('input', { type: 'time', value: tpl.leaveBy || '', 'aria-label': t('leaveBy'), oninput: (e) => { tpl.leaveBy = validLeaveBy(e.target.value); save(); } }),
@@ -145,6 +156,6 @@ export function renderEditor(root, id, nav) {
     h('div', { class: 'sticky-actions' },
       h('button', { class: 'btn', type: 'button', onclick: () => { save.flush(); nav('#/'); } }, t('save')),
       h('button', { class: 'btn primary', type: 'button', disabled: !tpl.tasks.length, onclick: () => { save.flush(); nav(`#/run/${tpl.id}`); } }, icon('play', 18), t('start'))));
-  draw(); drawAlarm(); drawSchedule(); drawGear();
+  draw(); drawAlarm(); drawSchedule(); drawGear(); drawPlans();
   return () => save.flush();
 }

@@ -67,6 +67,9 @@ Journal (📓): notes, voice notes (🎙️ - recorded during a task too), thoug
 
 Speech to text (optional): in a note tap “Dictate” (or record - in a browser a suggested transcript appears while you speak). It is only a suggestion: check and edit it. In the Android app it uses the phone’s own recognizer; in a browser the browser’s speech service may send audio to its maker, so the app asks first. Reward menu (🎁): spend stars on rewards from a menu you or a parent set up; a parent is told and can mark it as given.
 
+## Easier editing, wording and extras
+Editing tasks: tap the time on a task to open the time sheet (quick times, ±1m/±15s buttons, exact minutes and seconds), or use the − / + buttons next to it. The ☰ menu on each task lets you add a task below, duplicate, move up/down/to the top/to the bottom, change the picture or remove it; dragging by the handle still works. If-then plans (editor → “If-then plans”) show as a card when the routine starts: “If I want to scroll my phone, then it goes in the drawer”. Settings → Appearance → “Timer look” switches the ring to a pie or a bar. Young children: with an age under 12 the whole app uses lighter, more fun wording (Settings → Appearance → Wording to force it on or off). Android: the alarm notification has a 5-minute Snooze, and a “Calm corner” widget opens breathing in one tap. Parents see a weekly digest (slowest steps, repeated interruptions) on each child’s card.
+
 ## Privacy
 All data stays on your device. Use Settings → Back up all data to save or move it.
 

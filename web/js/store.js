@@ -22,7 +22,7 @@ import { newProfile, normalizeProfile, runsOf, MAX_PROFILES } from './profiles.j
 export const DEFAULT_SETTINGS = Object.freeze({
   lang: 'he', theme: 'auto', mode: 'both', volume: 80, warnSec: 10, defTaskSec: 300, defEstSec: 0,
   autoAdvance: false, keepAwake: true, keepAwakeApp: false, personName: '', mascot: '🦊', feedback: true, speak: false, age: null, gender: 'other', profileDone: false,
-  paceMode: 'normal', accent: '', simpleMode: false, announceTasks: false, fontScale: 100, colorSafe: false, contrast: 'normal', srAnnounce: false,
+  textStyle: 'auto', timerStyle: 'auto', paceMode: 'normal', accent: '', simpleMode: false, announceTasks: false, fontScale: 100, colorSafe: false, contrast: 'normal', srAnnounce: false,
   coachButton: true, coachAuto: false, coachSpeak: false, voiceURI: '', voicePreset: 'natural', seeded: false,
   avatar: defaultAvatar(), activeProfile: '', transcribe: false,
 });
@@ -46,7 +46,7 @@ export function newTask(settings = state.settings, name = '') {
 export function newTemplate(name = '') {
   const now = Date.now();
   return { id: uid(), name, icon: ICONS[0], color: COLORS[0], favorite: false, builtin: false,
-    leaveBy: '', from: '', days: [], gear: [], tasks: [newTask()], alarm: defaultAlarm(), createdAt: now, updatedAt: now };
+    leaveBy: '', from: '', days: [], gear: [], plans: [], tasks: [newTask()], alarm: defaultAlarm(), createdAt: now, updatedAt: now };
 }
 export const totalSec = (tpl) => tpl.tasks.reduce((s, x) => s + x.sec, 0);
 
@@ -60,6 +60,7 @@ export function normalizeTemplate(tpl) {
     name: cleanText(tpl.name, LIMITS.maxName), icon: cleanText(tpl.icon, 8) || '⏰',
     color: /^#[0-9a-fA-F]{6}$/.test(tpl.color) ? tpl.color : COLORS[0], favorite: !!tpl.favorite, builtin: !!tpl.builtin,
     createdAt: num(tpl.createdAt, Date.now()), updatedAt: num(tpl.updatedAt, Date.now()), leaveBy: validLeaveBy(tpl.leaveBy), from: cleanText(tpl.from, 30), days: normDays(tpl.days),
+    plans: (Array.isArray(tpl.plans) ? tpl.plans : []).filter((x) => x && typeof x === 'object' && cleanText(x.when, 80) && cleanText(x.then, 80)).slice(0, 5).map((x) => ({ id: typeof x.id === 'string' && x.id ? x.id.slice(0, 64) : uid(), when: cleanText(x.when, 80), then: cleanText(x.then, 80) })),
     gear: (Array.isArray(tpl.gear) ? tpl.gear : []).filter((g) => g && typeof g === 'object' && cleanText(g.name, 40)).slice(0, 20).map((g) => ({ id: typeof g.id === 'string' && g.id ? g.id.slice(0, 64) : uid(), name: cleanText(g.name, 40), icon: cleanText(g.icon, 8), days: normDays(g.days) })),
     tasks: (Array.isArray(tpl.tasks) ? tpl.tasks : []).slice(0, LIMITS.maxTasks).map((x) => ({
       id: typeof x?.id === 'string' && x.id ? x.id.slice(0, 64) : uid(), name: cleanText(x?.name, LIMITS.maxName), icon: cleanText(x?.icon, 8), photo: isSafePhoto(x?.photo) ? x.photo : '',
@@ -165,6 +166,7 @@ export async function addSamples(all = false) {
   if (all) samples.push(
     mk('sample-bedtime', t('sample3'), '🌙', '#6c5ce7', [['s_tidy', 5], ['s_pajamas', 3], ['s_teeth', 3], ['s_story', 10], ['s_lights', 1]]),
     mk('sample-homework', t('sample4'), '📚', '#00b894', [['s_hands', 2], ['s_snack', 10], ['s_homework', 25], ['s_read', 15], ['s_bagprep', 3]]),
+    mk('sample-evening', t('sample6'), '🌃', '#341f97', [['s_clothes', 3], ['s_bagprep', 3], ['s_good3', 3], ['s_teeth', 3], ['s_breathe', 2]]),
     mk('sample-afterschool', t('sample5'), '🏠', '#e84393', [['s_unpack', 3], ['s_hands', 2], ['s_lunch', 20], ['s_play', 30]]));
   const base = Date.now(); // distinct timestamps keep the list order (kids first) after reloads (IndexedDB returns rows by id)
   for (const [i, x] of samples.entries()) if (!getTemplate(x.id)) await saveTemplate({ ...x, createdAt: base + i });
@@ -204,6 +206,8 @@ export async function updateSettings(patch) {
   if ('mascot' in patch && !MASCOTS.includes(patch.mascot)) delete patch.mascot;
   if ('age' in patch) { const n = Math.round(Number(patch.age)); patch = { ...patch, age: Number.isFinite(n) && n >= 3 && n <= 120 ? n : null }; }
   if ('fontScale' in patch && ![100, 115, 130, 150].includes(patch.fontScale)) delete patch.fontScale;
+  if ('textStyle' in patch && !['auto', 'playful', 'plain'].includes(patch.textStyle)) delete patch.textStyle;
+  if ('timerStyle' in patch && !['auto', 'ring', 'pie', 'bar'].includes(patch.timerStyle)) delete patch.timerStyle;
   if ('paceMode' in patch && !['normal', 'quick', 'calm'].includes(patch.paceMode)) delete patch.paceMode;
   if ('contrast' in patch && !['normal', 'high'].includes(patch.contrast)) delete patch.contrast;
   if ('accent' in patch && !(patch.accent === '' || /^#[0-9a-f]{6}$/i.test(patch.accent))) delete patch.accent;
@@ -258,7 +262,7 @@ export function exportAll() {
 export function sanitizeSettings(raw) {
   const out = {};
   if (!raw || typeof raw !== 'object') return out;
-  const ENUM = { lang: ['auto', 'he', 'en'], theme: ['auto', 'light', 'dark'], mode: ['both', 'beep', 'vibrate', 'silent'], paceMode: ['normal', 'quick', 'calm'], contrast: ['normal', 'high'], fontScale: [100, 115, 130, 150] };
+  const ENUM = { lang: ['auto', 'he', 'en'], theme: ['auto', 'light', 'dark'], mode: ['both', 'beep', 'vibrate', 'silent'], paceMode: ['normal', 'quick', 'calm'], contrast: ['normal', 'high'], textStyle: ['auto', 'playful', 'plain'], timerStyle: ['auto', 'ring', 'pie', 'bar'], fontScale: [100, 115, 130, 150] };
   for (const [k, def] of Object.entries(DEFAULT_SETTINGS)) {
     if (k === 'seeded' || !(k in raw)) continue;
     const v = raw[k];

@@ -31,10 +31,10 @@ test('CSV: header, BOM, Hebrew, quoting, formula-injection neutralised, only fin
   assert.ok(!lines.some((l) => /,=HYPERLINK|,\+cmd/.test(l)), 'no cell starts with a formula character');
   assert.match(lines[1], /,done,100,100,90,30,3,2,2,0,0$/);
 });
-test('sample routines: all five have fixed ids, valid tasks and never duplicate; undo restores a deleted routine exactly', async () => {
+test('sample routines: all six have fixed ids, valid tasks and never duplicate; undo restores a deleted routine exactly', async () => {
   await S.init(); await S.addSamples(true); await S.addSamples(true);
   const ids = S.get().templates.map((x) => x.id).filter((i) => i.startsWith('sample-')).sort();
-  assert.deepEqual(ids, ['sample-adult', 'sample-afterschool', 'sample-bedtime', 'sample-homework', 'sample-kids']);
+  assert.deepEqual(ids, ['sample-adult', 'sample-afterschool', 'sample-bedtime', 'sample-evening', 'sample-homework', 'sample-kids']);
   for (const x of S.get().templates) { assert.ok(x.tasks.length >= 4); assert.ok(x.tasks.every((k) => k.name && k.sec >= 60 && k.icon)); }
   const before = structuredClone(S.getTemplate('sample-bedtime')), undo = await S.deleteWithUndo('sample-bedtime');
   assert.equal(S.getTemplate('sample-bedtime'), undefined); await undo(); assert.deepEqual(S.getTemplate('sample-bedtime'), before);

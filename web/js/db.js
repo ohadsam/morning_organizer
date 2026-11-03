@@ -1,5 +1,5 @@
 // IndexedDB wrapper with an in-memory fallback (private mode / blocked storage) so the app still works, just without persistence.
-const DB_NAME = 'morning-organizer', DB_VER = 1, STORES = ['templates', 'runs', 'kv'];
+const DB_NAME = 'morning-organizer', DB_VER = 2, STORES = ['templates', 'runs', 'kv', 'journal', 'audio'];
 let dbp = null, persistent = true;
 const mem = Object.fromEntries(STORES.map((s) => [s, new Map()]));
 
@@ -12,6 +12,8 @@ function open() {
         if (!db.objectStoreNames.contains('templates')) db.createObjectStore('templates', { keyPath: 'id' });
         if (!db.objectStoreNames.contains('runs')) { const s = db.createObjectStore('runs', { keyPath: 'id' }); s.createIndex('templateId', 'templateId'); }
         if (!db.objectStoreNames.contains('kv')) db.createObjectStore('kv');
+        if (!db.objectStoreNames.contains('journal')) { const j = db.createObjectStore('journal', { keyPath: 'id' }); j.createIndex('profileId', 'profileId'); }
+        if (!db.objectStoreNames.contains('audio')) db.createObjectStore('audio', { keyPath: 'id' });
       };
       req.onsuccess = () => resolve(req.result);
       req.onerror = req.onblocked = () => { persistent = false; resolve(null); };

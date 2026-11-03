@@ -14,6 +14,8 @@ import { confetti } from './fx.js';
 import { openQr, openScanner } from './qr.js';
 import { qrFits } from '../qr.js';
 import { avatarNode } from './avatar.js';
+import { openFocusPicker } from './focus.js';
+import { openMenuEditor } from './menu.js';
 
 const ago = (ms) => (ms ? new Date(ms).toLocaleString(getLang(), { dateStyle: 'short', timeStyle: 'short' }) : '—');
 const mini = (pct) => h('div', { class: 'bar', role: 'progressbar', 'aria-valuemin': '0', 'aria-valuemax': '100', 'aria-valuenow': String(Math.round(pct * 100)) }, h('i', { style: { width: `${Math.round(clamp(pct, 0, 1) * 100)}%` } }));
@@ -130,10 +132,14 @@ function childCard(link) {
       r.recent.length ? h('div', {}, h('h3', {}, t('recentRuns')), h('table', { class: 'tbl' }, h('tbody', {}, r.recent.slice(0, 3).map((x) => h('tr', { class: x.actual > x.planned ? 'over' : '' }, h('td', {}, `${x.icon} ${x.name}`), h('td', {}, ago(x.endedAt)), h('td', {}, '⭐'.repeat(x.stars) || '—'), h('td', {}, fmtDur(x.actual))))))) : null] : h('p', { class: 'note' }, t('noReportYet')),
     h('label', { class: 'switch row' }, h('span', {}, `🔔 ${t('alertsOn')}`), h('input', { type: 'checkbox', checked: c.alertsOn !== false, onchange: (e) => F.setAlertsOn(link.id, e.target.checked) })),
     c.alerts?.length ? h('p', { class: 'chip solid', style: { '--accent': 'var(--warn)' } }, `🔔 ${t(c.alerts[0].kind === 'overtime' ? 'alertBehind' : 'alertLate', { name: c.profile.name || link.peer.name || '?', routine: c.alerts[0].name, min: c.alerts[0].minutes })}`) : null,
+    (c.requests || []).length ? h('div', { class: 'card' }, h('h3', {}, `🎁 ${t('menuRequests')}`), c.requests.map((q) => h('div', { class: 'row between' }, h('span', {}, `${q.emoji} ${q.title} (${q.cost}⭐)`),
+      h('button', { class: 'btn small primary', type: 'button', onclick: async () => deliver(await F.markGiven(link.id, q.id), link.peer.name) }, t('menuMarkGiven'))))) : null,
     c.goal ? h('div', { class: 'goal' }, h('strong', {}, `${c.goal.emoji} ${c.goal.title}`), mini(Math.min(1, have / c.goal.target)), h('small', {}, t(c.goal.mode === 'week' ? 'goalProgressWeek' : 'goalProgress', { have, target: c.goal.target })),
       c.goalDone ? h('p', { class: 'chip solid' }, `🎉 ${t('goalReached', { title: c.goalDone.title })}`) : null) : h('p', { class: 'note' }, t('goalNone')),
     h('div', { class: 'row-btns' },
-      h('button', { class: 'btn', type: 'button', onclick: () => openAssign(link) }, '📋 ', t('assignRoutine')), h('button', { class: 'btn', type: 'button', onclick: () => openCheer(link) }, '👏 ', t('cheerTitle')), h('button', { class: 'btn', type: 'button', onclick: () => openGoal(link) }, '🎁 ', t('goalTitle'))),
+      h('button', { class: 'btn', type: 'button', onclick: () => openAssign(link) }, '📋 ', t('assignRoutine')), h('button', { class: 'btn', type: 'button', onclick: () => openCheer(link) }, '👏 ', t('cheerTitle')), h('button', { class: 'btn', type: 'button', onclick: () => openGoal(link) }, '🎁 ', t('goalTitle')),
+      h('button', { class: 'btn', type: 'button', onclick: () => openFocusPicker({ areas: c.focus?.areas || [], tools: c.focus?.tools || {}, title: t('focusFor', { name: link.peer.name }), intro: t('focusParentIntro', { name: link.peer.name }), onSave: async (v) => deliver(await F.setFocus(link.id, v), link.peer.name) }) }, '🎯 ', t('focusTitle')),
+      h('button', { class: 'btn', type: 'button', onclick: () => openMenuEditor(c.menu || [], async (m) => deliver(await F.sendMenu(link.id, m), link.peer.name)) }, '🍦 ', t('menuTitle'))),
     transportRow(link, 'parent'));
 }
 

@@ -17,4 +17,12 @@
     <string name="alarm_stop">Stop</string>
     <string name="share_via">Share routine</string>
     <string name="nfc_hint">Hold the phone against an NFC tag</string>
+    <string name="shortcut_calm">Calm corner</string>
+    <string name="shortcut_journal">Journal</string>
+    <string name="widget_card_label">Routine card</string>
+    <string name="widget_card_desc">Shows a routine and its tasks, starts it with all its settings; ‹ › switch routine</string>
+    <string name="widget_prev">Previous routine</string>
+    <string name="widget_next">Next routine</string>
+    <string name="widget_start">Start</string>
+    <string name="widget_open">Open</string>
 </resources>

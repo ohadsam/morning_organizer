@@ -13,6 +13,9 @@ import { levelInfo } from '../levels.js';
 import { splitForToday } from '../schedule.js';
 import { icon, iconBtn, toast, confirmBox } from './common.js';
 import { openShare, openImport } from './share.js';
+import { focusCard } from './focus.js';
+import { openMenu } from './menu.js';
+import { openCapture } from './capture.js';
 
 function card(tpl, nav) {
   const total = S.totalSec(tpl), simple = S.get().settings.simpleMode;
@@ -54,6 +57,12 @@ export function renderHome(root, nav) {
           h('button', { class: `chip btn-chip ${awake ? 'on' : ''}`, type: 'button', 'aria-pressed': String(awake), onclick: async () => { await S.updateSettings({ keepAwakeApp: !awake }); setAwake('app', !awake); draw(); } }, awake ? `☀️ ${t('screenOn')}` : `🌙 ${t('screenOff')}`)),
         next ? h('p', { class: 'chip' }, icon('bell', 16), t('alarmNext', { name: next.template.name, time: next.at.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) })) : null),
       activeCard(),
+      simple ? null : focusCard(),
+      simple ? null : (() => { const f = S.features(); return h('div', { class: 'quick', role: 'group', 'aria-label': t('quickTitle') },
+        f.calmCorner ? h('button', { class: 'btn', type: 'button', onclick: () => nav('#/calm') }, `🌬️ ${t('calmTitle')}`) : null,
+        f.journal ? h('button', { class: 'btn', type: 'button', onclick: () => nav('#/journal') }, `📓 ${t('journal')}`) : null,
+        f.journal ? h('button', { class: 'btn', type: 'button', onclick: () => openCapture({}) }, `🎙️ ${t('jQuick')}`) : null,
+        f.rewardMenu ? h('button', { class: 'btn', type: 'button', onclick: () => openMenu() }, `🎁 ${t('menuTitle')}`) : null); })(),
       simple ? null : h('div', { class: 'toolbar' },
         h('button', { class: 'btn primary', type: 'button', onclick: async () => { try { const x = S.newTemplate(t('untitled')); await S.saveTemplate(x); nav(`#/edit/${x.id}`); } catch { toast(t('error')); } } }, icon('plus', 18), t('newRoutine')),
         h('button', { class: 'btn', type: 'button', onclick: () => openImport() }, icon('download', 18), t('import'))),

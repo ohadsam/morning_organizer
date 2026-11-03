@@ -235,6 +235,9 @@ export const STR = {
   },
 };
 
+import { EN as WB_EN, HE as WB_HE } from './wellbeing.js';
+Object.assign(STR.en, WB_EN); Object.assign(STR.he, WB_HE);
+
 let lang = 'en';
 export const getLang = () => lang;
 export const isRtl = () => lang === 'he';

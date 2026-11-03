@@ -4,13 +4,17 @@ import { LIMITS } from './config.js';
 import { cleanText, clamp, uid, move } from './util.js';
 import { defaultAlarm, nextFire } from './alarms.js';
 import { native } from './native.js';
-import { t } from './i18n.js';
+import { t, units, getLang } from './i18n.js';
 import { suggestIcon } from './taskIcons.js';
 import { PRESETS } from './speech.js';
 import { validLeaveBy } from './leave.js';
 import { normDays } from './schedule.js';
 import { isSafePhoto } from './photo.js';
 import { sanitizeAvatar, avatarEmoji, avatarFromMascot, defaultAvatar } from './avatar.js';
+import { toolsFor } from './focus.js';
+import { widgetItems } from './widgetData.js';
+import { sanitizeMood } from './mood.js';
+import { eraseJournal } from './journal.js';
 import { newProfile, normalizeProfile, runsOf, MAX_PROFILES } from './profiles.js';
 
 export const DEFAULT_SETTINGS = Object.freeze({
@@ -18,7 +22,7 @@ export const DEFAULT_SETTINGS = Object.freeze({
   autoAdvance: false, keepAwake: true, keepAwakeApp: false, personName: '', mascot: '🦊', feedback: true, speak: false, age: null, gender: 'other', profileDone: false,
   paceMode: 'normal', accent: '', simpleMode: false, announceTasks: false, fontScale: 100, colorSafe: false, contrast: 'normal', srAnnounce: false,
   coachButton: true, coachAuto: false, coachSpeak: false, voiceURI: '', voicePreset: 'natural', seeded: false,
-  avatar: defaultAvatar(), activeProfile: '',
+  avatar: defaultAvatar(), activeProfile: '', transcribe: false,
 });
 /** The settings keys that mirror the ACTIVE profile (so the rest of the app can keep reading settings.personName etc.). */
 const isDefaultAvatar = (a) => !a || (a.k === 'char' && a.id === 'fox');
@@ -70,7 +74,7 @@ export function sanitizeRun(r) {
   return {
     id: String(r.id).slice(0, 64), profileId: typeof r.profileId === 'string' ? r.profileId.slice(0, 64) : '', templateId: String(r.templateId ?? '').slice(0, 64), templateName: cleanText(r.templateName, LIMITS.maxName),
     icon: cleanText(r.icon, 8), color: /^#[0-9a-fA-F]{6}$/.test(r.color) ? r.color : COLORS[0],
-    startedAt: n(r.startedAt), endedAt: n(r.endedAt), status: r.status === 'done' ? 'done' : 'stopped', current: 0, pausedMs: n(r.pausedMs),
+    startedAt: n(r.startedAt), endedAt: n(r.endedAt), status: r.status === 'done' ? 'done' : 'stopped', mood: sanitizeMood(r.mood), current: 0, pausedMs: n(r.pausedMs),
     plannedTotal: n(r.plannedTotal, 1e7), estTotal: n(r.estTotal, 1e7), actualTotal: n(r.actualTotal, 1e7),
     tasks: r.tasks.slice(0, LIMITS.maxTasks).map((x) => ({ id: String(x?.id ?? '').slice(0, 64), name: cleanText(x?.name, LIMITS.maxName), icon: cleanText(x?.icon, 8),
       plannedSec: n(x?.plannedSec, LIMITS.maxTaskSec), estSec: n(x?.estSec, LIMITS.maxTaskSec), extraSec: n(x?.extraSec, LIMITS.maxTaskSec), actualSec: n(x?.actualSec, LIMITS.maxTaskSec),
@@ -115,6 +119,13 @@ export async function saveProfile(p) {
   if (clean.id === state.settings.activeProfile) { mirrorActiveProfile(); await db.put('kv', state.settings, 'settings'); }
   emit(); return clean;
 }
+/** Which helpers (calm corner, sprints, journal...) are on for a person: from their chosen focus areas + their own switches. */
+export const features = (p = activeProfile()) => {
+  const f = toolsFor(p?.focus, p?.tools);
+  if (p?.menu?.length && !Object.hasOwn(p.tools || {}, 'rewardMenu')) f.rewardMenu = true;   // a menu someone set up is obviously meant to be used
+  return f;
+};
+export const patchProfile = async (id, patch) => { const p = state.profiles.find((x) => x.id === id); return p ? saveProfile({ ...p, ...patch }) : null; };
 export async function switchProfile(id) {
   if (!state.profiles.some((p) => p.id === id)) return;
   state.settings = { ...state.settings, activeProfile: id }; mirrorActiveProfile(); await db.put('kv', state.settings, 'settings'); emit();
@@ -124,7 +135,7 @@ export async function deleteProfile(id) {
   if (state.profiles.length <= 1) return false;
   const mine = runsOf(state.runs, id, firstId()), wasActive = id === state.settings.activeProfile;
   state.runs = state.runs.filter((r) => !mine.includes(r)); for (const r of mine) await db.del('runs', r.id);
-  state.profiles = state.profiles.filter((p) => p.id !== id); await persistProfiles();
+  state.profiles = state.profiles.filter((p) => p.id !== id); await persistProfiles(); await eraseJournal(id);
   if (wasActive) { state.settings = { ...state.settings, activeProfile: state.profiles[0].id }; }
   mirrorActiveProfile(); await db.put('kv', state.settings, 'settings'); emit(); return true;
 }
@@ -213,6 +224,11 @@ export async function saveRun(run) {
   await db.put('runs', copy);
   emit();
 }
+/** Records how the person felt after a finished run (mood faces). */
+export async function setRunMood(id, mood) {
+  const r = state.runs.find((x) => x.id === id); if (!r) return;
+  r.mood = sanitizeMood(mood); await db.put('runs', r); emit();
+}
 export async function clearRuns(templateId) {
   const gone = state.runs.filter((r) => !templateId || r.templateId === templateId);
   state.runs = state.runs.filter((r) => !gone.includes(r));
@@ -290,7 +306,7 @@ export function syncNative() {
     const [hour, minute] = x.alarm.time.split(':').map(Number);
     return { id: x.id, templateId: x.id, name: x.name, hour, minute, days: x.alarm.days, volume: x.alarm.volume, vibrate: x.alarm.vibrate, durationSec: x.alarm.durationSec };
   }));
-  const favs = state.templates.filter((x) => x.favorite);
-  native.setWidget((favs.length ? favs : state.templates).slice(0, 4).map((x) => ({ id: x.id, name: x.name, icon: x.icon, taskCount: x.tasks.length, totalSec: totalSec(x) })));
+  const dayName = (d) => new Date(2024, 0, 7 + d).toLocaleDateString(getLang(), { weekday: 'short' });   // 2024-01-07 was a Sunday
+  native.setWidget(widgetItems(state.templates, new Date().getDay(), { units: units(), day: dayName, leave: (tm) => t('leaveLine2', { time: tm }), gear: (n) => t('gearCount2', { n }) }));
 }
 export { isPersistent };

@@ -13,6 +13,8 @@ import { saveBackupFile, copySyncCode, sendSyncCode, openBackupImport } from './
 import { getLang } from '../i18n.js';
 import { APK_URL } from '../config.js';
 import { toast, icon } from './common.js';
+import { openMyFocus } from './focus.js';
+import { AREA_EMOJI } from '../focus.js';
 
 let deferredInstall = null;
 globalThis.addEventListener?.('beforeinstallprompt', (e) => { e.preventDefault(); deferredInstall = e; });
@@ -86,6 +88,11 @@ export function renderSettings(root, version) {
       group('buddy', t('buddySection'), false,
         h('div', { class: 'field' }, h('span', { class: 'lbl' }, t('mascot')), h('div', { class: 'swatches', role: 'radiogroup', 'aria-label': t('mascot') }, S.MASCOTS.map((m) => h('button', { type: 'button', class: `emoji-pick ${st.mascot === m ? 'on' : ''}`, role: 'radio', 'aria-checked': String(st.mascot === m), 'aria-label': m, onclick: () => set({ mascot: m }, true) }, m)))),
         toggle(t('feedbackOn'), t('feedbackOnHint'), st.feedback, (v) => set({ feedback: v }))),
+      group('helpers', `🎯 ${t('helpersTitle')}`, false, h('p', { class: 'note' }, t('helpersHint')),
+        h('div', { class: 'chips' }, S.activeProfile().focus.length ? S.activeProfile().focus.map((a) => h('span', { class: 'chip solid' }, `${AREA_EMOJI[a]} ${t(`area_${a}`)}`)) : h('span', { class: 'muted' }, t('focusNone'))),
+        h('div', { class: 'toolbar wrap' }, h('button', { class: 'btn primary', type: 'button', onclick: () => openMyFocus(draw) }, `🎯 ${t('focusChoose')}`),
+          h('a', { class: 'btn', href: '#/calm' }, `🌬️ ${t('calmTitle')}`), h('a', { class: 'btn', href: '#/journal' }, `📓 ${t('journal')}`)),
+        toggle(t('transcribeOn'), t('transcribeHint'), st.transcribe, (v) => set({ transcribe: v }))),
       group('pace', t('paceMode'), false,
         select(t('paceMode'), st.paceMode, [['normal', t('paceNormal')], ['quick', t('paceQuick')], ['calm', t('paceCalm')]], (v) => set({ paceMode: v })), h('small', { class: 'hint' }, t('paceHint')),
         toggle(t('announceTasks'), t('announceHint'), st.announceTasks, (v) => set({ announceTasks: v }))),

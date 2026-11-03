@@ -51,7 +51,18 @@ Several people can share one phone: tap the avatar on the home screen (or Settin
 In the editor, "Schedule" sets which days a routine is for (school days, weekend or any days); the home screen lists today's routines first. "Gear to remember" adds things for certain days (PE kit, swimming bag): they appear as a checklist when you start and are counted in the summary. Badges (first routine, streaks, on time, early bird, speedy, comeback…) are earned automatically; new ones are celebrated on the summary screen and all of them are in Stats → Achievements.
 
 ## Android app and widget
+Routine card widget: add “Routine card” from the widgets list. It shows one saved routine with its tasks, durations, days, leave-by time and gear count; tap it (or ▶ Start) to run it in the app with all its saved settings. Use ‹ › on the widget to show a different routine (each widget remembers its own). While that routine runs the card becomes a live countdown with progress.
+
 Settings → Download Android app always gives the latest APK. Allow “install unknown apps” for your browser once. Long-press the home screen → Widgets → Morning Organizer to start a favourite routine in one tap.
+
+## Helpers: calm, focus, journal and rewards
+Choose what you want help with: Home → “What would you like help with?” (or Settings → Helpers). Pick areas such as focus, calm, time sense, remembering, motivation or habits - the app switches on matching tools. A parent can choose this for a child from the Family tab (🎯). Every tool can still be switched on or off on its own.
+
+Calm corner (🌬️): breathing patterns, 5-4-3-2-1 grounding and a body scan, 1-3 minutes, with a gentle vibration cue. During a routine it pauses the clock while you breathe. Focus sprints split long tasks into short sprints with a 30-second movement break; the parking lot (🅿️) saves a stray thought so you can get back to the task; the next-task heads-up shows what comes next; the pie timer shows time as a filling circle; the mood faces after a routine feed a mood insight in Stats.
+
+Journal (📓): notes, voice notes (🎙️ - recorded during a task too), thought checks, “3 good things” and parked thoughts. It is stored only on this device and is not part of backups or sharing. Password (optional): Journal → Password. It is stored as a salted hash and the entries are encrypted; adding a note never needs the password. Forgot it? Answer your two security questions to set a new one. If you forget both, entries cannot be opened - you can only erase them.
+
+Speech to text (optional): in a note tap “Dictate” (or record - in a browser a suggested transcript appears while you speak). It is only a suggestion: check and edit it. In the Android app it uses the phone’s own recognizer; in a browser the browser’s speech service may send audio to its maker, so the app asks first. Reward menu (🎁): spend stars on rewards from a menu you or a parent set up; a parent is told and can mark it as given.
 
 ## Privacy
 All data stays on your device. Use Settings → Back up all data to save or move it.

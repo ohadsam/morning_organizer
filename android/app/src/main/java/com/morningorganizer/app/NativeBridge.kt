@@ -27,7 +27,7 @@ class NativeBridge(private val activity: MainActivity) {
 
     @JavascriptInterface fun setAlarms(json: String) { if (json.length <= MAX_JSON) AlarmStore.replace(ctx, json) }
 
-    @JavascriptInterface fun setWidget(json: String) { if (json.length <= MAX_JSON) RoutineWidget.save(ctx, json) }
+    @JavascriptInterface fun setWidget(json: String) { if (json.length <= MAX_JSON) { RoutineWidget.save(ctx, json); RoutineCardWidget.save(ctx, json) } }
 
     /** Snapshot of the routine in progress for the progress widget. */
     @JavascriptInterface fun setProgress(json: String) { if (json.length <= 4096) RunWidget.save(ctx, json) }
@@ -44,6 +44,11 @@ class NativeBridge(private val activity: MainActivity) {
     }
 
     @JavascriptInterface fun scanQr() { activity.runOnUiThread { activity.scanQr() } }
+
+    // ── dictation (speech-to-text with the phone's recognizer) ──
+    @JavascriptInterface fun dictationAvailable(): Boolean = android.speech.SpeechRecognizer.isRecognitionAvailable(ctx)
+    @JavascriptInterface fun dictationStart(lang: String) { activity.runOnUiThread { activity.dictation.start(lang.take(8)) } }
+    @JavascriptInterface fun dictationStop() { activity.runOnUiThread { activity.dictation.stop() } }
 
     @JavascriptInterface fun keepAwake(on: Boolean) = activity.setKeepAwake(on)
 

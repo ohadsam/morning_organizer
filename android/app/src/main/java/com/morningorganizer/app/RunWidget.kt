@@ -41,6 +41,7 @@ class RunWidget : AppWidgetProvider() {
         fun updateAll(context: Context) {
             val mgr = AppWidgetManager.getInstance(context)
             mgr.getAppWidgetIds(ComponentName(context, RunWidget::class.java)).forEach { mgr.updateAppWidget(it, build(context)) }
+            RoutineCardWidget.updateAll(context)   // the routine card goes live while its routine runs
         }
 
         private fun build(context: Context): RemoteViews {

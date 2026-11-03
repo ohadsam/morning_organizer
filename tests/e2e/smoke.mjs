@@ -28,10 +28,13 @@ async function newPage(opts = {}) {
     await page.goto(base + '#/settings'); await dismissWelcome(page); await page.waitForSelector('select');
     await page.selectOption('select >> nth=0', 'en'); await page.waitForFunction(() => document.documentElement.lang === 'en'); await page.waitForTimeout(150);
   }
+  // most steps assert the plain English wording even when they enter a child's age; the playful steps switch it back to automatic
+  if (opts.lang !== 'he') await page.evaluate(async () => { const S = await import('./js/store.js'); await S.updateSettings({ textStyle: 'plain' }); });
   return { page, errors, ctx };
 }
+const setStyle = (page, v) => page.evaluate(async (x) => { const S = await import('./js/store.js'); await S.updateSettings({ textStyle: x }); }, v);
 // Sets a task's duration through the time sheet (tap the time -> minutes/seconds -> OK).
-const setDur = async (page, task, m, sec) => { await task.locator('.tp-val').first().click(); await page.fill('dialog input[aria-label$="minutes"]', String(m)); await page.fill('dialog input[aria-label$="seconds"]', String(sec)); await page.click('dialog footer button:has-text("OK")'); await page.waitForSelector('dialog', { state: 'detached' }); };
+const setDur = async (page, task, m, sec) => { await task.locator('.tp-val').first().click(); await page.locator('dialog input[type=number]').nth(0).fill(String(m)); await page.locator('dialog input[type=number]').nth(1).fill(String(sec)); await page.click('dialog footer button:has-text("OK")'); await page.waitForSelector('dialog', { state: 'detached' }); };
 const shot = async (page, name) => { if (shots) await page.screenshot({ path: `${shots}/${name}.png` }); };
 
 await step('boots in English, seeds sample routines, no console errors', async () => {
@@ -610,7 +613,7 @@ await step('v1.10: time stepper and sheet, ☰ task menu (duplicate, add below, 
 });
 
 await step('v1.10: playful wording for a young child (age 8), plain when switched, timer bar style', async () => {
-  const { page, errors } = await newPage(); await page.goto(base + '#/settings'); await page.waitForSelector('h1');
+  const { page, errors } = await newPage(); await page.goto(base + '#/settings'); await page.waitForSelector('h1'); await setStyle(page, 'auto');
   await page.fill('input[type=number][max="120"]', '8'); await page.dispatchEvent('input[type=number][max="120"]', 'change'); await page.waitForSelector('h1:has-text("Settings")');
   await page.goto(base + '#/'); await page.waitForSelector('.routine'); assert.match(await page.textContent('.routine .start'), /Go!/); assert.match(await page.textContent('#nav'), /My progress/);
   await page.locator('.routine .start').first().click(); await page.waitForSelector('.ring'); assert.match(await page.textContent('.main-btns'), /I did it!/);
@@ -625,7 +628,7 @@ await step('v1.10: axe on task menu, time sheet, playful home and settings', asy
     await page.waitForSelector('.routine'); await page.locator('.routine-main').first().click(); await page.waitForSelector('.task'); bad.push(...await audit(page, `${L}/editor-timepicker`));
     await page.locator('.task').first().locator('.tp-val').first().click(); await page.waitForSelector('dialog .tp-big'); bad.push(...await audit(page, `${L}/time-sheet`)); await closeDialogs(page);
     await page.locator('.task').first().locator('.task-menu-btn').click(); await page.waitForSelector('dialog .task-menu'); bad.push(...await audit(page, `${L}/task-menu`)); await closeDialogs(page);
-    await page.goto(base + '#/settings'); await page.fill('input[type=number][max="120"]', '7'); await page.dispatchEvent('input[type=number][max="120"]', 'change'); await page.waitForTimeout(400);
+    await setStyle(page, 'auto'); await page.goto(base + '#/settings'); await page.fill('input[type=number][max="120"]', '7'); await page.dispatchEvent('input[type=number][max="120"]', 'change'); await page.waitForTimeout(400);
     for (const h of ['#/', '#/settings', '#/stats']) { await page.goto(base + h); await page.waitForTimeout(300); bad.push(...await audit(page, `${L}/playful ${h}`)); }
   }
   if (bad.length) console.error([...new Set(bad)].join('\n'));
@@ -660,7 +663,7 @@ await step('v1.10: axe on template pickers and library page (young child too)', 
     await page.locator('.routine-main').first().click(); await page.waitForSelector('.task'); await page.click('.toolbar.wrap button >> nth=0'); await page.waitForSelector('dialog .tiles-grid'); bad.push(...await audit(page, `${L}/task-picker`)); await closeDialogs(page);
     await page.click('.toolbar.wrap button >> nth=1'); await page.waitForTimeout(400);
     await page.goto(base + '#/library'); await page.waitForSelector('.lib-card'); bad.push(...await audit(page, `${L}/library`));
-    await page.goto(base + '#/settings'); await page.fill('input[type=number][max="120"]', '7'); await page.dispatchEvent('input[type=number][max="120"]', 'change'); await page.waitForTimeout(400);
+    await setStyle(page, 'auto'); await page.goto(base + '#/settings'); await page.fill('input[type=number][max="120"]', '7'); await page.dispatchEvent('input[type=number][max="120"]', 'change'); await page.waitForTimeout(400);
     await page.goto(base + '#/'); await page.waitForSelector('.routine'); await page.click('.toolbar button >> nth=1'); await page.waitForSelector('dialog .tiles-grid'); bad.push(...await audit(page, `${L}/routine-picker-playful`)); await closeDialogs(page);
   }
   if (bad.length) console.error([...new Set(bad)].join('\n'));

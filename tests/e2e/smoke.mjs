@@ -26,10 +26,10 @@ async function newPage(opts = {}) {
   if (opts.clock) await page.clock.install();
   if (opts.lang !== 'he') {
     await page.goto(base + '#/settings'); await dismissWelcome(page); await page.waitForSelector('select');
+    // most steps assert the plain English wording even when they enter a child's age; the playful steps switch it back to automatic
+    await page.selectOption('select:has(option[value="plain"])', 'plain'); await page.waitForTimeout(200);
     await page.selectOption('select >> nth=0', 'en'); await page.waitForFunction(() => document.documentElement.lang === 'en'); await page.waitForTimeout(150);
   }
-  // most steps assert the plain English wording even when they enter a child's age; the playful steps switch it back to automatic
-  if (opts.lang !== 'he') await page.evaluate(async () => { const S = await import('./js/store.js'); await S.updateSettings({ textStyle: 'plain' }); });
   return { page, errors, ctx };
 }
 const setStyle = (page, v) => page.evaluate(async (x) => { const S = await import('./js/store.js'); await S.updateSettings({ textStyle: x }); }, v);

@@ -1,6 +1,11 @@
 package com.morningorganizer.app
 
 import android.Manifest
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.PendingIntent
+import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationManagerCompat
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
@@ -26,6 +31,19 @@ class NativeBridge(private val activity: MainActivity) {
 
     /** Snapshot of the routine in progress for the progress widget. */
     @JavascriptInterface fun setProgress(json: String) { if (json.length <= 4096) RunWidget.save(ctx, json) }
+
+    /** A plain system notification (used for "your child is running late" alerts). Needs the notification permission on Android 13+. */
+    @JavascriptInterface fun notify(title: String, text: String) {
+        if (Build.VERSION.SDK_INT >= 33 && ctx.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) return
+        val nm = ctx.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        if (nm.getNotificationChannel(FAMILY_CHANNEL) == null) nm.createNotificationChannel(NotificationChannel(FAMILY_CHANNEL, ctx.getString(R.string.family_channel), NotificationManager.IMPORTANCE_DEFAULT))
+        val open = PendingIntent.getActivity(ctx, 300, MainActivity.startIntent(ctx, null), PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
+        val n = NotificationCompat.Builder(ctx, FAMILY_CHANNEL).setSmallIcon(android.R.drawable.ic_dialog_info).setContentTitle(title.take(80)).setContentText(text.take(200))
+            .setStyle(NotificationCompat.BigTextStyle().bigText(text.take(200))).setContentIntent(open).setAutoCancel(true).build()
+        try { NotificationManagerCompat.from(ctx).notify(FAMILY_NOTIF_ID, n) } catch (_: SecurityException) { }
+    }
+
+    @JavascriptInterface fun scanQr() { activity.runOnUiThread { activity.scanQr() } }
 
     @JavascriptInterface fun keepAwake(on: Boolean) = activity.setKeepAwake(on)
 
@@ -79,5 +97,5 @@ class NativeBridge(private val activity: MainActivity) {
     /** A routine to start / text to import that arrived before the page was ready. Returns "" when nothing is pending. */
     @JavascriptInterface fun takePendingIntent(): String = activity.takePending()
 
-    private companion object { const val MAX_JSON = 256 * 1024; const val MAX_FILE = 16 * 1024 * 1024 }
+    private companion object { const val MAX_JSON = 256 * 1024; const val MAX_FILE = 16 * 1024 * 1024; const val FAMILY_CHANNEL = "family"; const val FAMILY_NOTIF_ID = 4301 }
 }

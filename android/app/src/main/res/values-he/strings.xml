@@ -9,6 +9,7 @@
     <string name="run_idle">אין שגרה פעילה</string>
     <string name="run_idle_hint">לחצו לפתיחת האפליקציה</string>
     <string name="nfc_service_description">מעביר הזמנה או הודעה לטלפון שמוצמד לטלפון הזה</string>
+    <string name="family_channel">התראות משפחה</string>
     <string name="alarm_channel">התראות התחלת שגרה</string>
     <string name="alarm_title">הגיע הזמן להתחיל: %1$s</string>
     <string name="alarm_text">לחצו כדי להתחיל את השגרה</string>

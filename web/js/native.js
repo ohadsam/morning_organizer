@@ -13,6 +13,8 @@ export const native = {
   setWidget: (items) => call('setWidget', json(items)),
   /** Snapshot for the Android progress widget: {active, templateId, name, icon, task, pct, paused, remaining}. */
   setProgress: (o) => call('setProgress', json(o)),
+  /** System notification (Android app): used for parent alerts. */
+  notify: (title, text) => call('notify', title, text),
   keepAwake: (on) => call('keepAwake', !!on),
   /** Opens the system share sheet (Bluetooth, Nearby Share, WhatsApp...). */
   share: (title, text) => call('share', title, text),
@@ -25,6 +27,7 @@ export const native = {
   nfcPhoneSupported: () => call('nfcPhoneSupported') === true,
   nfcOffer: (text) => call('nfcOffer', text) === true, nfcOfferStop: () => call('nfcOfferStop'),
   nfcReceive: (seconds = 60) => call('nfcReceive', seconds), nfcReceiveStop: () => call('nfcReceiveStop'),
+  scanQr: () => call('scanQr'),
   nfcWrite: (text) => call('nfcWrite', text),
   nfcCancel: () => call('nfcCancel'),
   canExactAlarms: () => call('canScheduleExactAlarms') !== false,

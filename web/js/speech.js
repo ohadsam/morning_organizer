@@ -28,7 +28,7 @@ export function speakText(text, { lang = 'en', voiceURI = '', preset = 'natural'
   try {
     stopSpeaking();
     const u = new SpeechSynthesisUtterance(String(text).replace(/\p{Extended_Pictographic}|️/gu, '').slice(0, 600));
-    const p = PRESETS[preset] ?? PRESETS.natural;
+    const p = Object.hasOwn(PRESETS, preset) ? PRESETS[preset] : PRESETS.natural;
     u.lang = bcp(lang); u.pitch = p.pitch; u.rate = p.rate;
     const voice = speechSynthesis.getVoices().find((v) => (voiceURI && v.voiceURI === voiceURI) || (!voiceURI && langMatch(v, lang)));
     if (voice) u.voice = voice;

@@ -1,4 +1,4 @@
-import { h, fmtHuman, debounce, uid } from '../util.js';
+import { h, fmtHuman, debounce, uid, setChildren } from '../util.js';
 import { t, units } from '../i18n.js';
 import * as S from '../store.js';
 import { icon, iconBtn, toast } from './common.js';
@@ -7,6 +7,8 @@ import { native } from '../native.js';
 import { suggestIcon, PICKER_ICONS } from '../taskIcons.js';
 import { resizeToDataUrl } from '../photo.js';
 import { suggestStart, validLeaveBy } from '../leave.js';
+import { presetDays, normDays } from '../schedule.js';
+import { getLang } from '../i18n.js';
 import { modal } from './common.js';
 
 /** minutes + seconds inputs bound to one number of seconds. */
@@ -91,6 +93,21 @@ export function renderEditor(root, id, nav) {
     handle.addEventListener('pointermove', onMove); handle.addEventListener('pointerup', end); handle.addEventListener('pointercancel', end);
   }
 
+  const dayChips = (days, onChange) => h('fieldset', { class: 'days' }, h('legend', {}, t('alarmDays')),
+    [0, 1, 2, 3, 4, 5, 6].map((d) => h('label', { class: 'day' }, h('input', { type: 'checkbox', checked: days.includes(d), onchange: (e) => { onChange(e.target.checked ? normDays([...days, d]) : days.filter((x) => x !== d)); } }), h('span', {}, t(`day${d}`)))));
+  const scheduleBox = h('section', { class: 'card stack' }), gearBox = h('section', { class: 'card stack' });
+  function drawSchedule() {
+    const pre = presetDays(getLang()), set = (d) => { tpl.days = d; save(); drawSchedule(); };
+    setChildren(scheduleBox, h('p', { class: 'note' }, t('scheduleHint')), dayChips(tpl.days || [], set),
+      h('div', { class: 'row-btns' }, h('button', { class: 'btn small', type: 'button', onclick: () => set([]) }, t('presetEvery')), h('button', { class: 'btn small', type: 'button', onclick: () => set(pre.school) }, t('presetSchool')), h('button', { class: 'btn small', type: 'button', onclick: () => set(pre.weekend) }, t('presetWeekend'))));
+  }
+  function drawGear() {
+    tpl.gear ||= [];
+    setChildren(gearBox, h('p', { class: 'note' }, t('gearHint')), tpl.gear.map((g, i) => h('div', { class: 'gear-row' },
+      h('div', { class: 'row' }, h('span', { class: 'ti-s', 'aria-hidden': 'true' }, g.icon || suggestIcon(g.name)), h('input', { type: 'text', maxLength: 40, value: g.name, placeholder: t('gearName'), 'aria-label': t('gearName'), oninput: (e) => { g.name = e.target.value; save(); } }),
+        iconBtn('trash', t('gearRemove'), () => { tpl.gear.splice(i, 1); save(); drawGear(); })), dayChips(g.days || [], (d) => { g.days = d; save(); drawGear(); }))),
+      h('button', { class: 'btn add', type: 'button', onclick: () => { tpl.gear.push({ id: uid(), name: '', icon: '', days: [] }); save(); drawGear(); gearBox.querySelector('.gear-row:last-of-type input[type=text]')?.focus(); } }, icon('plus', 18), t('addGear')));
+  }
   const alarmBox = h('section', { class: 'card alarm' });
   function drawAlarm() {
     const a = tpl.alarm;
@@ -129,6 +146,8 @@ export function renderEditor(root, id, nav) {
     h('p', { class: 'note' }, t('dragHint')), h('p', { class: 'note' }, t('estimateHint')),
     list,
     h('button', { class: 'btn add', type: 'button', onclick: () => { const nt = S.newTask(); nt.name = ''; change(() => tpl.tasks.push(nt), true); list.lastElementChild?.querySelector('.task-name')?.focus(); } }, icon('plus', 18), t('addTask')),
+    h('h2', {}, t('schedule')), scheduleBox,
+    h('h2', {}, t('gear')), gearBox,
     h('h2', {}, t('leaveBy')),
     h('div', { class: 'card stack' }, h('p', { class: 'note' }, t('leaveHint')),
       h('div', { class: 'row' }, h('input', { type: 'time', value: tpl.leaveBy || '', 'aria-label': t('leaveBy'), oninput: (e) => { tpl.leaveBy = validLeaveBy(e.target.value); save(); } }),
@@ -140,6 +159,6 @@ export function renderEditor(root, id, nav) {
     h('div', { class: 'sticky-actions' },
       h('button', { class: 'btn', type: 'button', onclick: () => { save.flush(); nav('#/'); } }, t('save')),
       h('button', { class: 'btn primary', type: 'button', disabled: !tpl.tasks.length, onclick: () => { save.flush(); nav(`#/run/${tpl.id}`); } }, icon('play', 18), t('start'))));
-  draw(); drawAlarm();
+  draw(); drawAlarm(); drawSchedule(); drawGear();
   return () => save.flush();
 }

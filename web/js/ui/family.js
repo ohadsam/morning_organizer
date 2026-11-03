@@ -11,6 +11,9 @@ import { btAvailable, btState, subscribeBt } from '../transports.js';
 import { modal, toast, confirmBox, icon } from './common.js';
 import { routeIncoming } from './incoming.js';
 import { confetti } from './fx.js';
+import { openQr, openScanner } from './qr.js';
+import { qrFits } from '../qr.js';
+import { avatarNode } from './avatar.js';
 
 const ago = (ms) => (ms ? new Date(ms).toLocaleString(getLang(), { dateStyle: 'short', timeStyle: 'short' }) : '—');
 const mini = (pct) => h('div', { class: 'bar', role: 'progressbar', 'aria-valuemin': '0', 'aria-valuemax': '100', 'aria-valuenow': String(Math.round(pct * 100)) }, h('i', { style: { width: `${Math.round(clamp(pct, 0, 1) * 100)}%` } }));
@@ -19,8 +22,9 @@ async function copy(text) { try { await navigator.clipboard.writeText(text); toa
 
 /** Code + the ways to carry it to the other phone: copy, share sheet (Bluetooth/Nearby/messenger), NFC tag. */
 /** Button that makes this phone read an offer from the phone held against it (native app, NFC card emulation on the other side). */
-export const tapReceiveButton = () => (native.available && native.nfcPhoneSupported()
-  ? h('button', { class: 'btn', type: 'button', onclick: () => native.nfcReceive(60) }, icon('nfc', 18), t('tapReceive')) : null);
+export const tapReceiveButton = () => [(native.available && native.nfcPhoneSupported()
+  ? h('button', { class: 'btn', type: 'button', onclick: () => native.nfcReceive(60) }, icon('nfc', 18), t('tapReceive')) : null),
+  h('button', { class: 'btn', type: 'button', onclick: () => openScanner((text) => routeIncoming(text)) }, '▦ ', t('qrScan'))];
 
 function codeTools(code, title) {
   const nfcOk = (native.available || 'NDEFReader' in globalThis) && code.length <= 800;
@@ -30,6 +34,7 @@ function codeTools(code, title) {
     h('div', { class: 'toolbar wrap' },
       h('button', { class: 'btn', type: 'button', onclick: () => copy(code) }, icon('copy', 18), t('shareCopy')),
       h('button', { class: 'btn primary', type: 'button', onclick: async () => { if (native.available) native.share(title, code); else if (navigator.share) { try { await navigator.share({ title, text: code }); } catch { /* cancelled */ } } else copy(code); } }, icon('share', 18), t('shareSend')),
+      qrFits(code) ? h('button', { class: 'btn', type: 'button', onclick: () => openQr(code, title) }, '▦ ', t('qrShow')) : null,
       tapOk ? h('button', { class: 'btn', type: 'button', onclick: () => { if (native.nfcOffer(code)) { status.textContent = t('tapHold'); } else status.textContent = t('tapUnavailable'); } }, icon('nfc', 18), t('tapOffer')) : null,
       nfcOk ? h('button', { class: 'btn', type: 'button', onclick: async () => {
         status.textContent = t('shareNfcTap');
@@ -98,10 +103,11 @@ function openCheer(link) {
 function openGoal(link) {
   const name = h('input', { type: 'text', maxLength: 40, placeholder: t('goalName'), 'aria-label': t('goalName'), value: link.child.goal?.title || '' });
   const target = h('input', { type: 'number', min: 1, max: 999, inputMode: 'numeric', value: link.child.goal?.target || 10, 'aria-label': t('goalStars') });
+  const mode = h('select', { 'aria-label': t('goalType') }, [['stars', t('goalTypeStars')], ['week', t('goalTypeWeek')]].map(([v, l]) => h('option', { value: v, selected: (link.child.goal?.mode || 'stars') === v }, l)));
   const emoji = h('select', { 'aria-label': t('goalTitle') }, ['🎁', '🍦', '🎮', '🧸', '🍕', '🎬', '🏊', '📚'].map((e) => h('option', { value: e, selected: link.child.goal?.emoji === e }, e)));
-  modal(t('goalTitle'), h('div', { class: 'stack' }, h('label', { class: 'field' }, h('span', { class: 'lbl' }, t('goalName')), name), h('div', { class: 'two' }, h('label', { class: 'field' }, h('span', { class: 'lbl' }, t('goalStars')), target), h('label', { class: 'field' }, h('span', { class: 'lbl' }, '🎁'), emoji))),
+  modal(t('goalTitle'), h('div', { class: 'stack' }, h('label', { class: 'field' }, h('span', { class: 'lbl' }, t('goalName')), name), h('label', { class: 'field' }, h('span', { class: 'lbl' }, t('goalType')), mode), h('small', { class: 'hint' }, t('goalTypeHint')), h('div', { class: 'two' }, h('label', { class: 'field' }, h('span', { class: 'lbl' }, t('goalStars')), target), h('label', { class: 'field' }, h('span', { class: 'lbl' }, '🎁'), emoji))),
     [{ label: t('cancel') }, link.child.goal ? { label: t('goalClear'), danger: true, fn: async () => { deliver(await F.clearGoal(link.id), link.peer.name); } } : null,
-      { label: t('goalSet'), primary: true, fn: async () => { if (!name.value.trim()) return false; deliver(await F.setGoal(link.id, { title: name.value, emoji: emoji.value, target: target.value }), link.peer.name); } }].filter(Boolean));
+      { label: t('goalSet'), primary: true, fn: async () => { if (!name.value.trim()) return false; deliver(await F.setGoal(link.id, { title: name.value, emoji: emoji.value, target: target.value, mode: mode.value }), link.peer.name); } }].filter(Boolean));
 }
 
 const chip = (on, label) => h('span', { class: `chip solid ${on ? '' : 'off'}`, style: { '--accent': on ? 'var(--good)' : 'var(--muted)' } }, label);
@@ -117,12 +123,14 @@ function transportRow(link, role) {
 function childCard(link) {
   const c = link.child, r = c.report, prog = c.goal ? rewardProgress(c.goal, []) : null, have = r?.goalHave ?? 0;
   return h('article', { class: 'card family-card' },
-    h('div', { class: 'row between' }, h('strong', {}, `${c.profile.mascot || '🙂'} ${c.profile.name || link.peer.name || '?'}${c.profile.age ? ` (${c.profile.age})` : ''}`),
+    h('div', { class: 'row between' }, h('span', { class: 'row' }, avatarNode(c.profile.avatar || { k: 'emoji', e: c.profile.mascot || '🙂' }, { size: 44 }), h('strong', {}, `${c.profile.name || link.peer.name || '?'}${c.profile.age ? ` (${c.profile.age})` : ''}`)),
       h('button', { class: 'btn small danger', type: 'button', onclick: async () => { if (await confirmBox(t('unlinkConfirm'), t('unlink'), true)) await F.unlink(link.id); } }, t('unlink'))),
     r ? [h('div', { class: 'tiles' }, h('div', { class: 'tile' }, h('small', {}, t('stars')), h('strong', {}, `⭐ ${r.totalStars}`)), h('div', { class: 'tile' }, h('small', {}, t('streak')), h('strong', {}, `🔥 ${r.streakDays}`)), h('div', { class: 'tile' }, h('small', {}, t('lastReport', { when: '' })), h('strong', {}, ago(r.at)))),
       r.active ? h('div', { class: 'active-run' }, h('strong', {}, t('doingNow', { name: `${r.active.icon} ${r.active.name}`, task: r.active.task })), r.active.paused ? h('span', {}, ` ⏸ ${t('paused2')}`) : null, mini(r.active.pct)) : null,
       r.recent.length ? h('div', {}, h('h3', {}, t('recentRuns')), h('table', { class: 'tbl' }, h('tbody', {}, r.recent.slice(0, 3).map((x) => h('tr', { class: x.actual > x.planned ? 'over' : '' }, h('td', {}, `${x.icon} ${x.name}`), h('td', {}, ago(x.endedAt)), h('td', {}, '⭐'.repeat(x.stars) || '—'), h('td', {}, fmtDur(x.actual))))))) : null] : h('p', { class: 'note' }, t('noReportYet')),
-    c.goal ? h('div', { class: 'goal' }, h('strong', {}, `${c.goal.emoji} ${c.goal.title}`), mini(Math.min(1, have / c.goal.target)), h('small', {}, t('goalProgress', { have, target: c.goal.target })),
+    h('label', { class: 'switch row' }, h('span', {}, `🔔 ${t('alertsOn')}`), h('input', { type: 'checkbox', checked: c.alertsOn !== false, onchange: (e) => F.setAlertsOn(link.id, e.target.checked) })),
+    c.alerts?.length ? h('p', { class: 'chip solid', style: { '--accent': 'var(--warn)' } }, `🔔 ${t(c.alerts[0].kind === 'overtime' ? 'alertBehind' : 'alertLate', { name: c.profile.name || link.peer.name || '?', routine: c.alerts[0].name, min: c.alerts[0].minutes })}`) : null,
+    c.goal ? h('div', { class: 'goal' }, h('strong', {}, `${c.goal.emoji} ${c.goal.title}`), mini(Math.min(1, have / c.goal.target)), h('small', {}, t(c.goal.mode === 'week' ? 'goalProgressWeek' : 'goalProgress', { have, target: c.goal.target })),
       c.goalDone ? h('p', { class: 'chip solid' }, `🎉 ${t('goalReached', { title: c.goalDone.title })}`) : null) : h('p', { class: 'note' }, t('goalNone')),
     h('div', { class: 'row-btns' },
       h('button', { class: 'btn', type: 'button', onclick: () => openAssign(link) }, '📋 ', t('assignRoutine')), h('button', { class: 'btn', type: 'button', onclick: () => openCheer(link) }, '👏 ', t('cheerTitle')), h('button', { class: 'btn', type: 'button', onclick: () => openGoal(link) }, '🎁 ', t('goalTitle'))),
@@ -130,10 +138,10 @@ function childCard(link) {
 }
 
 function parentCard(link) {
-  const p = link.parent, prog = rewardProgress(p.goal, finished(S.get().runs));
+  const p = link.parent, prog = rewardProgress(p.goal, finished(S.myRuns()));
   return h('article', { class: 'card family-card' },
     h('div', { class: 'row between' }, h('strong', {}, `👪 ${p.name || link.peer.name || '?'}`), h('button', { class: 'btn small danger', type: 'button', onclick: async () => { if (await confirmBox(t('unlinkConfirm'), t('unlink'), true)) await F.unlink(link.id); } }, t('unlink'))),
-    p.goal ? h('div', { class: 'goal' }, h('strong', {}, `${p.goal.emoji} ${p.goal.title}`), mini(prog.pct), h('small', {}, t('goalProgress', { have: prog.have, target: prog.target })), prog.reached ? h('p', { class: 'chip solid' }, `🎉 ${t('goalReached', { title: p.goal.title })}`) : null) : h('p', { class: 'note' }, t('goalNone')),
+    p.goal ? h('div', { class: 'goal' }, h('strong', {}, `${p.goal.emoji} ${p.goal.title}`), mini(prog.pct), h('small', {}, t(p.goal.mode === 'week' ? 'goalProgressWeek' : 'goalProgress', { have: prog.have, target: prog.target })), prog.reached ? h('p', { class: 'chip solid' }, `🎉 ${t('goalReached', { title: p.goal.title })}`) : null) : h('p', { class: 'note' }, t('goalNone')),
     p.cheers?.length ? h('div', {}, h('h3', {}, t('cheers')), h('ul', { class: 'cheers' }, p.cheers.slice(0, 4).map((c) => h('li', {}, `${c.emoji} ${c.text}`)))) : null,
     h('div', { class: 'row-btns' }, h('button', { class: `btn ${link.pendingReport ? 'primary' : ''}`, type: 'button', onclick: async () => { const r = await F.sendReport(link.id); link.pendingReport = false; if (!r.delivered) openOutbox(t('sendReport'), r.envelope); else toast(t('rcvOk')); } }, '📤 ', t('sendReport'), link.pendingReport ? ' ●' : '')),
     transportRow(link, 'child'));

@@ -194,3 +194,42 @@ dialog header { display: flex; align-items: center; justify-content: space-betwe
 .heat-days, .heat { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; } .heat-days span { text-align: center; font-size: .75rem; color: var(--muted); }
 .heat i { aspect-ratio: 1; border-radius: 6px; background: var(--surface-2); border: 1px solid var(--line); } .heat i.l1 { background: color-mix(in srgb, var(--brand) 35%, var(--surface-2)); } .heat i.l2 { background: color-mix(in srgb, var(--brand) 65%, var(--surface-2)); } .heat i.l3 { background: var(--brand); }
 .heat i.future { opacity: .35; border-style: dashed; }
+
+/* ── v1.8: avatars (animated characters / photo / GIF), profiles, levels ── */
+.avatar { display: inline-block; width: var(--av, 56px); height: var(--av, 56px); flex: none; overflow: visible; line-height: 1; }
+.avatar-img { border-radius: 50%; object-fit: cover; background: var(--surface-2); } .avatar-emoji { display: inline-grid; place-items: center; }
+.avatar-char .av-body, .avatar-char .av-eyes, .avatar-char .av-hand, .avatar-char .av-z { transform-box: fill-box; }
+.avatar-char .av-body { transform-origin: 50% 100%; } .avatar-char .av-eyes { transform-origin: 50% 50%; animation: av-blink 4.2s infinite; }
+.avatar-char .av-hand { visibility: hidden; transform-origin: 50% 100%; } .avatar-char .av-z { visibility: hidden; fill: var(--muted); font-weight: 800; }
+.avatar[data-anim="idle"] .av-body, .avatar-emoji[data-anim="idle"], .avatar-img[data-anim="idle"] { animation: av-bob 3.2s ease-in-out infinite alternate; }
+.avatar[data-anim="cheer"] .av-body, .avatar-emoji[data-anim="cheer"], .avatar-img[data-anim="cheer"] { animation: av-jump .55s ease-in-out infinite; }
+.avatar[data-anim="dance"] .av-body, .avatar-emoji[data-anim="dance"], .avatar-img[data-anim="dance"] { animation: av-dance .5s ease-in-out infinite alternate; }
+.avatar[data-anim="alert"] .av-body, .avatar-emoji[data-anim="alert"], .avatar-img[data-anim="alert"] { animation: av-shake .25s linear infinite; }
+.avatar[data-anim="think"] .av-body, .avatar-emoji[data-anim="think"], .avatar-img[data-anim="think"] { animation: av-tilt 1.6s ease-in-out infinite alternate; }
+.avatar[data-anim="wave"] .av-hand { visibility: visible; animation: av-wave .45s ease-in-out infinite alternate; } .avatar-emoji[data-anim="wave"], .avatar-img[data-anim="wave"] { animation: av-tilt .5s ease-in-out infinite alternate; }
+.avatar[data-anim="sleep"] .av-eyes { animation: none; transform: scaleY(.12); } .avatar[data-anim="sleep"] .av-z { visibility: visible; animation: av-z 2s ease-in-out infinite; }
+.avatar-emoji[data-anim="sleep"], .avatar-img[data-anim="sleep"] { filter: grayscale(.5); opacity: .8; }
+@keyframes av-blink { 0%, 92%, 100% { transform: scaleY(1); } 95% { transform: scaleY(.1); } }
+@keyframes av-bob { to { transform: translateY(-3%) scale(1.02); } } @keyframes av-jump { 0%, 100% { transform: translateY(0) scale(1, 1); } 40% { transform: translateY(-14%) scale(.96, 1.06); } 60% { transform: translateY(-14%) scale(.96, 1.06); } }
+@keyframes av-dance { from { transform: rotate(-9deg) translateY(0); } to { transform: rotate(9deg) translateY(-6%); } } @keyframes av-shake { 0%, 100% { transform: translateX(-3%); } 50% { transform: translateX(3%); } }
+@keyframes av-tilt { from { transform: rotate(-6deg); } to { transform: rotate(6deg); } } @keyframes av-wave { from { transform: rotate(-25deg); } to { transform: rotate(25deg); } } @keyframes av-z { from { transform: translate(0, 4px); opacity: 0; } 50% { opacity: 1; } to { transform: translate(6px, -8px); opacity: 0; } }
+.hero-buddy { background: none; border: 0; padding: 0; cursor: pointer; border-radius: 50%; } .hero-buddy:focus-visible { outline-color: #fff; }
+.avatar-btn { background: none; border: 2px dashed var(--line); border-radius: 50%; padding: 6px; cursor: pointer; } .av-preview { display: grid; place-items: center; min-height: 130px; }
+.char-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; } .char { display: grid; place-items: center; gap: 2px; background: var(--surface-2); border: 2px solid transparent; border-radius: 16px; padding: 6px 2px; cursor: pointer; min-height: 72px; color: var(--text); }
+.char.on { border-color: var(--brand); } .char[disabled] { opacity: .5; cursor: not-allowed; } .char small { font-size: .7rem; color: var(--muted); }
+.avatar-picker h3 { margin: .4em 0 .2em; font-size: .95rem; } .profile-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px; }
+.profile-card { display: grid; place-items: center; gap: 6px; padding: 12px 6px; background: var(--surface); border: 2px solid var(--line); border-radius: 18px; cursor: pointer; color: var(--text); font: inherit; min-height: 120px; } .profile-card.on { border-color: var(--brand); box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand) 25%, transparent); }
+.profile-card.add { border-style: dashed; } .profile-card .plus { font-size: 2.2rem; color: var(--brand); line-height: 1; }
+.buddy .avatar { margin-top: -4px; }
+
+/* ── v1.8: schedule + gear ── */
+.gear-row { display: grid; gap: 6px; border-bottom: 1px dashed var(--line); padding-bottom: 8px; } .gear-card { padding: 0; width: 100%; text-align: start; } .gear-card summary { padding: 10px 14px; cursor: pointer; font-weight: 700; min-height: 44px; display: flex; align-items: center; }
+.gear-list { list-style: none; margin: 0; padding: 0 14px 10px; display: grid; gap: 2px; } .stack.dim { opacity: .75; }
+
+/* achievements */
+.badges { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 8px; }
+.badge { display: grid; justify-items: center; text-align: center; gap: 2px; padding: 10px 6px; border-radius: 16px; background: var(--surface-2); border: 1px dashed var(--line); } .badge:not(.on) .bi { filter: grayscale(1); opacity: .45; } /* dim the emoji only: dimming the text fails contrast */
+.badge.on { border-style: solid; background: color-mix(in srgb, var(--warn) 14%, var(--surface)); border-color: var(--warn); } .badge .bi { font-size: 1.9rem; } .badge strong { font-size: .85rem; } .badge small { font-size: .7rem; color: var(--muted); }
+.celebrate { display: grid; gap: 10px; border: 2px solid var(--warn); text-align: start; margin-block: 10px; animation: pop .5s cubic-bezier(.2, 1.4, .4, 1); } .celebrate .lvl { font-size: 1.2rem; } .badges.small { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); }
+
+.qr-box { display: grid; justify-items: center; gap: 8px; } .qr-box svg { width: min(78vw, 380px); height: auto; background: #fff; padding: 6px; border-radius: 14px; } .scan-video { width: 100%; max-height: 60vh; border-radius: 14px; background: #000; }

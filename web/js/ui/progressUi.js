@@ -1,0 +1,35 @@
+// What a person earns: the achievements gallery, and the inline celebration after a run (level up, unlocked characters, new badges).
+import { h } from '../util.js';
+import { t } from '../i18n.js';
+import * as S from '../store.js';
+import { BADGES, earnedBadges, newBadges } from '../badges.js';
+import { levelInfo } from '../levels.js';
+import { finished, totalStars } from '../stats.js';
+import { CHARACTERS } from '../avatar.js';
+import { avatarNode } from './avatar.js';
+import { confetti } from './fx.js';
+
+/** The gallery: earned badges in colour, the rest greyed with their hint. */
+export function achievementsCard(runs) {
+  const earned = earnedBadges(runs);
+  return h('section', { class: 'card' }, h('h2', {}, `🏆 ${t('achievements')}`), h('p', { class: 'note' }, t('badgesEarned', { n: earned.length, total: BADGES.length })),
+    h('ul', { class: 'badges' }, BADGES.map((b) => { const on = earned.includes(b.id);
+      return h('li', { class: `badge ${on ? 'on' : ''}`, 'aria-label': `${t(`badge_${b.id}`)}: ${t(`badgeDesc_${b.id}`)}${on ? '' : ` (${t('badgeLocked')})`}` }, h('span', { class: 'bi', 'aria-hidden': 'true' }, b.emoji), h('strong', {}, t(`badge_${b.id}`)), h('small', {}, t(`badgeDesc_${b.id}`))); })));
+}
+
+/** After a run was saved: -> a card to show on the summary screen, or null when there is nothing new. Marks the badges as seen. */
+export async function celebrationFor(run) {
+  const mine = S.myRuns(), before = mine.filter((r) => r.id !== run.id);
+  const lvBefore = levelInfo(totalStars(finished(before))).level, lvAfter = levelInfo(totalStars(finished(mine))).level;
+  const p = S.activeProfile(), fresh = newBadges(earnedBadges(mine), p.seenBadges);
+  const unlocked = Object.entries(CHARACTERS).filter(([, c]) => c.unlock > lvBefore && c.unlock <= lvAfter);
+  if (!fresh.length && lvAfter === lvBefore) return null;
+  await S.saveProfile({ ...p, seenBadges: [...new Set([...(p.seenBadges || []), ...fresh])] });
+  const card = h('section', { class: 'card celebrate', role: 'status' },
+    lvAfter > lvBefore ? h('div', { class: 'stack' }, h('strong', { class: 'lvl' }, `🏅 ${t('levelUp', { n: lvAfter })}`),
+      unlocked.length ? h('div', {}, h('small', {}, t('unlockedChar')), h('div', { class: 'row' }, unlocked.map(([id, c]) => avatarNode({ k: 'char', id, color: c.base }, { size: 48, anim: 'dance' })))) : null) : null,
+    fresh.length ? h('div', { class: 'stack' }, h('strong', {}, `✨ ${t('newBadgeTitle')}`), h('ul', { class: 'badges small' }, fresh.map((id) => { const b = BADGES.find((x) => x.id === id);
+      return h('li', { class: 'badge on' }, h('span', { class: 'bi', 'aria-hidden': 'true' }, b.emoji), h('strong', {}, t(`badge_${id}`)), h('small', {}, t(`badgeDesc_${id}`))); }))) : null);
+  setTimeout(() => confetti(document.body, 28), 200);
+  return card;
+}

@@ -8,6 +8,9 @@ import { progressWidget } from './progress.js';
 import { isActive } from '../engine.js';
 import * as F from '../family.js';
 import { rewardProgress } from '../rewards.js';
+import { avatarNode, openProfiles } from './avatar.js';
+import { levelInfo } from '../levels.js';
+import { splitForToday } from '../schedule.js';
 import { icon, iconBtn, toast, confirmBox } from './common.js';
 import { openShare, openImport } from './share.js';
 
@@ -31,21 +34,22 @@ export function renderHome(root, nav) {
   const activeCard = () => {
     if (!active) return null;
     const { settings } = S.get();
-    pw = progressWidget(active, { mascot: settings.mascot, compact: true });
+    pw = progressWidget(active, { mascot: settings.mascot, compact: true, buddyNode: avatarNode(settings.avatar, { size: 26 }) });
     return h('section', { class: 'card active-run', style: { '--accent': active.color || '#6c5ce7' } },
       h('div', { class: 'row between' }, h('strong', {}, `${active.icon} ${t('continueRun', { name: active.templateName })}`), h('span', { class: 'chip solid' }, t('activeRun'))),
       pw.el, h('button', { class: 'btn primary', type: 'button', onclick: () => nav(`#/run/${active.templateId}`) }, icon('play', 18), t('resume')));
   };
   const draw = () => {
-    const { templates, runs, settings } = S.get();
-    const done = finished(runs), days = streak(done), starsN = totalStars(done);
-    const awake = isAwakeWanted(), simple = settings.simpleMode;
+    const { templates, settings } = S.get();
+    const done = finished(S.myRuns()), days = streak(done), starsN = totalStars(done);
+    const awake = isAwakeWanted(), simple = settings.simpleMode, lv = levelInfo(starsN);
     const goals = F.childLinks().filter((l) => l.parent.goal).map((l) => ({ g: l.parent.goal, p: rewardProgress(l.parent.goal, done) }));
     const favs = templates.filter((x) => x.favorite);
     const next = nextAcross(templates);
     setChildren(root,
-      h('div', { class: 'hero' }, h('span', { class: 'hero-buddy', 'aria-hidden': 'true' }, settings.mascot), h('h1', {}, t('appName')), h('p', {}, settings.personName ? t('greetName', { name: settings.personName }) : t('hello')),
+      h('div', { class: 'hero' }, h('button', { class: 'hero-buddy', type: 'button', 'aria-label': `${t('switchProfile')}: ${settings.personName || ''}`, onclick: () => openProfiles(nav) }, avatarNode(settings.avatar, { size: 76 })), h('h1', {}, t('appName')), h('p', {}, settings.personName ? t('greetName', { name: settings.personName }) : t('hello')),
         h('div', { class: 'chips' }, days ? h('span', { class: 'chip' }, `🔥 ${t('streakDays', { n: days })}`) : null, starsN ? h('span', { class: 'chip' }, `⭐ ${t('starsTotal', { n: starsN })}`) : null,
+          h('span', { class: 'chip', title: lv.next ? t('levelNext', { n: lv.toNext, l: lv.level + 1 }) : '' }, `🏅 ${t('levelLabel', { n: lv.level })}`),
           goals.map(({ g, p }) => h('span', { class: 'chip', title: g.title }, t('goalChip', { emoji: g.emoji, have: p.have, target: p.target }))),
           h('button', { class: `chip btn-chip ${awake ? 'on' : ''}`, type: 'button', 'aria-pressed': String(awake), onclick: async () => { await S.updateSettings({ keepAwakeApp: !awake }); setAwake('app', !awake); draw(); } }, awake ? `☀️ ${t('screenOn')}` : `🌙 ${t('screenOff')}`)),
         next ? h('p', { class: 'chip' }, icon('bell', 16), t('alarmNext', { name: next.template.name, time: next.at.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) })) : null),
@@ -54,8 +58,9 @@ export function renderHome(root, nav) {
         h('button', { class: 'btn primary', type: 'button', onclick: async () => { try { const x = S.newTemplate(t('untitled')); await S.saveTemplate(x); nav(`#/edit/${x.id}`); } catch { toast(t('error')); } } }, icon('plus', 18), t('newRoutine')),
         h('button', { class: 'btn', type: 'button', onclick: () => openImport() }, icon('download', 18), t('import'))),
       favs.length ? h('section', {}, h('h2', {}, t('favorites')), h('div', { class: 'stack' }, favs.map((x) => card(x, nav)))) : null,
-      h('section', {}, h('h2', {}, t('allRoutines')),
-        templates.length ? h('div', { class: 'stack' }, templates.map((x) => card(x, nav))) : h('p', { class: 'empty' }, t('noRoutines'))));
+      (() => { const sp = splitForToday(templates, new Date().getDay()); return [
+        h('section', {}, h('h2', {}, sp.scheduled ? t('today') : t('allRoutines')), sp.today.length ? h('div', { class: 'stack' }, sp.today.map((x) => card(x, nav))) : h('p', { class: 'empty' }, templates.length ? t('noRoutinesToday') : t('noRoutines'))),
+        sp.other.length ? h('section', {}, h('h2', {}, t('otherDays')), h('div', { class: 'stack dim' }, sp.other.map((x) => card(x, nav)))) : null]; })());
   };
   draw();
   S.loadActive().then((r) => { if (r && isActive(r) && S.getTemplate(r.templateId)) { active = r; draw(); tick = setInterval(() => pw?.update(active), 1000); } });

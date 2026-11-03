@@ -5,6 +5,7 @@ import * as ST from '../stats.js';
 import { iconBtn, confirmBox, toast } from './common.js';
 import { weeklyReport, heatmap, toCsv } from '../weekly.js';
 import { native } from '../native.js';
+import { achievementsCard } from './progressUi.js';
 
 const NS = 'http://www.w3.org/2000/svg';
 const svg = (tag, attrs = {}, ...kids) => { const e = document.createElementNS(NS, tag); for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v); e.append(...kids); return e; };
@@ -46,11 +47,11 @@ function insightText(i) {
 
 export function renderStats(root, templateId, nav) {
   const draw = () => {
-    const { templates, runs } = S.get();
+    const { templates } = S.get(), runs = S.myRuns();
     if (!templateId) {
       const items = templates.map((x) => ({ x, n: ST.finished(runs, x.id).length }));
       const hasRuns = items.some((i) => i.n);
-      root.replaceChildren(h('h1', {}, t('statsTitle')), hasRuns ? overview(runs) : null,
+      root.replaceChildren(h('h1', {}, t('statsTitle')), hasRuns ? overview(runs) : null, hasRuns ? achievementsCard(runs) : null,
         hasRuns ? h('div', { class: 'stack' }, items.filter((i) => i.n).map(({ x, n }) =>
           h('a', { class: 'card link-card', href: `#/stats/${x.id}`, style: { '--accent': x.color } }, h('span', { class: 'emoji' }, x.icon), h('span', { class: 'routine-text' }, h('strong', {}, x.name), h('small', {}, t('runsCount', { n })))))) : h('p', { class: 'empty' }, t('noStats')));
       return;

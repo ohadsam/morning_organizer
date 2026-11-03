@@ -8,19 +8,26 @@ import { t } from './i18n.js';
 import { suggestIcon } from './taskIcons.js';
 import { PRESETS } from './speech.js';
 import { validLeaveBy } from './leave.js';
+import { normDays } from './schedule.js';
 import { isSafePhoto } from './photo.js';
+import { sanitizeAvatar, avatarEmoji, avatarFromMascot, defaultAvatar } from './avatar.js';
+import { newProfile, normalizeProfile, runsOf, MAX_PROFILES } from './profiles.js';
 
 export const DEFAULT_SETTINGS = Object.freeze({
   lang: 'he', theme: 'auto', mode: 'both', volume: 80, warnSec: 10, defTaskSec: 300, defEstSec: 0,
   autoAdvance: false, keepAwake: true, keepAwakeApp: false, personName: '', mascot: '🦊', feedback: true, speak: false, age: null, gender: 'other', profileDone: false,
   paceMode: 'normal', accent: '', simpleMode: false, announceTasks: false, fontScale: 100, colorSafe: false, contrast: 'normal', srAnnounce: false,
   coachButton: true, coachAuto: false, coachSpeak: false, voiceURI: '', voicePreset: 'natural', seeded: false,
+  avatar: defaultAvatar(), activeProfile: '',
 });
+/** The settings keys that mirror the ACTIVE profile (so the rest of the app can keep reading settings.personName etc.). */
+const isDefaultAvatar = (a) => !a || (a.k === 'char' && a.id === 'fox');
+const PROFILE_KEYS = ['personName', 'age', 'gender', 'mascot', 'avatar'];
 export const COLORS = ['#6c5ce7', '#0984e3', '#00b894', '#e17055', '#e84393', '#fdcb6e', '#2d3436'];
 export const MASCOTS = ['🦊', '🐼', '🦄', '🐯', '🐸', '🤖', '🐶', '🐱'];
 export const ICONS = ['🌅', '☀️', '🎒', '🪥', '👕', '🥣', '🏃', '📚', '🧘', '🐶', '🚌', '⏰'];
 
-const state = { templates: [], runs: [], settings: { ...DEFAULT_SETTINGS }, ready: false };
+const state = { templates: [], runs: [], profiles: [], settings: { ...DEFAULT_SETTINGS }, ready: false };
 const subs = new Set();
 export const subscribe = (fn) => { subs.add(fn); return () => subs.delete(fn); };
 const emit = () => subs.forEach((f) => f(state));
@@ -33,7 +40,7 @@ export function newTask(settings = state.settings, name = '') {
 export function newTemplate(name = '') {
   const now = Date.now();
   return { id: uid(), name, icon: ICONS[0], color: COLORS[0], favorite: false, builtin: false,
-    leaveBy: '', from: '', tasks: [newTask()], alarm: defaultAlarm(), createdAt: now, updatedAt: now };
+    leaveBy: '', from: '', days: [], gear: [], tasks: [newTask()], alarm: defaultAlarm(), createdAt: now, updatedAt: now };
 }
 export const totalSec = (tpl) => tpl.tasks.reduce((s, x) => s + x.sec, 0);
 
@@ -46,7 +53,8 @@ export function normalizeTemplate(tpl) {
     id: typeof tpl.id === 'string' && tpl.id ? tpl.id.slice(0, 64) : uid(),
     name: cleanText(tpl.name, LIMITS.maxName), icon: cleanText(tpl.icon, 8) || '⏰',
     color: /^#[0-9a-fA-F]{6}$/.test(tpl.color) ? tpl.color : COLORS[0], favorite: !!tpl.favorite, builtin: !!tpl.builtin,
-    createdAt: num(tpl.createdAt, Date.now()), updatedAt: num(tpl.updatedAt, Date.now()), leaveBy: validLeaveBy(tpl.leaveBy), from: cleanText(tpl.from, 30),
+    createdAt: num(tpl.createdAt, Date.now()), updatedAt: num(tpl.updatedAt, Date.now()), leaveBy: validLeaveBy(tpl.leaveBy), from: cleanText(tpl.from, 30), days: normDays(tpl.days),
+    gear: (Array.isArray(tpl.gear) ? tpl.gear : []).filter((g) => g && typeof g === 'object' && cleanText(g.name, 40)).slice(0, 20).map((g) => ({ id: typeof g.id === 'string' && g.id ? g.id.slice(0, 64) : uid(), name: cleanText(g.name, 40), icon: cleanText(g.icon, 8), days: normDays(g.days) })),
     tasks: (Array.isArray(tpl.tasks) ? tpl.tasks : []).slice(0, LIMITS.maxTasks).map((x) => ({
       id: typeof x?.id === 'string' && x.id ? x.id.slice(0, 64) : uid(), name: cleanText(x?.name, LIMITS.maxName), icon: cleanText(x?.icon, 8), photo: isSafePhoto(x?.photo) ? x.photo : '',
       sec: clamp(Math.round(Number(x?.sec)) || 1, 1, LIMITS.maxTaskSec), est: clamp(Math.round(Number(x?.est)) || 0, 0, LIMITS.maxTaskSec) })),
@@ -60,7 +68,7 @@ export function normalizeTemplate(tpl) {
 export function sanitizeRun(r) {
   const n = (v, max = 1e12) => clamp(Math.round(Number(v)) || 0, 0, max);
   return {
-    id: String(r.id).slice(0, 64), templateId: String(r.templateId ?? '').slice(0, 64), templateName: cleanText(r.templateName, LIMITS.maxName),
+    id: String(r.id).slice(0, 64), profileId: typeof r.profileId === 'string' ? r.profileId.slice(0, 64) : '', templateId: String(r.templateId ?? '').slice(0, 64), templateName: cleanText(r.templateName, LIMITS.maxName),
     icon: cleanText(r.icon, 8), color: /^#[0-9a-fA-F]{6}$/.test(r.color) ? r.color : COLORS[0],
     startedAt: n(r.startedAt), endedAt: n(r.endedAt), status: r.status === 'done' ? 'done' : 'stopped', current: 0, pausedMs: n(r.pausedMs),
     plannedTotal: n(r.plannedTotal, 1e7), estTotal: n(r.estTotal, 1e7), actualTotal: n(r.actualTotal, 1e7),
@@ -75,8 +83,50 @@ export async function init() {
   state.templates = templates.sort((a, b) => a.createdAt - b.createdAt);
   state.runs = runs;
   state.settings = { ...DEFAULT_SETTINGS, ...(kv || {}) };
+  // Profiles: first start (or an upgrade from before profiles) creates one from the existing name/age/gender/mascot.
+  const stored = await db.get('kv', 'profiles');
+  state.profiles = (Array.isArray(stored) ? stored : []).slice(0, MAX_PROFILES).map(normalizeProfile);
+  if (!state.profiles.length) {
+    state.profiles = [newProfile({ name: state.settings.personName, age: state.settings.age, gender: state.settings.gender, avatar: isDefaultAvatar(state.settings.avatar) ? avatarFromMascot(state.settings.mascot) : state.settings.avatar })];
+    await db.put('kv', state.profiles, 'profiles');
+  }
+  if (!state.profiles.some((p) => p.id === state.settings.activeProfile)) state.settings.activeProfile = state.profiles[0].id;
+  mirrorActiveProfile();
   state.ready = true;
   emit();
+}
+
+// ── profiles ──
+export const profiles = () => state.profiles;
+export const activeProfile = () => state.profiles.find((p) => p.id === state.settings.activeProfile) ?? state.profiles[0];
+const firstId = () => state.profiles[0]?.id;
+/** Runs of the active profile (use this - not state.runs - for anything personal: stars, streaks, stats, reports). */
+export const myRuns = () => runsOf(state.runs, activeProfile().id, firstId());
+export const runsForProfile = (id) => runsOf(state.runs, id, firstId());
+function mirrorActiveProfile() {
+  const p = activeProfile(); if (!p) return;
+  state.settings = { ...state.settings, activeProfile: p.id, personName: p.name, age: p.age, gender: p.gender, avatar: p.avatar, mascot: avatarEmoji(p.avatar) };
+}
+const persistProfiles = () => db.put('kv', state.profiles, 'profiles');
+export async function saveProfile(p) {
+  const clean = normalizeProfile(p), i = state.profiles.findIndex((x) => x.id === clean.id);
+  if (i < 0) { if (state.profiles.length >= MAX_PROFILES) throw new Error('limit'); state.profiles.push(clean); } else state.profiles[i] = { ...state.profiles[i], ...clean };
+  await persistProfiles();
+  if (clean.id === state.settings.activeProfile) { mirrorActiveProfile(); await db.put('kv', state.settings, 'settings'); }
+  emit(); return clean;
+}
+export async function switchProfile(id) {
+  if (!state.profiles.some((p) => p.id === id)) return;
+  state.settings = { ...state.settings, activeProfile: id }; mirrorActiveProfile(); await db.put('kv', state.settings, 'settings'); emit();
+}
+/** Removes a profile and its history. The last profile cannot be deleted. */
+export async function deleteProfile(id) {
+  if (state.profiles.length <= 1) return false;
+  const mine = runsOf(state.runs, id, firstId()), wasActive = id === state.settings.activeProfile;
+  state.runs = state.runs.filter((r) => !mine.includes(r)); for (const r of mine) await db.del('runs', r.id);
+  state.profiles = state.profiles.filter((p) => p.id !== id); await persistProfiles();
+  if (wasActive) { state.settings = { ...state.settings, activeProfile: state.profiles[0].id }; }
+  mirrorActiveProfile(); await db.put('kv', state.settings, 'settings'); emit(); return true;
 }
 
 /** Seeds the sample routines once (localised at that moment). Needs i18n to be set up first. */
@@ -136,9 +186,18 @@ export async function updateSettings(patch) {
   if ('contrast' in patch && !['normal', 'high'].includes(patch.contrast)) delete patch.contrast;
   if ('accent' in patch && !(patch.accent === '' || /^#[0-9a-f]{6}$/i.test(patch.accent))) delete patch.accent;
   if ('gender' in patch && !['female', 'male', 'other'].includes(patch.gender)) delete patch.gender;
-  if ('voicePreset' in patch && !(patch.voicePreset in PRESETS)) delete patch.voicePreset;
+  if ('voicePreset' in patch && !Object.hasOwn(PRESETS, patch.voicePreset)) delete patch.voicePreset;
   if ('voiceURI' in patch) patch = { ...patch, voiceURI: String(patch.voiceURI || '').slice(0, 200) };
+  if ('avatar' in patch) patch = { ...patch, avatar: sanitizeAvatar(patch.avatar) };
+  delete patch.activeProfile; // switching goes through switchProfile()
   state.settings = { ...state.settings, ...patch };
+  const touched = PROFILE_KEYS.filter((k) => k in patch);
+  if (touched.length && state.profiles.length) { // editing name/age/gender/avatar edits the ACTIVE profile
+    const p = activeProfile(), upd = { ...p };
+    if ('personName' in patch) upd.name = patch.personName; if ('age' in patch) upd.age = patch.age; if ('gender' in patch) upd.gender = patch.gender;
+    if ('avatar' in patch) upd.avatar = patch.avatar; else if ('mascot' in patch) upd.avatar = avatarFromMascot(patch.mascot);
+    state.profiles[state.profiles.indexOf(p)] = normalizeProfile(upd); await persistProfiles(); mirrorActiveProfile();
+  }
   await db.put('kv', state.settings, 'settings');
   emit();
 }
@@ -166,7 +225,7 @@ export const saveActive = (run) => db.put('kv', run ? structuredClone(run) : nul
 export const loadActive = () => db.get('kv', 'activeRun');
 
 export function exportAll() {
-  return JSON.stringify({ app: 'morning-organizer', v: 1, templates: state.templates, runs: state.runs, settings: state.settings });
+  return JSON.stringify({ app: 'morning-organizer', v: 1, templates: state.templates, runs: state.runs, profiles: state.profiles, settings: state.settings });
 }
 /** Keep only known settings with the right type and sane ranges (a backup is untrusted input). */
 export function sanitizeSettings(raw) {
@@ -177,6 +236,8 @@ export function sanitizeSettings(raw) {
     if (k === 'seeded' || !(k in raw)) continue;
     const v = raw[k];
     if (ENUM[k]) { if (ENUM[k].includes(v)) out[k] = v; }
+    else if (k === 'avatar') out.avatar = sanitizeAvatar(v);
+    else if (k === 'activeProfile') continue;
     else if (k === 'accent') { if (v === '' || /^#[0-9a-f]{6}$/i.test(v)) out[k] = v; }
     else if (typeof def === 'boolean') { if (typeof v === 'boolean') out[k] = v; }
     else if (k === 'age') { if (v === null || Number.isFinite(Number(v))) out[k] = v; }
@@ -205,6 +266,14 @@ export async function importBackup(text, { mode = 'merge', settings = true } = {
   }
   for (const r of (Array.isArray(d.runs) ? d.runs : []).slice(0, LIMITS.maxRuns)) {
     if (r && typeof r.id === 'string' && Array.isArray(r.tasks) && Number.isFinite(r.startedAt) && Number.isFinite(r.endedAt) && !state.runs.some((x) => x.id === r.id)) { await saveRun(sanitizeRun(r)); res.runs++; }
+  }
+  if (Array.isArray(d.profiles)) { // merge by id; "replace" makes the imported list the whole list
+    const incoming = d.profiles.slice(0, MAX_PROFILES).filter((x) => x && typeof x === 'object').map(normalizeProfile);
+    if (mode === 'replace' && incoming.length) state.profiles = [];
+    for (const p of incoming) { const i = state.profiles.findIndex((x) => x.id === p.id); if (i < 0 && state.profiles.length < MAX_PROFILES) state.profiles.push(p); else if (i >= 0) state.profiles[i] = { ...p, seenBadges: [...new Set([...state.profiles[i].seenBadges, ...p.seenBadges])] }; }
+    if (!state.profiles.length) state.profiles = [newProfile({})];
+    if (!state.profiles.some((x) => x.id === state.settings.activeProfile)) state.settings.activeProfile = state.profiles[0].id;
+    await persistProfiles(); mirrorActiveProfile();
   }
   if (settings && d.settings) {
     const patch = sanitizeSettings(d.settings);

@@ -1,15 +1,21 @@
 // Reward goals + child reports (pure). A goal = { title, emoji, target, since }: stars earned after `since` count toward it.
 import { stars } from './stats.js';
 import { cleanText, clamp } from './util.js';
+import { sanitizeAvatar, shareableAvatar } from './avatar.js';
 
+/** Goals: mode 'stars' = stars earned since `since`; mode 'week' = routines finished within the plan during the current calendar week. */
 export function sanitizeGoal(g) {
   if (!g || typeof g !== 'object') return null;
   const target = Math.round(Number(g.target)); if (!Number.isFinite(target) || target < 1) return null;
-  return { title: cleanText(g.title, 40) || '⭐', emoji: cleanText(g.emoji, 8) || '🎁', target: clamp(target, 1, 999), since: Math.max(0, Math.round(Number(g.since)) || 0), given: !!g.given };
+  const mode = g.mode === 'week' ? 'week' : 'stars';
+  return { title: cleanText(g.title, 40) || '⭐', emoji: cleanText(g.emoji, 8) || '🎁', target: clamp(target, 1, mode === 'week' ? 21 : 999), since: Math.max(0, Math.round(Number(g.since)) || 0), given: !!g.given, mode };
 }
-export function rewardProgress(goal, runs) {
+export const weekStart = (ms) => { const d = new Date(ms); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() - d.getDay()); return d.getTime(); };
+export function rewardProgress(goal, runs, now = Date.now()) {
   if (!goal) return null;
-  const have = runs.filter((r) => r.endedAt >= goal.since).reduce((s, r) => s + stars(r), 0);
+  const have = goal.mode === 'week'
+    ? runs.filter((r) => r.status === 'done' && r.actualTotal <= r.plannedTotal && r.endedAt >= weekStart(now)).length
+    : runs.filter((r) => r.endedAt >= goal.since).reduce((s, r) => s + stars(r), 0);
   return { have, target: goal.target, pct: Math.min(1, have / goal.target), reached: have >= goal.target };
 }
 /** What a child phone tells the parent: totals, streak (computed by caller), the last runs and the run in progress. */
@@ -23,7 +29,7 @@ export function sanitizeReport(r) {
   const n = (v, max = 1e7) => clamp(Math.round(Number(v)) || 0, 0, max), str = (v, m) => cleanText(v, m);
   const p = r.profile || {};
   return {
-    profile: { name: str(p.name, 30), age: Number.isFinite(Number(p.age)) ? clamp(Math.round(Number(p.age)), 0, 120) : null, gender: ['female', 'male', 'other'].includes(p.gender) ? p.gender : 'other', mascot: str(p.mascot, 8) },
+    profile: { name: str(p.name, 30), age: Number.isFinite(Number(p.age)) ? clamp(Math.round(Number(p.age)), 0, 120) : null, gender: ['female', 'male', 'other'].includes(p.gender) ? p.gender : 'other', mascot: str(p.mascot, 8), avatar: shareableAvatar(sanitizeAvatar(p.avatar)) },
     totalStars: n(r.totalStars, 1e6), streakDays: n(r.streakDays, 5000), goalHave: n(r.goalHave, 1e6), at: n(r.at, 1e14),
     recent: (Array.isArray(r.recent) ? r.recent : []).slice(0, 20).map((x) => ({ id: str(x?.id, 64), name: str(x?.name, 80), icon: str(x?.icon, 8), startedAt: n(x?.startedAt, 1e14), endedAt: n(x?.endedAt, 1e14), status: x?.status === 'done' ? 'done' : 'stopped', planned: n(x?.planned), actual: n(x?.actual), stars: n(x?.stars, 3) })),
     active: r.active && typeof r.active === 'object' ? { name: str(r.active.name, 80), icon: str(r.active.icon, 8), task: str(r.active.task, 80), pct: clamp(Number(r.active.pct) || 0, 0, 1), paused: !!r.active.paused } : null,

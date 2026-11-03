@@ -8,6 +8,7 @@ import { PRESETS, voicesFor, ttsSupported } from '../speech.js';
 import { speakWithSettings } from './coach.js';
 import { applyA11y, FONT_SCALES } from '../a11y.js';
 import { requestGate } from './gate.js';
+import { avatarNode, openAvatarPicker, openProfiles, openProfileEditor } from './avatar.js';
 import { saveBackupFile, copySyncCode, sendSyncCode, openBackupImport } from './backup.js';
 import { getLang } from '../i18n.js';
 import { APK_URL } from '../config.js';
@@ -58,7 +59,9 @@ function group(key, title, open, ...kids) {
 export const ACCENTS = ['', '#5b4bd5', '#0b6fc4', '#0a7a5f', '#c2410c', '#be185d', '#334155'];
 
 export function renderSettings(root, version) {
+  let alive = true; // a redraw that finishes after the person already left this page must NOT overwrite the page they are on
   const draw = () => {
+    if (!alive) return;
     const st = S.get().settings;
     const set = async (p, redraw = false) => { await S.updateSettings(p); if (redraw) draw(); };
     root.replaceChildren(
@@ -69,6 +72,12 @@ export function renderSettings(root, version) {
         h('div', { class: 'field' }, h('span', { class: 'lbl' }, t('accent')), h('div', { class: 'swatches', role: 'radiogroup', 'aria-label': t('accent') }, ACCENTS.map((c) => h('button', { type: 'button', class: `swatch ${st.accent === c ? 'on' : ''}`, style: { '--c': c || '#6c5ce7' }, role: 'radio', 'aria-checked': String(st.accent === c), 'aria-label': c || t('themeAuto'), onclick: async () => { await set({ accent: c }); applyA11y(S.get().settings); draw(); } })))),
         toggle(t('simpleMode'), t('simpleHint'), st.simpleMode, async (v) => { if (v && !(await requestGate())) { draw(); return; } await set({ simpleMode: v }); location.hash = '#/'; location.reload(); })),
       group('profile', t('profile'), true,
+        h('div', { class: 'field' }, h('span', { class: 'lbl' }, t('profilesTitle')),
+          h('div', { class: 'profile-grid' }, S.profiles().map((p) => h('button', { type: 'button', class: `profile-card ${p.id === S.activeProfile().id ? 'on' : ''}`, 'aria-pressed': String(p.id === S.activeProfile().id), onclick: async () => { await S.switchProfile(p.id); draw(); } },
+            avatarNode(p.avatar, { size: 52 }), h('strong', {}, p.name || t('untitledProfile')))),
+            S.profiles().length < 12 ? h('button', { type: 'button', class: 'profile-card add', onclick: () => openProfileEditor(null, { onDone: async (np) => { if (np) await S.switchProfile(np.id); draw(); } }) }, h('span', { class: 'plus' }, '+'), h('strong', {}, t('addProfile'))) : null)),
+        h('div', { class: 'toolbar wrap' }, h('button', { class: 'btn', type: 'button', onclick: () => openAvatarPicker(S.get().settings.avatar, async (a) => { await set({ avatar: a }, true); }) }, avatarNode(st.avatar, { size: 28 }), t('avatar')),
+          h('button', { class: 'btn', type: 'button', onclick: () => openProfileEditor(S.activeProfile(), { onDone: () => draw() }) }, t('editProfile'))),
         h('label', { class: 'field' }, h('span', { class: 'lbl' }, t('personName')), h('input', { type: 'text', maxLength: 30, value: st.personName, autocomplete: 'off', 'aria-describedby': 'pn-hint', onchange: (e) => set({ personName: e.target.value }) }), h('small', { class: 'hint', id: 'pn-hint' }, t('personNameHint'))),
         h('div', { class: 'two' },
           h('label', { class: 'field' }, h('span', { class: 'lbl' }, t('age')), h('input', { type: 'number', min: 3, max: 120, inputMode: 'numeric', value: st.age ?? '', onchange: (e) => set({ age: e.target.value }, true) })),
@@ -119,5 +128,5 @@ export function renderSettings(root, version) {
         h('p', { class: 'note' }, `${t('version', { v: version })} · ${t('offline')}`)));
   };
   draw();
-  return () => {};
+  return () => { alive = false; };
 }

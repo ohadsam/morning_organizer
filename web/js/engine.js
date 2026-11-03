@@ -12,7 +12,7 @@ export function createRun(tpl, now, opts = {}) {
     done: false, skipped: false, warned: false, ended: false,
   }));
   const run = {
-    id: uid(), mode: opts.mode || 'normal', leaveBy: tpl.leaveBy || '', templateId: tpl.id, templateName: tpl.name, icon: tpl.icon, color: tpl.color,
+    id: uid(), gear: (opts.gear || []).map((g) => ({ id: g.id, name: g.name, icon: g.icon || '', done: false })), mode: opts.mode || 'normal', leaveBy: tpl.leaveBy || '', templateId: tpl.id, templateName: tpl.name, icon: tpl.icon, color: tpl.color,
     startedAt: now, endedAt: null, status: 'running', current: 0, segStart: now, pausedAt: null, pausedMs: 0,
     tasks, plannedTotal: sum(tasks, 'plannedSec'), estTotal: sum(tasks, 'estSec'), actualTotal: 0,
   };

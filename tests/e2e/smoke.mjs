@@ -306,6 +306,22 @@ await step('UX: run screen keeps Done/Pause on screen (phone height) and the fir
   assert.ok(box.height >= 56, 'big touch targets'); for (const sel of ['.main-btns .btn >> nth=0', '.main-btns .btn >> nth=1']) assert.ok((await page.locator(sel).boundingBox()).height >= 44);
 });
 
+await step('v1.7: weekly overview + 5-week heat-map + CSV export (accessible), undo delete, more example routines', async () => {
+  const { page, errors } = await newPage(); await page.goto(base + '#/'); await page.waitForSelector('.routine');
+  await page.locator('.routine .start').first().click(); await page.waitForSelector('.ring'); for (let i = 0; i < 6; i++) await page.click('text=Done ✓'); await page.waitForSelector('.summary');
+  await page.goto(base + '#/stats'); await page.waitForSelector('.week .heat');
+  assert.equal(await page.locator('.heat i').count(), 35); assert.equal(await page.locator('.heat i.l1, .heat i.l2, .heat i.l3').count(), 1, 'today is marked'); assert.match(await page.textContent('.week'), /This week/);
+  const bad = await audit(page, 'stats overview'); assert.deepEqual(bad, []); await shot(page, 'stats-overview');
+  const [dl] = await Promise.all([page.waitForEvent('download'), page.click('text=Export history (CSV)')]);
+  const fs = await import('node:fs'); const csv = fs.readFileSync(await dl.path(), 'utf8'); assert.match(csv, /^\ufeffdate,start,end,routine,status/); assert.match(csv, /,done,1860,1860,/, "the finished run is in the CSV (sample names stay in the language they were created in)");
+  await page.goto(base + '#/'); await page.waitForSelector('.routine'); assert.equal(await page.locator('.routine').count(), 2);
+  await page.locator('.routine').first().locator('button[aria-label="Delete"]').click(); await page.click('dialog footer button >> nth=1');
+  await page.waitForFunction(() => document.querySelectorAll('.routine').length === 1); await page.click('#toast button:has-text("Undo")');
+  await page.waitForFunction(() => document.querySelectorAll('.routine').length === 2);
+  await page.goto(base + '#/settings'); await page.click('text=Add more example routines'); await page.waitForTimeout(300);
+  await page.goto(base + '#/'); await page.waitForFunction(() => document.querySelectorAll('.routine').length === 5); assert.deepEqual(errors, []);
+});
+
 await step('run survives reload (crash-safe) and checklist ticking works', async () => {
   const { page } = await newPage(); await page.goto(base); await page.waitForSelector('.routine');
   await page.locator('.routine .start').first().click(); await page.waitForSelector('.ring'); await page.locator('.checklist li').nth(2).locator('.cb').click();

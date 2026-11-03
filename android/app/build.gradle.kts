@@ -7,8 +7,9 @@ plugins {
 @Suppress("UNCHECKED_CAST")
 val webVersion = groovy.json.JsonSlurper().parse(file("../../web/version.json")) as Map<String, Any>
 
-// Release signing comes from the environment (GitHub Actions secrets). Without it the APK is signed with the
-// per-machine debug key: it installs fine, but cannot update an APK signed with a different key.
+// Release signing. Default: the committed shared key (android/app/morning-organizer.keystore), so every APK built from this repo
+// has the same signature and installs as an in-place update. A personal side-loaded app has no store account to protect, so
+// secrecy is traded for update-compatibility (docs/RELEASING.md). To use a private key instead, set the KEYSTORE_* secrets.
 val keystorePath: String? = System.getenv("KEYSTORE_FILE")
 
 android {
@@ -24,13 +25,11 @@ android {
     }
 
     signingConfigs {
-        if (keystorePath != null) {
-            create("release") {
-                storeFile = file(keystorePath)
-                storePassword = System.getenv("KEYSTORE_PASSWORD")
-                keyAlias = System.getenv("KEY_ALIAS")
-                keyPassword = System.getenv("KEY_PASSWORD")
-            }
+        create("release") {
+            storeFile = file(keystorePath ?: "morning-organizer.keystore")
+            storePassword = System.getenv("KEYSTORE_PASSWORD") ?: "morningorganizer"
+            keyAlias = System.getenv("KEY_ALIAS") ?: "morning"
+            keyPassword = System.getenv("KEY_PASSWORD") ?: "morningorganizer"
         }
     }
 
@@ -38,7 +37,7 @@ android {
         release {
             isMinifyEnabled = true
             isShrinkResources = true
-            signingConfig = if (keystorePath != null) signingConfigs.getByName("release") else signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.getByName("release")
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
         debug { applicationIdSuffix = ".debug" }

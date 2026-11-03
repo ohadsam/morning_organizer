@@ -46,6 +46,13 @@ class NativeBridge(private val activity: MainActivity) {
     /** Opens the system "save as" picker and writes the text to the chosen file (WebView cannot download blobs itself). */
     @JavascriptInterface fun saveFile(name: String, text: String) { if (text.length <= MAX_FILE) activity.saveTextFile(name.take(80).ifBlank { "backup.json" }, text) }
 
+    // ── phone-to-phone NFC (card emulation + reader mode, see NfcApdu) ──
+    @JavascriptInterface fun nfcPhoneSupported(): Boolean = ctx.packageManager.hasSystemFeature(PackageManager.FEATURE_NFC_HOST_CARD_EMULATION)
+    @JavascriptInterface fun nfcOffer(text: String): Boolean { val b = text.toByteArray(Charsets.UTF_8); if (b.isEmpty() || b.size > NfcApdu.MAX_PAYLOAD) return false; NfcOffer.set(b); return true }
+    @JavascriptInterface fun nfcOfferStop() = NfcOffer.clear()
+    @JavascriptInterface fun nfcReceive(seconds: Int) { activity.runOnUiThread { activity.nfcReader.start(seconds.coerceIn(5, 120)) } }
+    @JavascriptInterface fun nfcReceiveStop() { activity.runOnUiThread { activity.nfcReader.stop() } }
+
     @JavascriptInterface fun nfcWrite(text: String) { if (text.length <= 900) activity.armNfcWrite(text) }
     @JavascriptInterface fun nfcCancel() = activity.armNfcWrite(null)
 

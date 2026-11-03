@@ -13,8 +13,9 @@ Build morning routines (for kids or anyone), time every task, and watch yourself
 - **Personal & encouraging** - name, age, gender (Hebrew masculine/feminine forms), a buddy, cheerful messages, stars, 🔥 streaks, confetti, optional read-aloud with voice styles.
 - **Mindful coach** - 💡 on every task: 35 short CBT / mindfulness tips (breathing, grounding, thought checking, letting thoughts pass…), automatic when you run late or get stuck.
 - **Move data between the website and the app** - backup file or sync code, merge or replace.
-- **Family** - link a parent's and a child's phone (NFC tag / Bluetooth / Wi-Fi live link / share sheet, encrypted, no server): progress dashboard, routines, cheers and reward goals.
+- **Family** - link a parent's and a child's phone (NFC tap / NFC tag / Bluetooth / Wi-Fi live link / share sheet, encrypted, no server): progress dashboard, routines, cheers and reward goals.
 - **Leave-by time, Quick/Calm pace, accessibility** (text size, color-blind palette, screen-reader announcements), task photos and stickers.
+- **Weekly summary, heat-map, CSV export, undo, more example routines.**
 - **Android widget** - favourite routines, one tap to start.
 - Light/dark, offline, backup/restore, keyboard accessible.
 

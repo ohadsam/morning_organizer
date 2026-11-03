@@ -18,13 +18,19 @@ const mini = (pct) => h('div', { class: 'bar', role: 'progressbar', 'aria-valuem
 async function copy(text) { try { await navigator.clipboard.writeText(text); toast(t('shareCopied')); } catch { toast(t('error')); } }
 
 /** Code + the ways to carry it to the other phone: copy, share sheet (Bluetooth/Nearby/messenger), NFC tag. */
+/** Button that makes this phone read an offer from the phone held against it (native app, NFC card emulation on the other side). */
+export const tapReceiveButton = () => (native.available && native.nfcPhoneSupported()
+  ? h('button', { class: 'btn', type: 'button', onclick: () => native.nfcReceive(60) }, icon('nfc', 18), t('tapReceive')) : null);
+
 function codeTools(code, title) {
   const nfcOk = (native.available || 'NDEFReader' in globalThis) && code.length <= 800;
+  const tapOk = native.available && native.nfcPhoneSupported() && code.length <= 4000; // phone-to-phone: card emulation (the other phone reads)
   const status = h('p', { class: 'note', 'aria-live': 'polite' });
   return h('div', { class: 'stack' }, h('textarea', { readOnly: true, rows: 4, class: 'code', 'aria-label': title }, code),
     h('div', { class: 'toolbar wrap' },
       h('button', { class: 'btn', type: 'button', onclick: () => copy(code) }, icon('copy', 18), t('shareCopy')),
       h('button', { class: 'btn primary', type: 'button', onclick: async () => { if (native.available) native.share(title, code); else if (navigator.share) { try { await navigator.share({ title, text: code }); } catch { /* cancelled */ } } else copy(code); } }, icon('share', 18), t('shareSend')),
+      tapOk ? h('button', { class: 'btn', type: 'button', onclick: () => { if (native.nfcOffer(code)) { status.textContent = t('tapHold'); } else status.textContent = t('tapUnavailable'); } }, icon('nfc', 18), t('tapOffer')) : null,
       nfcOk ? h('button', { class: 'btn', type: 'button', onclick: async () => {
         status.textContent = t('shareNfcTap');
         try { if (native.available) native.nfcWrite(code); else await new globalThis.NDEFReader().write({ records: [{ recordType: 'mime', mediaType: NFC_MIME, data: new TextEncoder().encode(code) }] }); status.textContent = t('shareNfcOk'); } catch { status.textContent = t('shareNfcFail'); }
@@ -39,7 +45,7 @@ export function openJoin(prefill = '') {
   const nfc = 'NDEFReader' in globalThis ? h('button', { class: 'btn', type: 'button', onclick: async () => {
     try { const r = new globalThis.NDEFReader(); msg.textContent = t('shareNfcTap'); await r.scan(); r.onreading = ({ message }) => { const rec = message.records.find((x) => x.mediaType === NFC_MIME); if (rec) input.value = new TextDecoder().decode(rec.data); }; } catch { msg.textContent = t('shareNfcFail'); }
   } }, icon('nfc', 18), t('shareNfcRead')) : null;
-  const m = modal(t('joinTitle'), h('div', { class: 'stack' }, input, nfc, msg), [{ label: t('joinBtn'), primary: true, fn: async () => {
+  const m = modal(t('joinTitle'), h('div', { class: 'stack' }, input, nfc, tapReceiveButton(), msg), [{ label: t('joinBtn'), primary: true, fn: async () => {
     try { const { link, reply } = await F.acceptInvite(input.value); m.close(); toast(t('childLinked', { name: link.peer.name || '?' })); openOutbox(t('joinReply'), reply); }
     catch (e) { msg.textContent = e.message === 'already-linked' ? t('joinAlready') : t('joinBad'); msg.classList.add('err'); return false; }
   } }]);
@@ -54,7 +60,7 @@ function openInvite() {
     make.disabled = true;
     const { code } = await F.createInvite(S.get().settings.personName || '', { live: live.checked });
     out.replaceChildren(codeTools(code, t('inviteTitle')), h('small', { class: 'hint' }, t('inviteFresh')), reply,
-      h('button', { class: 'btn', type: 'button', onclick: async () => { if (reply.value.trim()) { await routeIncoming(reply.value); reply.value = ''; } } }, t('inviteProcess')));
+      h('div', { class: 'toolbar wrap' }, h('button', { class: 'btn', type: 'button', onclick: async () => { if (reply.value.trim()) { await routeIncoming(reply.value); reply.value = ''; } } }, t('inviteProcess')), tapReceiveButton()));
   } }, t('inviteGenerate'));
   return modal(t('inviteTitle'), h('div', { class: 'stack' }, h('p', { class: 'note' }, t('inviteHint')),
     h('label', { class: 'switch row' }, h('span', {}, t('inviteLive')), live), make, out), [{ label: t('close') }]);
@@ -137,7 +143,7 @@ export function renderFamily(root) {
   const draw = () => {
     const parents = F.parentLinks(), kids = F.childLinks();
     setChildren(root, h('h1', {}, `👨‍👩‍👧 ${t('family')}`), h('p', { class: 'note' }, t('famIntro')),
-      h('div', { class: 'toolbar wrap' }, h('button', { class: 'btn primary', type: 'button', onclick: openInvite }, icon('plus', 18), t('addChild')), h('button', { class: 'btn', type: 'button', onclick: () => openJoin() }, t('joinParent')),
+      h('div', { class: 'toolbar wrap' }, tapReceiveButton(), h('button', { class: 'btn primary', type: 'button', onclick: openInvite }, icon('plus', 18), t('addChild')), h('button', { class: 'btn', type: 'button', onclick: () => openJoin() }, t('joinParent')),
         h('button', { class: 'btn', type: 'button', onclick: () => { const ta = h('textarea', { rows: 4, class: 'code', placeholder: t('pasteHere'), 'aria-label': t('pasteAny') }); modal(t('pasteAny'), ta, [{ label: t('cancel') }, { label: t('importBtn'), primary: true, fn: async () => { await routeIncoming(ta.value); } }]); } }, t('pasteAny'))),
       parents.length ? h('section', {}, h('h2', {}, t('linkedChildren')), h('div', { class: 'stack' }, parents.map(childCard))) : null,
       kids.length ? h('section', {}, h('h2', {}, t('linkedParents')), h('div', { class: 'stack' }, kids.map(parentCard))) : null);

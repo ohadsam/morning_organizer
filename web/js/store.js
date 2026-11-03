@@ -85,14 +85,25 @@ export async function seedIfNeeded() {
   await addSamples();
   await updateSettings({ seeded: true });
 }
-export async function addSamples() {
+export async function addSamples(all = false) {
   // Fixed ids: the same sample on the website and in the app is the SAME routine, so a manual-sync merge never duplicates it.
   const mk = (id, name, icon, color, items) => ({ ...newTemplate(name), id, icon, color, builtin: true,
-    tasks: items.map(([k, min], i) => ({ id: `${id}-${i}`, name: t(k), icon: suggestIcon(t(k)), sec: min * 60, est: 0 })) });
+    tasks: items.map(([k, min], i) => ({ id: `${id}-${i}`, name: t(k), icon: suggestIcon(t(k)), sec: Math.round(min * 60), est: 0 })) });
   const samples = [mk('sample-kids', t('sample1'), '🎒', '#0984e3', [['s_wake', 2], ['s_bath', 4], ['s_dress', 5], ['s_eat', 15], ['s_bag', 3], ['s_shoes', 2]]),
     mk('sample-adult', t('sample2'), '🌅', '#e17055', [['s_shower', 8], ['s_dress', 5], ['s_coffee', 10], ['s_plan', 5]])];
+  if (all) samples.push(
+    mk('sample-bedtime', t('sample3'), '🌙', '#6c5ce7', [['s_tidy', 5], ['s_pajamas', 3], ['s_teeth', 3], ['s_story', 10], ['s_lights', 1]]),
+    mk('sample-homework', t('sample4'), '📚', '#00b894', [['s_hands', 2], ['s_snack', 10], ['s_homework', 25], ['s_read', 15], ['s_bagprep', 3]]),
+    mk('sample-afterschool', t('sample5'), '🏠', '#e84393', [['s_unpack', 3], ['s_hands', 2], ['s_lunch', 20], ['s_play', 30]]));
   const base = Date.now(); // distinct timestamps keep the list order (kids first) after reloads (IndexedDB returns rows by id)
   for (const [i, x] of samples.entries()) if (!getTemplate(x.id)) await saveTemplate({ ...x, createdAt: base + i });
+}
+
+/** Delete with an undo handle: call the returned function to put the routine back exactly as it was. */
+export async function deleteWithUndo(id) {
+  const snap = structuredClone(getTemplate(id)); if (!snap) return () => {};
+  await deleteTemplate(id);
+  return () => saveTemplate(snap, { touch: false });
 }
 
 export async function saveTemplate(tpl, { touch = true } = {}) {

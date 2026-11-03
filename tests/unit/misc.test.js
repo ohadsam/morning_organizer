@@ -5,7 +5,7 @@ import { move, fmtDur, fmtHuman, cleanText, clamp } from '../../web/js/util.js';
 import { nextFire, nextAcross } from '../../web/js/alarms.js';
 import { STR, resolveLang } from '../../web/js/i18n.js';
 import { GUIDE } from '../../web/js/ui/guide.js';
-import { normalizeTemplate, newTemplate } from '../../web/js/store.js';
+import { normalizeTemplate, sanitizeRun, newTemplate } from '../../web/js/store.js';
 
 test('move reorders without mutating', () => {
   const a = [1, 2, 3, 4]; assert.deepEqual(move(a, 0, 2), [2, 3, 1, 4]); assert.deepEqual(move(a, 3, 0), [4, 1, 2, 3]);
@@ -49,4 +49,15 @@ test('version is identical in version.json, sw.js and package.json', () => {
   assert.match(readFileSync('web/sw.js', 'utf8'), new RegExp(`const VERSION = '${v}'`));
   assert.equal(JSON.parse(readFileSync('package.json', 'utf8')).version, v);
   assert.ok(readFileSync('docs/CHANGELOG.md', 'utf8').includes(`## ${v}`), 'CHANGELOG has no entry for current version');
+});
+
+test('normalizeTemplate drops unknown fields (backup/import hardening)', () => {
+  const n = normalizeTemplate({ ...newTemplate('x'), evil: 'x'.repeat(1e6), tasks: [{ name: 'a', sec: 5, junk: { a: 1 } }], createdAt: 'NaN' });
+  assert.equal(n.evil, undefined); assert.equal(n.tasks[0].junk, undefined); assert.ok(Number.isFinite(n.createdAt));
+});
+test('sanitizeRun coerces numbers, cleans strings, drops unknown fields', () => {
+  const r = sanitizeRun({ id: 'r', templateId: 't', templateName: 'a\u202eb', startedAt: '5', endedAt: 'x', status: 'weird', actualTotal: -4, evil: 1,
+    tasks: [{ id: 't1', name: 'n', plannedSec: 'NaN', actualSec: 1e99, done: 1, extra: 1 }] });
+  assert.equal(r.evil, undefined); assert.equal(r.status, 'stopped'); assert.equal(r.endedAt, 0); assert.equal(r.actualTotal, 0);
+  assert.equal(r.tasks[0].plannedSec, 0); assert.equal(r.tasks[0].actualSec, 86400); assert.equal(r.tasks[0].extra, undefined); assert.ok(!/\u202e/.test(r.templateName));
 });

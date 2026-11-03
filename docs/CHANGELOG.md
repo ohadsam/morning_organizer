@@ -6,6 +6,7 @@
 - In-app progress widget: segmented bar (width = planned time), live fill, walking buddy, % / tasks / expected finish; "in progress" card on the home screen to jump back in.
 - Pause is a big button next to Done, with a paused state on the ring; paused time is tracked and shown in the summary.
 - Keep the screen on while the app is open (home chip + Settings), in addition to keeping it on during a run.
+- Hardening: backups/imports are whitelisted field-by-field (templates and runs) before being stored.
 - Task icons (auto-suggested from the name, changeable) shown in the run, checklist, summary and shared routines.
 
 ## 1.0.0

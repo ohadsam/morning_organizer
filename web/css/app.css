@@ -46,7 +46,7 @@ input[type=range] { width: 100%; accent-color: var(--brand); } input[type=checkb
 .hero { background: linear-gradient(135deg, var(--brand), #a29bfe); color: #fff; border-radius: 24px; padding: 20px; box-shadow: var(--shadow); }
 .hero h1 { margin: 0; } .hero p { opacity: .92; }
 .chip { display: inline-flex; align-items: center; gap: 6px; background: rgba(255,255,255,.2); border-radius: 99px; padding: 4px 12px; font-size: .9rem; margin-block-start: 8px; }
-.routine { border-inline-start: 6px solid var(--accent); padding: 10px 10px 10px 12px; }
+.routine { border-inline-start: 6px solid var(--accent); padding-block: 10px; padding-inline: 12px 10px; }
 .routine-main { display: flex; align-items: center; gap: 12px; width: 100%; background: none; border: 0; color: inherit; font: inherit; text-align: start; cursor: pointer; padding: 4px; min-height: 56px; }
 .emoji { font-size: 2rem; width: 52px; height: 52px; display: grid; place-items: center; background: color-mix(in srgb, var(--accent) 16%, transparent); border-radius: 16px; flex: none; }
 .routine-text { display: grid; } .routine-text small { color: var(--muted); }

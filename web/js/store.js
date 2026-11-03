@@ -35,15 +35,33 @@ export const totalSec = (tpl) => tpl.tasks.reduce((s, x) => s + x.sec, 0);
 /** Clamp + clean a template before it is stored. Defence in depth: the editor, import and restore all pass through. */
 export function normalizeTemplate(tpl) {
   const a = tpl.alarm ?? defaultAlarm();
+  const num = (v, d) => (Number.isFinite(Number(v)) ? Number(v) : d);
+  // Whitelist: unknown/oversized fields from a backup or import are dropped, never stored.
   return {
-    ...tpl, name: cleanText(tpl.name, LIMITS.maxName), icon: cleanText(tpl.icon, 8) || '⏰',
-    color: /^#[0-9a-fA-F]{6}$/.test(tpl.color) ? tpl.color : COLORS[0],
-    tasks: (tpl.tasks || []).slice(0, LIMITS.maxTasks).map((x) => ({
-      id: x.id || uid(), name: cleanText(x.name, LIMITS.maxName), icon: cleanText(x.icon, 8),
-      sec: clamp(Math.round(Number(x.sec)) || 1, 1, LIMITS.maxTaskSec), est: clamp(Math.round(Number(x.est)) || 0, 0, LIMITS.maxTaskSec) })),
+    id: typeof tpl.id === 'string' && tpl.id ? tpl.id.slice(0, 64) : uid(),
+    name: cleanText(tpl.name, LIMITS.maxName), icon: cleanText(tpl.icon, 8) || '⏰',
+    color: /^#[0-9a-fA-F]{6}$/.test(tpl.color) ? tpl.color : COLORS[0], favorite: !!tpl.favorite, builtin: !!tpl.builtin,
+    createdAt: num(tpl.createdAt, Date.now()), updatedAt: num(tpl.updatedAt, Date.now()),
+    tasks: (Array.isArray(tpl.tasks) ? tpl.tasks : []).slice(0, LIMITS.maxTasks).map((x) => ({
+      id: typeof x?.id === 'string' && x.id ? x.id.slice(0, 64) : uid(), name: cleanText(x?.name, LIMITS.maxName), icon: cleanText(x?.icon, 8),
+      sec: clamp(Math.round(Number(x?.sec)) || 1, 1, LIMITS.maxTaskSec), est: clamp(Math.round(Number(x?.est)) || 0, 0, LIMITS.maxTaskSec) })),
     alarm: { enabled: !!a.enabled, time: /^\d{2}:\d{2}$/.test(a.time) ? a.time : '07:00',
-      days: (a.days || []).filter((d) => Number.isInteger(d) && d >= 0 && d <= 6),
+      days: (Array.isArray(a.days) ? a.days : []).filter((d) => Number.isInteger(d) && d >= 0 && d <= 6),
       volume: clamp(Math.round(a.volume) || 0, 0, 100), vibrate: !!a.vibrate, durationSec: clamp(Math.round(a.durationSec) || 30, 5, 600) },
+  };
+}
+
+/** Same idea for a run read from a backup: only known fields, numbers coerced and clamped, strings cleaned. */
+export function sanitizeRun(r) {
+  const n = (v, max = 1e12) => clamp(Math.round(Number(v)) || 0, 0, max);
+  return {
+    id: String(r.id).slice(0, 64), templateId: String(r.templateId ?? '').slice(0, 64), templateName: cleanText(r.templateName, LIMITS.maxName),
+    icon: cleanText(r.icon, 8), color: /^#[0-9a-fA-F]{6}$/.test(r.color) ? r.color : COLORS[0],
+    startedAt: n(r.startedAt), endedAt: n(r.endedAt), status: r.status === 'done' ? 'done' : 'stopped', current: 0, pausedMs: n(r.pausedMs),
+    plannedTotal: n(r.plannedTotal, 1e7), estTotal: n(r.estTotal, 1e7), actualTotal: n(r.actualTotal, 1e7),
+    tasks: r.tasks.slice(0, LIMITS.maxTasks).map((x) => ({ id: String(x?.id ?? '').slice(0, 64), name: cleanText(x?.name, LIMITS.maxName), icon: cleanText(x?.icon, 8),
+      plannedSec: n(x?.plannedSec, LIMITS.maxTaskSec), estSec: n(x?.estSec, LIMITS.maxTaskSec), extraSec: n(x?.extraSec, LIMITS.maxTaskSec), actualSec: n(x?.actualSec, LIMITS.maxTaskSec),
+      done: !!x?.done, skipped: !!x?.skipped })),
   };
 }
 
@@ -131,7 +149,7 @@ export async function importAll(text) {
     await saveTemplate({ ...newTemplate(), ...raw, id: typeof raw.id === 'string' ? raw.id.slice(0, 64) : uid() }); n++;
   }
   for (const r of (Array.isArray(d.runs) ? d.runs : []).slice(0, LIMITS.maxRuns)) {
-    if (r && typeof r.id === 'string' && Array.isArray(r.tasks) && Number.isFinite(r.startedAt) && Number.isFinite(r.endedAt) && !state.runs.some((x) => x.id === r.id)) await saveRun(r);
+    if (r && typeof r.id === 'string' && Array.isArray(r.tasks) && Number.isFinite(r.startedAt) && Number.isFinite(r.endedAt) && !state.runs.some((x) => x.id === r.id)) await saveRun(sanitizeRun(r));
   }
   return n;
 }

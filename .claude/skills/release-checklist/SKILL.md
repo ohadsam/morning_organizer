@@ -52,6 +52,7 @@ Commit on the working branch, push, wait for **web** + **android** green. On `ma
 ## Known limitations (don't re-report as new)
 - Web alarms only ring while the page is open (browsers can't schedule background alarms); the Android app is the reliable path.
 - Bluetooth/Nearby sharing goes through the system share sheet (no raw RFCOMM); NFC = tag write/read (Web NFC in Chrome Android, native in the APK), not phone-to-phone Beam (removed from Android).
+- Starting a routine while a different one is in progress replaces the in-progress run (the home screen shows a Resume card so it is hard to do by accident).
 - Without signing secrets the APK uses a debug key (no in-place updates).
 
 ## Done means

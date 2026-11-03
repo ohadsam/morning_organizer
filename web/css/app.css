@@ -273,3 +273,12 @@ dialog header { display: flex; align-items: center; justify-content: space-betwe
 /* bar timer: a filling bar instead of the ring, for people who read "how much is left" better in a line */
 .ring.bar { width: min(92vw, 420px); aspect-ratio: auto; min-height: 120px; border-radius: 24px; background: linear-gradient(to right, var(--brand) calc(var(--p) * 100%), var(--surface-2) 0); } .ring.bar::before { inset: 8px; border-radius: 18px; }
 :root[dir="rtl"] .ring.bar, [dir="rtl"] .ring.bar { background: linear-gradient(to left, var(--brand) calc(var(--p) * 100%), var(--surface-2) 0); }
+
+/* ── template library: big, easy tiles (also for children) ── */
+.tiles-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 10px; }
+.tile-btn { display: grid; justify-items: center; align-content: center; gap: 4px; min-height: 104px; padding: 10px 6px; border-radius: 16px; border: 2px solid var(--line); background: var(--surface); color: var(--text); font: inherit; cursor: pointer; text-align: center; }
+.tile-btn:hover, .tile-btn:focus-visible { border-color: var(--accent, var(--brand)); } .tile-btn:active { transform: scale(.97); }
+.tb-emoji { font-size: 2.2rem; line-height: 1; } .tile-btn small { color: var(--muted); } .tile-btn strong { font-size: .95rem; overflow-wrap: anywhere; }
+.lib-card { display: grid; gap: 8px; border-inline-start: 6px solid var(--accent, var(--brand)); } .lib-task { align-items: center; gap: 8px; flex-wrap: wrap; }
+.chips.filter .chip { background: var(--surface-2); color: var(--text); border: 2px solid var(--line); min-height: 40px; }
+.chips.filter .chip.on { background: color-mix(in srgb, var(--brand) 22%, var(--surface)); border-color: var(--brand); font-weight: 800; }

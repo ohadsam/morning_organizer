@@ -632,5 +632,40 @@ await step('v1.10: axe on task menu, time sheet, playful home and settings', asy
   assert.deepEqual(bad, []);
 });
 
+// ── v1.10: template library ──
+await step('v1.10: templates - pick tasks with big tiles, save task/routine as template, manage (rename, delete+undo, use), new routine from an idea', async () => {
+  const { page, errors } = await newPage(); await page.goto(base); await page.waitForSelector('.routine'); await page.locator('.routine-main').first().click(); await page.waitForSelector('.task');
+  const n0 = await page.locator('.task').count();
+  await page.click('button:has-text("Add from templates")'); await page.waitForSelector('dialog .tiles-grid .tile-btn');
+  await page.fill('dialog input[type=search]', 'water'); await page.click('dialog .tile-btn:has-text("Drink water")'); await page.fill('dialog input[type=search]', ''); await page.click('dialog .chip:has-text("Evening")'); await page.click('dialog .tile-btn >> nth=0');
+  await page.waitForSelector('dialog [role=status]:has-text("added")'); await page.click('dialog footer button:has-text("Done")');
+  await page.waitForFunction((n) => document.querySelectorAll('.task').length === n + 2, n0);
+  await page.locator('.task').nth(n0).locator('.task-menu-btn').click(); await page.click('dialog button:has-text("Save task as template")');
+  await page.click('button:has-text("Save as template")'); await page.waitForTimeout(500);
+  await page.goto(base + '#/library'); await page.waitForSelector('.lib-card'); assert.equal(await page.locator('.lib-task').count(), 1); assert.equal(await page.locator('.lib-card').count(), 1);
+  await page.click('.lib-task button:has-text("Edit")'); await page.fill('dialog input[type=text]', 'Water bottle'); await page.click('dialog footer button:has-text("Save")'); await page.waitForSelector('.lib-task:has-text("Water bottle")');
+  await page.click('.lib-task button:has-text("Delete")'); await page.click('dialog footer button.danger'); await page.waitForSelector('.lib-task', { state: 'detached' }); await page.click('#toast button:has-text("Undo")'); await page.waitForSelector('.lib-task:has-text("Water bottle")');
+  await page.click('.lib-card button:has-text("Use")'); await page.waitForSelector('.task'); assert.ok(await page.locator('.task').count() >= 3);
+  await page.goto(base + '#/'); await page.waitForSelector('.routine'); const r0 = await page.locator('.routine').count();
+  await page.click('.toolbar button:has-text("From a template")'); await page.waitForSelector('dialog .tiles-grid'); await page.click('dialog .chip:has-text("Ready-made")'); await page.click('dialog .tile-btn:has-text("Bedtime")'); await page.waitForSelector('.task');
+  assert.equal(await page.locator('.task').count(), 5); await page.goto(base + '#/'); await page.waitForFunction((n) => document.querySelectorAll('.routine').length > n, r0);
+  assert.deepEqual(errors, []);
+});
+
+await step('v1.10: axe on template pickers and library page (young child too)', async () => {
+  const bad = [];
+  for (const [lang, scheme] of [['he', 'light'], ['en', 'dark']]) {
+    const { page } = await newPage({ lang, ctx: { colorScheme: scheme } }); await page.goto(base); if (lang === 'he') await dismissWelcome(page); const L = `${lang}/${scheme}`;
+    await page.waitForSelector('.routine'); await page.click('.toolbar button >> nth=1'); await page.waitForSelector('dialog .tiles-grid'); bad.push(...await audit(page, `${L}/routine-picker`)); await closeDialogs(page);
+    await page.locator('.routine-main').first().click(); await page.waitForSelector('.task'); await page.click('.toolbar.wrap button >> nth=0'); await page.waitForSelector('dialog .tiles-grid'); bad.push(...await audit(page, `${L}/task-picker`)); await closeDialogs(page);
+    await page.click('.toolbar.wrap button >> nth=1'); await page.waitForTimeout(400);
+    await page.goto(base + '#/library'); await page.waitForSelector('.lib-card'); bad.push(...await audit(page, `${L}/library`));
+    await page.goto(base + '#/settings'); await page.fill('input[type=number][max="120"]', '7'); await page.dispatchEvent('input[type=number][max="120"]', 'change'); await page.waitForTimeout(400);
+    await page.goto(base + '#/'); await page.waitForSelector('.routine'); await page.click('.toolbar button >> nth=1'); await page.waitForSelector('dialog .tiles-grid'); bad.push(...await audit(page, `${L}/routine-picker-playful`)); await closeDialogs(page);
+  }
+  if (bad.length) console.error([...new Set(bad)].join('\n'));
+  assert.deepEqual(bad, []);
+});
+
 await browser.close(); server.close();
 console.log(failures ? `\n${failures} e2e step(s) failed` : '\nall e2e steps passed'); process.exit(failures ? 1 : 0);

@@ -16,6 +16,7 @@ import { toolsFor } from './focus.js';
 import { widgetItems } from './widgetData.js';
 import { sanitizeMood } from './mood.js';
 import { sanitizeUnplanned, sanitizeWatch } from './unplanned.js';
+import { sanitizeLibrary, mergeLibrary, upsert, fromTemplate, fromTask, MAX_ROUTINES as LIB_R, MAX_TASKS as LIB_T, IDEA_ROUTINES } from './library.js';
 import { eraseJournal } from './journal.js';
 import { newProfile, normalizeProfile, runsOf, MAX_PROFILES } from './profiles.js';
 
@@ -33,7 +34,7 @@ export const COLORS = ['#6c5ce7', '#0984e3', '#00b894', '#e17055', '#e84393', '#
 export const MASCOTS = ['🦊', '🐼', '🦄', '🐯', '🐸', '🤖', '🐶', '🐱'];
 export const ICONS = ['🌅', '☀️', '🎒', '🪥', '👕', '🥣', '🏃', '📚', '🧘', '🐶', '🚌', '⏰'];
 
-const state = { templates: [], runs: [], watch: [], profiles: [], settings: { ...DEFAULT_SETTINGS }, ready: false };
+const state = { templates: [], runs: [], watch: [], library: { routines: [], tasks: [] }, profiles: [], settings: { ...DEFAULT_SETTINGS }, ready: false };
 const subs = new Set();
 export const subscribe = (fn) => { subs.add(fn); return () => subs.delete(fn); };
 const emit = () => subs.forEach((f) => f(state));
@@ -98,9 +99,39 @@ export async function init() {
   if (!state.profiles.some((p) => p.id === state.settings.activeProfile)) state.settings.activeProfile = state.profiles[0].id;
   mirrorActiveProfile();
   state.watch = sanitizeWatch(await db.get('kv', 'watch'));
+  state.library = sanitizeLibrary(await db.get('kv', 'library'));
   state.ready = true;
   emit();
 }
+
+// ── template library: reusable tasks and routines ──
+export const library = () => state.library;
+const persistLib = async () => { await db.put('kv', state.library, 'library'); emit(); };
+export async function saveToLibrary(kind, data) {
+  if (kind === 'task') { const e = fromTask(data); if (!e.name) return null; state.library = { ...state.library, tasks: upsert(state.library.tasks, e, LIB_T) }; }
+  else { const e = fromTemplate(data); if (!e.name || !e.tasks.length) return null; state.library = { ...state.library, routines: upsert(state.library.routines, e, LIB_R) }; }
+  await persistLib(); return true;
+}
+export async function updateLibraryItem(kind, id, patch) {
+  const key = kind === 'task' ? 'tasks' : 'routines', cur = state.library[key].find((e) => e.id === id); if (!cur) return;
+  state.library = sanitizeLibrary({ ...state.library, [key]: state.library[key].map((e) => (e.id === id ? { ...e, ...patch, id } : e)) }); await persistLib();
+}
+export async function removeLibraryItem(kind, id) {
+  const key = kind === 'task' ? 'tasks' : 'routines', before = state.library, item = before[key].find((e) => e.id === id); if (!item) return () => {};
+  state.library = { ...before, [key]: before[key].filter((e) => e.id !== id) }; await persistLib();
+  return async () => { state.library = { ...state.library, [key]: [...state.library[key], item] }; await persistLib(); };
+}
+/** A (not yet saved) routine built from a library entry: fresh ids, no alarm. */
+export function templateFromEntry(e, name = e.name) {
+  const base = newTemplate(name);
+  return { ...base, name, icon: e.icon || base.icon, color: e.color || base.color, days: e.days || [], leaveBy: e.leaveBy || '',
+    tasks: e.tasks.map((k) => ({ id: uid(), name: k.name, icon: k.icon, photo: '', sec: k.sec, est: k.est })),
+    gear: (e.gear || []).map((g) => ({ id: uid(), name: g.name, icon: g.icon || '', days: g.days || [] })), plans: (e.plans || []).map((p) => ({ id: uid(), when: p.when, then: p.then })) };
+}
+export async function createFromEntry(e, name) { const tpl = normalizeTemplate(templateFromEntry(e, name)); await saveTemplate(tpl); return tpl; }
+/** Built-in idea routines as library-shaped entries (names localised now). */
+export const ideaRoutines = () => IDEA_ROUTINES.map((r) => ({ id: r.id, name: t(r.nameKey), icon: r.icon, color: r.color, days: [], gear: [], plans: [], leaveBy: '', builtin: true,
+  tasks: r.items.map(([k, min]) => ({ name: t(k), icon: suggestIcon(t(k)), sec: Math.round(min * 60), est: 0 })) }));
 
 // ── "look closer" at a recurring unplanned interruption (kept on this device) ──
 export const watchList = () => state.watch;
@@ -161,13 +192,7 @@ export async function addSamples(all = false) {
   // Fixed ids: the same sample on the website and in the app is the SAME routine, so a manual-sync merge never duplicates it.
   const mk = (id, name, icon, color, items) => ({ ...newTemplate(name), id, icon, color, builtin: true,
     tasks: items.map(([k, min], i) => ({ id: `${id}-${i}`, name: t(k), icon: suggestIcon(t(k)), sec: Math.round(min * 60), est: 0 })) });
-  const samples = [mk('sample-kids', t('sample1'), '🎒', '#0984e3', [['s_wake', 2], ['s_bath', 4], ['s_dress', 5], ['s_eat', 15], ['s_bag', 3], ['s_shoes', 2]]),
-    mk('sample-adult', t('sample2'), '🌅', '#e17055', [['s_shower', 8], ['s_dress', 5], ['s_coffee', 10], ['s_plan', 5]])];
-  if (all) samples.push(
-    mk('sample-bedtime', t('sample3'), '🌙', '#6c5ce7', [['s_tidy', 5], ['s_pajamas', 3], ['s_teeth', 3], ['s_story', 10], ['s_lights', 1]]),
-    mk('sample-homework', t('sample4'), '📚', '#00b894', [['s_hands', 2], ['s_snack', 10], ['s_homework', 25], ['s_read', 15], ['s_bagprep', 3]]),
-    mk('sample-evening', t('sample6'), '🌃', '#341f97', [['s_clothes', 3], ['s_bagprep', 3], ['s_good3', 3], ['s_teeth', 3], ['s_breathe', 2]]),
-    mk('sample-afterschool', t('sample5'), '🏠', '#e84393', [['s_unpack', 3], ['s_hands', 2], ['s_lunch', 20], ['s_play', 30]]));
+  const samples = ideaRoutines().filter((r) => all || IDEA_ROUTINES.find((d) => d.id === r.id)?.basic).map((r) => mk(r.id, r.name, r.icon, r.color, IDEA_ROUTINES.find((d) => d.id === r.id).items));
   const base = Date.now(); // distinct timestamps keep the list order (kids first) after reloads (IndexedDB returns rows by id)
   for (const [i, x] of samples.entries()) if (!getTemplate(x.id)) await saveTemplate({ ...x, createdAt: base + i });
 }
@@ -256,7 +281,7 @@ export const saveActive = (run) => db.put('kv', run ? structuredClone(run) : nul
 export const loadActive = () => db.get('kv', 'activeRun');
 
 export function exportAll() {
-  return JSON.stringify({ app: 'morning-organizer', v: 1, templates: state.templates, runs: state.runs, profiles: state.profiles, settings: state.settings });
+  return JSON.stringify({ app: 'morning-organizer', v: 1, templates: state.templates, runs: state.runs, profiles: state.profiles, library: state.library, settings: state.settings });
 }
 /** Keep only known settings with the right type and sane ranges (a backup is untrusted input). */
 export function sanitizeSettings(raw) {
@@ -305,6 +330,11 @@ export async function importBackup(text, { mode = 'merge', settings = true } = {
     if (!state.profiles.length) state.profiles = [newProfile({})];
     if (!state.profiles.some((x) => x.id === state.settings.activeProfile)) state.settings.activeProfile = state.profiles[0].id;
     await persistProfiles(); mirrorActiveProfile();
+  }
+  if (d.library && typeof d.library === 'object') { // the template library: merge by id; "replace" makes the backup's library the whole library
+    const incoming = sanitizeLibrary(d.library), before = state.library.routines.length + state.library.tasks.length;
+    state.library = mode === 'replace' ? incoming : mergeLibrary(state.library, incoming); await persistLib();
+    res.library = state.library.routines.length + state.library.tasks.length - (mode === 'replace' ? 0 : before);
   }
   if (settings && d.settings) {
     const patch = sanitizeSettings(d.settings);

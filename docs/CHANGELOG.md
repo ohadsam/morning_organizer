@@ -1,6 +1,7 @@
 # Changelog
 
 ## 1.10.0
+- **Template library**: save tasks and whole routines as reusable templates, add them with big easy tiles (search + categories, 37 ready-made task ideas and 6 ready-made routines), a Templates page to use / rename / edit / share / delete (with Undo), included in backups and sync codes. Large, simple tiles also for children.
 - **Easier task editing**: a time sheet (quick times, steppers, exact minutes/seconds) with − / + buttons on every task, and a **☰ task menu** (add below, duplicate, move up/down/top/bottom, picture, remove).
 - **Playful wording for young children**: under age 12 (or "Playful" in Settings) the whole app - tabs, buttons, settings, summaries - uses lighter, more fun texts in both languages.
 - **If-then plans** per routine (shown as a card when it starts), **timer look** (ring / pie / bar), **evening wind-down** sample routine, **weekly digest** for parents (slowest steps, repeated interruptions), **alarm snooze** (5 min) and a **Calm corner widget** (Android).

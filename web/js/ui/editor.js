@@ -12,6 +12,7 @@ import { presetDays, normDays } from '../schedule.js';
 import { getLang } from '../i18n.js';
 import { modal } from './common.js';
 import { timeField } from './timePicker.js';
+import { openTaskPicker, saveRoutineAsTemplate, saveTaskAsTemplate } from './library.js';
 
 /** Task picture if it has a photo, else its emoji. */
 export const iconNode = (task) => (task.photo ? h('img', { src: task.photo, alt: '' }) : (task.icon || suggestIcon(task.name)));
@@ -52,6 +53,7 @@ export function renderEditor(root, id, nav) {
       item('⧉', t('menuDuplicate'), () => change(() => tpl.tasks.splice(i + 1, 0, { ...structuredClone(task), id: uid() }), true)),
       item('⬆️', t('moveUp'), () => moveTask(i, i - 1), { disabled: i === 0 }), item('⬇️', t('moveDown'), () => moveTask(i, i + 1), { disabled: i === last }),
       item('⏫', t('menuToTop'), () => moveTask(i, 0), { disabled: i === 0 }), item('⏬', t('menuToBottom'), () => moveTask(i, last), { disabled: i === last }),
+      item('📚', t('libSaveTask'), () => saveTaskAsTemplate(task)),
       item('🖼️', t('pickIcon'), () => pickIcon(task, list.children[i]?.querySelector('.task-icon'))),
       item('🗑️', t('removeTask'), () => change(() => tpl.tasks.splice(i, 1), true), { danger: true })), [{ label: t('close') }]);
   }
@@ -142,6 +144,8 @@ export function renderEditor(root, id, nav) {
     h('p', { class: 'note' }, t('dragHint')), h('p', { class: 'note' }, t('estimateHint')),
     list,
     h('button', { class: 'btn add', type: 'button', onclick: () => { const nt = S.newTask(); nt.name = ''; change(() => tpl.tasks.push(nt), true); list.lastElementChild?.querySelector('.task-name')?.focus(); } }, icon('plus', 18), t('addTask')),
+    h('div', { class: 'toolbar wrap' }, h('button', { class: 'btn', type: 'button', onclick: () => openTaskPicker((task) => { const nt = { ...S.newTask(), ...task, id: uid() }; change(() => tpl.tasks.push(nt), true); }) }, `📚 ${t('libAddFrom')}`),
+      h('button', { class: 'btn', type: 'button', onclick: () => { save.flush(); saveRoutineAsTemplate(tpl); } }, `💾 ${t('libSaveRoutine')}`)),
     h('h2', {}, t('schedule')), scheduleBox,
     h('h2', {}, t('gear')), gearBox,
     h('h2', {}, t('plansTitle')), plansBox,

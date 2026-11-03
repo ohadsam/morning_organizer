@@ -16,6 +16,7 @@ import { openShare, openImport } from './share.js';
 import { focusCard } from './focus.js';
 import { openMenu } from './menu.js';
 import { openCapture } from './capture.js';
+import { openRoutinePicker } from './library.js';
 
 function card(tpl, nav) {
   const total = S.totalSec(tpl), simple = S.get().settings.simpleMode;
@@ -65,6 +66,8 @@ export function renderHome(root, nav) {
         f.rewardMenu ? h('button', { class: 'btn', type: 'button', onclick: () => openMenu() }, `🎁 ${t('menuTitle')}`) : null); })(),
       simple ? null : h('div', { class: 'toolbar' },
         h('button', { class: 'btn primary', type: 'button', onclick: async () => { try { const x = S.newTemplate(t('untitled')); await S.saveTemplate(x); nav(`#/edit/${x.id}`); } catch { toast(t('error')); } } }, icon('plus', 18), t('newRoutine')),
+        h('button', { class: 'btn', type: 'button', onclick: () => openRoutinePicker(nav) }, `📚 ${t('libFromTemplate')}`),
+        h('button', { class: 'btn', type: 'button', onclick: () => nav('#/library') }, `⚙️ ${t('libManage')}`),
         h('button', { class: 'btn', type: 'button', onclick: () => openImport() }, icon('download', 18), t('import'))),
       favs.length ? h('section', {}, h('h2', {}, t('favorites')), h('div', { class: 'stack' }, favs.map((x) => card(x, nav)))) : null,
       (() => { const sp = splitForToday(templates, new Date().getDay()); return [

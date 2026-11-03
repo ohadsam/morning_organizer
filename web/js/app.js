@@ -22,6 +22,7 @@ import { setProfileDeleteHook } from './ui/avatar.js';
 import { isUnlocked, requestGate } from './ui/gate.js';
 import { initTransports } from './transports.js';
 import { handleRing } from './ui/offer.js';
+import { renderLibrary } from './ui/library.js';
 import { renderCalm } from './ui/calm.js';
 import { renderJournal } from './ui/journal.js';
 import { lockAll } from './journal.js';
@@ -43,7 +44,7 @@ async function route() {
     const views = {
       home: () => renderHome(root, nav), edit: () => renderEditor(root, arg, nav), run: () => renderRunner(root, arg, nav),
       stats: () => renderStats(root, arg, nav), family: () => renderFamily(root), settings: () => renderSettings(root, version), guide: () => renderGuide(root),
-      calm: () => renderCalm(root, nav), journal: () => renderJournal(root, nav),
+      calm: () => renderCalm(root, nav), library: () => renderLibrary(root, nav), journal: () => renderJournal(root, nav),
     };
     // The route comes from the address bar: look it up as OWN data only ("#/constructor" or "#/__proto__" must fall back to home).
     const out = await (Object.hasOwn(views, view) ? views[view] : views.home)();
@@ -55,7 +56,7 @@ async function route() {
 function drawNav(view) {
   const simple = S.get().settings.simpleMode;
   const tabs = simple ? [['home', 'home', '#/'], ['settings', 'gear', '#/settings']] : [['home', 'home', '#/'], ['stats', 'chart', '#/stats'], ['family', 'users', '#/family'], ['guide', 'book', '#/guide'], ['settings', 'gear', '#/settings']];
-  const parentTab = { edit: 'home', run: 'home' }, active = Object.hasOwn(parentTab, view) ? parentTab[view] : view;
+  const parentTab = { edit: 'home', run: 'home', library: 'home' }, active = Object.hasOwn(parentTab, view) ? parentTab[view] : view;
   document.getElementById('nav').replaceChildren(...tabs.map(([key, ic, href]) => h('a', { href, class: key === active ? 'on' : '', 'aria-current': key === active ? 'page' : null }, icon(ic, 24), h('span', {}, t(key === 'family' ? 'tabFamily' : key)))));
 }
 

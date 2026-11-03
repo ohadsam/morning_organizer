@@ -2,6 +2,7 @@
 // the matching grown-up ones everywhere in the app - same keys, same {placeholders}, lighter and more fun. Anything not listed stays as is.
 export const PLAYFUL = {
   en: {
+    libFromTemplate: 'Pick a ready-made one ✨', libManage: 'My templates', libAddFrom: 'Pick ready-made steps', libTaskTitle: 'Pick some steps!', libDone: 'All done',
     home: 'My routines', stats: 'My progress', family: 'Family', guide: 'Help', settings: 'Settings', tabFamily: 'Family', hello: 'Ready for a super day? 🚀', newRoutine: 'Make a new routine', noRoutines: 'No routines yet. Let’s make your first one! ✨',
     favorites: 'My favourites ⭐', allRoutines: 'All my routines', start: 'Go!', edit: 'Change', delete: 'Remove', addTask: 'Add a step', tasks: 'Steps', taskName: 'What do I do?', duration: 'How long', estimate: 'My guess', total: 'All together',
     alarm: 'Wake-up alarm ⏰', alarmEnable: 'Wake me up!', doneNext: 'I did it! ✓', pause: 'Wait a sec', resume: 'Keep going!', skip: 'Skip this', stop: 'All done', stopConfirm: 'Finish the routine now?', paused: 'Taking a break',
@@ -15,6 +16,7 @@ export const PLAYFUL = {
     addMinute: '+1 minute', calmWell: 'Super calm! 🌿', menuGet: 'I want it!', jQuick: 'Quick note ✏️', moodAsk: 'How do you feel?', offerTitle: 'Time to start {name}! 🚀', offerLater: 'In a minute', unpBack: 'Back to the fun!', parkSaved: 'Parked! Back to it!',
   },
   he: {
+    libFromTemplate: 'לבחור משהו מוכן ✨', libManage: 'התבניות שלי', libAddFrom: 'לבחור שלבים מוכנים', libTaskTitle: 'בחרו כמה שלבים!', libDone: 'סיימתי',
     home: 'השגרות שלי', stats: 'ההתקדמות שלי', family: 'משפחה', guide: 'עזרה', settings: 'הגדרות', tabFamily: 'משפחה', hello: 'מוכנים ליום מדהים? 🚀', newRoutine: 'שגרה חדשה', noRoutines: 'עוד אין שגרות. בואו ניצור את הראשונה! ✨',
     favorites: 'האהובות עליי ⭐', allRoutines: 'כל השגרות שלי', start: 'יאללה!', edit: 'שינוי', delete: 'להסיר', addTask: 'עוד שלב', tasks: 'שלבים', taskName: 'מה עושים?', duration: 'כמה זמן', estimate: 'ההערכה שלי', total: 'הכול ביחד',
     alarm: 'שעון מעורר ⏰', alarmEnable: 'תעירו אותי!', doneNext: 'סיימתי! ✓', pause: 'רגע', resume: 'ממשיכים!', skip: 'מדלגים', stop: 'סיימנו', stopConfirm: 'לסיים את השגרה עכשיו?', paused: 'הפסקה קטנה',

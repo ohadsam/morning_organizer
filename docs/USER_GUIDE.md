@@ -15,7 +15,10 @@ Start begins the first task. The ring counts down; at 10 seconds left you get a 
 Stats shows every routine you finished: a chart of total time per run (actual, planned, estimate), averages and a per-task table. After 3 runs you get insights: tasks that always finish early (shorten) or late (extend), and the net effect on the total frame. Tap Apply to update the duration.
 
 ## Start alarm
-In the editor switch on “Remind me to start”, choose time, days, volume, vibration and ring length. Android app: real alarms that ring even when the app is closed. Browser: only while the page is open.
+Wake-up alarms: in the editor switch on “Remind me to start”, choose time and days. The first alarm has its own sound, volume, vibration, length and message; “Add another alarm” (or “Add N more alarms every M minutes”) adds more, each after a gap you choose and each with its own sound, volume, message and optional spoken voice - for example 7:00, 7:15 and 7:20. After the last alarm choose “Offer to start” (a Start button) or “Start the routine automatically”. Android: real alarms that ring even when the app is closed; on a locked phone the app opens by itself, otherwise tap the notification (its Start button always starts). Browser: only while the page is open.
+
+## Unplanned interruptions
+Unplanned interruptions: during a routine tap ⚡ Unplanned and pick what happened (toilet, spilled drink, forgot something... or your own words). The routine clock stops and that time is counted on its own - not as task time and not as a pause - then tap “Back to the routine”. The summary and Stats show how often and how long. When the same interruption keeps coming back in a routine (in at least 3 of the last runs) a card offers to add it to the routine as a real task, or to look closer: a few guiding questions (why, what happens before, one thing to try) are saved in your journal and the app keeps counting to show whether it changes.
 
 ## Sharing
 Share creates a code and a link. Send it with the system share sheet (Bluetooth, Nearby Share, WhatsApp), copy it, or write it to an NFC tag. Import accepts a code, link, text file or an NFC tag. There is no server: everything is transferred directly and checked on arrival.

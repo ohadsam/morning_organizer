@@ -29,9 +29,9 @@ export function weeklyReport(runs, nowMs) {
 // A spreadsheet treats a cell starting with = + - @ as a formula: neutralise it (names are user-controlled).
 const cell = (v) => { let s = String(v ?? ''); if (/^[=+\-@\t\r]/.test(s)) s = `'${s}`; return /[",\n\r]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s; };
 export function toCsv(runs) {
-  const head = ['date', 'start', 'end', 'routine', 'status', 'planned_sec', 'estimated_sec', 'actual_sec', 'paused_sec', 'stars', 'tasks_done', 'tasks_total'];
+  const head = ['date', 'start', 'end', 'routine', 'status', 'planned_sec', 'estimated_sec', 'actual_sec', 'paused_sec', 'stars', 'tasks_done', 'tasks_total', 'unplanned_sec', 'unplanned_count'];
   const iso = (ms) => new Date(ms).toISOString();
   const rows = [...finishedRuns(runs)].sort((a, b) => a.startedAt - b.startedAt).map((r) => [dayKey(r.startedAt), iso(r.startedAt), iso(r.endedAt), r.templateName, r.status, r.plannedTotal, r.estTotal, r.actualTotal,
-    Math.round((r.pausedMs || 0) / 1000), stars(r), r.tasks.filter((x) => x.done).length, r.tasks.length]);
+    Math.round((r.pausedMs || 0) / 1000), stars(r), r.tasks.filter((x) => x.done).length, r.tasks.length, (r.unplanned || []).reduce((a, x) => a + x.sec, 0), (r.unplanned || []).length]);
   return `﻿${[head, ...rows].map((row) => row.map(cell).join(',')).join('\r\n')}\r\n`; // BOM so Excel reads Hebrew correctly
 }

@@ -11,9 +11,7 @@ export function nextFire(alarm, now = new Date()) {
   return null;
 }
 
-export const defaultAlarm = () => ({
-  enabled: false, time: '07:00', days: [0, 1, 2, 3, 4], volume: 80, vibrate: true, durationSec: 30,
-});
+export { defaultAlarm } from './wake.js';
 
 /** Next alarm across all templates -> { template, at } or null. */
 export function nextAcross(templates, now = new Date()) {

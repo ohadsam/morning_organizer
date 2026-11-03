@@ -10,6 +10,9 @@
 - **Reward menu**: spend stars on rewards, a parent can set the menu and gets "would like" requests.
 - Launcher shortcuts for the calm corner and the journal (Android); microphone permission only when recording or dictating.
 - **Routine card widget** (Android): shows a saved routine with its tasks and settings summary, starts it with all saved settings, ‹ › switch to another routine per widget, live countdown while it runs.
+- **Wake-up alarm chains**: several alarms per routine (e.g. 7:00, 7:15, 7:20), each with its own gap, sound (alarm, gentle, ringtone, rising), volume, vibration, length, message and optional spoken voice; after the last one the routine is **offered with a Start button or started automatically**. Android rings real alarms with text-to-speech; the browser rings while the page is open.
+- **Unplanned interruptions**: a ⚡ button in the run (toilet, spill, forgot something, your own reason) stops the routine clock and counts that time separately - shown in the summary, Stats and the CSV. **Pattern detection**: when the same interruption recurs in a routine the app offers to add it as a real task or to look closer (guiding questions saved to the journal, with before/after counts).
+- Fixed: a stray "null" appeared under "Remind me to start" when the alarm was off.
 - Fixed: the "send to child" dialog title was missing its text.
 
 ## 1.9.0

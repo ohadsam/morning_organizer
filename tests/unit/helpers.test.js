@@ -70,3 +70,18 @@ test('widget data: today + favourites first, bounded tasks, settings summary lin
   assert.equal(out[0].tasks.length, 8); assert.equal(out[0].more, 2);
   assert.match(out[0].meta, /10m · leave 07:45 · gear 2/); assert.match(out[2].meta, /d3/);
 });
+
+test('wake chain: rings, schedule, next ring, native entries, sanitising', async () => {
+  const W = await import('../../web/js/wake.js');
+  const a = W.normalizeAlarm({ enabled: true, time: '07:00', days: [1, 2], sound: 'bogus', volume: 500, startMode: 'auto', more: [{ afterMin: 15, text: 'x'.repeat(200), voice: '__proto__' }, { afterMin: 5, sound: 'gentle', speak: true }, 7] });
+  assert.equal(a.sound, 'alarm'); assert.equal(a.volume, 100); assert.equal(a.more.length, 2); assert.equal(a.more[0].text.length, 80); assert.equal(a.more[0].voice, 'natural');
+  assert.deepEqual(W.schedule(a), ['07:00', '07:15', '07:20']);
+  const n = W.nextRing(a, new Date(2024, 0, 8, 7, 10)); // Monday 07:10
+  assert.equal(n.index, 1); assert.equal(n.final, false); assert.equal(n.at.getHours() * 60 + n.at.getMinutes(), 7 * 60 + 15);
+  assert.equal(W.nextRing(a, new Date(2024, 0, 8, 7, 21)).at.getDay(), 2);   // after the last ring -> tomorrow's first
+  const nat = W.nativeRings({ id: 't', name: 'N', alarm: a }, 'he');
+  assert.deepEqual(nat.map((x) => x.start), ['offer', 'offer', 'auto']); assert.equal(nat[2].minute, 20); assert.equal(nat[1].lang, 'he-IL'); assert.equal(nat[1].n, 2); assert.equal(nat[2].of, 3);
+  const late = W.nativeRings({ id: 't', name: 'N', alarm: { enabled: true, time: '23:50', days: [6], more: [{ afterMin: 20 }] } });
+  assert.equal(late[1].hour, 0); assert.equal(late[1].minute, 10); assert.deepEqual(late[1].days, [0]);   // crosses midnight: Saturday -> Sunday
+  assert.deepEqual(W.nativeRings({ id: 't', name: 'N', alarm: { enabled: false } }), []);
+});

@@ -21,6 +21,7 @@ import { initFamily, unlinkProfile, setAlertHook } from './family.js';
 import { setProfileDeleteHook } from './ui/avatar.js';
 import { isUnlocked, requestGate } from './ui/gate.js';
 import { initTransports } from './transports.js';
+import { handleRing } from './ui/offer.js';
 import { renderCalm } from './ui/calm.js';
 import { renderJournal } from './ui/journal.js';
 import { lockAll } from './journal.js';
@@ -75,13 +76,14 @@ async function boot() {
   try { version = (await (await fetch('version.json', { cache: 'no-cache' })).json()).version; } catch { /* offline first load */ }
   await S.seedIfNeeded();
   S.syncNative();
-  S.subscribe(() => scheduleWebReminders((id) => nav(`#/run/${id}`)));
-  scheduleWebReminders((id) => nav(`#/run/${id}`));
+  const onRing = (tpl, r) => handleRing(tpl.id, r, nav);
+  S.subscribe(() => scheduleWebReminders(onRing));
+  scheduleWebReminders(onRing);
 
   // Native shell events: widget/alarm taps and shared text arrive here.
   const handle = async (ev) => {
     if (!ev) return;
-    if (ev.type === 'start' && S.getTemplate(ev.templateId)) nav(`#/run/${ev.templateId}`);
+    if (ev.type === 'start' && S.getTemplate(ev.templateId)) handleRing(ev.templateId, { final: true, mode: ev.mode === 'offer' ? 'offer' : 'auto', text: String(ev.text || '').slice(0, 120) }, nav);
     if (ev.type === 'nfcrx') { if (ev.status === 'listening') toast(t('tapHold')); else if (ev.status === 'timeout') toast(t('tapTimeout')); else if (ev.status === 'unavailable') toast(t('tapUnavailable')); }
     if (ev.type === 'qrfail') toast(t('scanUnsupported'));
     if (ev.type === 'saved') toast(t(ev.status === 'ok' ? 'savedFile' : 'saveFailed'));

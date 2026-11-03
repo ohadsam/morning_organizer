@@ -14,6 +14,7 @@ export function createRun(tpl, now, opts = {}) {
   const run = {
     id: uid(), gear: (opts.gear || []).map((g) => ({ id: g.id, name: g.name, icon: g.icon || '', done: false })), mode: opts.mode || 'normal', leaveBy: tpl.leaveBy || '', templateId: tpl.id, templateName: tpl.name, icon: tpl.icon, color: tpl.color,
     startedAt: now, endedAt: null, status: 'running', current: 0, segStart: now, pausedAt: null, pausedMs: 0,
+    unplanned: [], interrupt: null,
     tasks, plannedTotal: sum(tasks, 'plannedSec'), estTotal: sum(tasks, 'estSec'), actualTotal: 0,
   };
   if (!tasks.length) return finish(run, now);
@@ -51,6 +52,25 @@ export function resume(run, now) {
   if (run.status === 'paused') { run.pausedMs = (run.pausedMs || 0) + (now - run.pausedAt); run.segStart += now - run.pausedAt; run.pausedAt = null; run.status = 'running'; }
   return run;
 }
+/**
+ * An unplanned interruption (toilet, spilled drink...): the task clock stops and the time is counted on its own - not as "paused", not as task time.
+ * reason: { key, label, emoji }. Only while running.
+ */
+export function startInterruption(run, now, reason) {
+  if (run.status !== 'running' || run.interrupt) return run;
+  pause(run, now);
+  run.interrupt = { key: String(reason.key).slice(0, 30), label: String(reason.label).slice(0, 30), emoji: String(reason.emoji || '⚡').slice(0, 8), startedAt: now, taskIndex: run.current };
+  return run;
+}
+export function endInterruption(run, now) {
+  const i = run.interrupt; if (!i) return run;
+  (run.unplanned ??= []).push({ key: i.key, label: i.label, emoji: i.emoji, sec: Math.max(0, Math.round((now - i.startedAt) / 1000)), at: i.startedAt, task: run.tasks[i.taskIndex]?.name || '' });
+  const kept = run.pausedMs || 0; resume(run, now); run.pausedMs = kept;   // resume() would count it as a pause; it is unplanned time instead
+  run.interrupt = null;
+  return run;
+}
+export const unplannedSec = (run) => (run.unplanned || []).reduce((s, x) => s + x.sec, 0);
+
 /** Add (or remove) time on the current task without changing the planned figure used in statistics. */
 export function addTime(run, sec, now = Date.now()) {
   const t = cur(run); if (!t) return run;
@@ -91,6 +111,7 @@ export function toggleTask(run, i, now) {
 }
 
 export function finish(run, now) {
+  if (run.interrupt) endInterruption(run, now);
   if (isActive(run) && cur(run) && !cur(run).endedAt) closeCurrent(run, now, cur(run).done ? 'done' : 'stopped');
   run.endedAt = now;
   run.status = run.tasks.every((t) => t.done || t.skipped) ? 'done' : 'stopped';
@@ -104,7 +125,7 @@ export function summarize(run) {
   return {
     plannedSec: run.plannedTotal, estSec: run.estTotal, actualSec: run.actualTotal, wallSec,
     deltaSec: run.actualTotal - run.plannedTotal, pausedSec: Math.round((run.pausedMs || 0) / 1000), done: run.tasks.filter((t) => t.done).length,
-    skipped: run.tasks.filter((t) => t.skipped).length, total: run.tasks.length,
+    skipped: run.tasks.filter((t) => t.skipped).length, total: run.tasks.length, unplannedSec: unplannedSec(run), unplannedCount: (run.unplanned || []).length,
   };
 }
 

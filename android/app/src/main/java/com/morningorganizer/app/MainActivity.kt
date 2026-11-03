@@ -173,10 +173,14 @@ class MainActivity : ComponentActivity() {
     private fun handleIntent(i: Intent?) {
         i ?: return
         val templateId = i.getStringExtra(EXTRA_TEMPLATE)
+        val mode = i.getStringExtra(EXTRA_MODE); val note = i.getStringExtra(EXTRA_TEXT)?.take(120)
         val route = i.getStringExtra(EXTRA_ROUTE)
         when {
             route != null -> { i.removeExtra(EXTRA_ROUTE); if (route in Shortcuts.ROUTES) deliver(JSONObject().put("type", "route").put("hash", route)) }
-            templateId != null -> { i.removeExtra(EXTRA_TEMPLATE); deliver(JSONObject().put("type", "start").put("templateId", templateId)) }
+            templateId != null -> {
+                i.removeExtra(EXTRA_TEMPLATE); i.removeExtra(EXTRA_MODE); i.removeExtra(EXTRA_TEXT)
+                deliver(JSONObject().put("type", "start").put("templateId", templateId).put("mode", if (mode == "offer") "offer" else "auto").put("text", note ?: ""))
+            }
             i.action == Intent.ACTION_SEND && i.type == "text/plain" -> {
                 val text = i.getStringExtra(Intent.EXTRA_TEXT)?.take(256 * 1024)
                 if (text != null) deliver(JSONObject().put("type", "import").put("text", text))
@@ -221,12 +225,18 @@ class MainActivity : ComponentActivity() {
         private const val NFC_MIME = "application/vnd.morningorganizer+json"
         private const val EXTRA_TEMPLATE = "templateId"
         private const val EXTRA_ROUTE = "route"
+        private const val EXTRA_MODE = "mode"
+        private const val EXTRA_TEXT = "text"
 
         /** Intent that opens the app on one of the allow-listed screens (launcher shortcuts). */
         fun routeIntent(ctx: Context, route: String): Intent = Intent(ctx, MainActivity::class.java).setAction(Intent.ACTION_VIEW).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP).putExtra(EXTRA_ROUTE, route)
 
         /** Intent that opens the app and starts [templateId] (or just opens it when null). */
-        fun startIntent(ctx: Context, templateId: String?): Intent =
-            Intent(ctx, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP).apply { if (templateId != null) putExtra(EXTRA_TEMPLATE, templateId) }
+        fun startIntent(ctx: Context, templateId: String?, mode: String? = null, text: String? = null): Intent =
+            Intent(ctx, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP).apply {
+                if (templateId != null) putExtra(EXTRA_TEMPLATE, templateId)
+                if (mode != null) putExtra(EXTRA_MODE, mode)
+                if (text != null) putExtra(EXTRA_TEXT, text.take(120))
+            }
     }
 }

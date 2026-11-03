@@ -122,7 +122,7 @@ dialog header { display: flex; align-items: center; justify-content: space-betwe
 .seg.done .fill { background: var(--good); } .seg.skip .fill { background: var(--muted); opacity: .5; } .seg.over .fill { background: var(--bad); } .seg.cur { box-shadow: 0 0 0 2px color-mix(in srgb, var(--brand) 35%, transparent); }
 .buddy { position: absolute; top: -6px; inset-inline-start: calc(var(--p, 0) * (100% - 24px)); font-size: 1.35rem; line-height: 1; transition: inset-inline-start .6s ease; animation: hop .9s ease-in-out infinite alternate; }
 .buddy.still { animation: none; filter: grayscale(.6); } @keyframes hop { to { transform: translateY(-4px); } }
-.pw-foot { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; font-size: .8rem; color: var(--muted); margin-block-start: 6px; font-variant-numeric: tabular-nums; } .pw-paused { color: var(--warn); font-weight: 700; }
+.pw-foot { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; font-size: .8rem; color: var(--muted); margin-block-start: 6px; font-variant-numeric: tabular-nums; } .pw-paused { color: var(--text); font-weight: 700; }
 .bubble { display: flex; align-items: center; gap: 10px; background: var(--surface); border: 2px solid var(--brand); border-radius: 20px; padding: 8px 14px; font-weight: 700; box-shadow: var(--shadow); max-width: 100%; margin-inline: auto; }
 .bubble .bm { font-size: 2rem; } .bubble.pop { animation: pop .45s cubic-bezier(.2, 1.6, .4, 1); } @keyframes pop { from { transform: scale(.4); opacity: 0; } }
 .ring-wrap { position: relative; display: grid; place-items: center; } .ring .ti { font-size: 2.4rem; line-height: 1; margin-block-end: 2px; } .ring.warn .ti, .ring.over .ti { animation: hop .4s infinite alternate; }
@@ -256,3 +256,10 @@ dialog header { display: flex; align-items: center; justify-content: space-betwe
 .tb-ic { font-size: 1.8rem; line-height: 1; }
 .ring.pie::before { display: none; }
 .menu-item { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; } .menu-row { display: grid; grid-template-columns: 64px 1fr 76px 44px; gap: 6px; align-items: center; }
+
+/* ── v1.10 alarms chain + unplanned interruptions ── */
+.ring-card { display: grid; gap: 8px; } .ring-fields { display: grid; gap: 8px; }
+.intr-banner { display: flex; align-items: center; justify-content: center; gap: 6px; flex-wrap: wrap; padding: 10px 12px; border-radius: var(--radius); background: color-mix(in srgb, var(--warn) 18%, var(--surface)); border: 1px solid var(--warn); font-size: 1.05rem; }
+.intr-time { font-variant-numeric: tabular-nums; font-weight: 800; font-size: 1.3rem; }
+.reasons { display: flex; flex-wrap: wrap; gap: 8px; } .reason { flex: 1 1 40%; justify-content: center; }
+.unp-list { margin: 0; padding-inline-start: 1.2em; } .pattern { border-inline-start: 6px solid var(--warn); display: grid; gap: 6px; }

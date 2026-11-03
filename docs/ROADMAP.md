@@ -19,6 +19,9 @@ Status: 💡 idea · 🔬 needs a decision / research · ✅ built (see CHANGELO
 - 💡 **Evening routine templates**: "3 good things", gratitude, tomorrow's gear.
 - ✅ 61 coach tips, automatic tips when late / stuck, spoken tips, voices.
 
+- ✅ (1.10) **Alarm chains** with per-ring sound/text/voice and offer-or-auto start; **unplanned interruptions** with pattern detection.
+- 💡 Interruption patterns in the parent report; snooze button on the alarm notification.
+
 ## Family
 - 💡 **Weekly parent digest** with plain-language insights ("shoes are the slowest step; try preparing them the night before").
 - ✅ (1.10) **Shared reward menu** and "reward given" confirmation flow.

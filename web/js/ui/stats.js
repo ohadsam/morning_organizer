@@ -7,6 +7,7 @@ import { weeklyReport, heatmap, toCsv } from '../weekly.js';
 import { native } from '../native.js';
 import { achievementsCard } from './progressUi.js';
 import { moodStats, MOODS } from '../mood.js';
+import { unplannedCard, patternCards } from './unplanned.js';
 
 const NS = 'http://www.w3.org/2000/svg';
 const svg = (tag, attrs = {}, ...kids) => { const e = document.createElementNS(NS, tag); for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v); e.append(...kids); return e; };
@@ -60,7 +61,7 @@ export function renderStats(root, templateId, nav) {
     if (!templateId) {
       const items = templates.map((x) => ({ x, n: ST.finished(runs, x.id).length }));
       const hasRuns = items.some((i) => i.n);
-      root.replaceChildren(h('h1', {}, t('statsTitle')), hasRuns ? overview(runs) : null, hasRuns ? achievementsCard(runs) : null, hasRuns ? moodCard(runs) : null,
+      root.replaceChildren(h('h1', {}, t('statsTitle')), hasRuns ? overview(runs) : null, hasRuns ? achievementsCard(runs) : null, hasRuns ? moodCard(runs) : null, hasRuns ? unplannedCard(runs) : null,
         hasRuns ? h('div', { class: 'stack' }, items.filter((i) => i.n).map(({ x, n }) =>
           h('a', { class: 'card link-card', href: `#/stats/${x.id}`, style: { '--accent': x.color } }, h('span', { class: 'emoji' }, x.icon), h('span', { class: 'routine-text' }, h('strong', {}, x.name), h('small', {}, t('runsCount', { n })))))) : h('p', { class: 'empty' }, t('noStats')));
       return;
@@ -78,6 +79,7 @@ export function renderStats(root, templateId, nav) {
         h('h2', {}, t('chartTitle')),
         rs.length >= 2 ? h('div', { class: 'card' }, lineChart(ST.series(rs)),
           h('div', { class: 'legend' }, h('span', { class: 'k actual' }, t('legendActual')), h('span', { class: 'k planned' }, t('legendPlanned')), h('span', { class: 'k est' }, t('legendEstimate')))) : h('p', { class: 'note' }, t('chartEmpty')),
+        patternCards(tpl, nav, draw), unplannedCard(rs),
         h('h2', {}, t('insights')),
         h('ul', { class: 'insights' }, ins.map((i) => h('li', {}, h('span', {}, insightText(i)),
           (i.type === 'shorten' || i.type === 'extend') ? h('button', { class: 'btn small', type: 'button', onclick: async (e) => {
@@ -88,7 +90,7 @@ export function renderStats(root, templateId, nav) {
         h('table', { class: 'tbl' }, h('thead', {}, h('tr', {}, h('th', {}, t('colTask')), h('th', {}, t('colPlanned')), h('th', {}, t('colActual')))),
           h('tbody', {}, ST.taskStats(rs).map((s) => h('tr', { class: s.medActual > s.plannedNow ? 'over' : '' }, h('td', {}, s.name || '—'), h('td', {}, fmtDur(s.plannedNow)), h('td', {}, fmtDur(s.avgActual)))))),
         h('h2', {}, t('history')),
-        h('table', { class: 'tbl' }, h('thead', {}, h('tr', {}, h('th', {}, ''), h('th', {}, t('colPlanned')), h('th', {}, t('colActual')))),
+        h('table', { class: 'tbl' }, h('thead', {}, h('tr', {}, h('th', {}, t('colDate')), h('th', {}, t('colPlanned')), h('th', {}, t('colActual')))),
           h('tbody', {}, [...rs].reverse().slice(0, 30).map((r) => h('tr', { class: r.actualTotal > r.plannedTotal ? 'over' : '' },
             h('td', {}, new Date(r.startedAt).toLocaleString(getLang(), { dateStyle: 'medium', timeStyle: 'short' })), h('td', {}, fmtDur(r.plannedTotal)), h('td', {}, fmtDur(r.actualTotal)))))),
         h('button', { class: 'btn danger', type: 'button', onclick: async () => { if (await confirmBox(t('clearHistoryConfirm'), t('clearHistory'), true)) { await S.clearRuns(templateId); toast(t('deleted')); } } }, t('clearHistory'))]));

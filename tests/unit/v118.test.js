@@ -49,3 +49,9 @@ test('child task times travel in the report (2+ runs only, median, bounded) for 
   const rep = sanitizeReport(buildReport({ profile: { name: 'D' }, runs: [run(1, 100), run(2, 140)], streakDays: 0, totalStars: 0 })); assert.equal(rep.times.find((x) => x.name === 'Shoes').sec, 140);
   assert.deepEqual(sanitizeReport({ profile: {}, times: [{ name: 'x', sec: -4, n: 9 }, { name: 'ok', sec: 60, n: 3 }] }).times, [{ name: 'ok', sec: 60, n: 3 }]);
 });
+
+import { buildReport as buildReportModel } from '../../web/js/report.js';
+test('a report for a period with no runs has no NaN / Infinity', () => {
+  const m = buildReportModel({ runs: [], templates: [], scope: { kind: 'period', days: 7 }, now: Date.now() });
+  assert.ok(!/NaN|Infinity/.test(JSON.stringify(m.kpis)), JSON.stringify(m.kpis));
+});

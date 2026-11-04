@@ -79,7 +79,8 @@ object AlarmStore {
     fun rescheduleAll(ctx: Context, previous: List<RoutineAlarm> = emptyList()) {
         val am = ctx.getSystemService(Context.ALARM_SERVICE) as AlarmManager
         previous.forEach { p -> pending(ctx, p, false)?.let { am.cancel(it); it.cancel() } }
-        val now = System.currentTimeMillis(), rules = loadRules(ctx)
+        val now = System.currentTimeMillis()
+        val rules = loadRules(ctx)
         for (a in load(ctx)) {
             val at = AlarmMath.nextFireMillis(a.hour, a.minute, a.days, now, skip = if (a.offDays) rules.skip else emptySet(), pausedUntil = rules.pausedUntil) ?: continue
             val show = PendingIntent.getActivity(ctx, a.id.hashCode(), MainActivity.startIntent(ctx, a.templateId, a.start, a.text), PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)

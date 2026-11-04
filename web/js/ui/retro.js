@@ -96,7 +96,7 @@ export function renderRetros(root, nav) {
         o.conclusions.length ? h('ul', { class: 'unp-list' }, o.conclusions.map((c) => h('li', {}, conclusionText(c)))) : null,
         o.causes.length ? h('div', {}, h('h2', {}, t('rcvCauses')), o.causes.slice(0, 5).map((c) => h('div', { class: 'diff-bar' }, h('span', {}, `${CAUSES.find((x) => x.id === c.cause)?.emoji || ''} ${t(`rc_${c.cause}`)}`), h('div', { class: 'bar' }, h('i', { style: { width: `${(c.n / o.causes[0].n) * 100}%`, background: '#6c5ce7' } })), h('small', {}, `${c.n}×`)))) : null,
         o.byType.length ? h('div', {}, h('h2', {}, t('rcvByType')), h('ul', { class: 'unp-list' }, o.byType.map((x) => h('li', {}, `${t(`rcType_${x.type}`)}: ${x.improved}📈 ${x.same}➖ ${x.worse}📉 (${x.n}×)`)))) : null) : h('p', { class: 'empty' }, t('rcvEmpty')),
-      todo.length ? h('section', {}, h('h2', {}, t('rcvTodo')), h('div', { class: 'stack' }, todo.map((r) => h('a', { class: 'card link-card', href: `#/retro/${r.id}` }, h('span', { class: 'emoji' }, r.icon), h('span', { class: 'routine-text' }, h('strong', {}, r.templateName), h('small', {}, `${dateStr(r.endedAt)} · ${dur(r.actualTotal)}`)))))) : null,
+      todo.length ? h('section', {}, h('h2', {}, t('rcvTodo')), h('div', { class: 'stack' }, todo.map((r) => h('a', { class: 'card retro-link', style: { '--accent': '#6c5ce7' }, href: `#/retro/${r.id}` }, h('span', { class: 'emoji' }, r.icon), h('span', { class: 'routine-text' }, h('strong', {}, r.templateName), h('small', {}, `${dateStr(r.endedAt)} · ${dur(r.actualTotal)}`)))))) : null,
       rs.length ? h('section', {}, h('h2', {}, t('rcvHistory')), h('div', { class: 'stack' }, [...o.items].reverse().map(({ r, im }) => h('a', { class: 'card retro-item', href: `#/retro/${r.runId}` }, h('div', { class: 'row between' }, h('strong', {}, `${r.templateName} · ${dateStr(r.at)}`), r.rating ? h('span', {}, MOODS[r.rating - 1].emoji) : null),
         r.stuck.length ? h('small', {}, `${t('rcStuckList')}: ${r.stuck.map((x) => x.name).join(', ')}`) : null, verdictChip(im))))) : null);
   };
@@ -107,6 +107,6 @@ export function renderRetros(root, nav) {
 export function dueCard(nav, redraw) {
   const run = dueRun(S.myRuns(), S.retros()); let skipped = ''; try { skipped = localStorage.getItem('mo.retroSkip') || ''; } catch { /* blocked */ }
   if (!run || skipped === run.id) return null;
-  return h('section', { class: 'card focus-card' }, h('strong', {}, `🔄 ${t('rcDueTitle', { name: run.templateName })}`), h('p', {}, t('rcDueBody')),
+  return h('section', { class: 'card retro-card' }, h('strong', {}, `🔄 ${t('rcDueTitle', { name: run.templateName })}`), h('p', {}, t('rcDueBody')),
     h('div', { class: 'row-btns' }, h('button', { class: 'btn primary', type: 'button', onclick: () => nav(`#/retro/${run.id}`) }, t('rcDoIt')), h('button', { class: 'btn', type: 'button', onclick: () => { try { localStorage.setItem('mo.retroSkip', run.id); } catch { /* blocked */ } redraw(); } }, t('focusLater'))));
 }

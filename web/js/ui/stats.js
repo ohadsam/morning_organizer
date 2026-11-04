@@ -68,7 +68,7 @@ function awarenessCard(runs, templateId = null) {
 /** Looking back: how many, did the changes help (Stats front page). */
 function retroCard(runs) {
   const rs = S.retros(), o = retroOverview(rs, runs);
-  return h('a', { class: 'card link-card', href: '#/retros' }, h('span', { class: 'emoji' }, '🔄'), h('span', { class: 'routine-text' }, h('strong', {}, t('rcvTitle')),
+  return h('a', { class: 'card retro-link', style: { '--accent': '#6c5ce7' }, href: '#/retros' }, h('span', { class: 'emoji' }, '🔄'), h('span', { class: 'routine-text' }, h('strong', {}, t('rcvTitle')),
     h('small', {}, o.total ? t('rcvCardLine', { n: o.total, helped: o.improved, applied: o.applied }) : t('rcvCardEmpty'))));
 }
 

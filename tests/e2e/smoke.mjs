@@ -868,7 +868,7 @@ const seedRetroRuns = (page, spec) => page.evaluate(async (items) => {   // item
 await step('v1.14: look back at a run, apply suggested changes to the routine, then see whether they helped (before/after) with conclusions', async () => {
   const { page, errors } = await newPage(); await page.goto(base); await page.waitForSelector('.routine');
   await seedRetroRuns(page, [{ id: 'b1', startOffsetSec: -5 * 86400, over: 200, diff: 5 }, { id: 'b2', startOffsetSec: -3 * 86400, over: 180, diff: 5 }, { id: 'b3', startOffsetSec: -1 * 86400, over: 220, diff: 4 }]);
-  await page.goto(base + '#/'); await page.waitForSelector('.focus-card:has-text("Look back at")'); await page.click('.focus-card button:has-text("Look back")'); await page.waitForSelector('.retro-task');
+  await page.goto(base + '#/'); await page.waitForSelector('.retro-card'); await page.click('.retro-card button.primary'); await page.waitForSelector('.retro-task');
   assert.ok(await page.locator('.retro-task input[type=checkbox]:checked').count() >= 1, 'tasks the data points at are pre-ticked');
   await page.click('.retro-task >> nth=0 >> .cause:has-text("Not enough time")'); await page.click('.retro-task >> nth=0 >> .cause:has-text("Hard to start")'); await page.click('.card:has(h2:has-text("How did it go?")) .mood >> nth=2');
   await page.waitForSelector('.strat-pick:has-text("more time")'); assert.ok(await page.locator('.strat-pick').count() >= 2); const before = await page.evaluate(async () => { const S = await import('./js/store.js'); return S.get().templates[0].tasks.map((t) => [t.name, t.sec]); });
@@ -889,9 +889,9 @@ await step('v1.14: axe on retrospective page, overview and home prompt (he + en)
   for (const [lang, scheme] of [['he', 'light'], ['en', 'dark']]) {
     const { page } = await newPage({ lang, ctx: { colorScheme: scheme } }); await page.goto(base); if (lang === 'he') await dismissWelcome(page); const L = `${lang}/${scheme}`;
     await page.waitForSelector('.routine'); await seedRetroRuns(page, [{ id: 'x1', startOffsetSec: -3 * 86400, over: 200, diff: 5 }, { id: 'x2', startOffsetSec: -86400, over: 200, diff: 5 }]);
-    await page.goto(base + '#/'); await page.waitForSelector('.focus-card .btn.primary'); bad.push(...await audit(page, `${L}/home-retro-prompt`));
+    await page.goto(base + '#/'); await page.waitForSelector('.retro-card .btn.primary'); bad.push(...await audit(page, `${L}/home-retro-prompt`));
     await page.goto(base + '#/retros'); await page.waitForSelector('h1'); bad.push(...await audit(page, `${L}/retros-empty`));
-    await page.locator('a.link-card').first().click(); await page.waitForSelector('.retro-task'); await page.click('.retro-task >> nth=0 >> .cause >> nth=0'); await page.waitForSelector('.strat-pick'); bad.push(...await audit(page, `${L}/retro-form`));
+    await page.locator('a.retro-link').first().click(); await page.waitForSelector('.retro-task'); await page.click('.retro-task >> nth=0 >> .cause >> nth=0'); await page.waitForSelector('.strat-pick'); bad.push(...await audit(page, `${L}/retro-form`));
     await page.click('.card:has(.mood) .mood >> nth=1'); await page.click('button:has(+ button.primary), .toolbar.wrap button >> nth=0'); await page.waitForTimeout(500);
     await page.goto(base + '#/retros'); await page.waitForSelector('.retro-item'); bad.push(...await audit(page, `${L}/retros-list`));
   }

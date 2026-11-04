@@ -361,3 +361,13 @@ fieldset { min-width: 0; }
 .help-fold > summary::after { content: "▾"; margin-inline-start: auto; color: var(--muted); } .help-fold[open] > summary::after { transform: rotate(180deg); }
 .task-help { padding-block: 4px; }
 .task-help { width: 100%; }
+
+/* v1.17: topic toolbar with dropdowns (the open one takes the full row and its items sit in the page flow - nothing overlaps or gets clipped) */
+.topic-bar { display: grid; grid-template-columns: repeat(auto-fit, minmax(90px, 1fr)); gap: 8px; margin-block: 10px; }
+.menu-group { min-width: 0; } .menu-group[open] { grid-column: 1 / -1; }
+.menu-group > summary { list-style: none; display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%; min-height: 48px; padding-inline: 6px; white-space: nowrap; cursor: pointer; }
+.menu-group > summary::-webkit-details-marker { display: none; } .menu-group > summary::after { content: "▾"; font-size: .8em; color: var(--muted); }
+.menu-group[open] > summary { border-color: var(--brand); background: color-mix(in srgb, var(--brand) 10%, var(--surface)); }
+.menu-panel { display: grid; gap: 6px; padding-block: 8px 2px; }
+.menu-panel .btn { justify-content: flex-start; width: 100%; text-align: start; min-height: 48px; }
+.run-group h3 { margin: 6px 0 4px; font-size: .9rem; color: var(--muted); } .run-more > .run-group { padding: 0 12px 12px; }

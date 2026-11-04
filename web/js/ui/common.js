@@ -59,3 +59,20 @@ export function fold(title, summary, ...children) {
   const el = h('details', { class: 'fold' }, h('summary', {}, h('span', { class: 'fold-t' }, title), summary ? h('small', { class: 'fold-s' }, summary) : null), h('div', { class: 'fold-body' }, ...children));
   return { el };
 }
+
+/**
+ * A toolbar of topic dropdowns: [{ id, icon, label, items: [node...] }]. One dropdown is open at a time; a click outside or Escape closes it.
+ * Each button inside should close the menu itself by simply navigating or opening a sheet (the menu closes when anything inside is clicked).
+ */
+export function topicMenus(groups, label = '') {
+  const bar = h('div', { class: 'topic-bar', role: 'group', 'aria-label': label });
+  const all = groups.map((g) => {
+    const d = h('details', { class: 'menu-group', dataset: { group: g.id } }, h('summary', { class: 'btn' }, h('span', { 'aria-hidden': 'true' }, g.icon), h('span', {}, g.label)), h('div', { class: 'menu-panel quick' }, g.items.filter(Boolean)));
+    d.addEventListener('toggle', () => { if (d.open) all.forEach((o) => { if (o !== d) o.open = false; }); });
+    d.addEventListener('click', (e) => { if (e.target.closest('.menu-panel button, .menu-panel a')) setTimeout(() => { d.open = false; }, 0); });
+    d.addEventListener('keydown', (e) => { if (e.key === 'Escape' && d.open) { d.open = false; d.querySelector('summary').focus(); } });
+    return d;
+  });
+  setChildren(bar, ...all);
+  return bar;
+}

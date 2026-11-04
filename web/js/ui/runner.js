@@ -201,15 +201,17 @@ export async function renderRunner(root, id, nav) {
       h('div', { class: 'main-btns' },
         h('button', { class: 'btn primary xl', type: 'button', onclick: doComplete }, icon('check', 22), t('doneNext')),
         h('button', { class: `btn xl pause-btn ${paused ? 'resume' : ''}`, type: 'button', 'aria-pressed': String(paused), onclick: togglePause }, icon(paused ? 'play' : 'pause', 22), paused ? t('resume') : t('pause'))),
-      h('details', { class: 'fold run-more' }, h('summary', {}, h('span', { class: 'fold-t' }, `⋯ ${t('runMore')}`), h('small', { class: 'fold-s' }, t('runMoreSub'))), h('div', { class: 'row-btns' },
-        h('button', { class: 'btn', type: 'button', onclick: () => { E.addTime(run, 60); persist(); paintLive(); pushWidget(); } }, icon('plus', 18), t('addMinute')),
-        st().coachButton ? h('button', { class: 'btn tip-main', type: 'button', onclick: () => coach.show('any', cur?.name) }, '💡', t('tipBtn')) : null,
-        feat.journal ? h('button', { class: 'btn', type: 'button', 'aria-label': t('jNoteFor', { task: cur?.name || '' }), onclick: () => openCapture({ routine: run.templateName, task: cur?.name || '' }) }, '🎙️', t('jQuick')) : null,
-        feat.parkingLot ? h('button', { class: 'btn', type: 'button', onclick: () => openPark({ routine: run.templateName, task: cur?.name || '' }) }, '🅿️', t('parkTitle')) : null,
-        h('button', { class: 'btn', type: 'button', disabled: paused, onclick: startUnplanned }, '⚡', t('unpBtn')),
-        feat.calmCorner ? h('button', { class: 'btn', type: 'button', onclick: openCalm }, '🌬️', t('calmTitle')) : null,
-        h('button', { class: 'btn', type: 'button', onclick: () => act(E.skipCurrent) }, icon('skip', 18), t('skip')),
-        h('button', { class: 'btn danger', type: 'button', onclick: async () => { if (await confirmBox(t('stopConfirm'), t('stop'), true)) act(E.finish); } }, icon('stop', 18), t('stop')))));
+      h('details', { class: 'fold run-more' }, h('summary', {}, h('span', { class: 'fold-t' }, `⋯ ${t('runMore')}`), h('small', { class: 'fold-s' }, t('runMoreSub'))),
+        h('div', { class: 'run-group' }, h('h3', {}, `🤝 ${t('runGrpHelp')}`), h('div', { class: 'row-btns' },
+          st().coachButton ? h('button', { class: 'btn tip-main', type: 'button', onclick: () => coach.show('any', cur?.name) }, '💡', t('tipBtn')) : null,
+          feat.calmCorner ? h('button', { class: 'btn', type: 'button', onclick: openCalm }, '🌬️', t('calmTitle')) : null,
+          feat.journal ? h('button', { class: 'btn', type: 'button', 'aria-label': t('jNoteFor', { task: cur?.name || '' }), onclick: () => openCapture({ routine: run.templateName, task: cur?.name || '' }) }, '🎙️', t('jQuick')) : null,
+          feat.parkingLot ? h('button', { class: 'btn', type: 'button', onclick: () => openPark({ routine: run.templateName, task: cur?.name || '' }) }, '🅿️', t('parkTitle')) : null)),
+        h('div', { class: 'run-group' }, h('h3', {}, `🔧 ${t('runGrpChange')}`), h('div', { class: 'row-btns' },
+          h('button', { class: 'btn', type: 'button', onclick: () => { E.addTime(run, 60); persist(); paintLive(); pushWidget(); } }, icon('plus', 18), t('addMinute')),
+          h('button', { class: 'btn', type: 'button', disabled: paused, onclick: startUnplanned }, '⚡', t('unpBtn')),
+          h('button', { class: 'btn', type: 'button', onclick: () => act(E.skipCurrent) }, icon('skip', 18), t('skip')),
+          h('button', { class: 'btn danger', type: 'button', onclick: async () => { if (await confirmBox(t('stopConfirm'), t('stop'), true)) act(E.finish); } }, icon('stop', 18), t('stop'))))));
   }
 
   function paintLive() {

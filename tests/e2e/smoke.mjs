@@ -21,7 +21,7 @@ async function newPage(opts = {}) {
   // settings groups are collapsible (state remembered); most steps need every field reachable, so start with all groups open
   if (!opts.collapsed) await ctx.addInitScript(() => { try { localStorage.setItem('mo.sg', JSON.stringify(Object.fromEntries(['look', 'profile', 'helpers', 'buddy', 'pace', 'a11y', 'coach', 'voice', 'alerts', 'defaults', 'sync', 'app'].map((k) => [k, true])))); } catch { /* blocked */ } });
   // v1.17: sections ("More", edit-page folds, task help, run "More") start closed for people; most steps just need their buttons reachable, so open them as they appear
-  if (!opts.foldsClosed) await ctx.addInitScript(() => { const open = () => document.querySelectorAll('details.fold:not([data-keep]), details.help-fold, details.task-more').forEach((d) => { if (!d.open && !d.dataset.seen) { d.dataset.seen = '1'; d.open = true; } }); new MutationObserver(open).observe(document, { childList: true, subtree: true }); });
+  if (!opts.foldsClosed) await ctx.addInitScript(() => { const open = () => document.querySelectorAll('details.fold:not([data-keep]), details.help-fold, details.task-more, details.menu-group').forEach((d) => { if (!d.open && !d.dataset.seen) { d.dataset.seen = '1'; d.open = true; } }); new MutationObserver(open).observe(document, { childList: true, subtree: true }); });
   if (opts.collapsed) await ctx.addInitScript(() => { try { if (!localStorage.getItem('mo.sg')) localStorage.setItem('mo.sg', JSON.stringify({ look: true })); } catch { /* blocked */ } });
   const page = await ctx.newPage(); const errors = [];
   page.on('pageerror', (e) => errors.push(e.message)); page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); });
@@ -35,6 +35,8 @@ async function newPage(opts = {}) {
   }
   return { page, errors, ctx };
 }
+// the home topic menus are an accordion (one open at a time): open the one that holds a button before clicking it
+const openMenuWith = async (page, text) => { const g = page.locator('.menu-group', { has: page.locator(`button:has-text("${text}")`) }); if (!(await g.evaluate((d) => d.open))) await g.locator('summary').click(); await page.waitForFunction(() => document.querySelectorAll('.menu-group[open]').length === 1); };
 const setStyle = (page, v) => page.evaluate(async (x) => { const S = await import('./js/store.js'); await S.updateSettings({ textStyle: x }); }, v);
 // Sets a task's duration through the time sheet (tap the time -> minutes/seconds -> OK).
 const setDur = async (page, task, m, sec) => { await task.locator('.tp-val').first().click(); await page.locator('dialog input[type=number]').nth(0).fill(String(m)); await page.locator('dialog input[type=number]').nth(1).fill(String(sec)); await page.click('dialog footer button:has-text("OK")'); await page.waitForSelector('dialog', { state: 'detached' }); };
@@ -267,10 +269,10 @@ await step('family: invite -> join -> approve -> LIVE link (WebRTC, no server) -
   await P.page.goto(base + '#/family'); await P.page.click('button:has-text("Rewards")'); await P.page.click('dialog button:has-text("Add reward")');
   await P.page.fill('dialog .menu-row input[type=text]', 'Ice cream trip'); await P.page.fill('dialog .menu-row input[type=number]', '1'); await P.page.dispatchEvent('dialog .menu-row input[type=number]', 'change'); await P.page.dispatchEvent('dialog .menu-row input[type=text]', 'change');
   await P.page.click('dialog footer button:has-text("Save")');
-  await closeDialogs(C.page); await C.page.goto(base + '#/'); await C.page.waitForSelector('.quick'); await closeDialogs(C.page); await C.page.click('.quick button:has-text("Rewards")'); await C.page.waitForSelector('dialog .menu-item:has-text("Ice cream trip")', { timeout: 15000 });
+  await closeDialogs(C.page); await C.page.goto(base + '#/'); await C.page.waitForSelector('.quick'); await closeDialogs(C.page); await openMenuWith(C.page, 'Rewards'); await C.page.click('.quick button:has-text("Rewards")'); await C.page.waitForSelector('dialog .menu-item:has-text("Ice cream trip")', { timeout: 15000 });
   await C.page.click('dialog .menu-item button:has-text("Get")'); await C.page.click('dialog footer button:has-text("Get")');
   await P.page.goto(base + '#/family'); await P.page.waitForSelector('.family-card:has-text("Ice cream trip")', { timeout: 15000 }); await P.page.click('.family-card button:has-text("Given")');
-  await C.page.waitForTimeout(1500); await closeDialogs(C.page); await C.page.click('.quick button:has-text("Rewards")'); await C.page.click('dialog details summary'); await C.page.waitForSelector('dialog li:has-text("given")', { timeout: 15000 });
+  await C.page.waitForTimeout(1500); await closeDialogs(C.page); await openMenuWith(C.page, 'Rewards'); await C.page.click('.quick button:has-text("Rewards")'); await C.page.click('dialog details summary'); await C.page.waitForSelector('dialog li:has-text("given")', { timeout: 15000 });
   // v1.11: the parent suggests a goal (live) and sits with the child during a run
   await closeDialogs(C.page); await P.page.goto(base + '#/family'); await P.page.click('button:has-text("Suggest a goal")'); await P.page.click('dialog .chip:has-text("Be ready on time")'); await P.page.check('dialog .strat-pick:has-text("Prepare things the night before") input'); await P.page.click('dialog footer button:has-text("Save")');
   await C.page.goto(base + '#/goals'); await C.page.waitForSelector('.goal-card:has-text("Suggested by Mom")', { timeout: 15000 });
@@ -358,7 +360,7 @@ await step('v1.7: weekly overview + 5-week heat-map + CSV export (accessible), u
 await step('hosting: the repo ROOT (Pages "deploy from branch") redirects to the app under /web/, which boots, registers its service worker and works offline-first', async () => {
   const root = await serve('.', 0); const rbase = `http://localhost:${root.address().port}/`;
   const ctx = await browser.newContext({ viewport: { width: 390, height: 800 }, locale: 'en-US' }); await ctx.addInitScript(() => { try { localStorage.setItem('mo.lang', 'en'); } catch { /* blocked */ } });
-  await ctx.addInitScript(() => { try { localStorage.setItem('mo.sg', JSON.stringify({ look: true, voice: true })); } catch { /* blocked */ } const open = () => document.querySelectorAll('details.fold, details.help-fold, details.task-more').forEach((d) => { if (!d.dataset.seen) { d.dataset.seen = '1'; d.open = true; } }); new MutationObserver(open).observe(document, { childList: true, subtree: true }); });
+  await ctx.addInitScript(() => { try { localStorage.setItem('mo.sg', JSON.stringify({ look: true, voice: true })); } catch { /* blocked */ } const open = () => document.querySelectorAll('details.fold, details.help-fold, details.task-more, details.menu-group').forEach((d) => { if (!d.dataset.seen) { d.dataset.seen = '1'; d.open = true; } }); new MutationObserver(open).observe(document, { childList: true, subtree: true }); });
   const page = await ctx.newPage(); const errors = []; page.on('pageerror', (e) => errors.push(e.message)); page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); });
   await page.goto(rbase); await page.waitForURL(/\/web\/(#.*)?$/); await page.waitForSelector('dialog.welcome, .routine');
   assert.ok(!(await page.textContent('body')).includes('npm run'), 'the app page never shows developer instructions');
@@ -506,7 +508,7 @@ await step('v1.10: journal password (hash+salt), add while locked, wrong passwor
 await step('v1.10: voice note recorded in a run (fake microphone), kept on the device, playable; dictation asks for consent first', async () => {
   const mic = await chromium.launch({ args: ['--use-fake-device-for-media-stream', '--use-fake-ui-for-media-stream'] });
   const ctx = await mic.newContext({ viewport: { width: 390, height: 800 }, locale: 'en-US', serviceWorkers: 'block', permissions: ['microphone'] });
-  await ctx.addInitScript(() => { try { localStorage.setItem('mo.sg', JSON.stringify({ look: true, voice: true })); } catch { /* blocked */ } const open = () => document.querySelectorAll('details.fold, details.help-fold, details.task-more').forEach((d) => { if (!d.dataset.seen) { d.dataset.seen = '1'; d.open = true; } }); new MutationObserver(open).observe(document, { childList: true, subtree: true }); });
+  await ctx.addInitScript(() => { try { localStorage.setItem('mo.sg', JSON.stringify({ look: true, voice: true })); } catch { /* blocked */ } const open = () => document.querySelectorAll('details.fold, details.help-fold, details.task-more, details.menu-group').forEach((d) => { if (!d.dataset.seen) { d.dataset.seen = '1'; d.open = true; } }); new MutationObserver(open).observe(document, { childList: true, subtree: true }); });
   const page = await ctx.newPage(); const errors = []; page.on('pageerror', (e) => errors.push(e.message));
   await page.goto(base + '#/settings'); await dismissWelcome(page); await page.waitForSelector('select'); await page.selectOption('select >> nth=0', 'en'); await page.waitForFunction(() => document.documentElement.lang === 'en');
   await page.goto(base); await page.waitForSelector('.routine'); await page.locator('.routine .start').first().click(); await page.waitForSelector('.ring');
@@ -534,7 +536,7 @@ await step('v1.10: axe finds no violations on calm corner, journal (open + locke
     await page.click('.lock-screen .btn >> nth=1'); await page.waitForSelector('dialog'); bad.push(...await audit(page, `${L}/forgot`)); await closeDialogs(page);
     await page.goto(base + '#/'); await page.waitForSelector('.focus-card'); bad.push(...await audit(page, `${L}/home-focus-card`));
     await page.click('.focus-card button.primary'); await page.waitForSelector('dialog .area-grid'); bad.push(...await audit(page, `${L}/focus-picker`)); await page.check('dialog .area-pick >> nth=4 >> input'); await page.click('dialog footer .primary');
-    await page.waitForSelector('.quick'); await page.click('.quick button:has-text("🎁")'); await page.waitForSelector('dialog .menu-item, dialog .empty'); bad.push(...await audit(page, `${L}/reward-menu`)); await page.click('dialog button:has(+ *) >> nth=-1').catch(() => {}); await closeDialogs(page);
+    await page.waitForSelector('.quick'); await openMenuWith(page, '🎁'); await page.click('.quick button:has-text("🎁")'); await page.waitForSelector('dialog .menu-item, dialog .empty'); bad.push(...await audit(page, `${L}/reward-menu`)); await page.click('dialog button:has(+ *) >> nth=-1').catch(() => {}); await closeDialogs(page);
     await page.goto(base + '#/settings'); await page.waitForSelector('details.settings-group'); bad.push(...await audit(page, `${L}/settings-helpers`));
   }
   if (bad.length) console.error([...new Set(bad)].join('\n'));
@@ -673,12 +675,12 @@ await step('v1.10: axe on template pickers and library page (young child too)', 
   const bad = [];
   for (const [lang, scheme] of [['he', 'light'], ['en', 'dark']]) {
     const { page } = await newPage({ lang, ctx: { colorScheme: scheme } }); await page.goto(base); if (lang === 'he') await dismissWelcome(page); const L = `${lang}/${scheme}`;
-    await page.waitForSelector('.routine'); await page.click('.quick button >> nth=-3'); await page.waitForSelector('dialog .tiles-grid'); bad.push(...await audit(page, `${L}/routine-picker`)); await closeDialogs(page);
+    await page.waitForSelector('.routine'); await page.click('.quick button:has-text("📚")'); await page.waitForSelector('dialog .tiles-grid'); bad.push(...await audit(page, `${L}/routine-picker`)); await closeDialogs(page);
     await page.locator('.routine-main').first().click(); await page.waitForSelector('.task'); await page.click('.toolbar.wrap button >> nth=0'); await page.waitForSelector('dialog .tiles-grid'); bad.push(...await audit(page, `${L}/task-picker`)); await closeDialogs(page);
     await page.click('.fold-body button:has-text("💾")'); await page.waitForTimeout(400);
     await page.goto(base + '#/library'); await page.waitForSelector('.lib-card'); bad.push(...await audit(page, `${L}/library`));
     await setStyle(page, 'auto'); await page.goto(base + '#/settings'); await page.fill('input[type=number][max="120"]', '7'); await page.dispatchEvent('input[type=number][max="120"]', 'change'); await page.waitForTimeout(400);
-    await page.goto(base + '#/'); await page.waitForSelector('.routine'); await page.click('.quick button >> nth=-3'); await page.waitForSelector('dialog .tiles-grid'); bad.push(...await audit(page, `${L}/routine-picker-playful`)); await closeDialogs(page);
+    await page.goto(base + '#/'); await page.waitForSelector('.routine'); await page.click('.quick button:has-text("📚")'); await page.waitForSelector('dialog .tiles-grid'); bad.push(...await audit(page, `${L}/routine-picker-playful`)); await closeDialogs(page);
   }
   if (bad.length) console.error([...new Set(bad)].join('\n'));
   assert.deepEqual(bad, []);
@@ -985,9 +987,9 @@ await step('v1.17: stats with no runs shows no "null"; alarm sheet fits a narrow
 await step('v1.17: home is calm - search bar, New + wizard, tools behind More, one gentle suggestion with three answers', async () => {
   const { page } = await newPage({ foldsClosed: true }); await page.goto(base + '#/'); await page.waitForSelector('.routine');
   await page.evaluate(async () => { const S = await import('./js/store.js'); await S.updateSettings({ focusSeen: true }); localStorage.removeItem('mo.sug'); });
-  assert.ok(await page.locator('.home-search').isVisible()); assert.equal(await page.locator('.quick').isVisible(), false, 'tools are folded');
+  assert.ok(await page.locator('.home-search').isVisible()); assert.equal(await page.locator('.quick:visible').count(), 0, 'tools are folded');
   assert.ok(await page.locator('.toolbar button:has-text("Help me build one")').isVisible());
-  await page.click('details.fold summary:has-text("More")'); assert.ok(await page.locator('.quick button:has-text("Alarms")').isVisible());
+  assert.equal(await page.locator('.menu-group').count(), 3, 'three topic menus'); await page.click('.menu-group summary:has-text("Plan")'); assert.ok(await page.locator('.quick button:has-text("Alarms")').isVisible()); await page.click('.menu-group summary:has-text("Progress")'); await page.waitForFunction(() => document.querySelectorAll('.menu-group[open]').length === 1); await page.keyboard.press('Escape');
   // a suggestion shows unless the "what helps" card is up; answer "Not now" -> snoozed, and nothing else the same day
   await page.evaluate(() => { localStorage.setItem('mo.sug', '{}'); }); await page.reload(); await page.waitForSelector('.routine');
   if (await page.locator('.suggest').count()) {
@@ -1030,7 +1032,7 @@ await step('v1.17: wizard - five calm questions build a routine for the person, 
 
 await step('v1.17: run screen keeps Done + Pause in view; the rest sits behind More; difficulty behind one tap', async () => {
   const { page } = await newPage({ foldsClosed: true }); await page.goto(base + '#/run/sample-kids'); await page.waitForSelector('.main-btns');
-  assert.equal(await page.locator('.run-more .row-btns').isVisible(), false); assert.equal(await page.locator('.diff-row').isVisible(), false);
+  assert.equal(await page.locator('.run-more .row-btns:visible').count(), 0); assert.equal(await page.locator('.diff-row').isVisible(), false);
   const box = await page.locator('.main-btns').boundingBox(); assert.ok(box.y + box.height < 800, 'Done/Pause above the fold'); assert.ok(box.width > 200);
   await page.click('.run-more summary'); assert.ok(await page.locator('.run-more button:has-text("+1 min")').isVisible()); await page.click('.run-more button:has-text("+1 min")');
   await page.click('.help-fold summary'); assert.ok(await page.locator('.diff-row').isVisible()); await page.locator('.diff').nth(3).click();
@@ -1043,7 +1045,7 @@ await step('v1.17: axe on search, wizard (every step), suggestion card, folded h
     const { page } = await newPage({ lang, foldsClosed: true }); await page.goto(base); if (lang === 'he') await dismissWelcome(page);
     if (big) await page.evaluate(async () => { const S = await import('./js/store.js'); await S.updateSettings({ fontScale: 150 }); });
     await page.evaluate(() => localStorage.setItem('mo.sug', '{}')); await page.goto(base + '#/'); await page.reload(); await page.waitForSelector('.routine'); bad.push(...await audit(page, `${lang}/home`));
-    await page.click('details.fold summary >> nth=0'); bad.push(...await audit(page, `${lang}/home-more`));
+    await page.click('.menu-group summary >> nth=0'); bad.push(...await audit(page, `${lang}/home-menu-open`));
     await page.click('.home-search'); await page.waitForSelector('.search-item'); bad.push(...await audit(page, `${lang}/search`)); await page.fill('.search-input', 'a'); bad.push(...await audit(page, `${lang}/search-results`)); await page.keyboard.press('Escape'); await page.waitForSelector('dialog', { state: 'detached' });
     await page.click('.toolbar button >> nth=1'); await page.waitForSelector('.wz-opt');
     for (let i = 0; i < 5; i++) { bad.push(...await audit(page, `${lang}/wizard-${i}`)); if (i < 4) await page.click('.wz-nav .btn.primary'); }

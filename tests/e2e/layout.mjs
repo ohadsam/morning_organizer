@@ -48,7 +48,7 @@ for (const lang of ['he', 'en']) for (const big of [false, true]) for (const [w,
   const tag = `[${lang} ${w}x${hgt}${big ? ' big' : ''}]`;
   const ctx = await browser.newContext({ viewport: { width: w, height: hgt }, locale: lang === 'he' ? 'he-IL' : 'en-US', serviceWorkers: 'block' });
   await ctx.addInitScript(([l, b]) => { try { localStorage.setItem('mo.sg', JSON.stringify(Object.fromEntries(['look', 'profile', 'helpers', 'buddy', 'pace', 'a11y', 'coach', 'voice', 'data', 'about', 'alarms', 'family'].map((k) => [k, true])))); } catch {} }, [lang, big]);
-  await ctx.addInitScript(() => { const open = () => document.querySelectorAll('details.fold, details.help-fold, details.task-more').forEach((d) => { if (!d.dataset.seen) { d.dataset.seen = '1'; d.open = true; } }); new MutationObserver(open).observe(document, { childList: true, subtree: true }); });   // check what is inside the folds too
+  await ctx.addInitScript(() => { const open = () => document.querySelectorAll('details.fold, details.help-fold, details.task-more, details.menu-group').forEach((d) => { if (!d.dataset.seen) { d.dataset.seen = '1'; d.open = true; } }); new MutationObserver(open).observe(document, { childList: true, subtree: true }); });   // check what is inside the folds too
   const page = await ctx.newPage(); const errs = []; page.on('pageerror', (e) => errs.push(e.message));
   await page.goto(base); try { await page.waitForSelector('dialog.welcome', { timeout: 3000 }); await page.click('dialog.welcome footer button >> nth=0'); await page.waitForSelector('dialog.welcome', { state: 'detached' }); } catch {}
   await page.evaluate(async (l) => { const S = await import('./js/store.js'); await S.updateSettings({ lang: l }); }, lang);

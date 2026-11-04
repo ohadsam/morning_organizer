@@ -1,0 +1,13 @@
+/* The report (on screen, print and the PDF). Plain values only - no CSS variables - so it renders identically everywhere. */
+.rpt{font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;color:#2d3436;background:#fff;padding:0;line-height:1.45;font-size:14px;box-sizing:border-box}
+.rpt *{box-sizing:border-box}.rpt h1,.rpt h2,.rpt h3,.rpt p{margin:0}
+.rpt-head{background:linear-gradient(135deg,#6c5ce7,#a29bfe);color:#fff;padding:26px 28px}.rpt-head h1{font-size:26px}.rpt-head p{opacity:.92;margin-top:4px}
+.rpt-sec{padding:16px 28px;border-bottom:1px solid #eef0f2}.rpt-sec h2{font-size:17px;margin-bottom:10px;color:#4b3fc4}
+.rpt-kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.rpt-kpi{background:#f6f5ff;border-radius:14px;padding:12px;text-align:center}.rpt-kpi b{display:block;font-size:22px;color:#4b3fc4}.rpt-kpi span{font-size:12px;color:#636e72}
+.rpt-note{color:#636e72;font-size:12px}.rpt-ul{margin:0;padding-inline-start:20px}.rpt-ul li{margin-block:4px}
+.rpt-bar{display:grid;grid-template-columns:34% 1fr 22%;gap:8px;align-items:center;margin-block:5px}.rpt-bar .tr{height:14px;background:#eceff1;border-radius:99px;overflow:hidden}.rpt-bar .fl{height:100%;border-radius:99px}.rpt-bar .tx{font-size:12px;color:#636e72;text-align:end}
+.rpt-tbl{width:100%;border-collapse:collapse;font-size:12.5px}.rpt-tbl th{text-align:start;color:#636e72;border-bottom:2px solid #eceff1;padding:5px 4px}.rpt-tbl td{border-bottom:1px solid #f1f3f5;padding:5px 4px}.rpt-tbl .over{color:#d63031;font-weight:600}
+.rpt-heat{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;max-width:330px}.rpt-heat i{display:block;aspect-ratio:1;border-radius:6px;background:#eceff1}
+.rpt-chips span{display:inline-block;background:#f1efff;border-radius:99px;padding:3px 10px;margin:2px;font-size:12.5px}
+.rpt-row2{display:grid;grid-template-columns:1fr 1fr;gap:14px}.rpt-foot{padding:14px 28px;color:#636e72;font-size:11px}
+.rpt-gantt{position:relative;height:18px;background:#eceff1;border-radius:6px;overflow:hidden}.rpt-gantt .p{position:absolute;inset-block:0;inset-inline-start:0;background:#cfd8dc;border-radius:6px}.rpt-gantt .a{position:absolute;inset-block:5px;inset-inline-start:0;border-radius:6px}

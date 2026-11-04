@@ -2,7 +2,7 @@
 // Every helper stays individually switchable (Settings → Helpers): areas only decide the DEFAULTS, `overrides` always win.
 export const AREAS = ['focus', 'calm', 'time', 'memory', 'motivation', 'habits'];
 export const AREA_EMOJI = { focus: '🎯', calm: '🌬️', time: '⏱️', memory: '🧩', motivation: '🏆', habits: '🌱' };
-export const TOOLS = ['calmCorner', 'sprints', 'bodyDouble', 'parkingLot', 'transition', 'timerPie', 'moodCheck', 'rewardMenu', 'journal'];
+export const TOOLS = ['calmCorner', 'sprints', 'bodyDouble', 'parkingLot', 'transition', 'timerPie', 'moodCheck', 'rewardMenu', 'journal', 'taskHelp'];
 
 export const sanitizeAreas = (a) => [...new Set((Array.isArray(a) ? a : []).filter((x) => typeof x === 'string' && Object.hasOwn(AREA_EMOJI, x)))];
 const has = (areas, a) => areas.includes(a);
@@ -11,7 +11,7 @@ const has = (areas, a) => areas.includes(a);
 export function toolsFor(areas, overrides = {}) {
   const a = sanitizeAreas(areas);
   const auto = {
-    calmCorner: true, journal: true,                                   // small, never in the way: always available
+    calmCorner: true, journal: true, taskHelp: true,                                   // small, never in the way: always available
     sprints: has(a, 'focus'), bodyDouble: has(a, 'focus'), parkingLot: has(a, 'focus'),
     transition: has(a, 'time') || has(a, 'focus') || has(a, 'memory'), timerPie: has(a, 'time'),
     moodCheck: has(a, 'calm') || has(a, 'habits'), rewardMenu: has(a, 'motivation'),

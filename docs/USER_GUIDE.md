@@ -79,6 +79,12 @@ Goals (Goal - Plan - Do - Check): Home → Goals. Write one goal that matters to
 ## Alarms screen
 Alarms screen: Home → Alarms lists every routine with its wake-up alarm - switch it on or off, see the schedule (e.g. 07:00 → 07:15 → 07:20) and edit the whole chain. Each routine card also shows its alarm. After an update a one-time “New in…” sheet points to new features.
 
+## Task feelings and help
+Feelings and help on every task: while you do a task, rate how hard it is with the icons (🪶 very easy … 🥵 very hard). “Why is it hard?” opens a note (type or record) with that task attached - what is hard and which thoughts came up. “A kind thought” and “Relax” give a different suggestion each time, worded for your age: kind thoughts (effort, self-compassion, reframing, starting small) and short exercises (breathing, squeezing and releasing, shaking out, five senses, butterfly hug and more); breathing exercises can open the Calm corner. Everything is saved with the run. Stats → “Where is it hard?” ranks tasks by average difficulty, flags the ones that are both hard and slow, and counts how often notes, kind thoughts and relaxation were used - so you can see where more help is needed.
+
+## Reports, PDF and e-mail
+Reports, PDF and e-mail: Stats → “Export & send” (or 📄 next to any run in a routine’s history, or on the summary screen) opens a designed report with a summary, insights in plain words, charts over time, an activity calendar, per-routine and per-task tables, difficulty, interruptions, mood and goals - for one run or for the last 7/30/90 days or all time, for all routines or one. “Save as PDF” makes a real PDF file; “E-mail the report” opens your e-mail app with the PDF attached (Android app, or phones that support sharing files) - in a browser the PDF is downloaded and the mail opens with a summary, and you attach the file. Print and copy-summary are there too. Reports are made on this device only.
+
 ## Privacy
 All data stays on your device. Use Settings → Back up all data to save or move it.
 

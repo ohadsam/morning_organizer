@@ -722,5 +722,58 @@ await step('v1.11: axe on alarms screen + sheet, goals screen + wizard + check-i
   assert.deepEqual(bad, []);
 });
 
+// ── v1.12: task difficulty + kind thoughts + relaxation, report + real PDF ──
+await step('v1.12: per-task difficulty icons, "why hard" journal note, a different kind thought / relaxation every time, saved on the run', async () => {
+  const { page, errors } = await newPage(); await page.goto(base); await page.waitForSelector('.routine'); await page.locator('.routine .start').first().click(); await page.waitForSelector('.task-help');
+  assert.equal(await page.locator('.diff').count(), 5); await page.click('.diff >> nth=3'); assert.equal(await page.getAttribute('.diff >> nth=3', 'aria-pressed'), 'true'); await page.waitForSelector('.help-out:has-text("That sounds hard")');
+  await page.click('.help-btns button:has-text("A kind thought")'); await page.waitForSelector('.help-card .help-text'); const t1 = await page.textContent('.help-card .help-text');
+  let t2 = t1; for (let i = 0; i < 4 && t2 === t1; i++) { await page.click('.help-card button:has-text("Another one")'); t2 = await page.textContent('.help-card .help-text'); } assert.notEqual(t1, t2);
+  await page.click('.help-btns button:has-text("Relax")'); await page.waitForSelector('.help-card .help-steps li'); const e1 = await page.textContent('.help-card strong'); let e2 = e1; for (let i = 0; i < 4 && e2 === e1; i++) { await page.click('.help-card button:has-text("Another one")'); e2 = await page.textContent('.help-card strong'); } assert.notEqual(e1, e2);
+  await page.click('.help-btns button:has-text("Why is it hard?")'); await page.waitForSelector('dialog textarea'); await page.fill('dialog textarea', 'I kept thinking it would go wrong'); await page.click('dialog footer button:has-text("Save")'); await page.waitForSelector('dialog', { state: 'detached' });
+  await page.click('text=Done ✓'); await page.waitForSelector('.diff[aria-pressed="false"]');       // a new task starts unrated
+  for (let i = 0; i < 5; i++) await page.click('text=Done ✓'); await page.waitForSelector('.summary');
+  const run = await page.evaluate(async () => { const S = await import('./js/store.js'); const r = S.get().runs.at(-1); return { d: r.tasks[0].difficulty, help: r.tasks[0].help }; });
+  assert.equal(run.d, 4); assert.ok(run.help.thought >= 2 && run.help.relax >= 2 && run.help.note === 1, JSON.stringify(run.help));
+  await page.goto(base + '#/journal'); await page.waitForSelector('.entry:has-text("kept thinking it would go wrong")'); assert.deepEqual(errors, []);
+});
+
+await step('v1.12: statistics show where it is hard; the report page renders; a real multi-page-capable PDF is produced (valid header, xref, JPEG pages)', async () => {
+  const { page, errors, ctx } = await newPage(); await page.goto(base); await page.waitForSelector('.routine');
+  await page.evaluate(async () => {
+    const S = await import('./js/store.js'), tpl = S.get().templates[0], day = 86_400_000;
+    for (let i = 0; i < 6; i++) { const tasks = tpl.tasks.map((t, k) => ({ id: t.id, name: t.name, icon: t.icon, plannedSec: t.sec, estSec: t.sec, extraSec: 0, actualSec: t.sec + (k === 0 ? 120 : 0), done: true, skipped: false, difficulty: k === 0 ? 5 : 2, help: { note: k === 0 ? 1 : 0, thought: k === 0 ? 1 : 0, relax: 0 } })), tot = tasks.reduce((a, x) => a + x.plannedSec, 0), act = tasks.reduce((a, x) => a + x.actualSec, 0);
+      await S.saveRun({ id: `rp${i}`, profileId: S.activeProfile().id, templateId: tpl.id, templateName: tpl.name, icon: tpl.icon, color: '#6c5ce7', startedAt: Date.now() - (12 - i * 2) * day, endedAt: Date.now() - (12 - i * 2) * day + 900_000, status: 'done', current: 0, pausedMs: 0, plannedTotal: tot, estTotal: tot, actualTotal: act, mood: 4, tasks,
+        unplanned: i % 2 ? [{ key: 'toilet', label: 'Toilet', emoji: '🚽', sec: 100, at: 1, task: tpl.tasks[0].name }] : [] }); }
+  });
+  await page.goto(base + '#/stats'); await page.waitForSelector('.card:has-text("Where is it hard?")'); assert.match(await page.textContent('.diff-bars'), /5|4\./); await page.waitForSelector('.card:has-text("Export & send")');
+  await page.click('.card:has-text("Export & send") button:has-text("Last 30 days")'); await page.waitForSelector('.rpt .rpt-head'); assert.match(await page.textContent('.rpt'), /Where is it hard\?/); assert.ok(await page.locator('.rpt svg polyline').count() >= 2); assert.ok(await page.locator('.rpt .rpt-kpi').count() >= 6);
+  await page.click('.rpt-toolbar .chip:has-text("All time")'); await page.waitForSelector('.rpt');
+  const [dl] = await Promise.all([page.waitForEvent('download', { timeout: 60000 }), page.click('button:has-text("Save as PDF")')]);
+  const path = await dl.path(); const fs = await import('node:fs'); const buf = fs.readFileSync(path), s = buf.toString('latin1');
+  assert.ok(s.startsWith('%PDF-1.4')); assert.ok(s.trimEnd().endsWith('%%EOF')); assert.ok((s.match(/\/Type \/Page /g) || []).length >= 1); assert.ok(s.includes('/Filter /DCTDecode')); assert.ok(buf.length > 20000, `pdf size ${buf.length}`);
+  const xr = s.lastIndexOf('xref\n0 '), n = parseInt(s.slice(xr + 7)); for (let i = 1; i < n; i++) { const off = parseInt(s.slice(xr + 8 + String(n).length + 21 + (i - 1) * 20, xr + 8 + String(n).length + 21 + (i - 1) * 20 + 10)); assert.ok(s.slice(off).startsWith(`${i} 0 obj`), `xref ${i}`); }
+  fs.copyFileSync(path, '/tmp/report-test.pdf');
+  // a single run's report from the history
+  await page.goto(base + '#/stats'); await page.locator('a.card.link-card').first().click(); await page.waitForSelector('.tbl a[href^="#/report/run/"]'); await page.locator('.tbl a[href^="#/report/run/"]').first().click(); await page.waitForSelector('.rpt .rpt-tbl'); assert.match(await page.textContent('.rpt'), /Run report/); assert.match(await page.textContent('.rpt'), /Help used/);
+  assert.deepEqual(errors.filter((e) => !/mailto|Failed to launch/.test(e)), []);
+});
+
+await step('v1.12: axe on task-help card, kind thought / relax, stats difficulty card, report screens (he + en)', async () => {
+  const bad = [];
+  for (const [lang, scheme] of [['he', 'light'], ['en', 'dark']]) {
+    const { page } = await newPage({ lang, ctx: { colorScheme: scheme } }); await page.goto(base); if (lang === 'he') await dismissWelcome(page); const L = `${lang}/${scheme}`;
+    await page.waitForSelector('.routine'); await page.locator('.routine .start').first().click(); await page.waitForSelector('.task-help'); await page.click('.diff >> nth=4'); bad.push(...await audit(page, `${L}/task-help`));
+    await page.click('.help-btns button >> nth=1'); await page.waitForSelector('.help-card'); bad.push(...await audit(page, `${L}/kind-thought`)); await page.click('.help-btns button >> nth=2'); await page.waitForSelector('.help-steps'); bad.push(...await audit(page, `${L}/relax`));
+    await page.click('.help-btns button >> nth=0'); await page.waitForSelector('dialog textarea'); bad.push(...await audit(page, `${L}/why-hard`)); await closeDialogs(page);
+    await page.evaluate(async () => { const S = await import('./js/store.js'), tpl = S.get().templates[0], day = 86_400_000; for (let i = 0; i < 4; i++) { const tasks = tpl.tasks.map((t, k) => ({ id: t.id, name: t.name, icon: t.icon, plannedSec: t.sec, estSec: t.sec, extraSec: 0, actualSec: t.sec + (k === 0 ? 100 : 0), done: true, skipped: false, difficulty: k === 0 ? 5 : 2, help: { note: 0, thought: 1, relax: 0 } })), tot = tasks.reduce((a, x) => a + x.plannedSec, 0);
+      await S.saveRun({ id: `ax${i}`, profileId: S.activeProfile().id, templateId: tpl.id, templateName: tpl.name, icon: tpl.icon, color: '#6c5ce7', startedAt: Date.now() - (9 - i) * day, endedAt: Date.now() - (9 - i) * day + 600_000, status: 'done', current: 0, pausedMs: 0, plannedTotal: tot, estTotal: tot, actualTotal: tot + 100, tasks, unplanned: [] }); } });
+    await page.goto(base + '#/stats'); await page.waitForSelector('.diff-bars'); bad.push(...await audit(page, `${L}/stats-difficulty`));
+    await page.goto(base + '#/report/period/0-all'); await page.waitForSelector('.rpt .rpt-head'); bad.push(...await audit(page, `${L}/report-period`));
+    await page.goto(base + '#/report/run/ax1'); await page.waitForSelector('.rpt .rpt-tbl'); bad.push(...await audit(page, `${L}/report-run`));
+  }
+  if (bad.length) console.error([...new Set(bad)].join('\n'));
+  assert.deepEqual(bad, []);
+});
+
 await browser.close(); server.close();
 console.log(failures ? `\n${failures} e2e step(s) failed` : '\nall e2e steps passed'); process.exit(failures ? 1 : 0);

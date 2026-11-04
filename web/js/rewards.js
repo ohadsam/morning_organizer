@@ -26,7 +26,9 @@ export function weeklyDigest(runs, now = Date.now()) {
     for (const k of r.tasks || []) if (k.done && k.name) { const e = over.get(k.name) ?? { name: k.name, sum: 0, n: 0 }; e.sum += k.actualSec - k.plannedSec; e.n++; over.set(k.name, e); }
     for (const u of r.unplanned || []) { const e = unp.get(u.key) ?? { key: u.key, label: u.label, emoji: u.emoji, n: 0 }; e.n++; unp.set(u.key, e); }
   }
-  return { slow: [...over.values()].filter((e) => e.n >= 2 && e.sum / e.n >= 30).map((e) => ({ name: e.name, overSec: Math.round(e.sum / e.n) })).sort((a, b) => b.overSec - a.overSec).slice(0, 2),
+  const hardM = new Map(); for (const r of rs) for (const k of r.tasks || []) if (k.difficulty >= 1 && k.name) { const e = hardM.get(k.name) ?? { name: k.name, sum: 0, n: 0 }; e.sum += k.difficulty; e.n++; hardM.set(k.name, e); }
+  return { hard: [...hardM.values()].filter((e) => e.n >= 2 && e.sum / e.n >= 3.5).map((e) => ({ name: e.name, avg: Math.round((e.sum / e.n) * 10) / 10 })).sort((a, b) => b.avg - a.avg).slice(0, 2),
+    slow: [...over.values()].filter((e) => e.n >= 2 && e.sum / e.n >= 30).map((e) => ({ name: e.name, overSec: Math.round(e.sum / e.n) })).sort((a, b) => b.overSec - a.overSec).slice(0, 2),
     unp: [...unp.values()].filter((e) => e.n >= 2).sort((a, b) => b.n - a.n).slice(0, 2).map((e) => ({ key: e.key, label: e.label, emoji: e.emoji, n: e.n })) };
 }
 export function buildReport({ profile, runs, streakDays, totalStars, active, goal }) {
@@ -42,7 +44,7 @@ export function sanitizeReport(r) {
     profile: { name: str(p.name, 30), age: Number.isFinite(Number(p.age)) ? clamp(Math.round(Number(p.age)), 0, 120) : null, gender: ['female', 'male', 'other'].includes(p.gender) ? p.gender : 'other', mascot: str(p.mascot, 8), avatar: shareableAvatar(sanitizeAvatar(p.avatar)) },
     totalStars: n(r.totalStars, 1e6), streakDays: n(r.streakDays, 5000), goalHave: n(r.goalHave, 1e6), at: n(r.at, 1e14),
     recent: (Array.isArray(r.recent) ? r.recent : []).slice(0, 20).map((x) => ({ id: str(x?.id, 64), name: str(x?.name, 80), icon: str(x?.icon, 8), startedAt: n(x?.startedAt, 1e14), endedAt: n(x?.endedAt, 1e14), status: x?.status === 'done' ? 'done' : 'stopped', planned: n(x?.planned), actual: n(x?.actual), stars: n(x?.stars, 3) })),
-    digest: { slow: (Array.isArray(r.digest?.slow) ? r.digest.slow : []).slice(0, 2).map((x) => ({ name: str(x?.name, 80), overSec: n(x?.overSec, 86_400) })), unp: (Array.isArray(r.digest?.unp) ? r.digest.unp : []).slice(0, 2).map((x) => ({ key: str(x?.key, 30), label: str(x?.label, 30), emoji: str(x?.emoji, 8), n: n(x?.n, 999) })) },
+    digest: { hard: (Array.isArray(r.digest?.hard) ? r.digest.hard : []).slice(0, 2).map((x) => ({ name: str(x?.name, 80), avg: clamp(Number(x?.avg) || 0, 0, 5) })), slow: (Array.isArray(r.digest?.slow) ? r.digest.slow : []).slice(0, 2).map((x) => ({ name: str(x?.name, 80), overSec: n(x?.overSec, 86_400) })), unp: (Array.isArray(r.digest?.unp) ? r.digest.unp : []).slice(0, 2).map((x) => ({ key: str(x?.key, 30), label: str(x?.label, 30), emoji: str(x?.emoji, 8), n: n(x?.n, 999) })) },
     active: r.active && typeof r.active === 'object' ? { name: str(r.active.name, 80), icon: str(r.active.icon, 8), task: str(r.active.task, 80), pct: clamp(Number(r.active.pct) || 0, 0, 1), paused: !!r.active.paused } : null,
   };
 }

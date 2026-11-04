@@ -13,6 +13,8 @@ export const native = {
   setWidget: (items) => call('setWidget', json(items)),
   /** Snapshot for the Android progress widget: {active, templateId, name, icon, task, pct, paused, remaining}. */
   setProgress: (o) => call('setProgress', json(o)),
+  /** Shares a PDF (base64) through the system share sheet - e-mail apps attach it. */
+  sharePdf: (name, b64, subject, text) => call('sharePdf', name, b64, subject, text),
   /** {name, stars, streak, week} for the progress widget. */
   setStats: (o) => call('setStats', json(o)),
   /** System notification (Android app): used for parent alerts. */

@@ -35,7 +35,7 @@ export function moodRow(onPick, current = null) {
 
 /** Note + voice + dictation sheet. ctx: { routine, task, voice: start recording right away }. */
 export function openCapture(ctx = {}) {
-  const text = h('textarea', { rows: 4, maxLength: 4000, placeholder: t('jNotePh') }), transcript = h('textarea', { rows: 3, maxLength: 6000 });
+  const text = h('textarea', { rows: 4, maxLength: 4000, placeholder: ctx.hard ? t('jHardPh') : t('jNotePh') }), transcript = h('textarea', { rows: 3, maxLength: 6000 });
   const tBox = h('div', { class: 'stack', hidden: true }, field(t('jTranscript'), transcript, t('jTranscriptHint')),
     h('button', { class: 'btn small', type: 'button', onclick: () => { text.value = `${text.value}${text.value ? '\n' : ''}${transcript.value}`.slice(0, 4000); transcript.value = ''; tBox.hidden = true; } }, t('jUseTranscript')));
   const status = h('p', { class: 'note', role: 'status' }, ''), timer = h('strong', { class: 'rec-time', 'aria-hidden': 'true' }, '');
@@ -63,15 +63,15 @@ export function openCapture(ctx = {}) {
     paint();
   }
   dictBtn.addEventListener('click', toggleDictation); recBtn.addEventListener('click', toggleRecord); paint();
-  const m = modal(`📝 ${ctx.task ? t('jNoteFor', { task: ctx.task }) : t('jNewNote')}`, h('div', { class: 'stack' }, field(t('jNote'), text), h('div', { class: 'row-btns' }, recBtn, dictBtn, timer), status, tBox,
+  const m = modal(`📝 ${ctx.task ? t('jNoteFor', { task: ctx.task }) : t('jNewNote')}`, h('div', { class: 'stack' }, ctx.hard ? h('p', { class: 'note' }, t('jHardHint')) : null, field(t('jNote'), text), h('div', { class: 'row-btns' }, recBtn, dictBtn, timer), status, tBox,
     h('p', { class: 'note' }, t('jPrivacy'))), [
     { label: t('cancel'), fn: () => { cleanup(); } },
     { label: t('save'), primary: true, fn: async () => {
       if (rec) { const r = await rec.stop(); rec = null; blob = r.blob; sec = r.sec; }
       dict?.stop(); clearInterval(tick);
       if (!text.value.trim() && !blob && !transcript.value.trim()) { toast(t('jNothing')); return false; }
-      await J.addEntry(pid(), { kind: blob ? 'voice' : 'note', text: text.value, transcript: transcript.value, routine: ctx.routine || '', task: ctx.task || '', audio: blob ? { sec } : null }, blob);
-      await saved(); } }]);
+      await J.addEntry(pid(), { kind: blob ? 'voice' : 'note', text: text.value, transcript: transcript.value, routine: ctx.routine || '', task: ctx.task || '', audio: blob ? { sec } : null, difficulty: ctx.difficulty || 0 }, blob);
+      ctx.onSaved?.(); await saved(); } }]);
   m.el.addEventListener('close', cleanup);
   if (ctx.voice && recorderSupported()) setTimeout(toggleRecord, 150);
   return m;

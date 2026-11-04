@@ -25,6 +25,9 @@ Status: 💡 idea · 🔬 needs a decision / research · ✅ built (see CHANGELO
 - ✅ (1.11) **Goal - Plan - Do - Check** (Cog-Fun-inspired self-help), **Alarms screen**, **What's new** sheet.
 - 🔬 Parent view of a child's goal progress/check-ins; a parent-set weekly goal reminder.
 
+- ✅ (1.12) Task difficulty + kind thoughts + relaxation, difficulty statistics, report/PDF/e-mail export.
+- 💡 Selectable text in the PDF (needs an embedded font); scheduled weekly report reminder; per-task difficulty trends over time.
+
 ## Family
 - ✅ (1.10) **Weekly parent digest** with plain-language insights ("shoes are the slowest step; try preparing them the night before").
 - ✅ (1.10) **Shared reward menu** and "reward given" confirmation flow.

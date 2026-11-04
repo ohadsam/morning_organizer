@@ -81,7 +81,8 @@ export function sanitizeRun(r) {
     plannedTotal: n(r.plannedTotal, 1e7), estTotal: n(r.estTotal, 1e7), actualTotal: n(r.actualTotal, 1e7),
     tasks: r.tasks.slice(0, LIMITS.maxTasks).map((x) => ({ id: String(x?.id ?? '').slice(0, 64), name: cleanText(x?.name, LIMITS.maxName), icon: cleanText(x?.icon, 8),
       plannedSec: n(x?.plannedSec, LIMITS.maxTaskSec), estSec: n(x?.estSec, LIMITS.maxTaskSec), extraSec: n(x?.extraSec, LIMITS.maxTaskSec), actualSec: n(x?.actualSec, LIMITS.maxTaskSec),
-      done: !!x?.done, skipped: !!x?.skipped })),
+      done: !!x?.done, skipped: !!x?.skipped, difficulty: clamp(Math.round(Number(x?.difficulty)) || 0, 0, 5),
+      help: { note: n(x?.help?.note, 99), thought: n(x?.help?.thought, 99), relax: n(x?.help?.relax, 99) } })),
   };
 }
 

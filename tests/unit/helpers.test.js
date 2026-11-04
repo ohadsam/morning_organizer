@@ -100,5 +100,5 @@ test('weekly digest: slowest steps and repeated interruptions, last 7 days only'
   const run = (ago, over, unp) => ({ endedAt: now - ago * day, tasks: [{ name: 'Shoes', done: true, plannedSec: 60, actualSec: 60 + over }, { name: 'Eat', done: true, plannedSec: 300, actualSec: 300 }], unplanned: unp ? [{ key: 'toilet', label: 'Toilet', emoji: '🚽', sec: 60 }] : [] });
   const d = weeklyDigest([run(1, 90, true), run(2, 70, true), run(3, 80, false), run(20, 500, true)], now);
   assert.deepEqual(d.slow, [{ name: 'Shoes', overSec: 80 }]); assert.equal(d.unp.length, 1); assert.equal(d.unp[0].n, 2);
-  assert.deepEqual(sanitizeReport({ digest: { slow: [{ name: 'x'.repeat(200), overSec: -5 }], unp: 5 } }).digest, { slow: [{ name: 'x'.repeat(80), overSec: 0 }], unp: [] });
+  assert.deepEqual(sanitizeReport({ digest: { slow: [{ name: 'x'.repeat(200), overSec: -5 }], unp: 5 } }).digest, { hard: [], slow: [{ name: 'x'.repeat(80), overSec: 0 }], unp: [] });
 });

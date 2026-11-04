@@ -27,6 +27,7 @@ import { openCapture, openPark, moodRow } from './capture.js';
 import { calmPanel } from './calm.js';
 import { modal } from './common.js';
 import { planText } from './goals.js';
+import { taskHelpCard } from './taskHelp.js';
 import { openUnplannedSheet, patternCards, reasonName } from './unplanned.js';
 
 const clock = (ms) => new Date(ms).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -91,7 +92,7 @@ export async function renderRunner(root, id, nav) {
   { const cp = sandSvg.querySelector('clipPath'); cp.append(sv('path', { d: 'M10 4H50L34 50L50 96H10L26 50Z' })); for (const r of [sandTop, sandBot]) r.setAttribute('clip-path', 'url(#hg)'); }
   ring.append(ti, sandSvg, time, sub);
 
-  let alerted = false; let lastCur = -1; const srMarks = new Set(), leaveMemo = newLeaveMemo();
+  let lastHelpIdx = -1; let alerted = false; let lastCur = -1; const srMarks = new Set(), leaveMemo = newLeaveMemo();
   const leaveEl = h('p', { class: 'leave-line', hidden: true });
   const feat = S.features();                                       // which helpers this person has switched on (focus areas)
   const intrEl = h('div', { class: 'intr-banner', role: 'status', hidden: true });
@@ -131,6 +132,12 @@ export async function renderRunner(root, id, nav) {
   const plans = (S.getTemplate(run.templateId)?.plans || []).slice(0, 5);
   if (plans.length) { setChildren(planBox, h('summary', {}, `🧠 ${t('plansTitle')}`), h('ul', { class: 'plan-list' }, plans.map((p) => h('li', {}, h('strong', {}, t('planIf')), ` ${p.when}, `, h('strong', {}, t('planThenWord')), ` ${p.then}`)))); planBox.open = fresh; }
   const myGoals = S.goals().filter((g) => !g.done && g.templateId === run.templateId).slice(0, 2);
+  const helpCard = feat.taskHelp ? taskHelpCard({
+    current: () => ({ task: E.isActive(run) ? run.tasks[run.current] : null, index: run.current }),
+    rate: (i, v) => { run = E.setDifficulty(run, i, v); persist(); },
+    helped: (i, kind) => { run = E.noteHelp(run, i, kind); persist(); },
+    openCalm: () => openCalm(),
+  }, run.templateName) : null;
   const goalBox = h('details', { class: 'card plan-card', hidden: !myGoals.length });
   if (myGoals.length) { setChildren(goalBox, h('summary', {}, `🎯 ${t('goalMyPlanToday')}`), h('ul', { class: 'plan-list' }, myGoals.map((g) => h('li', {}, h('strong', {}, g.title), planText(g) ? ` — ${planText(g)}` : '')))); goalBox.open = fresh; }
   function announceTask(cur) {
@@ -184,7 +191,7 @@ export async function renderRunner(root, id, nav) {
         h('span', { class: 'cb' }, icon('check', 16)), h('span', { class: 'ti-s', 'aria-hidden': 'true' }, taskIcon(tk)), h('span', { class: 'nm' }, tk.name || '—'),
         h('span', { class: 'du' }, tk.done || tk.skipped ? fmtDur(tk.actualSec || 0) : fmtDur(tk.plannedSec))),
       st().coachButton && !tk.done && !tk.skipped ? h('button', { class: 'tip-btn', type: 'button', 'aria-label': t('tipFor', { name: tk.name || '' }), title: t('tipBtn'), onclick: () => coach.show('any', tk.name) }, '💡') : null)));
-    pushWidget();
+    pushWidget(); helpCard?.update(); if (cur && run.current !== lastHelpIdx) { lastHelpIdx = run.current; helpCard?.clear(); }
     list.toggleAttribute('inert', !!run.interrupt);
     if (run.interrupt) {
       setChildren(controls, h('div', { class: 'main-btns' }, h('button', { class: 'btn primary xl', type: 'button', onclick: endUnplanned }, icon('play', 22), t('unpBack'))));
@@ -289,14 +296,15 @@ export async function renderRunner(root, id, nav) {
         h('tbody', {}, run.tasks.map((x) => h('tr', { class: x.actualSec > x.plannedSec ? 'over' : '' }, h('td', {}, `${taskIcon(x)} ${x.name || '—'}${x.skipped ? ` (${t('skippedTag')})` : ''}`), h('td', {}, fmtDur(x.plannedSec)), h('td', {}, fmtDur(x.actualSec)))))),
       h('div', { class: 'toolbar' },
         h('button', { class: 'btn primary', type: 'button', onclick: () => nav('#/') }, t('again')),
-        h('button', { class: 'btn', type: 'button', onclick: () => nav(`#/stats/${run.templateId}`) }, icon('chart', 18), t('viewStats')))));
+        h('button', { class: 'btn', type: 'button', onclick: () => nav(`#/stats/${run.templateId}`) }, icon('chart', 18), t('viewStats')),
+        h('button', { class: 'btn', type: 'button', onclick: () => nav(`#/report/run/${run.id}`) }, `📄 ${t('rpRunReport')}`))));
     if (done) confetti(root, 44);
     say(done ? 'runDone' : 'runStopped');
   }
 
   root.replaceChildren(h('div', { class: 'run' },
     h('div', { class: 'run-top', style: { '--accent': run.color || '#6c5ce7' } }, h('span', { class: 'emoji' }, run.icon), h('h1', { class: 'run-title' }, run.templateName)),
-    bubble, coachHost, transEl, sitEl, intrEl, goalBox, planBox, gearBox, pw.el, head, leaveEl, h('div', { class: 'ring-wrap' }, ring, pausedBadge), sprintEl, taskName, pace, controls, list));
+    bubble, coachHost, transEl, sitEl, intrEl, goalBox, planBox, gearBox, pw.el, head, leaveEl, h('div', { class: 'ring-wrap' }, ring, pausedBadge), sprintEl, taskName, pace, controls, helpCard?.el, list));
   paintStatic(); paintLive(); paintGear();
   if (fresh) { say('start'); pushActive(true); }   // the parent sees "doing now" from the very first task
   timer = setInterval(loop, 250);

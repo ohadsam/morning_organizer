@@ -61,6 +61,11 @@
             </intent-filter>
         </activity>
 
+        <!-- Report PDFs are handed to other apps (e-mail...) as read-only content URIs from the private cache folder "reports". -->
+        <provider android:name="androidx.core.content.FileProvider" android:authorities="${applicationId}.files" android:exported="false" android:grantUriPermissions="true">
+            <meta-data android:name="android.support.FILE_PROVIDER_PATHS" android:resource="@xml/file_paths"/>
+        </provider>
+
         <!-- Phone-to-phone NFC hand-over (invitation / encrypted message). Must be exported for the NFC system service to bind it;
              BIND_NFC_SERVICE is held only by the platform. It answers "nothing here" unless the person asked to offer something. -->
         <service android:name=".NfcOfferService" android:exported="true" android:permission="android.permission.BIND_NFC_SERVICE">

@@ -716,7 +716,7 @@ await step('v1.11: axe on alarms screen + sheet, goals screen + wizard + check-i
     await page.click('button.primary'); await page.waitForSelector('dialog .strat-pick'); bad.push(...await audit(page, `${L}/goal-wizard`)); await page.fill('dialog input[type=text] >> nth=0', 'goal'); await page.click('dialog footer button.primary'); await page.waitForSelector('.goal-card');
     bad.push(...await audit(page, `${L}/goals`)); await page.click('.goal-card button.primary'); await page.waitForSelector('dialog .mood'); bad.push(...await audit(page, `${L}/checkin`)); await closeDialogs(page);
     await page.goto(base + '#/'); await page.evaluate(() => localStorage.setItem('mo.seen', '0.0.1')); await page.reload(); await page.waitForSelector('.routine'); await page.waitForSelector('dialog .row-btns'); bad.push(...await audit(page, `${L}/whatsnew`)); await closeDialogs(page);
-    await page.evaluate(async () => { const S = await import('./js/store.js'); await S.updateSettings({ timerStyle: 'sand' }); }); await page.goto(base + '#/'); await page.locator('.routine .start').first().click(); await page.waitForSelector('.ring.sandy'); bad.push(...await audit(page, `${L}/sand-run`));
+    await page.evaluate(async () => { const S = await import('./js/store.js'); await S.updateSettings({ timerStyle: 'sand' }); }); await page.goto(base + '#/'); await page.locator('.routine .start').first().click(); await page.waitForSelector('.ring.sandy'); await page.waitForTimeout(900); bad.push(...await audit(page, `${L}/sand-run`));   // let the pop-in animation of the cheer bubble finish (it is partly transparent while it plays)
   }
   if (bad.length) console.error([...new Set(bad)].join('\n'));
   assert.deepEqual(bad, []);
@@ -762,7 +762,7 @@ await step('v1.12: axe on task-help card, kind thought / relax, stats difficulty
   const bad = [];
   for (const [lang, scheme] of [['he', 'light'], ['en', 'dark']]) {
     const { page } = await newPage({ lang, ctx: { colorScheme: scheme } }); await page.goto(base); if (lang === 'he') await dismissWelcome(page); const L = `${lang}/${scheme}`;
-    await page.waitForSelector('.routine'); await page.locator('.routine .start').first().click(); await page.waitForSelector('.task-help'); await page.click('.diff >> nth=4'); bad.push(...await audit(page, `${L}/task-help`));
+    await page.waitForSelector('.routine'); await page.locator('.routine .start').first().click(); await page.waitForSelector('.task-help'); await page.click('.diff >> nth=4'); await page.waitForTimeout(900); bad.push(...await audit(page, `${L}/task-help`));
     await page.click('.help-btns button >> nth=1'); await page.waitForSelector('.help-card'); bad.push(...await audit(page, `${L}/kind-thought`)); await page.click('.help-btns button >> nth=2'); await page.waitForSelector('.help-steps'); bad.push(...await audit(page, `${L}/relax`));
     await page.click('.help-btns button >> nth=0'); await page.waitForSelector('dialog textarea'); bad.push(...await audit(page, `${L}/why-hard`)); await closeDialogs(page);
     await page.evaluate(async () => { const S = await import('./js/store.js'), tpl = S.get().templates[0], day = 86_400_000; for (let i = 0; i < 4; i++) { const tasks = tpl.tasks.map((t, k) => ({ id: t.id, name: t.name, icon: t.icon, plannedSec: t.sec, estSec: t.sec, extraSec: 0, actualSec: t.sec + (k === 0 ? 100 : 0), done: true, skipped: false, difficulty: k === 0 ? 5 : 2, help: { note: 0, thought: 1, relax: 0 } })), tot = tasks.reduce((a, x) => a + x.plannedSec, 0);

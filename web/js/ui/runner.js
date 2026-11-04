@@ -7,13 +7,14 @@ import { choose, taskEvent } from '../feedback.js';
 import { suggestIcon } from '../taskIcons.js';
 import { setAwake } from '../awake.js';
 import { signal, unlockAudio } from '../audio.js';
-import { icon, confirmBox } from './common.js';
+import { icon, confirmBox, toast } from './common.js';
 import { progressWidget, overallProgress } from './progress.js';
 import { native } from '../native.js';
 import { avatarNode, animate } from './avatar.js';
 import { confetti } from './fx.js';
 import { createCoach, speakWithSettings } from './coach.js';
 import { iconNode } from './editor.js';
+import * as F from '../family.js';
 import { afterRun, pushActive, alertParents } from '../family.js';
 import { celebrateGoals } from './family.js';
 import { announce } from '../a11y.js';
@@ -25,6 +26,7 @@ import { sprintPlan, sprintState } from '../sprints.js';
 import { openCapture, openPark, moodRow } from './capture.js';
 import { calmPanel } from './calm.js';
 import { modal } from './common.js';
+import { planText } from './goals.js';
 import { openUnplannedSheet, patternCards, reasonName } from './unplanned.js';
 
 const clock = (ms) => new Date(ms).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -81,12 +83,19 @@ export async function renderRunner(root, id, nav) {
   const pausedBadge = h('div', { class: 'paused-badge', hidden: true }, `⏸ ${t('pausedBig')}`);
   const taskName = h('h2', { class: 'now' }), head = h('div', { class: 'run-meta' });
   const list = h('ul', { class: 'checklist' }), controls = h('div', { class: 'run-controls' }), pace = h('p', { class: 'pace' });
-  ring.append(ti, time, sub);
+  // sand clock: an hourglass whose top empties while the bottom fills (only shown with the "sand" timer look)
+  const SVGNS = 'http://www.w3.org/2000/svg', sv = (tag, a) => { const e = document.createElementNS(SVGNS, tag); for (const [k, v] of Object.entries(a)) e.setAttribute(k, v); return e; };
+  const sandTop = sv('rect', { x: 10, y: 4, width: 40, height: 46, class: 'sand' }), sandBot = sv('rect', { x: 10, y: 96, width: 40, height: 0, class: 'sand' }), sandFlow = sv('rect', { x: 29, y: 50, width: 2, height: 46, class: 'sand' });
+  const sandSvg = sv('svg', { viewBox: '0 0 60 100', class: 'sand-svg', 'aria-hidden': 'true' });
+  sandSvg.append(sv('defs', {}), sv('clipPath', { id: 'hg' }), sandTop, sandBot, sandFlow, sv('path', { d: 'M10 4H50L34 50L50 96H10L26 50Z', class: 'glass', fill: 'none' }));
+  { const cp = sandSvg.querySelector('clipPath'); cp.append(sv('path', { d: 'M10 4H50L34 50L50 96H10L26 50Z' })); for (const r of [sandTop, sandBot]) r.setAttribute('clip-path', 'url(#hg)'); }
+  ring.append(ti, sandSvg, time, sub);
 
   let alerted = false; let lastCur = -1; const srMarks = new Set(), leaveMemo = newLeaveMemo();
   const leaveEl = h('p', { class: 'leave-line', hidden: true });
   const feat = S.features();                                       // which helpers this person has switched on (focus areas)
   const intrEl = h('div', { class: 'intr-banner', role: 'status', hidden: true });
+  const sitEl = h('p', { class: 'chip solid sit-chip', role: 'status', hidden: true });
   const sprintEl = h('div', { class: 'sprint-line', role: 'status', 'aria-live': 'polite', hidden: true });
   const transEl = h('div', { class: 'transition-banner', role: 'status', 'aria-live': 'polite', hidden: true });
   let transTimer, sprintKey = '', bodyAt = Date.now(), bodyN = 0; const warnedNext = new Set();
@@ -121,6 +130,9 @@ export async function renderRunner(root, id, nav) {
   const planBox = h('details', { class: 'card plan-card', hidden: !(run.plans || S.getTemplate(run.templateId)?.plans || []).length });
   const plans = (S.getTemplate(run.templateId)?.plans || []).slice(0, 5);
   if (plans.length) { setChildren(planBox, h('summary', {}, `🧠 ${t('plansTitle')}`), h('ul', { class: 'plan-list' }, plans.map((p) => h('li', {}, h('strong', {}, t('planIf')), ` ${p.when}, `, h('strong', {}, t('planThenWord')), ` ${p.then}`)))); planBox.open = fresh; }
+  const myGoals = S.goals().filter((g) => !g.done && g.templateId === run.templateId).slice(0, 2);
+  const goalBox = h('details', { class: 'card plan-card', hidden: !myGoals.length });
+  if (myGoals.length) { setChildren(goalBox, h('summary', {}, `🎯 ${t('goalMyPlanToday')}`), h('ul', { class: 'plan-list' }, myGoals.map((g) => h('li', {}, h('strong', {}, g.title), planText(g) ? ` — ${planText(g)}` : '')))); goalBox.open = fresh; }
   function announceTask(cur) {
     const msg = t('nowTask', { task: cur.name || '' });
     if (st().announceTasks) setTimeout(() => speakWithSettings(msg), fresh ? 1800 : 300); // after the "start" encouragement
@@ -165,7 +177,7 @@ export async function renderRunner(root, id, nav) {
     const cur = run.tasks[run.current], paused = run.status === 'paused';
     taskName.textContent = cur?.name || ''; ti.replaceChildren(cur ? taskIcon(cur) : '');
     if (cur && run.current !== lastCur) { lastCur = run.current; announceTask(cur); }
-    ring.classList.toggle('calm', calm(run)); { const ts = st().timerStyle, style = ts && ts !== 'auto' ? ts : feat.timerPie ? 'pie' : 'ring'; ring.classList.toggle('pie', style === 'pie'); ring.classList.toggle('bar', style === 'bar'); }
+    ring.classList.toggle('calm', calm(run)); { const ts = st().timerStyle, style = ts && ts !== 'auto' ? ts : feat.timerPie ? 'pie' : 'ring'; ring.classList.toggle('pie', style === 'pie'); ring.classList.toggle('bar', style === 'bar'); ring.classList.toggle('sandy', style === 'sand'); }
     ring.classList.toggle('paused', paused); pausedBadge.hidden = !paused || !!run.interrupt;
     list.replaceChildren(...run.tasks.map((tk, i) => h('li', { class: `${i === run.current && E.isActive(run) ? 'cur' : ''} ${tk.done ? 'done' : ''} ${tk.skipped ? 'skip' : ''}` },
       h('label', {}, h('input', { type: 'checkbox', checked: tk.done, onchange: () => { if (i === run.current) doComplete(); else { run = E.toggleTask(run, i, Date.now()); afterChange(); } } }),
@@ -196,11 +208,13 @@ export async function renderRunner(root, id, nav) {
   function paintLive() {
     if (!E.isActive(run)) return;
     const now = Date.now(), cur = run.tasks[run.current], left = E.remainingSec(run, now), total = cur.plannedSec + cur.extraSec, over = left < 0;
+    { const par = F.sittingParent(); sitEl.hidden = !par; if (par) sitEl.textContent = `👪 ${t('sitHere', { name: par.name || t('family') })}`; }
     intrEl.hidden = !run.interrupt;
     if (run.interrupt) setChildren(intrEl, h('span', { 'aria-hidden': 'true' }, run.interrupt.emoji), h('strong', {}, ` ${reasonName(run.interrupt)} `), h('span', { class: 'intr-time' }, fmtDur((now - run.interrupt.startedAt) / 1000)), h('small', {}, ` · ${t('unpClockStopped')}`));
     time.textContent = fmtDur(Math.ceil(over ? -left : left));
     sub.textContent = run.status === 'paused' ? t('paused') : over ? (calm(run) ? t('calmLeft') : t('over')) : t('left');
-    ring.style.setProperty('--p', String(clamp(1 - left / total, 0, 1)));
+    const prog = clamp(1 - left / total, 0, 1); ring.style.setProperty('--p', String(prog));
+    if (ring.classList.contains('sandy')) { sandTop.setAttribute('y', String(4 + 46 * prog)); sandTop.setAttribute('height', String(46 * (1 - prog))); sandBot.setAttribute('y', String(96 - 46 * prog)); sandBot.setAttribute('height', String(46 * prog)); sandFlow.setAttribute('height', prog < 1 ? '46' : '0'); }
     const w = st().warnSec;
     ring.classList.toggle('over', over); ring.classList.toggle('warn', !over && w > 0 && left <= w && run.status === 'running');
     const diff = E.paceDiffSec(run, now);
@@ -262,6 +276,7 @@ export async function renderRunner(root, id, nav) {
       h('div', { class: 'big-emoji' }, avatarNode(st().avatar, { size: 110, anim: done ? 'dance' : 'think' })), h('h1', {}, done ? t('allDone') : t('stopped')), starRow,
       h('p', { class: 'muted' }, run.templateName), h('div', { class: 'celebrate-slot' }), bubble,
       feat.moodCheck ? h('div', { class: 'card center' }, h('strong', {}, t('moodAsk')), moodRow(async (v) => { run.mood = v; await S.setRunMood(run.id, v); }, run.mood || null)) : null,
+      myGoals.length && done ? h('div', { class: 'card center' }, h('strong', {}, `🎯 ${myGoals[0].title}`), h('p', {}, t('checkAsk')), moodRow(async (v) => { await S.addCheck(myGoals[0].id, { rating: v }); toast(t('checkSaved')); })) : null,
       feat.journal ? h('button', { class: 'btn', type: 'button', onclick: () => openCapture({ routine: run.templateName }) }, `📝 ${t('jAfter')}`) : null,
       h('div', { class: 'card kvs' },
         dRow(t('startedAt'), clock(run.startedAt)), dRow(t('wall'), fmtHuman(s.wallSec, u)),
@@ -281,9 +296,9 @@ export async function renderRunner(root, id, nav) {
 
   root.replaceChildren(h('div', { class: 'run' },
     h('div', { class: 'run-top', style: { '--accent': run.color || '#6c5ce7' } }, h('span', { class: 'emoji' }, run.icon), h('h1', { class: 'run-title' }, run.templateName)),
-    bubble, coachHost, transEl, intrEl, planBox, gearBox, pw.el, head, leaveEl, h('div', { class: 'ring-wrap' }, ring, pausedBadge), sprintEl, taskName, pace, controls, list));
+    bubble, coachHost, transEl, sitEl, intrEl, goalBox, planBox, gearBox, pw.el, head, leaveEl, h('div', { class: 'ring-wrap' }, ring, pausedBadge), sprintEl, taskName, pace, controls, list));
   paintStatic(); paintLive(); paintGear();
-  if (fresh) say('start');
+  if (fresh) { say('start'); pushActive(true); }   // the parent sees "doing now" from the very first task
   timer = setInterval(loop, 250);
   return () => { clearInterval(timer); clearTimeout(bubbleTimer); clearTimeout(transTimer); coach.hide(); document.removeEventListener('visibilitychange', onVis); setAwake('run', false); if (E.isActive(run)) persist(); };
 }

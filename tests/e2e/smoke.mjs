@@ -267,6 +267,12 @@ await step('family: invite -> join -> approve -> LIVE link (WebRTC, no server) -
   await C.page.click('dialog .menu-item button:has-text("Get")'); await C.page.click('dialog footer button:has-text("Get")');
   await P.page.goto(base + '#/family'); await P.page.waitForSelector('.family-card:has-text("Ice cream trip")', { timeout: 15000 }); await P.page.click('.family-card button:has-text("Given")');
   await C.page.waitForTimeout(1500); await closeDialogs(C.page); await C.page.click('.quick button:has-text("Rewards")'); await C.page.click('dialog details summary'); await C.page.waitForSelector('dialog li:has-text("given")', { timeout: 15000 });
+  // v1.11: the parent suggests a goal (live) and sits with the child during a run
+  await closeDialogs(C.page); await P.page.goto(base + '#/family'); await P.page.click('button:has-text("Suggest a goal")'); await P.page.click('dialog .chip:has-text("Be ready on time")'); await P.page.check('dialog .strat-pick:has-text("Prepare things the night before") input'); await P.page.click('dialog footer button:has-text("Save")');
+  await C.page.goto(base + '#/goals'); await C.page.waitForSelector('.goal-card:has-text("Suggested by Mom")', { timeout: 15000 });
+  await C.page.goto(base + '#/'); await C.page.locator('.routine .start').first().click(); await C.page.waitForSelector('.ring');
+  await P.page.goto(base + '#/family'); await P.page.waitForSelector('.family-card button:has-text("Sit with me")', { timeout: 15000 }); await P.page.click('.family-card button:has-text("Sit with me")');
+  await C.page.waitForSelector('.sit-chip:not([hidden])', { timeout: 15000 }); assert.match(await C.page.textContent('.sit-chip'), /Mom is with you/);
   assert.deepEqual(P.errors, []); assert.deepEqual(C.errors, []);
 });
 
@@ -665,6 +671,52 @@ await step('v1.10: axe on template pickers and library page (young child too)', 
     await page.goto(base + '#/library'); await page.waitForSelector('.lib-card'); bad.push(...await audit(page, `${L}/library`));
     await setStyle(page, 'auto'); await page.goto(base + '#/settings'); await page.fill('input[type=number][max="120"]', '7'); await page.dispatchEvent('input[type=number][max="120"]', 'change'); await page.waitForTimeout(400);
     await page.goto(base + '#/'); await page.waitForSelector('.routine'); await page.click('.toolbar button >> nth=1'); await page.waitForSelector('dialog .tiles-grid'); bad.push(...await audit(page, `${L}/routine-picker-playful`)); await closeDialogs(page);
+  }
+  if (bad.length) console.error([...new Set(bad)].join('\n'));
+  assert.deepEqual(bad, []);
+});
+
+// ── v1.11: alarms screen, goals (Goal-Plan-Do-Check), sand clock, what's new ──
+await step('v1.11: Alarms screen - find it from home, switch on, edit the chain in a sheet, schedule shows on the routine card', async () => {
+  const { page, errors } = await newPage(); await page.goto(base); await page.waitForSelector('.routine');
+  await page.click('.quick button:has-text("Alarms")'); await page.waitForSelector('.alarm-card'); assert.match(await page.textContent('.chip.solid'), /No alarm is on/);
+  await page.locator('.alarm-card').first().locator('input[type=checkbox]').check(); await page.waitForFunction(() => !document.querySelector('.chip.solid'));
+  await page.locator('.alarm-card').first().locator('button:has-text("Edit alarm")').click(); await page.waitForSelector('dialog .ring-card');
+  await page.click('dialog button:has-text("Add another alarm")'); await page.waitForSelector('dialog .ring-card >> nth=1'); await page.click('dialog footer button:has-text("Done")'); await page.waitForSelector('dialog', { state: 'detached' });
+  await page.waitForFunction(() => /→/.test(document.querySelector('.alarm-card small')?.textContent || ''));
+  await page.goto(base + '#/'); await page.waitForSelector('.routine .alarm-line'); assert.match(await page.textContent('.routine .alarm-line'), /07:00 → 07:05/);
+  assert.deepEqual(errors, []);
+});
+
+await step('v1.11: goals - create with strategies, plan card in the run, check-in after the run, edit/achieve; sand clock timer; what\'s new after an update', async () => {
+  const { page, errors } = await newPage(); await page.goto(base); await page.waitForSelector('.routine');
+  await page.click('.quick button:has-text("Goals")'); await page.waitForSelector('.goal-card, .empty'); await page.click('button:has-text("New goal")'); await page.waitForSelector('dialog .strat-pick');
+  await page.click('dialog .chip:has-text("Be ready on time")'); await page.selectOption('dialog select', { index: 1 });
+  await page.check('dialog .strat-pick:has-text("Prepare things the night before") input'); await page.check('dialog .strat-pick:has-text("visible timer") input'); await page.check('dialog .strat-pick:has-text("Say the steps") input'); await page.click('dialog .strat-pick:has-text("Put the phone away") input');
+  await page.waitForSelector('dialog .note:has-text("Up to 3")'); await page.fill('dialog input[type=text] >> nth=1', 'Shoes by the door'); await page.click('dialog footer button:has-text("Save")');
+  await page.waitForSelector('.goal-card:has-text("Be ready on time")'); assert.match(await page.textContent('.goal-card'), /night before/);
+  await page.goto(base + '#/settings'); await page.selectOption('label.field:has-text("Timer look") select', 'sand');
+  await page.goto(base + '#/'); await page.locator('.routine .start').first().click(); await page.waitForSelector('.ring.sandy'); await page.waitForSelector('details:has-text("My goal and plan today") li:has-text("Be ready on time")');
+  assert.ok(await page.locator('.sand-svg').isVisible());
+  for (let i = 0; i < 6; i++) await page.click('text=Done ✓'); await page.waitForSelector('.summary'); await page.click('.summary .card:has-text("How did your plan work?") .mood >> nth=3'); await page.waitForSelector('#toast:has-text("Check-in saved")');
+  await page.goto(base + '#/goals'); await page.waitForSelector('.goal-card'); assert.match(await page.textContent('.goal-card'), /1 check-ins/); assert.match(await page.textContent('.goal-card'), /routines on time/);
+  await page.click('.goal-card button:has-text("Achieved")'); await page.waitForSelector('details summary:has-text("Achieved (1)")');
+  // what's new: shown once after an update, never on the very first run
+  await page.evaluate(() => localStorage.setItem('mo.seen', '0.0.1')); await page.reload(); await page.waitForSelector('dialog:has-text("New in")'); await page.click('dialog footer button:has-text("Close")');
+  await page.goto(base + '#/'); await page.reload(); await page.waitForSelector('.routine'); assert.equal(await page.locator('dialog:has-text("New in")').count(), 0); assert.deepEqual(errors, []);
+});
+
+await step('v1.11: axe on alarms screen + sheet, goals screen + wizard + check-in, what\'s new, sand clock', async () => {
+  const bad = [];
+  for (const [lang, scheme] of [['he', 'light'], ['en', 'dark']]) {
+    const { page } = await newPage({ lang, ctx: { colorScheme: scheme } }); await page.goto(base); if (lang === 'he') await dismissWelcome(page); const L = `${lang}/${scheme}`;
+    await page.waitForSelector('.routine'); await page.goto(base + '#/alarms'); await page.waitForSelector('.alarm-card'); bad.push(...await audit(page, `${L}/alarms`));
+    await page.locator('.alarm-card').first().locator('button').last().click(); await page.waitForSelector('dialog .alarm'); bad.push(...await audit(page, `${L}/alarm-sheet`)); await closeDialogs(page);
+    await page.goto(base + '#/goals'); await page.waitForSelector('h1'); bad.push(...await audit(page, `${L}/goals-empty`));
+    await page.click('button.primary'); await page.waitForSelector('dialog .strat-pick'); bad.push(...await audit(page, `${L}/goal-wizard`)); await page.fill('dialog input[type=text] >> nth=0', 'goal'); await page.click('dialog footer button.primary'); await page.waitForSelector('.goal-card');
+    bad.push(...await audit(page, `${L}/goals`)); await page.click('.goal-card button.primary'); await page.waitForSelector('dialog .mood'); bad.push(...await audit(page, `${L}/checkin`)); await closeDialogs(page);
+    await page.goto(base + '#/'); await page.evaluate(() => localStorage.setItem('mo.seen', '0.0.1')); await page.reload(); await page.waitForSelector('.routine'); await page.waitForSelector('dialog .row-btns'); bad.push(...await audit(page, `${L}/whatsnew`)); await closeDialogs(page);
+    await page.evaluate(async () => { const S = await import('./js/store.js'); await S.updateSettings({ timerStyle: 'sand' }); }); await page.goto(base + '#/'); await page.locator('.routine .start').first().click(); await page.waitForSelector('.ring.sandy'); bad.push(...await audit(page, `${L}/sand-run`));
   }
   if (bad.length) console.error([...new Set(bad)].join('\n'));
   assert.deepEqual(bad, []);

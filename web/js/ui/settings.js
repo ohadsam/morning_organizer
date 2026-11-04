@@ -95,7 +95,7 @@ export function renderSettings(root, version) {
           h('a', { class: 'btn', href: '#/calm' }, `🌬️ ${t('calmTitle')}`), h('a', { class: 'btn', href: '#/journal' }, `📓 ${t('journal')}`)),
         toggle(t('transcribeOn'), t('transcribeHint'), st.transcribe, (v) => set({ transcribe: v }))),
       group('pace', t('paceMode'), false,
-        select(t('timerStyle'), st.timerStyle, [['auto', t('timerAuto')], ['ring', t('timerRing')], ['pie', t('timerPie')], ['bar', t('timerBar')]], (v) => set({ timerStyle: v })),
+        select(t('timerStyle'), st.timerStyle, [['auto', t('timerAuto')], ['ring', t('timerRing')], ['pie', t('timerPie')], ['bar', t('timerBar')], ['sand', t('timerSand')]], (v) => set({ timerStyle: v })),
         select(t('paceMode'), st.paceMode, [['normal', t('paceNormal')], ['quick', t('paceQuick')], ['calm', t('paceCalm')]], (v) => set({ paceMode: v })), h('small', { class: 'hint' }, t('paceHint')),
         toggle(t('announceTasks'), t('announceHint'), st.announceTasks, (v) => set({ announceTasks: v }))),
       group('a11y', `♿ ${t('a11y')}`, false,

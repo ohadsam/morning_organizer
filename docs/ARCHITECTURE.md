@@ -45,3 +45,6 @@
 
 ## Template library (1.10)
 `library.js` (pure) defines entries (reusable task / routine; sanitised on load and on every backup import, photos only via `isSafePhoto`, caps 100 routines / 300 tasks), the built-in idea catalogue and merge/upsert rules. `store.js` keeps `state.library` in `kv:library`, exposes `saveToLibrary/updateLibraryItem/removeLibraryItem(undo)/createFromEntry`, and includes it in `exportAll`/`importBackup` (merge by id, replace mirrors). `ui/library.js` holds the pickers (big tiles) and the management page. The sample routines are the built-in routine templates (fixed ids).
+
+## Goals, alarms screen, sand clock (1.11)
+`cogfun.js` (pure) holds the strategy catalogue and goal logic (sanitise, progress from the linked routine's finished runs since the goal began, weekly check prompt); goals live on the profile (`goals`), a parent's suggestion arrives as the `cogGoal` link message (sanitised) and `sitwith` marks a parent as sitting with the child for 20 minutes. `ui/alarms.js` is the all-routines alarm screen (it reuses `alarmEditor` in a sheet on a copy of the template). The sand clock is an inline SVG updated in `paintLive`. `StatsWidget.kt` shows a bounded snapshot pushed through `native.setStats`.

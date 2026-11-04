@@ -13,6 +13,8 @@ export const native = {
   setWidget: (items) => call('setWidget', json(items)),
   /** Snapshot for the Android progress widget: {active, templateId, name, icon, task, pct, paused, remaining}. */
   setProgress: (o) => call('setProgress', json(o)),
+  /** {name, stars, streak, week} for the progress widget. */
+  setStats: (o) => call('setStats', json(o)),
   /** System notification (Android app): used for parent alerts. */
   notify: (title, text) => call('notify', title, text),
   keepAwake: (on) => call('keepAwake', !!on),

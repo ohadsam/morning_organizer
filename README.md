@@ -10,6 +10,7 @@ Build morning routines (for kids or anyone), time every task, and watch yourself
 - **Summary & statistics** - planned vs. estimated vs. actual, per task; chart of every run over time; averages; **insights** (shorten / extend tasks, net effect on the total frame, "you are getting faster") with one-tap *Apply*.
 - **Wake-up alarms** - a chain of alarms (e.g. 7:00, 7:15, 7:20) each with its own sound, volume, message and spoken voice; then offer to start or start the routine automatically (real alarms in the Android app).
 - **Unplanned interruptions** - a ⚡ button counts surprises (toilet, spills...) separately, spots patterns, and offers to plan for them or look closer.
+- **Goals** - Goal - Plan - Do - Check with strategies (inspired by Cog-Fun; self-help, not therapy), and an **Alarms** screen for wake-up chains.
 - **Templates** - save tasks and routines for reuse, pick them with big tiles, share and back them up.
 - **Helpers** - help areas, calm corner, focus tools, journal with optional password and voice notes, reward menu, routine-card widget.
 - **Share without a server** - code/link, system share sheet (Bluetooth, Nearby Share, WhatsApp…), NFC tags; import from code, link, file or tag.

@@ -35,6 +35,9 @@ Status: 💡 idea · 🔬 needs a decision / research · ✅ built (see CHANGELO
 - ✅ (1.15) Undo applied changes; guided / free / partial / several look-backs per run; focus and worked-vs-not views; follow-up card.
 - 💡 Parent view of a child's look-backs; retrospective reminders by schedule.
 
+- ✅ (1.16) Human-sounding voices: characters that pick matching installed voices, phrasing and pauses, wording styles.
+- 🔬 Truly different accents / sector voices and offline neural voices would need bundled voice models (tens of MB per voice) or recordings - not built; a future optional download could add them.
+
 ## Family
 - ✅ (1.10) **Weekly parent digest** with plain-language insights ("shoes are the slowest step; try preparing them the night before").
 - ✅ (1.10) **Shared reward menu** and "reward given" confirmation flow.

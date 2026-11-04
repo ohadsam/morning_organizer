@@ -49,13 +49,13 @@ export function calmPanel(host, { onClose, compact = false } = {}) {
         const ph = phaseAt(PATTERNS[pattern], sec), text = t(`ph_${ph.label}`);
         circle.style.setProperty('--sz', reduced() ? (ph.label === 'out' ? 0.4 : 1) : String(0.4 + 0.6 * ph.size));
         circle.dataset.phase = ph.label; setChildren(label, text); sub.textContent = `${Math.ceil(ph.left)}`;
-        if (text !== lastSpoken) { lastSpoken = text; cue(ph.label); if (s.speak || s.coachSpeak) speakWithSettings(text); }
+        if (text !== lastSpoken) { lastSpoken = text; cue(ph.label); if (s.speak || s.coachSpeak) speakWithSettings(text, { kind: 'short' }); }
       } else {
         const list = kind === 'ground' ? GROUNDING : BODYSCAN, i = stepAt(list.length, total, sec), item = list[i];
         circle.style.setProperty('--sz', '0.8');
         const txt = kind === 'ground' ? t('groundStep', { n: item.n, sense: t(`sense_${item.sense}`) }) : t('scanStep', { part: t(`part_${item}`) });
         setChildren(label, txt); sub.textContent = `${i + 1}/${list.length}`;
-        if (txt !== lastSpoken) { lastSpoken = txt; cue('in'); if (s.speak || s.coachSpeak) speakWithSettings(txt); }
+        if (txt !== lastSpoken) { lastSpoken = txt; cue('in'); if (s.speak || s.coachSpeak) speakWithSettings(txt, { kind: 'short' }); }
       }
       raf = requestAnimationFrame(frame);
     };

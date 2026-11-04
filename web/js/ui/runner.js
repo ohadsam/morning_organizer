@@ -142,7 +142,7 @@ export async function renderRunner(root, id, nav) {
   if (myGoals.length) { setChildren(goalBox, h('summary', {}, `🎯 ${t('goalMyPlanToday')}`), h('ul', { class: 'plan-list' }, myGoals.map((g) => h('li', {}, h('strong', {}, g.title), planText(g) ? ` — ${planText(g)}` : '')))); goalBox.open = fresh; }
   function announceTask(cur) {
     const msg = t('nowTask', { task: cur.name || '' });
-    if (st().announceTasks) setTimeout(() => speakWithSettings(msg), fresh ? 1800 : 300); // after the "start" encouragement
+    if (st().announceTasks) setTimeout(() => speakWithSettings(msg, { kind: 'short' }), fresh ? 1800 : 300); // after the "start" encouragement
     if (st().srAnnounce) announce(`${msg}, ${fmtHuman(cur.plannedSec + cur.extraSec, units())}`);
   }
   /** The calm corner over the run: the clock pauses while you breathe (nothing is "lost"), and resumes when you come back. */

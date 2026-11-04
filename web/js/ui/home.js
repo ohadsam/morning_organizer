@@ -26,13 +26,23 @@ import { alarmSummary } from './alarms.js';
 import { needsCheck } from '../cogfun.js';
 import { openCheckin } from './goals.js';
 
+/** The routine's alarm as an on/off switch: Start runs the routine now, the alarm is what happens by itself - so the person controls it right on the card. */
+function alarmSwitch(tpl) {
+  const on = !!tpl.alarm?.enabled, time = tpl.alarm?.time || '';
+  return h('button', { class: `alarm-switch ${on ? 'on' : ''}`, type: 'button', role: 'switch', 'aria-checked': String(on), 'aria-label': `${t('alarmToggle')} ${time}: ${on ? t('alarmArmed') : t('alarmDisarmed')}`,
+    onclick: async () => { try { await S.saveTemplate({ ...tpl, alarm: { ...tpl.alarm, enabled: !on } }); toast(!on ? t('alarmArmedToast', { time }) : t('alarmDisarmedToast')); } catch { toast(t('error')); } } },
+    h('span', { class: 'as-track', 'aria-hidden': 'true' }, h('span', { class: 'as-knob' })),
+    h('span', { class: 'as-text' }, h('strong', {}, t('alarmToggle')), h('small', { class: on ? 'alarm-line' : '' }, on ? `⏰ ${alarmSummary(tpl)}` : t('alarmDisarmed'))));
+}
+
 function card(tpl, nav) {
   const total = S.totalSec(tpl), simple = S.get().settings.simpleMode;
-  return h('article', { class: 'card routine', style: { '--accent': tpl.color } },
+  return h('article', { class: `card routine ${tpl.alarm?.enabled ? 'armed' : ''}`, style: { '--accent': tpl.color } },
     h('button', { class: 'routine-main', type: 'button', onclick: () => nav(simple ? `#/run/${tpl.id}` : `#/edit/${tpl.id}`), 'aria-label': `${simple ? t('start') : t('edit')}: ${tpl.name}` },
       h('span', { class: 'emoji', 'aria-hidden': 'true' }, tpl.icon),
       h('span', { class: 'routine-text' }, h('strong', {}, tpl.name || t('untitled')),
-        h('small', {}, `${t('tasksCount', { n: tpl.tasks.length })} · ${fmtHuman(total, units())}${tpl.from ? ` · ${t('fromParentTag', { name: tpl.from })}` : ''}`), tpl.alarm?.enabled ? h('small', { class: 'alarm-line' }, `⏰ ${alarmSummary(tpl)}`) : null)),
+        h('small', {}, `${t('tasksCount', { n: tpl.tasks.length })} · ${fmtHuman(total, units())}${tpl.from ? ` · ${t('fromParentTag', { name: tpl.from })}` : ''}`))),
+    simple ? null : alarmSwitch(tpl),
     h('div', { class: `routine-actions ${simple ? 'simple' : ''}` },
       iconBtn('star', tpl.favorite ? t('unfavorite') : t('favorite'), () => S.toggleFavorite(tpl.id), tpl.favorite ? 'fav on' : 'fav'),
       simple ? null : iconBtn('share', t('share'), () => openShare(tpl)),

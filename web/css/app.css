@@ -371,3 +371,11 @@ fieldset { min-width: 0; }
 .menu-panel { display: grid; gap: 6px; padding-block: 8px 2px; }
 .menu-panel .btn { justify-content: flex-start; width: 100%; text-align: start; min-height: 48px; }
 .run-group h3 { margin: 6px 0 4px; font-size: .9rem; color: var(--muted); } .run-more > .run-group { padding: 0 12px 12px; }
+
+/* v1.17: alarm switch on the routine card */
+.alarm-switch { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 52px; padding: 8px 4px; border: 0; border-top: 1px solid var(--line); background: none; color: var(--text); font: inherit; text-align: start; cursor: pointer; }
+.alarm-switch:focus-visible { outline: 3px solid var(--brand); outline-offset: 2px; border-radius: 12px; }
+.as-track { flex: none; width: 46px; height: 26px; border-radius: 99px; background: var(--line); position: relative; transition: background .2s; }
+.as-knob { position: absolute; top: 3px; inset-inline-start: 3px; width: 20px; height: 20px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.3); transition: inset-inline-start .2s; }
+.alarm-switch.on .as-track { background: var(--ok, #0a7a5f); } .alarm-switch.on .as-knob { inset-inline-start: 23px; }
+.as-text { display: grid; gap: 2px; min-width: 0; } .as-text small { color: var(--muted); } .routine.armed { box-shadow: 0 0 0 2px color-mix(in srgb, var(--ok, #0a7a5f) 35%, transparent), var(--shadow); }

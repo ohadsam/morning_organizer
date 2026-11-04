@@ -1030,6 +1030,16 @@ await step('v1.17: wizard - five calm questions build a routine for the person, 
   await page.click('.wizard .btn:has-text("Edit it")'); await page.waitForFunction(() => location.hash.startsWith('#/edit/')); await page.goto(base + '#/'); await page.waitForSelector('.routine'); assert.equal(await page.locator('.routine').count(), before + 1);
 });
 
+await step('v1.17: each routine card has an alarm switch (armed / off) separate from Start; it saves and survives reload', async () => {
+  const { page } = await newPage({ foldsClosed: true }); await page.goto(base + '#/'); await page.waitForSelector('.routine .alarm-switch');
+  const sw = page.locator('.routine .alarm-switch').first(); assert.equal(await sw.getAttribute('aria-checked'), 'true', 'ready-made routines are armed'); assert.ok(await page.locator('.routine.armed').count() >= 1);
+  await sw.click(); await page.waitForFunction(() => document.querySelector('.routine .alarm-switch')?.getAttribute('aria-checked') === 'false');
+  assert.equal(await page.evaluate(async () => (await import('./js/store.js')).get().templates[0].alarm.enabled), false, 'saved');
+  await page.reload(); await page.waitForSelector('.routine .alarm-switch'); assert.equal(await page.locator('.routine .alarm-switch').first().getAttribute('aria-checked'), 'false');
+  await page.locator('.routine .alarm-switch').first().click(); await page.waitForFunction(() => document.querySelector('.routine .alarm-switch')?.getAttribute('aria-checked') === 'true');
+  assert.match(await page.textContent('.routine .alarm-line'), /07:00/); assert.equal(await page.locator('.routine .start').first().isEnabled(), true, 'Start is separate');
+});
+
 await step('v1.17: run screen keeps Done + Pause in view; the rest sits behind More; difficulty behind one tap', async () => {
   const { page } = await newPage({ foldsClosed: true }); await page.goto(base + '#/run/sample-kids'); await page.waitForSelector('.main-btns');
   assert.equal(await page.locator('.run-more .row-btns:visible').count(), 0); assert.equal(await page.locator('.diff-row').isVisible(), false);
@@ -1044,7 +1054,7 @@ await step('v1.17: axe on search, wizard (every step), suggestion card, folded h
   for (const [lang, big] of [['he', false], ['en', true]]) {
     const { page } = await newPage({ lang, foldsClosed: true }); await page.goto(base); if (lang === 'he') await dismissWelcome(page);
     if (big) await page.evaluate(async () => { const S = await import('./js/store.js'); await S.updateSettings({ fontScale: 150 }); });
-    await page.evaluate(() => localStorage.setItem('mo.sug', '{}')); await page.goto(base + '#/'); await page.reload(); await page.waitForSelector('.routine'); bad.push(...await audit(page, `${lang}/home`));
+    await page.evaluate(() => localStorage.setItem('mo.sug', '{}')); await page.goto(base + '#/'); await page.reload(); await page.waitForSelector('.routine'); await dismissWelcome(page); bad.push(...await audit(page, `${lang}/home`));
     await page.click('.menu-group summary >> nth=0'); bad.push(...await audit(page, `${lang}/home-menu-open`));
     await page.click('.home-search'); await page.waitForSelector('.search-item'); bad.push(...await audit(page, `${lang}/search`)); await page.fill('.search-input', 'a'); bad.push(...await audit(page, `${lang}/search-results`)); await page.keyboard.press('Escape'); await page.waitForSelector('dialog', { state: 'detached' });
     await page.click('.toolbar button >> nth=1'); await page.waitForSelector('.wz-opt');

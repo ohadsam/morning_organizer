@@ -5,6 +5,7 @@
 - **Routine wizard** (Home, search, suggestions): who / how old / what helps (focus, organizing, calm, motivation) / which routine / when -> a routine with age- and help-adjusted times (or your own history), optional calm/focus breaks, an alarm, and the chosen help areas saved; then Start / Edit / Done.
 - **Gentle suggestions**: one idea at a time on Home with Try it / Not now / Don't show again, at most one a day; can be switched off in Settings.
 - **Calmer screens**: Home keeps search, New routine and the wizard, with the other tools grouped by topic in a toolbar of dropdowns (Plan / Calm / Progress); the edit page folds Schedule / Gear / If-then / Leave-by / Alarm and per-task expected time; the run screen shows Done + Pause, with the other buttons under "More" and difficulty behind one tap; settings groups start closed.
+- **Alarm switch on every routine card**: a toggle (armed / off, with the schedule) separate from Start, so the person controls whether the alarm will ring by itself.
 - **Fixes**: Statistics showed "nullnull…" when there were no runs (every `replaceChildren(...)` now goes through `setChildren`, enforced by the static check); sheets and pages no longer grow wider than the screen (grid/flex min-width, wrapping text), verified by a new layout sweep (`tests/e2e/layout.mjs`) across 8 sizes x Hebrew/English x big text.
 - **Voices**: stronger character differences (pitch/pace); in the Android app the phone's own text-to-speech is used (all installed voices, exact pitch and pace) with a "Get more voices" button.
 

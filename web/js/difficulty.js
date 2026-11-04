@@ -42,3 +42,20 @@ export function runDifficulty(run) {
   const rated = (run.tasks || []).filter((k) => k.difficulty >= 1);
   return { rated: rated.length, avg: rated.length ? rated.reduce((s, k) => s + k.difficulty, 0) / rated.length : 0, hardest: rated.slice().sort((a, b) => b.difficulty - a.difficulty)[0] ?? null };
 }
+
+/**
+ * How each task's difficulty changed over time (oldest -> newest rating). Tasks rated in at least `min` runs only.
+ * -> [{ name, icon, points: [1..5], first, last, delta, trend: 'easier' | 'harder' | 'steady' }], the biggest change first.
+ */
+export function difficultyTrends(runs, templateId = null, min = 3) {
+  const m = new Map();
+  for (const r of [...finishedRuns(runs)].sort((a, b) => (a.endedAt || 0) - (b.endedAt || 0))) {
+    if (templateId && r.templateId !== templateId) continue;
+    for (const k of r.tasks || []) { if (!k.name || !(k.difficulty >= 1)) continue; const e = m.get(k.name) ?? { name: k.name, icon: k.icon, points: [] }; e.points.push(k.difficulty); m.set(k.name, e); }
+  }
+  const avg = (a) => a.reduce((s, x) => s + x, 0) / a.length;
+  return [...m.values()].filter((e) => e.points.length >= min).slice(0).map((e) => {
+    const half = Math.max(1, Math.floor(e.points.length / 2)), first = avg(e.points.slice(0, half)), last = avg(e.points.slice(-half)), delta = Math.round((last - first) * 10) / 10;
+    return { ...e, points: e.points.slice(-12), first, last, delta, trend: delta <= -0.7 ? 'easier' : delta >= 0.7 ? 'harder' : 'steady' };
+  }).sort((a, b) => Math.abs(b.delta) - Math.abs(a.delta));
+}

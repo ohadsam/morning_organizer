@@ -1,19 +1,12 @@
-// Renders web/icon.svg into PNG icons (PWA + Android launcher). Uses the Playwright that CI/dev machines already have.
+// Renders web/icon.svg / logo-maskable.svg to the PNG icons the PWA manifest and the Android launcher use. Run after scripts/make-logo.py.
 import { chromium } from 'playwright';
-import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
-const svg = readFileSync('web/icon.svg', 'utf8');
-const sizes = { 'web/icons/icon-192.png': 192, 'web/icons/icon-512.png': 512 };
-const android = { mdpi: 48, hdpi: 72, xhdpi: 96, xxhdpi: 144, xxxhdpi: 192 };
-const browser = await chromium.launch();
-const page = await browser.newPage();
-async function render(size, maskable = false) {
-  const inner = maskable ? `<div style="width:100%;height:100%;background:#6c5ce7;display:grid;place-items:center"><div style="width:72%;height:72%">${svg}</div></div>` : svg;
-  await page.setViewportSize({ width: size, height: size });
-  await page.setContent(`<body style="margin:0;background:transparent"><div style="width:${size}px;height:${size}px">${inner.replace('<svg ', `<svg width="100%" height="100%" `)}</div></body>`);
-  return page.screenshot({ omitBackground: true });
+import { readFileSync, writeFileSync } from 'node:fs';
+const jobs = [['web/icon.svg', 'web/icons/icon-512.png', 512], ['web/icon.svg', 'web/icons/icon-192.png', 192], ['web/icons/logo-maskable.svg', 'web/icons/icon-maskable-512.png', 512],
+  ...[['mdpi', 48], ['hdpi', 72], ['xhdpi', 96], ['xxhdpi', 144], ['xxxhdpi', 192]].map(([d, n]) => ['web/icon.svg', `android/app/src/main/res/mipmap-${d}/ic_launcher.png`, n])];
+const b = await chromium.launch(); const p = await b.newPage();
+for (const [src, out, n] of jobs) {
+  await p.setViewportSize({ width: n, height: n });
+  await p.setContent(`<body style="margin:0;background:transparent">${readFileSync(src, 'utf8').replace('<svg ', `<svg width="${n}" height="${n}" `)}</body>`);
+  writeFileSync(out, await p.screenshot({ omitBackground: true, type: 'png' }));
 }
-mkdirSync('web/icons', { recursive: true });
-for (const [f, s] of Object.entries(sizes)) writeFileSync(f, await render(s));
-writeFileSync('web/icons/icon-maskable-512.png', await render(512, true));
-for (const [d, s] of Object.entries(android)) { const dir = `android/app/src/main/res/mipmap-${d}`; mkdirSync(dir, { recursive: true }); writeFileSync(`${dir}/ic_launcher.png`, await render(s)); }
-await browser.close();
+await b.close(); console.log('icons ok');

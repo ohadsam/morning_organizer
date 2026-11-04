@@ -35,8 +35,9 @@ async function newPage(opts = {}) {
   }
   return { page, errors, ctx };
 }
-// the home topic menus are an accordion (one open at a time): open the one that holds a button before clicking it
-const openMenuWith = async (page, text) => { const g = page.locator('.menu-group', { has: page.locator(`button:has-text("${text}")`) }); if (!(await g.evaluate((d) => d.open))) await g.locator('summary').click(); await page.waitForFunction(() => document.querySelectorAll('.menu-group[open]').length === 1); };
+// the Home toolbar's dropdowns show one panel at a time: open the one that holds a button before clicking it
+const openMenuWith = async (page, text) => { if (await page.locator(`.tb-panel:not([hidden]) button:has-text("${text}")`).count()) return; const n = await page.locator('.tb-btn[aria-haspopup]').count(); for (let i = 0; i < n; i++) { await page.locator('.tb-btn[aria-haspopup]').nth(i).click(); if (await page.locator(`.tb-panel:not([hidden]) button:has-text("${text}")`).count()) return; } };
+const qk = async (page, text) => { await openMenuWith(page, text); await page.click(`.tb-panel button:has-text("${text}")`); };
 const setStyle = (page, v) => page.evaluate(async (x) => { const S = await import('./js/store.js'); await S.updateSettings({ textStyle: x }); }, v);
 // Sets a task's duration through the time sheet (tap the time -> minutes/seconds -> OK).
 const setDur = async (page, task, m, sec) => { await task.locator('.tp-val').first().click(); await page.locator('dialog input[type=number]').nth(0).fill(String(m)); await page.locator('dialog input[type=number]').nth(1).fill(String(sec)); await page.click('dialog footer button:has-text("OK")'); await page.waitForSelector('dialog', { state: 'detached' }); };
@@ -54,19 +55,19 @@ await step('Hebrew + RTL is the default (fresh install), welcome dialog personal
   await shot(page, 'welcome-he'); await page.fill('dialog.welcome input[type=text]', 'נועה'); await page.fill('dialog.welcome input[type=number]', '8'); await page.selectOption('dialog.welcome select', 'female');
   await page.click('dialog.welcome footer button >> nth=1'); await page.waitForSelector('dialog.welcome', { state: 'detached' });
   await page.waitForSelector('.routine'); assert.match(await page.textContent('.hero'), /בוקר טוב, נועה/);
-  assert.match(await page.textContent('h1'), /מארגן בוקר/); assert.deepEqual(errors, []); await shot(page, 'home-he');
+  assert.match(await page.textContent('h1'), /SonRise/); assert.deepEqual(errors, []); await shot(page, 'home-he');
   await page.click('.routine-main'); await page.waitForSelector('.task'); await shot(page, 'editor-he');
 });
 
 await step('create routine, set 5.5 min task, reorder with arrows, favourite', async () => {
   const { page, errors } = await newPage(); await page.goto(base); await page.waitForSelector('.routine');
-  await page.click('text=New routine'); await page.waitForSelector('.task');
+  await page.click('.tb-btn[data-tb=new]'); await page.waitForSelector('.task');
   await page.fill('.field input[type=text]', 'My test'); await page.fill('.task-name', 'First');
   await setDur(page, page.locator('.task').first(), 5, 30);
   await page.click('text=Add task'); await page.locator('.task-name').nth(1).fill('Second');
   await page.locator('.task').nth(1).locator('.task-menu-btn').click(); await page.click('dialog button:has-text("Move up")');
   assert.equal(await page.locator('.task-name').first().inputValue(), 'Second');
-  assert.match(await page.textContent('.row.between strong'), /Total: 10m 30s/);
+  assert.match(await page.textContent('.row.between strong'), /Total: 10\sm 30\ss/);
   await page.waitForTimeout(500); await page.click('button[aria-label="Back"]'); await page.waitForSelector('.routine');
   await page.locator('.routine', { hasText: 'My test' }).locator('button[aria-label="Favorite"]').click();
   await page.waitForSelector('text=Favorites'); assert.deepEqual(errors, []);
@@ -85,7 +86,7 @@ await step('drag handle reorders tasks (pointer events)', async () => {
 await step('run: countdown, 10s warning class, overtime, done, summary, statistics', async () => {
   const { page, errors } = await newPage({ clock: true }); await page.goto(base); await page.waitForSelector('.routine');
   // build a 20s + 15s routine through the real UI
-  await page.click('text=New routine'); await page.waitForSelector('.task'); await page.fill('.field input[type=text]', 'Zed');
+  await page.click('.tb-btn[data-tb=new]'); await page.waitForSelector('.task'); await page.fill('.field input[type=text]', 'Zed');
   await setDur(page, page.locator('.task').first(), 0, 20);
   await page.click('text=Add task'); await setDur(page, page.locator('.task').nth(1), 0, 15);
   await page.clock.runFor(600); await page.click('.sticky-actions .primary'); await page.waitForSelector('.ring');
@@ -183,7 +184,7 @@ await step('manual sync: export a sync code on one "device", import (merge) on a
   const a = await newPage(); await a.ctx.grantPermissions(['clipboard-read', 'clipboard-write']);
   await a.page.goto(base + '#/settings'); await a.page.waitForSelector('h1');
   await a.page.fill('input[aria-describedby="pn-hint"]', 'Dana'); await a.page.dispatchEvent('input[aria-describedby="pn-hint"]', 'change'); await a.page.waitForTimeout(150);
-  await a.page.goto(base + '#/'); await a.page.waitForSelector('.routine'); await a.page.click('text=New routine'); await a.page.waitForSelector('.task');
+  await a.page.goto(base + '#/'); await a.page.waitForSelector('.routine'); await a.page.click('.tb-btn[data-tb=new]'); await a.page.waitForSelector('.task');
   await a.page.fill('.field input[type=text]', 'Synced routine'); await a.page.waitForTimeout(500);
   await a.page.goto(base + '#/settings'); await a.page.click('text=Copy sync code'); await a.page.waitForTimeout(200);
   const code = await a.page.evaluate(() => navigator.clipboard.readText()); assert.match(code, /^MB1\./);
@@ -194,7 +195,7 @@ await step('manual sync: export a sync code on one "device", import (merge) on a
   await b.page.goto(base + '#/settings'); assert.equal(await b.page.inputValue('input[aria-describedby="pn-hint"]'), 'Dana');
   await b.page.click('text=Import backup'); await b.page.fill('dialog textarea', code); await b.page.check('input[value=replace]'); await b.page.click('dialog footer button'); await b.page.click('dialog:has-text("Replace all") footer button >> nth=1');
   await b.page.waitForSelector('.toast:has-text("Added 3")'); await b.page.goto(base + '#/'); await b.page.waitForSelector('.routine'); assert.equal(await b.page.locator('.routine').count(), 3, 'replace mirrors the source');
-  await b.page.click('.quick button:has-text("Import")'); await b.page.fill('dialog textarea', 'MB1.garbage-garbage-garbage'); assert.ok(true);
+  await qk(b.page, "Import"); await b.page.fill('dialog textarea', 'MB1.garbage-garbage-garbage'); assert.ok(true);
   assert.deepEqual(a.errors, []); assert.deepEqual(b.errors, []);
 });
 
@@ -251,7 +252,7 @@ await step('family: invite -> join -> approve -> LIVE link (WebRTC, no server) -
   // parent cheers, sets a goal, assigns a new routine - all delivered live
   await P.page.click('button:has-text("Send a cheer")'); await P.page.click('dialog button:has-text("Great job")');
   await P.page.click('button:has-text("Reward goal")'); await P.page.fill('dialog input[type=text]', 'Ice cream'); await P.page.fill('dialog input[type=number]', '3'); await P.page.click('dialog footer button:has-text("Set goal")');
-  await P.page.goto(base + '#/'); await P.page.click('text=New routine'); await P.page.waitForSelector('.task'); await P.page.fill('.field input[type=text]', 'From Mom'); await P.page.waitForTimeout(500);
+  await P.page.goto(base + '#/'); await P.page.click('.tb-btn[data-tb=new]'); await P.page.waitForSelector('.task'); await P.page.fill('.field input[type=text]', 'From Mom'); await P.page.waitForTimeout(500);
   await P.page.goto(base + '#/family'); await P.page.click('button:has-text("Send a routine")'); await P.page.click('dialog label:has-text("From Mom") input'); await P.page.click('dialog footer button:has-text("Send")');
   await C.page.goto(base + '#/family'); await C.page.waitForSelector('.family-card:has-text("Great job")', { timeout: 15000 }); await C.page.waitForSelector('.goal:has-text("Ice cream")'); await shot(C.page, 'family-child');
   await C.page.goto(base + '#/'); await C.page.waitForSelector('.routine:has-text("From Mom")'); assert.match(await C.page.textContent('.routine:has-text("From Mom")'), /from Mom/);
@@ -269,10 +270,10 @@ await step('family: invite -> join -> approve -> LIVE link (WebRTC, no server) -
   await P.page.goto(base + '#/family'); await P.page.click('button:has-text("Rewards")'); await P.page.click('dialog button:has-text("Add reward")');
   await P.page.fill('dialog .menu-row input[type=text]', 'Ice cream trip'); await P.page.fill('dialog .menu-row input[type=number]', '1'); await P.page.dispatchEvent('dialog .menu-row input[type=number]', 'change'); await P.page.dispatchEvent('dialog .menu-row input[type=text]', 'change');
   await P.page.click('dialog footer button:has-text("Save")');
-  await closeDialogs(C.page); await C.page.goto(base + '#/'); await C.page.waitForSelector('.quick'); await closeDialogs(C.page); await openMenuWith(C.page, 'Rewards'); await C.page.click('.quick button:has-text("Rewards")'); await C.page.waitForSelector('dialog .menu-item:has-text("Ice cream trip")', { timeout: 15000 });
+  await closeDialogs(C.page); await C.page.goto(base + '#/'); await C.page.waitForSelector('.toolbar-main'); await closeDialogs(C.page); await openMenuWith(C.page, 'Rewards'); await qk(C.page, "Rewards"); await C.page.waitForSelector('dialog .menu-item:has-text("Ice cream trip")', { timeout: 15000 });
   await C.page.click('dialog .menu-item button:has-text("Get")'); await C.page.click('dialog footer button:has-text("Get")');
   await P.page.goto(base + '#/family'); await P.page.waitForSelector('.family-card:has-text("Ice cream trip")', { timeout: 15000 }); await P.page.click('.family-card button:has-text("Given")');
-  await C.page.waitForTimeout(1500); await closeDialogs(C.page); await openMenuWith(C.page, 'Rewards'); await C.page.click('.quick button:has-text("Rewards")'); await C.page.click('dialog details summary'); await C.page.waitForSelector('dialog li:has-text("given")', { timeout: 15000 });
+  await C.page.waitForTimeout(1500); await closeDialogs(C.page); await openMenuWith(C.page, 'Rewards'); await qk(C.page, "Rewards"); await C.page.click('dialog details summary'); await C.page.waitForSelector('dialog li:has-text("given")', { timeout: 15000 });
   // v1.11: the parent suggests a goal (live) and sits with the child during a run
   await closeDialogs(C.page); await P.page.goto(base + '#/family'); await P.page.click('button:has-text("Suggest a goal")'); await P.page.click('dialog .chip:has-text("Be ready on time")'); await P.page.check('dialog .strat-pick:has-text("Prepare things the night before") input'); await P.page.click('dialog footer button:has-text("Save")');
   await C.page.goto(base + '#/goals'); await C.page.waitForSelector('.goal-card:has-text("Suggested by Mom")', { timeout: 15000 });
@@ -441,9 +442,9 @@ await step('share code round-trips through the import dialog', async () => {
   await page.goto(base); await page.waitForSelector('.routine');
   await page.locator('.routine').first().locator('button[aria-label="Share"]').click(); await page.waitForSelector('textarea.code');
   const code = await page.inputValue('textarea.code'); assert.match(code, /^M[12]\./); await page.keyboard.press('Escape');
-  await page.click('.quick button:has-text("Import")'); await page.fill('dialog textarea', `check this out ${code}`); await page.click('dialog footer button');
+  await qk(page, "Import"); await page.fill('dialog textarea', `check this out ${code}`); await page.click('dialog footer button');
   await page.waitForFunction(() => document.querySelectorAll('.routine').length === 3);
-  await page.click('.quick button:has-text("Import")'); await page.fill('dialog textarea', 'M1.@@@'); await page.click('dialog footer button');
+  await qk(page, "Import"); await page.fill('dialog textarea', 'M1.@@@'); await page.click('dialog footer button');
   await page.waitForSelector('dialog .err');
 });
 
@@ -462,9 +463,9 @@ await step('no horizontal scroll at 320px wide', async () => {
 // ── v1.10: helpers, calm corner, journal ──
 await step('v1.10: choose help areas -> focus tools appear in the run; parking lot saves a thought; calm corner pauses the clock', async () => {
   const { page, errors } = await newPage(); await page.goto(base); await page.waitForSelector('.focus-card');
-  assert.equal(await page.locator('.quick button:has-text("Rewards")').count(), 0);
+  await page.click('.tb-btn[data-tb=track]'); assert.equal(await page.locator('.tb-panel button:has-text("Rewards")').count(), 0);
   await page.click('.focus-card button.primary'); await page.waitForSelector('dialog .area-grid'); await page.check('dialog .area-pick:has-text("Focus & attention") input'); await page.check('dialog .area-pick:has-text("Motivation") input');
-  await page.click('dialog footer button:has-text("Save")'); await page.waitForSelector('.focus-card', { state: 'detached' }); assert.equal(await page.locator('.quick button:has-text("Rewards")').count(), 1);
+  await page.click('dialog footer button:has-text("Save")'); await page.waitForSelector('.focus-card', { state: 'detached' }); await page.click('.tb-btn[data-tb=track]'); assert.equal(await page.locator('.tb-panel button:has-text("Rewards")').count(), 1);
   await page.locator('.routine .start').first().click(); await page.waitForSelector('.ring');
   await page.click('.row-btns button:has-text("Parking lot")'); await page.fill('dialog input[type=text]', 'ask about the trip'); await page.click('dialog footer button:has-text("Park it")');
   await page.click('.row-btns button:has-text("Calm corner")'); await page.waitForSelector('dialog .calm-menu'); await page.waitForSelector('.paused-badge:not([hidden])');
@@ -536,7 +537,7 @@ await step('v1.10: axe finds no violations on calm corner, journal (open + locke
     await page.click('.lock-screen .btn >> nth=1'); await page.waitForSelector('dialog'); bad.push(...await audit(page, `${L}/forgot`)); await closeDialogs(page);
     await page.goto(base + '#/'); await page.waitForSelector('.focus-card'); bad.push(...await audit(page, `${L}/home-focus-card`));
     await page.click('.focus-card button.primary'); await page.waitForSelector('dialog .area-grid'); bad.push(...await audit(page, `${L}/focus-picker`)); await page.check('dialog .area-pick >> nth=4 >> input'); await page.click('dialog footer .primary');
-    await page.waitForSelector('.quick'); await openMenuWith(page, '🎁'); await page.click('.quick button:has-text("🎁")'); await page.waitForSelector('dialog .menu-item, dialog .empty'); bad.push(...await audit(page, `${L}/reward-menu`)); await page.click('dialog button:has(+ *) >> nth=-1').catch(() => {}); await closeDialogs(page);
+    await page.waitForSelector('.toolbar-main'); await openMenuWith(page, '🎁'); await qk(page, "🎁"); await page.waitForSelector('dialog .menu-item, dialog .empty'); bad.push(...await audit(page, `${L}/reward-menu`)); await page.click('dialog button:has(+ *) >> nth=-1').catch(() => {}); await closeDialogs(page);
     await page.goto(base + '#/settings'); await page.waitForSelector('details.settings-group'); bad.push(...await audit(page, `${L}/settings-helpers`));
   }
   if (bad.length) console.error([...new Set(bad)].join('\n'));
@@ -615,8 +616,8 @@ await step('v1.10: time stepper and sheet, ☰ task menu (duplicate, add below, 
   const first = page.locator('.task').first(), v0 = await first.locator('.tp-val').first().textContent();
   await first.locator('.tp-step >> nth=1').click(); assert.notEqual(await first.locator('.tp-val').first().textContent(), v0);
   await first.locator('.tp-step >> nth=0').click(); assert.equal(await first.locator('.tp-val').first().textContent(), v0);
-  await first.locator('.tp-val').first().click(); await page.click('dialog .tp-presets button >> nth=3'); assert.match(await page.textContent('dialog .tp-big'), /5m/); await page.click('dialog footer button:has-text("OK")');
-  assert.match(await first.locator('.tp-val').first().textContent(), /5m/);
+  await first.locator('.tp-val').first().click(); await page.click('dialog .tp-presets button >> nth=3'); assert.match(await page.textContent('dialog .tp-big'), /5\sm/); await page.click('dialog footer button:has-text("OK")');
+  assert.match(await first.locator('.tp-val').first().textContent(), /5\sm/);
   await first.locator('.task-menu-btn').click(); await page.click('dialog button:has-text("Duplicate")'); await page.waitForFunction((n) => document.querySelectorAll('.task').length === n + 1, n0);
   assert.equal(await page.locator('.task-name').nth(1).inputValue(), await page.locator('.task-name').nth(0).inputValue());
   await page.locator('.task').first().locator('.task-menu-btn').click(); await page.click('dialog button:has-text("Move to bottom")'); await page.waitForTimeout(100);
@@ -666,7 +667,7 @@ await step('v1.10: templates - pick tasks with big tiles, save task/routine as t
   await page.click('.lib-task button:has-text("Delete")'); await page.click('dialog footer button.danger'); await page.waitForSelector('.lib-task', { state: 'detached' }); await page.click('#toast button:has-text("Undo")'); await page.waitForSelector('.lib-task:has-text("Water bottle")');
   await page.click('.lib-card button:has-text("Use")'); await page.waitForSelector('.task'); assert.ok(await page.locator('.task').count() >= 3);
   await page.goto(base + '#/'); await page.waitForSelector('.routine'); const r0 = await page.locator('.routine').count();
-  await page.click('.quick button:has-text("From a template")'); await page.waitForSelector('dialog .tiles-grid'); await page.click('dialog .chip:has-text("Ready-made")'); await page.click('dialog .tile-btn:has-text("Bedtime")'); await page.waitForSelector('.task');
+  await qk(page, "From a template"); await page.waitForSelector('dialog .tiles-grid'); await page.click('dialog .chip:has-text("Ready-made")'); await page.click('dialog .tile-btn:has-text("Bedtime")'); await page.waitForSelector('.task');
   assert.equal(await page.locator('.task').count(), 5); await page.goto(base + '#/'); await page.waitForFunction((n) => document.querySelectorAll('.routine').length > n, r0);
   assert.deepEqual(errors, []);
 });
@@ -675,12 +676,12 @@ await step('v1.10: axe on template pickers and library page (young child too)', 
   const bad = [];
   for (const [lang, scheme] of [['he', 'light'], ['en', 'dark']]) {
     const { page } = await newPage({ lang, ctx: { colorScheme: scheme } }); await page.goto(base); if (lang === 'he') await dismissWelcome(page); const L = `${lang}/${scheme}`;
-    await page.waitForSelector('.routine'); await page.click('.quick button:has-text("📚")'); await page.waitForSelector('dialog .tiles-grid'); bad.push(...await audit(page, `${L}/routine-picker`)); await closeDialogs(page);
+    await page.waitForSelector('.routine'); await qk(page, "📚"); await page.waitForSelector('dialog .tiles-grid'); bad.push(...await audit(page, `${L}/routine-picker`)); await closeDialogs(page);
     await page.locator('.routine-main').first().click(); await page.waitForSelector('.task'); await page.click('.toolbar.wrap button >> nth=0'); await page.waitForSelector('dialog .tiles-grid'); bad.push(...await audit(page, `${L}/task-picker`)); await closeDialogs(page);
     await page.click('.fold-body button:has-text("💾")'); await page.waitForTimeout(400);
     await page.goto(base + '#/library'); await page.waitForSelector('.lib-card'); bad.push(...await audit(page, `${L}/library`));
     await setStyle(page, 'auto'); await page.goto(base + '#/settings'); await page.fill('input[type=number][max="120"]', '7'); await page.dispatchEvent('input[type=number][max="120"]', 'change'); await page.waitForTimeout(400);
-    await page.goto(base + '#/'); await page.waitForSelector('.routine'); await page.click('.quick button:has-text("📚")'); await page.waitForSelector('dialog .tiles-grid'); bad.push(...await audit(page, `${L}/routine-picker-playful`)); await closeDialogs(page);
+    await page.goto(base + '#/'); await page.waitForSelector('.routine'); await qk(page, "📚"); await page.waitForSelector('dialog .tiles-grid'); bad.push(...await audit(page, `${L}/routine-picker-playful`)); await closeDialogs(page);
   }
   if (bad.length) console.error([...new Set(bad)].join('\n'));
   assert.deepEqual(bad, []);
@@ -690,7 +691,7 @@ await step('v1.10: axe on template pickers and library page (young child too)', 
 await step('v1.11: Alarms screen - find it from home, switch on, edit the chain in a sheet, schedule shows on the routine card', async () => {
   const { page, errors } = await newPage(); await page.goto(base); await page.waitForSelector('.routine');
   await page.evaluate(async () => { const S = await import('./js/store.js'); for (const x of S.get().templates) await S.saveTemplate({ ...x, alarm: { ...x.alarm, enabled: false } }); });   // alarms are ON by default now; start this step from "all off"
-  await page.click('.quick button:has-text("Alarms")'); await page.waitForSelector('.alarm-card'); assert.match(await page.textContent('.chip.solid'), /No alarm is on/);
+  await qk(page, "Alarms"); await page.waitForSelector('.alarm-card'); assert.match(await page.textContent('.chip.solid'), /No alarm is on/);
   await page.locator('.alarm-card').first().locator('input[type=checkbox]').check(); await page.waitForFunction(() => !document.querySelector('.chip.solid'));
   await page.locator('.alarm-card').first().locator('button:has-text("Edit alarm")').click(); await page.waitForSelector('dialog .ring-card');
   await page.click('dialog button:has-text("Add another alarm")'); await page.waitForSelector('dialog .ring-card >> nth=1'); await page.click('dialog footer button:has-text("Done")'); await page.waitForSelector('dialog', { state: 'detached' });
@@ -701,7 +702,7 @@ await step('v1.11: Alarms screen - find it from home, switch on, edit the chain 
 
 await step('v1.11: goals - create with strategies, plan card in the run, check-in after the run, edit/achieve; sand clock timer; what\'s new after an update', async () => {
   const { page, errors } = await newPage(); await page.goto(base); await page.waitForSelector('.routine');
-  await page.click('.quick button:has-text("Goals")'); await page.waitForSelector('.goal-card, .empty'); await page.click('button:has-text("New goal")'); await page.waitForSelector('dialog .strat-pick');
+  await qk(page, "Goals"); await page.waitForSelector('.goal-card, .empty'); await page.click('button:has-text("New goal")'); await page.waitForSelector('dialog .strat-pick');
   await page.click('dialog .chip:has-text("Be ready on time")'); await page.selectOption('dialog select', { index: 1 });
   await page.check('dialog .strat-pick:has-text("Prepare things the night before") input'); await page.check('dialog .strat-pick:has-text("visible timer") input'); await page.check('dialog .strat-pick:has-text("Say the steps") input'); await page.click('dialog .strat-pick:has-text("Put the phone away") input');
   await page.waitForSelector('dialog .note:has-text("Up to 3")'); await page.fill('dialog input[type=text] >> nth=1', 'Shoes by the door'); await page.click('dialog footer button:has-text("Save")');
@@ -815,7 +816,7 @@ await step('v1.13: alarms are ON by default (new routines + ready-made ones), ve
   const { page, errors } = await newPage(); await page.goto(base); await page.waitForSelector('.routine');
   assert.ok(await page.locator('.routine .alarm-line').count() >= 2, 'the ready-made routines show their alarm'); assert.match(await page.textContent('.routine .alarm-line'), /\d\d:\d\d/);
   await page.goto(base + '#/alarms'); await page.waitForSelector('.alarm-card'); assert.equal(await page.locator('.chip.solid').count(), 0); assert.ok(await page.locator('.alarm-card input[type=checkbox]:checked').count() >= 2);
-  await page.goto(base + '#/'); await page.click('.toolbar button:has-text("New routine")'); await page.waitForSelector('.alarm'); assert.ok(await page.locator('.alarm .switch input').first().isChecked(), 'a new routine starts with its alarm on'); await page.waitForTimeout(500);
+  await page.goto(base + '#/'); await page.click('.tb-btn[data-tb=new]'); await page.waitForSelector('.alarm'); assert.ok(await page.locator('.alarm .switch input').first().isChecked(), 'a new routine starts with its alarm on'); await page.waitForTimeout(500);
   await page.goto(base + '#/'); await page.waitForSelector('.version-line'); const ver = JSON.parse((await import('node:fs')).readFileSync('web/version.json', 'utf8')).version; assert.match(await page.textContent('.version-line'), new RegExp(`v${ver.replace(/\./g, '\\.')}`));
   await page.click('.version-line button'); await page.waitForSelector(`dialog:has-text("New in ${ver}")`); assert.ok(await page.locator('dialog details').count() === 1); await closeDialogs(page);
   await page.goto(base + '#/settings'); await page.waitForSelector('button:has-text("What\'s new")'); assert.match(await page.textContent('.settings-group:has(button:has-text("What\'s new"))'), new RegExp(ver.replace(/\./g, '\\.'))); await page.click('button:has-text("What\'s new")'); await page.waitForSelector('dialog:has-text("New in")'); await closeDialogs(page);
@@ -825,7 +826,7 @@ await step('v1.13: alarms are ON by default (new routines + ready-made ones), ve
 await step('v1.13: smart times (hint, sheet, menu), smart extra steps by chosen help, helper step in the run, estimate accuracy card', async () => {
   const { page, errors } = await newPage(); await page.goto(base); await page.waitForSelector('.routine');
   await page.evaluate(async () => { const S = await import('./js/store.js'); await S.patchProfile(S.activeProfile().id, { age: 8, focus: ['focus', 'calm'], focusSet: true }); });
-  await page.click('.toolbar button:has-text("New routine")'); await page.waitForSelector('.task'); await page.fill('.task-name', 'Shower'); await page.dispatchEvent('.task-name', 'change');
+  await page.click('.tb-btn[data-tb=new]'); await page.waitForSelector('.task'); await page.fill('.task-name', 'Shower'); await page.dispatchEvent('.task-name', 'change');
   await page.waitForSelector('.smart-hint'); assert.match(await page.textContent('.smart-hint'), /typical time for this kind of task/); await page.click('.smart-hint button'); await page.waitForSelector('.smart-hint', { state: 'detached' }); assert.ok(!/^5m$/.test((await page.textContent('.tp-val >> nth=0')).trim()));
   await page.click('button:has-text("Add task")'); await page.locator('.task-name').nth(1).fill('Homework'); await page.dispatchEvent('.task >> nth=1 >> .task-name', 'change');
   await page.click('.toolbar.wrap button:has-text("Smart times")'); await page.waitForSelector('dialog .smart-row'); assert.ok(await page.locator('dialog .smart-row').count() === 2); await page.click('dialog footer button:has-text("Apply")'); await page.waitForSelector('dialog', { state: 'detached' });
@@ -988,8 +989,9 @@ await step('v1.17: home is calm - search bar, New + wizard, tools behind More, o
   const { page } = await newPage({ foldsClosed: true }); await page.goto(base + '#/'); await page.waitForSelector('.routine');
   await page.evaluate(async () => { const S = await import('./js/store.js'); await S.updateSettings({ focusSeen: true }); localStorage.removeItem('mo.sug'); });
   assert.ok(await page.locator('.home-search').isVisible()); assert.equal(await page.locator('.quick:visible').count(), 0, 'tools are folded');
-  assert.ok(await page.locator('.toolbar button:has-text("Help me build one")').isVisible());
-  assert.equal(await page.locator('.menu-group').count(), 3, 'three topic menus'); await page.click('.menu-group summary:has-text("Plan")'); assert.ok(await page.locator('.quick button:has-text("Alarms")').isVisible()); await page.click('.menu-group summary:has-text("Progress")'); await page.waitForFunction(() => document.querySelectorAll('.menu-group[open]').length === 1); await page.keyboard.press('Escape');
+  assert.ok(await page.locator('.tb-btn[data-tb=wizard]').isVisible());
+  assert.equal(await page.locator('.toolbar-main .tb-btn').count(), 6, 'one toolbar, six items'); const rows = await page.evaluate(() => new Set([...document.querySelectorAll('.toolbar-main .tb-btn')].map((b) => Math.round(b.getBoundingClientRect().top))).size); assert.equal(rows, 1, 'a single row');
+  await page.click('.tb-btn[data-tb=plan]'); assert.ok(await page.locator('.tb-panel button:has-text("Alarms")').isVisible()); await page.click('.tb-btn[data-tb=track]'); assert.equal(await page.locator('.tb-btn[aria-expanded=true]').count(), 1, 'one dropdown open at a time'); await page.keyboard.press('Escape'); assert.equal(await page.locator('.tb-panel:not([hidden])').count(), 0);
   // a suggestion shows unless the "what helps" card is up; answer "Not now" -> snoozed, and nothing else the same day
   await page.evaluate(() => { localStorage.setItem('mo.sug', '{}'); }); await page.reload(); await page.waitForSelector('.routine');
   if (await page.locator('.suggest').count()) {
@@ -1017,7 +1019,7 @@ await step('v1.17: global search - English and Hebrew words, routines by name, E
 await step('v1.17: wizard - five calm questions build a routine for the person, then start / edit / done', async () => {
   const { page } = await newPage({ foldsClosed: true }); await page.goto(base + '#/'); await page.waitForSelector('.routine');
   const before = await page.locator('.routine').count();
-  await page.click('.toolbar button:has-text("Help me build one")'); await page.waitForSelector('dialog.wizard-modal[open] .wz-opt');
+  await page.click('.tb-btn[data-tb=wizard]'); await page.waitForSelector('dialog.wizard-modal[open] .wz-opt');
   assert.match(await page.textContent('.wz-step'), /Step 1 of 5/); await page.click('.wz-opt:has-text("My child")'); await page.click('.wz-opt:has-text("8–10")'); await page.click('.wz-nav .btn.primary');
   await page.click('.wz-opt:has-text("Staying focused")'); await page.click('.wz-opt:has-text("calmer")'); await page.click('.wz-nav .btn.primary');
   await page.click('.wz-opt:has-text("Bedtime")'); await page.click('.wz-nav .btn.primary');
@@ -1055,14 +1057,60 @@ await step('v1.17: axe on search, wizard (every step), suggestion card, folded h
     const { page } = await newPage({ lang, foldsClosed: true }); await page.goto(base); if (lang === 'he') await dismissWelcome(page);
     if (big) await page.evaluate(async () => { const S = await import('./js/store.js'); await S.updateSettings({ fontScale: 150 }); });
     await page.evaluate(() => localStorage.setItem('mo.sug', '{}')); await page.goto(base + '#/'); await page.reload(); await page.waitForSelector('.routine'); await dismissWelcome(page); bad.push(...await audit(page, `${lang}/home`));
-    await page.click('.menu-group summary >> nth=0'); bad.push(...await audit(page, `${lang}/home-menu-open`));
+    await page.click('.tb-btn[data-tb=plan]'); bad.push(...await audit(page, `${lang}/home-menu-open`));
     await page.click('.home-search'); await page.waitForSelector('.search-item'); bad.push(...await audit(page, `${lang}/search`)); await page.fill('.search-input', 'a'); bad.push(...await audit(page, `${lang}/search-results`)); await page.keyboard.press('Escape'); await page.waitForSelector('dialog', { state: 'detached' });
-    await page.click('.toolbar button >> nth=1'); await page.waitForSelector('.wz-opt');
+    await page.click('.tb-btn[data-tb=wizard]'); await page.waitForSelector('.wz-opt');
     for (let i = 0; i < 5; i++) { bad.push(...await audit(page, `${lang}/wizard-${i}`)); if (i < 4) await page.click('.wz-nav .btn.primary'); }
     await page.keyboard.press('Escape'); await page.evaluate(() => document.querySelectorAll('dialog').forEach((d) => d.remove()));
     await page.goto(base + '#/edit/sample-kids'); await page.waitForSelector('.task'); bad.push(...await audit(page, `${lang}/edit-folded`));
     await page.click('details.fold summary >> nth=3'); bad.push(...await audit(page, `${lang}/edit-fold-open`));
     await page.goto(base + '#/run/sample-kids'); await page.waitForSelector('.main-btns'); bad.push(...await audit(page, `${lang}/run-folded`)); await page.click('.run-more summary'); await page.click('.help-fold summary'); bad.push(...await audit(page, `${lang}/run-folds-open`));
+  }
+  if (bad.length) console.error([...new Set(bad)].join('\n'));
+  assert.deepEqual(bad, []);
+});
+
+// ── v1.18: SonRise, quiet days, pause, ring types, one toolbar ──
+await step('v1.18: SonRise name + logo everywhere, durations have a space before the unit', async () => {
+  const { page } = await newPage(); await page.goto(base); await page.waitForSelector('.routine');
+  assert.equal(await page.title(), 'SonRise'); const man = await page.evaluate(async () => (await fetch('manifest.webmanifest')).json()); assert.equal(man.name, 'SonRise'); assert.equal(man.short_name, 'SonRise');
+  const svg = await page.evaluate(async () => (await fetch('icon.svg')).text()); assert.match(svg, /aria-label="SonRise"/); assert.match(await page.textContent('h1'), /SonRise/);
+  assert.match(await page.textContent('.routine small'), /\d\s(m|h|s)\b/); await page.goto(base + '#/edit/sample-kids'); await page.waitForSelector('.task'); assert.match(await page.locator('.tp-val').first().textContent(), /\d m|\d\s?m/);
+  const he = await newPage({ lang: 'he' }); await he.page.goto(base); await dismissWelcome(he.page); await he.page.goto(base + '#/edit/sample-kids'); await he.page.waitForSelector('.task'); assert.match(await he.page.locator('.tp-val').first().textContent(), /\d\s+ד׳|\d ד׳/, 'a space before ד׳');
+});
+
+await step('v1.18: ring type tiles (9 types, preview), quiet-on-holidays switch (on by default) with the next days off', async () => {
+  const { page } = await newPage({ foldsClosed: true }); await page.goto(base + '#/edit/sample-kids'); await page.waitForSelector('.task'); await page.click('details.fold summary:has-text("Wake-up")').catch(() => page.click('details.fold >> nth=-1 >> summary'));
+  await page.waitForSelector('.sound-grid'); assert.equal(await page.locator('.sound-grid .sound-tile').count(), 8, 'eight tiles in a browser (the phone-sound tile is app-only)');
+  await page.click('.sound-tile:has-text("Bell")'); await page.waitForFunction(async () => (await import('./js/store.js')).get().templates.find((x) => x.id === 'sample-kids').alarm.sound === 'bell');
+  assert.equal(await page.locator('.sound-tile[aria-checked=true]').count() >= 1, true);
+  const off = page.locator('input[aria-label="Quiet on holidays and vacations"]'); assert.equal(await off.isChecked(), true, 'on by default'); assert.match(await page.textContent('.alarm'), /Next days off/);
+  await off.uncheck(); await page.waitForFunction(async () => (await import('./js/store.js')).get().templates.find((x) => x.id === 'sample-kids').alarm.offDays === false);
+});
+
+await step('v1.18: Hebrew date + holiday on Home, quiet alarm skips the holiday; pause all alarms from the toolbar, banner and resume; alarm sticker', async () => {
+  const { page } = await newPage({ foldsClosed: true }); await page.clock.install({ time: new Date('2026-09-12T05:00:00') }); await page.goto(base + '#/'); await page.waitForSelector('.routine');
+  assert.match(await page.textContent('.hero'), /Tishri/); assert.match(await page.textContent('.hero'), /Rosh Hashana/);
+  assert.ok(await page.locator('.routine .alarm-sticker').count() >= 1, 'alarm sticker on routines with an alarm');
+  assert.match(await page.textContent('.hero .chip:has-text("Next")').catch(() => ''), /./);
+  await page.click('.tb-btn[data-tb=alarms]'); await page.waitForSelector('dialog'); await page.click('dialog button:has-text("Until tomorrow")'); await page.waitForSelector('.paused-banner');
+  assert.equal(await page.locator('.tb-btn[data-tb=alarms]').getAttribute('aria-pressed'), 'true'); assert.match(await page.textContent('.tb-btn[data-tb=alarms]'), /paused/i);
+  assert.ok((await page.evaluate(async () => (await import('./js/store.js')).get().settings.alarmsPause)) > 0);
+  await page.click('.paused-banner button'); await page.waitForFunction(() => !document.querySelector('.paused-banner')); assert.equal(await page.evaluate(async () => (await import('./js/store.js')).get().settings.alarmsPause), 0);
+  await page.click('.tb-btn[data-tb=alarms]'); await page.click('dialog button:has-text("Until I switch them back on")'); assert.equal(await page.evaluate(async () => (await import('./js/store.js')).get().settings.alarmsPause), -1);
+  await page.waitForSelector('.paused-banner'); assert.match(await page.textContent('.paused-banner'), /switch them back on/);
+});
+
+await step('v1.18: axe + layout of the new toolbar, ring tiles, pause sheet, banner (he + en, big text)', async () => {
+  const bad = [];
+  for (const [lang, big] of [['he', false], ['en', true]]) {
+    const { page } = await newPage({ lang, foldsClosed: true }); await page.goto(base); if (lang === 'he') await dismissWelcome(page);
+    if (big) await page.evaluate(async () => { const S = await import('./js/store.js'); await S.updateSettings({ fontScale: 150 }); });
+    await page.goto(base + '#/'); await page.reload(); await page.waitForSelector('.toolbar-main'); await dismissWelcome(page); bad.push(...await audit(page, `${lang}/toolbar`));
+    const rows = await page.evaluate(() => new Set([...document.querySelectorAll('.toolbar-main .tb-btn')].map((b) => Math.round(b.getBoundingClientRect().top))).size); assert.equal(rows, 1, `${lang}: one row`);
+    const over = await page.evaluate(() => { const vw = document.documentElement.clientWidth; return [...document.querySelectorAll('.toolbar-main .tb-btn')].some((b) => b.getBoundingClientRect().right > vw + 1 || b.getBoundingClientRect().left < -1 || b.scrollWidth > b.clientWidth + 2); }); assert.equal(over, false, `${lang}: toolbar fits`);
+    await page.click('.tb-btn[data-tb=plan]'); bad.push(...await audit(page, `${lang}/toolbar-open`)); await page.click('.tb-btn[data-tb=alarms]'); await page.waitForSelector('dialog'); bad.push(...await audit(page, `${lang}/pause-sheet`)); await page.click('dialog .btn:not(.icon-btn) >> nth=0'); await page.waitForSelector('.paused-banner'); bad.push(...await audit(page, `${lang}/pause-banner`));
+    await page.goto(base + '#/edit/sample-kids'); await page.waitForSelector('.task'); await page.click('details.fold >> nth=-1 >> summary'); await page.waitForSelector('.sound-grid'); bad.push(...await audit(page, `${lang}/ring-tiles`));
   }
   if (bad.length) console.error([...new Set(bad)].join('\n'));
   assert.deepEqual(bad, []);

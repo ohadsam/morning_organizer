@@ -9,6 +9,10 @@ export const native = {
   vibrate: (pattern) => call('vibrate', json(pattern)),
   /** alarms: [{id, templateId, name, hour, minute, days:[0..6], volume, vibrate, durationSec}] - replaces all. */
   setAlarms: (alarms) => call('setAlarms', json(alarms)),
+  /** Global alarm rules: { pausedUntil: 0 | -1 | ms, skipDates: ['YYYY-MM-DD', ...] } - days on which alarms set to be quiet on days off must not ring. */
+  setAlarmRules: (rules) => call('setAlarmRules', json(rules)),
+  /** Opens the phone's ringtone picker; the choice arrives as a {type:'ringtone', key, uri, title} event. */
+  pickRingtone: (key) => call('pickRingtone', String(key)),
   /** items: [{id, name, icon, taskCount, totalSec}] - favourites shown by the home-screen widget. */
   setWidget: (items) => call('setWidget', json(items)),
   /** Snapshot for the Android progress widget: {active, templateId, name, icon, task, pct, paused, remaining}. */
@@ -35,7 +39,7 @@ export const native = {
   /** The phone's own text-to-speech (Android app): voices [{name, lang, quality, network}], speak one phrase with an exact voice/pitch/rate, stop, download more voices. */
   ttsAvailable: () => call('ttsAvailable') === true,
   ttsVoices: () => { try { const a = JSON.parse(call('ttsVoices') || '[]'); return Array.isArray(a) ? a : []; } catch { return []; } },
-  ttsSpeak: (id, text, voice, lang, pitch, rate) => call('ttsSpeak', id, text, voice, lang, pitch, rate), ttsStop: () => call('ttsStop'), ttsInstallVoices: () => call('ttsInstallVoices'),
+  ttsSpeak: (id, text, voice, lang, pitch, rate) => call('ttsSpeak', id, text, voice, lang, pitch, rate), ttsStop: () => call('ttsStop'), ttsEngines: () => { try { const a = JSON.parse(call('ttsEngines') || '[]'); return Array.isArray(a) ? a : []; } catch { return []; } }, ttsSetEngine: (pkg) => call('ttsSetEngine', String(pkg || '')), ttsInstallVoices: () => call('ttsInstallVoices'),
   scanQr: () => call('scanQr'),
   nfcWrite: (text) => call('nfcWrite', text),
   nfcCancel: () => call('nfcCancel'),

@@ -4,7 +4,7 @@ import * as S from '../store.js';
 import { signal, unlockAudio } from '../audio.js';
 import { native } from '../native.js';
 import { setAwake } from '../awake.js';
-import { PRESETS, GROUPS, personaIds, voicesFor, ttsSupported, voiceLabel, canInstallVoices, installVoices } from '../speech.js';
+import { PRESETS, GROUPS, personaIds, voicesFor, ttsSupported, voiceLabel, canInstallVoices, installVoices, listEngines, setEngine } from '../speech.js';
 import { speakWithSettings } from './coach.js';
 import { suggestionsOn, setSuggestionsOn } from './suggest.js';
 import { applyA11y, FONT_SCALES } from '../a11y.js';
@@ -47,13 +47,18 @@ function voiceControls(st, set) {
   const sample = () => setTimeout(() => speakWithSettings(t('voiceSample')), 60);
   const voiceSel = h('select', { 'aria-label': t('voice'), onchange: async (e) => { await set({ voiceURI: e.target.value }); sample(); } }, h('option', { value: '' }, t('voiceAutoBest')));
   const note = h('small', { class: 'hint' }, t('voiceNote'));
-  voicesFor(getLang()).then((vs) => {
-    if (!vs.length) note.textContent = `${t('voiceNone')} ${t('voiceNote')}`;
-    for (const v of vs) voiceSel.append(h('option', { value: v.voiceURI, selected: v.voiceURI === st.voiceURI }, voiceLabel(v, getLang())));
+  const fillVoices = () => voicesFor(getLang()).then((vs) => {
+    note.textContent = vs.length ? t('voiceNote') : `${t('voiceNone')} ${t('voiceNote')}`;
+    setChildren(voiceSel, h('option', { value: '' }, t('voiceAutoBest')), vs.map((v) => h('option', { value: v.voiceURI, selected: v.voiceURI === st.voiceURI }, voiceLabel(v, getLang()))));
   });
+  fillVoices();
+  // Android app: pick which installed text-to-speech engine to use (Google, Samsung, or an offline neural one such as SherpaTTS / Hayai TTS)
+  const engineSel = h('select', { 'aria-label': t('voiceEngine'), onchange: async (e) => { await set({ voiceEngine: e.target.value }); setEngine(e.target.value); setTimeout(() => { fillVoices(); sample(); }, 1500); } }, h('option', { value: '' }, t('voiceEngineDefault')));
+  if (canInstallVoices()) setTimeout(() => { for (const en of listEngines()) engineSel.append(h('option', { value: en.name, selected: st.voiceEngine ? en.name === st.voiceEngine : false }, en.label)); }, 900);
   const rateLbl = h('span', { class: 'lbl' }, `${t('voicePace')}: ${st.voiceRate}%`);
   return h('div', { class: 'stack' },
     GROUPS.map((g) => h('fieldset', { class: 'voice-group' }, h('legend', {}, t(`vg_${g}`)), h('div', { class: 'persona-grid', role: 'radiogroup', 'aria-label': t(`vg_${g}`) }, personaIds(g).map((k) => h('button', { type: 'button', class: `persona ${st.voicePreset === k ? 'on' : ''}`, role: 'radio', 'aria-checked': String(st.voicePreset === k), onclick: async () => { await set({ voicePreset: k }, true); sample(); } }, h('span', { class: 'pe', 'aria-hidden': 'true' }, PRESETS[k].emoji), h('span', {}, t(`p_${k}`))))))),
+    canInstallVoices() ? h('label', { class: 'field' }, h('span', { class: 'lbl' }, t('voiceEngine')), engineSel, h('small', { class: 'hint' }, t('voiceEngineHint'))) : null,
     h('label', { class: 'field' }, h('span', { class: 'lbl' }, t('voice')), voiceSel),
     h('label', { class: 'field' }, rateLbl, h('input', { type: 'range', min: 70, max: 130, step: 5, value: st.voiceRate, 'aria-label': t('voicePace'), oninput: (e) => { rateLbl.textContent = `${t('voicePace')}: ${e.target.value}%`; }, onchange: async (e) => { await set({ voiceRate: +e.target.value }); sample(); } }), h('small', { class: 'hint' }, t('voicePaceHint'))),
     select(t('voiceFlavorLabel'), st.voiceFlavor, ['neutral', 'casual', 'warm', 'formal'].map((k) => [k, t(`flv_${k}`)]), async (v) => { await set({ voiceFlavor: v }); sample(); }), h('small', { class: 'hint' }, t('voiceFlavorHint')),
@@ -121,6 +126,8 @@ export function renderSettings(root, version, focusKey = '') {
         toggle(t('coachButton'), '', st.coachButton, (v) => set({ coachButton: v })),
         toggle(t('coachAuto'), t('coachAutoHint'), st.coachAuto, (v) => set({ coachAuto: v })),
         toggle(t('sugSetting'), t('sugSettingHint'), suggestionsOn(), (v) => setSuggestionsOn(v)),
+        select(t('weeklySetting'), st.weeklyOn === false ? 'off' : String(st.weeklyDay), [['off', t('weeklyOff')], ...[0, 1, 2, 3, 4, 5, 6].map((d) => [String(d), t(`day${d}`)])], (v) => set(v === 'off' ? { weeklyOn: false } : { weeklyOn: true, weeklyDay: Number(v) })),
+        h('small', { class: 'hint' }, t('weeklyHint')),
         h('small', { class: 'hint' }, t('coachDisclaimer'))),
       ttsSupported() ? group('voice', `🔊 ${t('voiceSection')}`, false, h('small', { class: 'hint' }, t('voiceHint')),
         toggle(t('speakOn'), '', st.speak, (v) => set({ speak: v })), toggle(t('coachSpeak'), '', st.coachSpeak, (v) => set({ coachSpeak: v })), voiceControls(st, set)) : null,

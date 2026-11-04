@@ -31,9 +31,26 @@ export function weeklyDigest(runs, now = Date.now()) {
     slow: [...over.values()].filter((e) => e.n >= 2 && e.sum / e.n >= 30).map((e) => ({ name: e.name, overSec: Math.round(e.sum / e.n) })).sort((a, b) => b.overSec - a.overSec).slice(0, 2),
     unp: [...unp.values()].filter((e) => e.n >= 2).sort((a, b) => b.n - a.n).slice(0, 2).map((e) => ({ key: e.key, label: e.label, emoji: e.emoji, n: e.n })) };
 }
-export function buildReport({ profile, runs, streakDays, totalStars, active, goal }) {
+export function buildReport({ profile, runs, streakDays, totalStars, active, goal, goals = [], retros = [] }) {
   const recent = [...runs].sort((a, b) => b.endedAt - a.endedAt).slice(0, 20).map((r) => ({ id: r.id, name: r.templateName, icon: r.icon, startedAt: r.startedAt, endedAt: r.endedAt, status: r.status, planned: r.plannedTotal, actual: r.actualTotal, stars: stars(r) }));
-  return { profile, totalStars, streakDays, recent, digest: weeklyDigest(runs), active: active || null, goalHave: goal ? rewardProgress(goal, runs).have : 0, at: Date.now() };
+  return { profile, totalStars, streakDays, recent, digest: weeklyDigest(runs), active: active || null, goalHave: goal ? rewardProgress(goal, runs).have : 0, at: Date.now(), ...parentView(goals, retros), times: taskTimes(runs) };
+}
+/** How long each task really takes this person (median of the last runs): lets a parent's smart times use the CHILD's own history. [{ name, sec, n }], at most 30. */
+export function taskTimes(runs) {
+  const m = new Map();
+  for (const r of [...runs].filter((x) => x.endedAt).sort((a, b) => a.startedAt - b.startedAt)) for (const k of r.tasks || []) if (k.done && k.name && k.actualSec > 0) { const key = k.name.trim().toLowerCase(); const e = m.get(key) ?? { name: k.name, xs: [] }; e.xs.push(k.actualSec); m.set(key, e); }
+  const med = (a) => { const s = [...a].sort((x, y) => x - y); return s[Math.floor(s.length / 2)]; };
+  return [...m.values()].filter((e) => e.xs.length >= 2).sort((a, b) => b.xs.length - a.xs.length).slice(0, 30).map((e) => ({ name: e.name, sec: Math.round(med(e.xs.slice(-8))), n: Math.min(8, e.xs.length) }));
+}
+/** What a parent may see of a child's own tools: goals with their check-ins, and look-backs (counts, the last one, what got stuck). Titles only - no private notes. */
+export function parentView(goals, retros) {
+  const done = (Array.isArray(retros) ? retros : []).filter((r) => r && r.status !== 'draft').sort((a, b) => b.at - a.at), last = done[0];
+  const stuck = last ? (last.stuck || []).slice(0, 3).map((x) => x.name) : [];
+  return {
+    goals: (Array.isArray(goals) ? goals : []).slice(0, 5).map((g) => { const c = Array.isArray(g.checks) ? g.checks : [], r = c.map((x) => Number(x.rating) || 0).filter(Boolean);
+      return { title: g.title, done: !!g.done, checks: c.length, avg: r.length ? r.reduce((a, b) => a + b, 0) / r.length : 0, lastAt: c.at(-1)?.at || 0 }; }),
+    looks: { n: done.length, lastAt: last?.at || 0, rating: last?.rating || 0, stuck },
+  };
 }
 /** Receiver side: keep only known fields with sane types/ranges. */
 export function sanitizeReport(r) {
@@ -43,6 +60,9 @@ export function sanitizeReport(r) {
   return {
     profile: { name: str(p.name, 30), age: Number.isFinite(Number(p.age)) ? clamp(Math.round(Number(p.age)), 0, 120) : null, gender: ['female', 'male', 'other'].includes(p.gender) ? p.gender : 'other', mascot: str(p.mascot, 8), avatar: shareableAvatar(sanitizeAvatar(p.avatar)) },
     totalStars: n(r.totalStars, 1e6), streakDays: n(r.streakDays, 5000), goalHave: n(r.goalHave, 1e6), at: n(r.at, 1e14),
+    times: (Array.isArray(r.times) ? r.times : []).slice(0, 30).filter((x) => Number(x?.sec) > 0).map((x) => ({ name: str(x?.name, 80), sec: clamp(Math.round(Number(x.sec)), 1, 86_400), n: clamp(Math.round(Number(x?.n)) || 0, 0, 8) })).filter((x) => x.name && x.n >= 2),
+    goals: (Array.isArray(r.goals) ? r.goals : []).slice(0, 5).map((g) => ({ title: str(g?.title, 80), done: !!g?.done, checks: n(g?.checks, 1000), avg: clamp(Number(g?.avg) || 0, 0, 5), lastAt: n(g?.lastAt, 1e14) })).filter((g) => g.title),
+    looks: { n: n(r.looks?.n, 10000), lastAt: n(r.looks?.lastAt, 1e14), rating: clamp(Math.round(Number(r.looks?.rating)) || 0, 0, 5), stuck: (Array.isArray(r.looks?.stuck) ? r.looks.stuck : []).slice(0, 3).map((x) => str(x, 80)).filter(Boolean) },
     recent: (Array.isArray(r.recent) ? r.recent : []).slice(0, 20).map((x) => ({ id: str(x?.id, 64), name: str(x?.name, 80), icon: str(x?.icon, 8), startedAt: n(x?.startedAt, 1e14), endedAt: n(x?.endedAt, 1e14), status: x?.status === 'done' ? 'done' : 'stopped', planned: n(x?.planned), actual: n(x?.actual), stars: n(x?.stars, 3) })),
     digest: { hard: (Array.isArray(r.digest?.hard) ? r.digest.hard : []).slice(0, 2).map((x) => ({ name: str(x?.name, 80), avg: clamp(Number(x?.avg) || 0, 0, 5) })), slow: (Array.isArray(r.digest?.slow) ? r.digest.slow : []).slice(0, 2).map((x) => ({ name: str(x?.name, 80), overSec: n(x?.overSec, 86_400) })), unp: (Array.isArray(r.digest?.unp) ? r.digest.unp : []).slice(0, 2).map((x) => ({ key: str(x?.key, 30), label: str(x?.label, 30), emoji: str(x?.emoji, 8), n: n(x?.n, 999) })) },
     active: r.active && typeof r.active === 'object' ? { name: str(r.active.name, 80), icon: str(r.active.icon, 8), task: str(r.active.task, 80), pct: clamp(Number(r.active.pct) || 0, 0, 1), paused: !!r.active.paused } : null,

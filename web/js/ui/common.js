@@ -61,18 +61,22 @@ export function fold(title, summary, ...children) {
 }
 
 /**
- * A toolbar of topic dropdowns: [{ id, icon, label, items: [node...] }]. One dropdown is open at a time; a click outside or Escape closes it.
- * Each button inside should close the menu itself by simply navigating or opening a sheet (the menu closes when anything inside is clicked).
+ * One unified toolbar: a single row of equal icon-over-label buttons. An item is either an action ({ icon, label, run }) or a dropdown ({ icon, label, items: [nodes] });
+ * the open dropdown's buttons appear in one panel right under the bar (in the page flow, so nothing overlaps). One dropdown is open at a time; Escape closes it.
+ * An item may set `badge` (a small marker such as a dot) and `pressed` (a state shown on the button).
  */
-export function topicMenus(groups, label = '') {
-  const bar = h('div', { class: 'topic-bar', role: 'group', 'aria-label': label });
-  const all = groups.map((g) => {
-    const d = h('details', { class: 'menu-group', dataset: { group: g.id } }, h('summary', { class: 'btn' }, h('span', { 'aria-hidden': 'true' }, g.icon), h('span', {}, g.label)), h('div', { class: 'menu-panel quick' }, g.items.filter(Boolean)));
-    d.addEventListener('toggle', () => { if (d.open) all.forEach((o) => { if (o !== d) o.open = false; }); });
-    d.addEventListener('click', (e) => { if (e.target.closest('.menu-panel button, .menu-panel a')) setTimeout(() => { d.open = false; }, 0); });
-    d.addEventListener('keydown', (e) => { if (e.key === 'Escape' && d.open) { d.open = false; d.querySelector('summary').focus(); } });
-    return d;
+export function toolbar(items, label = '') {
+  const panel = h('div', { class: 'tb-panel quick', hidden: true }); let openIt = null, openBtn = null;
+  const close = () => { if (openBtn) { openBtn.setAttribute('aria-expanded', 'false'); openBtn.classList.remove('open'); } openIt = openBtn = null; panel.hidden = true; panel.replaceChildren(); };
+  const btns = items.map((it) => {
+    const b = h('button', { type: 'button', class: `tb-btn ${it.pressed ? 'pressed' : ''}`, 'aria-haspopup': it.items ? 'true' : null, 'aria-expanded': it.items ? 'false' : null, 'aria-pressed': it.pressed === undefined ? null : String(!!it.pressed), 'data-tb': it.id || '',
+      onclick: () => { if (!it.items) { close(); it.run?.(); return; } const was = openIt === it; close(); if (was) return; openIt = it; openBtn = b; b.setAttribute('aria-expanded', 'true'); b.classList.add('open'); setChildren(panel, it.items.filter(Boolean)); panel.hidden = false; } },
+      h('span', { class: 'tb-i', 'aria-hidden': 'true' }, it.icon, it.badge ? h('i', { class: 'tb-dot' }) : null), h('span', { class: 'tb-l' }, it.label));
+    return b;
   });
-  setChildren(bar, ...all);
-  return bar;
+  const bar = h('div', { class: 'toolbar-main', role: 'group', 'aria-label': label }, btns);
+  const root = h('div', { class: 'tb-wrap' }, bar, panel);
+  panel.addEventListener('click', (e) => { if (e.target.closest('button, a')) setTimeout(close, 0); });
+  root.addEventListener('keydown', (e) => { if (e.key === 'Escape' && openBtn) { const b = openBtn; close(); b.focus(); } });
+  return root;
 }

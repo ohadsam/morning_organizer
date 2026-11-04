@@ -4,6 +4,10 @@
 const DAY = 86_400_000;
 /** id, icon, where "Try it" goes, and when it makes sense. Order = priority. `c` = { runs, ownRoutines, alarmsOn, goals, retros, voiceChosen, ttsOk, calmOn }. */
 export const SUGGESTIONS = [
+  // weekly check-ins (on the person's chosen day; "Not now" snoozes them a week)
+  { id: 'weeklyReport', icon: '📄', go: { route: '#/report' }, when: (c) => c.weeklyOn && c.dow === c.weeklyDay && c.runsWeek >= 1 },
+  { id: 'weeklyGoal', icon: '🎯', go: { route: '#/goals' }, when: (c) => c.weeklyOn && c.dow === c.weeklyDay && c.goalStale },
+  { id: 'weeklyRetro', icon: '🔄', go: { route: '#/retros' }, when: (c) => c.weeklyOn && c.dow === c.weeklyDay && c.runsWeek >= 3 && c.retroWeek === 0 },
   { id: 'wizard', icon: '🪄', go: { action: 'wizard' }, when: (c) => c.ownRoutines === 0 && c.runs < 3 },
   { id: 'guide', icon: '📖', go: { route: '#/guide' }, when: (c) => c.runs === 0 && c.ownRoutines > 0 },
   { id: 'alarms', icon: '⏰', go: { route: '#/alarms' }, when: (c) => !c.alarmsOn && c.runs >= 1 },
@@ -31,6 +35,6 @@ export function pickSuggestion(ctx, state, now = Date.now()) {
 /** The state after the person answered: 'try' and 'later' pause for a week (they may want it again), 'never' is forever. */
 export function answer(state, id, how, now = Date.now()) {
   const s = sanitizeState(state); if (!IDS.has(id)) return s;
-  if (how === 'never') s.hidden = [...new Set([...s.hidden, id])]; else s.snoozed[id] = now + (how === 'try' ? 30 : 7) * DAY;
+  if (how === 'never') s.hidden = [...new Set([...s.hidden, id])]; else s.snoozed[id] = now + (how === 'try' ? (id.startsWith('weekly') ? 6 : 30) : 7) * DAY;   // weekly check-ins come back next week
   s.last = now; return s;
 }

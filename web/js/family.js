@@ -168,7 +168,7 @@ export async function reportFor(link) {
   const done = finished(S.runsForProfile(pid)), act = await S.loadActive(); const mine = act && (act.profileId || S.profiles()[0].id) === pid ? act : null;
   const active = mine && (mine.status === 'running' || mine.status === 'paused') ? { name: mine.templateName, icon: mine.icon, task: mine.tasks[mine.current]?.name || '',
     pct: mine.tasks.filter((x) => x.done || x.skipped).length / Math.max(1, mine.tasks.length), paused: mine.status === 'paused' } : null;
-  return buildReport({ profile: profileOf(prof), runs: done, streakDays: streak(done), totalStars: totalStars(done), active, goal: link.parent?.goal });
+  return buildReport({ profile: profileOf(prof), runs: done, streakDays: streak(done), totalStars: totalStars(done), active, goal: link.parent?.goal, goals: S.goals(prof), retros: S.retros(pid) });
 }
 export async function sendReport(linkId) { const link = linkById(linkId); return send(linkId, 'report', await reportFor(link)); }
 let lastPush = 0;

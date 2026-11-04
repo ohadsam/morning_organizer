@@ -8,7 +8,7 @@ import { native } from '../native.js';
 import { achievementsCard } from './progressUi.js';
 import { moodStats, MOODS } from '../mood.js';
 import { unplannedCard, patternCards } from './unplanned.js';
-import { taskDifficulty, hardSpots, hardAndSlow, summary as diffSummary, levelEmoji } from '../difficulty.js';
+import { taskDifficulty, difficultyTrends, hardSpots, hardAndSlow, summary as diffSummary, levelEmoji } from '../difficulty.js';
 import { exportCard } from './report.js';
 import { estimateAccuracy } from '../awareness.js';
 import { overview as retroOverview } from '../retro.js';
@@ -49,11 +49,21 @@ function moodCard(runs) {
 }
 
 /** Where is it hard? Average difficulty per task, the hard-and-slow ones, and what helped (notes, kind thoughts, relaxation). */
+/** Small lines showing whether a task is getting easier or harder over the runs. */
+function trendsBlock(runs, templateId) {
+  const tr = difficultyTrends(runs, templateId).slice(0, 5); if (!tr.length) return null;
+  const spark = (pts) => { const w = 84, ht = 26, step = pts.length > 1 ? w / (pts.length - 1) : 0, y = (v) => ht - 3 - ((v - 1) / 4) * (ht - 6), d = pts.map((v, i) => `${i ? 'L' : 'M'}${(i * step).toFixed(1)} ${y(v).toFixed(1)}`).join(' ');
+    const s = document.createElementNS('http://www.w3.org/2000/svg', 'svg'); s.setAttribute('viewBox', `0 0 ${w} ${ht}`); s.setAttribute('width', w); s.setAttribute('height', ht); s.setAttribute('aria-hidden', 'true'); s.classList.add('spark');
+    const p = document.createElementNS('http://www.w3.org/2000/svg', 'path'); p.setAttribute('d', d); p.setAttribute('fill', 'none'); p.setAttribute('stroke', 'currentColor'); p.setAttribute('stroke-width', '2'); p.setAttribute('stroke-linecap', 'round'); p.setAttribute('stroke-linejoin', 'round'); s.append(p); return s; };
+  return h('div', { class: 'stack' }, h('h3', {}, `📉 ${t('trendTitle')}`), h('ul', { class: 'trend-list' }, tr.map((x) => h('li', {}, h('span', { class: 'tr-n' }, `${x.icon || ''} ${x.name}`), spark(x.points), h('span', { class: `chip solid tr-${x.trend}` }, t(`trend_${x.trend}`))))));
+}
+
 function difficultyCard(runs, templateId = null) {
   const stats = taskDifficulty(runs, templateId), sum = diffSummary(templateId ? runs.filter((r) => r.templateId === templateId) : runs); if (!stats.length) return null;
   const spots = hardSpots(stats), slow = new Set(hardAndSlow(stats).map((x) => x.name)), colors = ['#55efc4', '#a3e635', '#fdcb6e', '#fab1a0', '#e17055'];
   return h('section', { class: 'card stack' }, h('h2', {}, `🧗 ${t('rpWhereHard')}`), h('p', { class: 'note' }, t('rpDifficultyIntro', { n: sum.rated, avg: Math.round(sum.avg * 10) / 10, hard: `${Math.round(sum.hardShare * 100)}%` })),
     h('div', { class: 'diff-bars' }, stats.slice(0, 8).map((x) => h('div', { class: 'diff-bar' }, h('span', {}, `${x.icon || ''} ${x.name}`), h('div', { class: 'bar', role: 'img', 'aria-label': `${x.name}: ${Math.round(x.avg * 10) / 10}/5` }, h('i', { style: { width: `${(x.avg / 5) * 100}%`, background: colors[Math.max(0, Math.min(4, Math.round(x.avg) - 1))] } })), h('small', {}, `${levelEmoji(Math.round(x.avg))} ${Math.round(x.avg * 10) / 10} · ${x.rated}×`)))),
+    trendsBlock(runs, templateId),
     spots.length ? h('ul', { class: 'unp-list' }, spots.map((x) => h('li', {}, t(slow.has(x.name) ? 'rpHardSlowTip' : 'rpHardTip', { name: x.name, avg: Math.round(x.avg * 10) / 10 })))) : h('p', { class: 'note' }, t('rpNoHard')),
     h('p', { class: 'chips' }, h('span', { class: 'chip solid' }, `✍️ ${t('rpHelpNotes', { n: sum.help.note })}`), h('span', { class: 'chip solid' }, `💭 ${t('rpHelpThoughts', { n: sum.help.thought })}`), h('span', { class: 'chip solid' }, `🧘 ${t('rpHelpRelax', { n: sum.help.relax })}`)));
 }

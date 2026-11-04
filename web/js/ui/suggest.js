@@ -15,7 +15,10 @@ export const setSuggestionsOn = (on) => saveState({ ...loadState(), off: !on });
 
 function context() {
   const { templates, settings } = S.get(), me = S.activeProfile(), runs = S.myRuns().filter((r) => r.status === 'done' || r.endedAt).length;
-  return { runs, ownRoutines: templates.filter((x) => !x.builtin).length, alarmsOn: templates.some((x) => x.alarm?.enabled), goals: S.goals(me).length, retros: S.retros(me.id).length,
+  const week = Date.now() - 7 * 86_400_000, mine = S.myRuns(), g = S.goals(me).find((x) => !x.done);
+  return { dow: new Date().getDay(), weeklyOn: settings.weeklyOn !== false, weeklyDay: Number.isInteger(settings.weeklyDay) ? settings.weeklyDay : 5, runsWeek: mine.filter((r) => r.endedAt && r.endedAt > week).length,
+    retroWeek: S.retros(me.id).filter((r) => r.at > week).length, goalStale: !!g && (g.checks.at(-1)?.at || g.since) < week,
+    runs, ownRoutines: templates.filter((x) => !x.builtin).length, alarmsOn: templates.some((x) => x.alarm?.enabled), goals: S.goals(me).length, retros: S.retros(me.id).length,
     voiceChosen: !!settings.voiceURI || (settings.voicePreset && settings.voicePreset !== 'natural'), ttsOk: ttsSupported(), calmOn: S.features().calmCorner !== false };
 }
 

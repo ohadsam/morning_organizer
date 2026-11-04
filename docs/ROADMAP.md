@@ -38,6 +38,12 @@ Status: 💡 idea · 🔬 needs a decision / research · ✅ built (see CHANGELO
 - ✅ (1.16) Human-sounding voices: characters that pick matching installed voices, phrasing and pauses, wording styles.
 - 🔬 Truly different accents / sector voices and offline neural voices would need bundled voice models (tens of MB per voice) or recordings - not built; a future optional download could add them.
 
+- ✅ (1.18) SonRise rename + logo; unified toolbar; pause all alarms; Hebrew calendar + quiet holidays/vacations; ring types; alarm sticker; parent view of goals/look-backs; weekly check-ins; difficulty trends; learn from rejected suggestions; more helper steps.
+- 🔬 Selectable text inside the PDF (needs an embedded Hebrew font; the interactive HTML report and Print already give selectable text).
+- ✅ (1.18) Android: choose the **text-to-speech engine** (richer offline neural voices come from engines such as SherpaTTS / Hayai TTS, free and open source, which the app uses through the phone's standard TTS).
+- 🔬 Voice research (Nov 2026): Hebrew neural voices exist (Piper "noa" - CC BY-NC-SA / CC BY depending on the source, Phonikud and notmax123 voices - CC BY-NC, Kokoro Hebrew - NC, MMS - NC) but need a G2P step (Phonikud/renikud), the Piper engine is GPL-3.0, and each model is ~20-60 MB. Kokoro-82M (Apache-2.0, ~80-160 MB, 54 voices) has no permissive Hebrew. Bundling is possible only for English; revisit when a commercially licensed Hebrew model appears.
+- 🔬 A bundled neural voice: the only Hebrew models found (Piper "noa", MMS) are non-commercial and tens of MB; English-only permissive options (Piper, Kokoro, sherpa-onnx WASM) would not serve the Hebrew-first audience.
+
 ## Family
 - ✅ (1.10) **Weekly parent digest** with plain-language insights ("shoes are the slowest step; try preparing them the night before").
 - ✅ (1.10) **Shared reward menu** and "reward given" confirmation flow.

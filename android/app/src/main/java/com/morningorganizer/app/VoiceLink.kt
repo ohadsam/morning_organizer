@@ -18,6 +18,7 @@ class VoiceLink(private val activity: MainActivity, private val send: (JSONObjec
     @Volatile private var ready = false
     private var starting = false
     private val waiting = ArrayDeque<() -> Unit>()
+    private var enginePkg: String? = null
 
     fun available(): Boolean = activity.packageManager.queryIntentServices(Intent(TextToSpeech.Engine.INTENT_ACTION_TTS_SERVICE), 0).isNotEmpty()
 
@@ -27,7 +28,7 @@ class VoiceLink(private val activity: MainActivity, private val send: (JSONObjec
             if (then != null) waiting.add(then)
             if (starting) return@runOnUiThread
             starting = true
-            tts = TextToSpeech(activity.applicationContext) { status ->
+            tts = TextToSpeech(activity.applicationContext, { status ->
                 starting = false
                 if (status == TextToSpeech.SUCCESS) {
                     ready = true
@@ -39,7 +40,7 @@ class VoiceLink(private val activity: MainActivity, private val send: (JSONObjec
                     send(JSONObject().put("type", "tts").put("status", "ready"))
                     while (waiting.isNotEmpty()) waiting.removeFirst().invoke()
                 } else { tts = null; waiting.clear(); send(JSONObject().put("type", "tts").put("status", "unavailable")) }
-            }
+            }, enginePkg)
         }
     }
 
@@ -54,6 +55,22 @@ class VoiceLink(private val activity: MainActivity, private val send: (JSONObjec
             }
         }
         return out.toString()
+    }
+
+    /** Installed text-to-speech engines as [{name (package), label, current}]; the person can pick e.g. an offline neural engine they installed. */
+    fun engines(): String {
+        if (!ready) { ensure(); return "[]" }
+        val out = JSONArray()
+        runCatching { val cur = tts?.defaultEngine; for (e in tts?.engines.orEmpty()) out.put(JSONObject().put("name", e.name).put("label", e.label ?: e.name).put("current", e.name == (enginePkg ?: cur))) }
+        return out.toString()
+    }
+
+    /** Switches to another installed engine (an empty name = the phone's default). The page gets a new 'ready' event and re-reads the voices. */
+    fun setEngine(pkg: String) {
+        val want = pkg.takeIf { it.isNotEmpty() && Regex("^[\\w.]{1,100}$").matches(it) }
+        if (want == enginePkg && ready) return
+        if (want != null && ready && tts?.engines.orEmpty().none { it.name == want }) return
+        activity.runOnUiThread { runCatching { tts?.stop(); tts?.shutdown() }; tts = null; ready = false; starting = false; enginePkg = want; ensure() }
     }
 
     fun speak(id: String, text: String, voiceName: String, lang: String, pitch: Float, rate: Float) {

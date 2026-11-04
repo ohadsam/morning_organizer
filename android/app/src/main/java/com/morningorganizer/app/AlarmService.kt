@@ -44,6 +44,7 @@ class AlarmService : Service() {
         val vibrate = intent.getBooleanExtra("vibrate", true)
         val durationSec = intent.getIntExtra("durationSec", 30).coerceIn(5, 600)
         val sound = intent.getStringExtra("sound") ?: "alarm"
+        val tone = intent.getStringExtra("tone") ?: ""
         val text = intent.getStringExtra("text").orEmpty().take(80)
         val speak = intent.getBooleanExtra("speak", false)
         val start = intent.getStringExtra("start") ?: "offer"
@@ -54,7 +55,7 @@ class AlarmService : Service() {
         ServiceCompat.startForeground(this, NOTIF_ID, buildNotification(templateId, name, text, start, n, of), type)
 
         stopRinging()
-        if (volume > 0) startSound(volume / 100f, sound)
+        if (volume > 0) startSound(volume / 100f, sound, tone)
         if (vibrate) startVibration()
         if (speak) {
             val msg = text.ifBlank { getString(R.string.alarm_title, name) }
@@ -108,10 +109,12 @@ class AlarmService : Service() {
         }
     }
 
-    private fun startSound(level: Float, sound: String) {
+    private fun startSound(level: Float, sound: String, tone: String = "") {
         try {
-            val kind = when (sound) { "ringtone" -> RingtoneManager.TYPE_RINGTONE; "gentle" -> RingtoneManager.TYPE_NOTIFICATION; else -> RingtoneManager.TYPE_ALARM }
-            val uri = RingtoneManager.getActualDefaultRingtoneUri(this, kind)
+            // the web app's tone names map to the closest system sound; "device" is a sound the person picked from the phone
+            val kind = when (sound) { "ringtone", "melody" -> RingtoneManager.TYPE_RINGTONE; "gentle", "bell", "birds" -> RingtoneManager.TYPE_NOTIFICATION; else -> RingtoneManager.TYPE_ALARM }
+            val picked = if (sound == "device" && tone.startsWith("content://")) android.net.Uri.parse(tone) else null
+            val uri = picked ?: RingtoneManager.getActualDefaultRingtoneUri(this, kind)
                 ?: RingtoneManager.getDefaultUri(kind) ?: RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM) ?: RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
             player = MediaPlayer().apply {
                 setAudioAttributes(AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_ALARM).setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION).build())

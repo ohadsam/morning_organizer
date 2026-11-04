@@ -1,5 +1,20 @@
 # Changelog
 
+## 1.18.0
+- **Renamed to SonRise** (display name in the app, PWA manifest, Android launcher, reports, notifications, docs) with a new **logo**: a sun rising over the horizon with the name "SonRise" inside it (`scripts/make-logo.py` + `scripts/make-icons.mjs` regenerate the SVG and every PNG / launcher icon). Package ids and URLs are unchanged so updates keep working.
+- **ONE unified toolbar** on Home: a single row (New · Wizard · Plan ▾ · Calm ▾ · Track ▾ · Alarms) where the dropdowns open one panel in the page flow; the Alarms button pauses/resumes everything.
+- **Pause all alarms**: until tomorrow, for a week, or until switched back on; a banner on Home with a one-tap way back; mirrored to the Android app (`setAlarmRules`).
+- **Hebrew calendar + quiet days**: the Hebrew date on Home, holidays and school vacations computed offline (`holidays.js`: Rosh Hashana, Yom Kippur, Sukkot/Simchat Torah, Hanukkah, Purim, Pesach, Independence Day, Shavuot, the summer vacation). Every alarm has "Quiet on holidays and vacations" - **on by default** - shown with the next days off; the Android app receives ~14 months of dates and skips them.
+- **Alarm sticker** on the routine card of every routine that has an alarm; the card's switch arms/disarms it.
+- **Choose the type of ring**: nine types as tiles with a preview (alarm, gentle, phone, rising, bell, birds, digital, melody, and - in the Android app - any sound from the phone).
+- **Spacing**: durations read `5 ד׳` / `5 m` (a non-breaking space between number and unit).
+- **Parent view**: a linked child's goals with check-ins and look-backs (counts, last one, what got stuck) appear on the parent's Family screen (titles only, never private notes).
+- **Weekly check-ins**: on a chosen day Home suggests the weekly report, a goal check-in and a look-back (Settings -> coach).
+- **Difficulty trends**: each task's difficulty over time ("getting easier / harder / steady") in Statistics.
+- **Learning from "no"**: extra steps or times you leave unticked twice are not suggested again; three new helper steps (water, music, a small celebration).
+- **Voice engine choice** (Android app): pick any installed text-to-speech engine - Google, Samsung, or a free offline neural one such as SherpaTTS / Hayai TTS - and then any of its voices; the app re-reads the voice list.
+- Release checklist: the owner's standing rules and the requests ledger (`docs/REQUESTS.md`).
+
 ## 1.17.0
 - **Global search**: one box (🔍 on the bottom bar and on Home, or Ctrl/Cmd+K) finds any feature, settings group or your own routines ("Start / Edit …"), in Hebrew and English, and opens the exact place (settings groups open via `#/settings/<group>`).
 - **Routine wizard** (Home, search, suggestions): who / how old / what helps (focus, organizing, calm, motivation) / which routine / when -> a routine with age- and help-adjusted times (or your own history), optional calm/focus breaks, an alarm, and the chosen help areas saved; then Start / Edit / Done.

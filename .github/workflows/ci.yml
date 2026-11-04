@@ -109,7 +109,7 @@ jobs:
           VERSION=$(node -p "require('./web/version.json').version")
           TAG="build-${GITHUB_RUN_NUMBER}"
           awk -v v="## $VERSION" '$0==v{f=1;next} /^## /{f=0} f' docs/CHANGELOG.md > notes.md
-          [ -s notes.md ] || echo "Morning Organizer $VERSION" > notes.md
+          [ -s notes.md ] || echo "SonRise $VERSION" > notes.md
           gh release create "$TAG" dist/morning-organizer.apk dist/morning-organizer.apk.sha256 \
             --title "v$VERSION (build ${GITHUB_RUN_NUMBER})" --notes-file notes.md --target "$GITHUB_SHA" --latest
           # keep the release list tidy: newest 10 stay

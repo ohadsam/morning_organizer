@@ -1,15 +1,25 @@
 ---
 name: release-checklist
-description: Run this after implementing any feature or fix in Morning Organizer (ohadsam/morning_organizer), before considering the work done. Covers the 5 specialist reviews (architecture, QA, UI/UX + RTL, security, performance), version bump, What's New, user guide, docs, skills, tests, CI as the Android verification gate, and shipping to main. Invoke by name ("run the release checklist") or whenever the user asks to finish/ship/wrap up a change here.
+description: Run this after implementing any feature or fix in SonRise (ohadsam/morning_organizer), before considering the work done. Covers the 5 specialist reviews (architecture, QA, UI/UX + RTL, security, performance), version bump, What's New, user guide, docs, skills, tests, CI as the Android verification gate, and shipping to main. Invoke by name ("run the release checklist") or whenever the user asks to finish/ship/wrap up a change here.
 ---
 
 # Release checklist
 
-Morning Organizer = one **vanilla-JS web app** (`web/`, no build step, no runtime dependencies) used two ways:
+SonRise = one **vanilla-JS web app** (`web/`, no build step, no runtime dependencies) used two ways:
 a **PWA** on GitHub Pages and a thin **Android WebView shell** (`android/`) that packages the same `web/` folder as assets.
 Do not skip or reorder steps; later steps assume earlier ones are done. If a step finds nothing, say so explicitly and move on.
 
 **First:** confirm the previous batch's checklist really finished (check the task list) - a green `main` and a half-finished checklist look identical.
+
+## 0. The owner's standing rules - every change must satisfy these (check them in the review passes and say how)
+1. **Audience first.** People with attention, focus, anxiety or organisation difficulties, and children as well as adults. Too many things on one screen makes the app unusable for them: show few things, group the rest, collapse long pages into sections, keep wording short and kind.
+2. **UI/UX: simple, accessible, minimal - and beautiful, comfortable and self-explanatory.** Every screen should explain itself (clear titles, one-line hints, visible state). Controls are **grouped by topic in ONE unified toolbar on ONE row** with dropdowns (never a pile of separate buttons, never wrapping over several rows); settings and long pages start collapsed with a one-line summary per section; one primary action per screen.
+3. **Parity PWA = Android app.** The Android app packages the same `web/` folder, so every feature must exist in both. Anything that also has to work in the background (alarms, pause, holiday quiet days, widgets) must be mirrored through `native.js` -> `NativeBridge.kt` -> Kotlin logic **with a JVM unit test**, and degrade gracefully in the browser. Native-only extras (phone voices, ringtone picker) are hidden in the browser, never broken.
+4. **Hebrew first, English equal.** Every string in both languages (neutral plural forms in Hebrew), RTL-safe layout, a space between a number and its unit (`5 ד׳`, `5 m`).
+5. **Defaults protect people.** Alarms are on by default for new routines; they are quiet on Jewish holidays and school vacations by default; a single control pauses all alarms.
+6. **Tests are the proof.** Unit tests for logic, an e2e step for every flow, axe at ZERO violations (he/en, big text), and the **layout sweep** (`node tests/e2e/layout.mjs`, CI runs `QUICK=1`) must stay clean at 320-1366 px. Look at screenshots of every changed screen.
+7. **Requirements ledger.** `docs/REQUESTS.md` lists every request/suggestion the owner approved and its status. Before finishing: add the new requests, tick what shipped, and walk the whole list - nothing may be silently dropped (if something cannot be done, say why in the report).
+8. **Honesty.** Say what was verified only by CI / tests and what needs a real device. Never claim a third-party component fits without checking its licence and size.
 
 ## 1. Five reviews - separate passes, in this order
 Re-read every changed file fresh for each pass; each pass has caught bugs the others missed.
@@ -44,6 +54,7 @@ New logic ⇒ new unit test; new user flow ⇒ new e2e step; every fixed bug ⇒
 Gotcha (real): untrusted keys must be checked with `Object.hasOwn(map, key)` - `key in map` / `map[key]` accept `__proto__`/`constructor` (found in avatar ids and voice presets). Continuously animated elements are never "stable" for Playwright clicks: use `reducedMotion: 'reduce'` for steps that click avatars.
 Gotcha (real): `page.addInitScript` only applies on the next document load - `reload()` first (a hash `goto` does not reload). e2e starts in Hebrew/RTL (the default): `newPage()` switches to English via Settings unless `{ lang: 'he' }`.
 Gotcha (real): glyphs like ‹ › in Android layouts do not mirror in RTL - put them in `values/` and `values-he/` strings. Native-only features (alarm chains, TTS, widgets, dictation) cannot be exercised here: say so in the report and rely on CI compile/lint.
+Gotcha (real): grid/flex children default to `min-width:auto` - a time input or long word makes sheets wider than the screen (fixed globally in `app.css`; the layout sweep guards it). Hebrew-calendar dates come from `Intl` (`u-ca-hebrew`) in `holidays.js`; holiday rules are unit-tested - extend the tests, not a table.
 Gotcha (real): `el.replaceChildren(null)` renders the text "null" and arrays render `[object HTMLDivElement]` - use `setChildren()` from `util.js` or `h()` which flatten and skip null.
 
 ## 7. Android verification = CI
@@ -59,7 +70,7 @@ Commit on the working branch, push, wait for **web** + **android** green. On `ma
 - The committed APK signing key is public by design (see RELEASING.md).
 - Website ↔ app sync is manual (sync code / file): a merge never deletes routines, Replace gives an exact copy. Automatic sync would need a cloud store (Gist/Drive) - not built.
 - Sample routines have fixed ids (`sample-kids`, `sample-adult`) so merges don't duplicate them; keep it that way.
-- Voice "characters" are pitch/speed presets of the device voice; Hebrew needs an installed Hebrew TTS voice.
+- Voice "characters" are pitch/speed presets of the device voice (in the Android app: any voice the phone's engine offers); Hebrew needs an installed Hebrew TTS voice. No bundled neural voice: the only Hebrew models found are non-commercial (CC BY-NC) and large.
 - Web alarms only ring while the page is open (browsers can't schedule background alarms); the Android app is the reliable path.
 - Bluetooth/Nearby sharing goes through the system share sheet (no raw RFCOMM); NFC = tag write/read (Web NFC in Chrome Android, native in the APK) and, in the APK, phone-to-phone hand-over via card emulation (Android removed Beam; the web/PWA cannot do phone-to-phone NFC).
 - Starting a routine while a different one is in progress replaces the in-progress run (the home screen shows a Resume card so it is hard to do by accident).

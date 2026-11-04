@@ -122,7 +122,7 @@ export function renderStats(root, templateId, nav) {
         h('h2', {}, t('history')),
         h('table', { class: 'tbl' }, h('thead', {}, h('tr', {}, h('th', {}, t('colDate')), h('th', {}, t('colPlanned')), h('th', {}, t('colActual')), h('th', {}, h('span', { class: 'sr-only' }, t('rpTitle'))))),
           h('tbody', {}, [...rs].reverse().slice(0, 30).map((r) => h('tr', { class: r.actualTotal > r.plannedTotal ? 'over' : '' },
-            h('td', {}, new Date(r.startedAt).toLocaleString(getLang(), { dateStyle: 'medium', timeStyle: 'short' })), h('td', {}, fmtDur(r.plannedTotal)), h('td', {}, fmtDur(r.actualTotal)), h('td', {}, h('a', { href: `#/report/run/${r.id}`, 'aria-label': `${t('rpRunReport')} ${new Date(r.startedAt).toLocaleDateString(getLang())}` }, '📄'), ' ', h('a', { href: `#/retro/${r.id}`, 'aria-label': `${t('rcLookBack')} ${new Date(r.startedAt).toLocaleDateString(getLang())}` }, S.retroForRun(r.id) ? '✅' : '🔄')))))),
+            h('td', {}, new Date(r.startedAt).toLocaleString(getLang(), { dateStyle: 'medium', timeStyle: 'short' })), h('td', {}, fmtDur(r.plannedTotal)), h('td', {}, fmtDur(r.actualTotal)), h('td', {}, h('a', { href: `#/report/run/${r.id}`, 'aria-label': `${t('rpRunReport')} ${new Date(r.startedAt).toLocaleDateString(getLang())}` }, '📄'), ' ', h('a', { href: `#/retro/${r.id}`, 'aria-label': `${t('rcLookBack')} ${new Date(r.startedAt).toLocaleDateString(getLang())}` }, S.retrosForRun(r.id).length ? '✅' : '🔄')))))),
         h('button', { class: 'btn danger', type: 'button', onclick: async () => { if (await confirmBox(t('clearHistoryConfirm'), t('clearHistory'), true)) { await S.clearRuns(templateId); toast(t('deleted')); } } }, t('clearHistory'))]));
   };
   draw();

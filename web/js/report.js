@@ -6,7 +6,7 @@ import { moodStats } from './mood.js';
 import * as U from './unplanned.js';
 import * as D from './difficulty.js';
 import { progress as goalProgress } from './cogfun.js';
-import { overview as retroOverview } from './retro.js';
+import { overview as retroOverview, focusItems, workedItems } from './retro.js';
 
 const DAY = 86_400_000, avg = (a) => (a.length ? a.reduce((s, x) => s + x, 0) / a.length : 0);
 const done = (runs) => runs.filter((r) => r.endedAt);
@@ -42,7 +42,7 @@ export function buildReport({ runs, templates = [], goals = [], retros = [], pro
     kpis: { runs: tot.count, onTime: tot.onTime, onTimeRate: tot.count ? tot.onTime / tot.count : 0, avgActualSec: Math.round(tot.avgActual), bestSec: tot.best, stars: ST.totalStars(rs), unplannedCount: unp.count, unplannedSec: unp.sec, avgDifficulty: dif.avg, avgMood: mood.avg },
     series: ST.series(rs), byRoutine, tasks: taskRows.slice(0, 15), hardTasks: hard.slice(0, 8), difficulty: dif, unplanned: unp, mood, heat: heatmap(rs, now, 5), insights,
     goals: goals.map((g) => ({ title: g.title, done: g.done, ...goalProgress(g, rs) })),
-    retro: ro,
+    retro: { ...ro, focus: focusItems(retros.filter((r) => (!scope.templateId || r.templateId === scope.templateId) && r.at >= from), runs).slice(0, 3), worked: workedItems(retros.filter((r) => (!scope.templateId || r.templateId === scope.templateId) && r.at >= from), runs) },
   };
 }
 

@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.15.0
+- **Looking back, your way**: choose **guided** (step by step, can be paused and continued later as a draft) or **free** (everything on one page); for **this run or the routine's last 5 runs**; the **whole thing or only some parts** (feel / tasks / went well / changes); **several look-backs per run**; a remembered default style (Settings → Helpers).
+- **What worked and what did not**: each task is marked went well / stuck / not now; Looking back now shows **what to focus on** (tasks that keep getting stuck or were set aside, with a one-tap look at just that task), **what worked** (changes that helped, tasks that keep going well) and **what did not**.
+- **Undo** any applied change; a Home card tells you when a change has been judged (helped / no clear change / worse); the Home prompt picks the run with the most going on; focus and worked/not-worked appear in the reports.
+
 ## 1.14.0
 - **Retrospective (looking back)**: after any run - or later - a short guided look-back: how it went, which tasks got stuck (the data pre-ticks tasks that ran over, were rated hard or were interrupted), why (8 causes), what went well, and **concrete suggested changes to the routine** (more time, a helper step, split a task, an earlier alarm, a gear item, planning for an interruption, a goal with a plan) that can be **applied in one tap**.
 - **Did it help?** The app compares the routine's runs before and after the applied changes (on time, over/under plan, difficulty, stuck tasks, interruptions) and says improved / no clear change / worse, waiting for enough runs first.

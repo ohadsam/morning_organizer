@@ -38,7 +38,7 @@ const nav = (hash) => { if (location.hash === hash) route(); else location.hash 
 
 async function route() {
   cleanup(); cleanup = () => {};
-  const [, page, arg, arg2] = (location.hash.replace(/^#/, '') || '/').split('/');
+  const [, page, arg, arg2, arg3] = (location.hash.replace(/^#/, '') || '/').split('/');
   const view = page || 'home';
   // Simple (kids) mode: only routines and running them are open; everything else needs the grown-up gate.
   if (S.get().settings.simpleMode && !['home', 'run'].includes(view) && !isUnlocked() && !(await requestGate())) { if (location.hash !== '#/') location.hash = '#/'; else drawNav('home'); return; }
@@ -49,7 +49,7 @@ async function route() {
     const views = {
       home: () => renderHome(root, nav), edit: () => renderEditor(root, arg, nav), run: () => renderRunner(root, arg, nav),
       stats: () => renderStats(root, arg, nav), family: () => renderFamily(root), settings: () => renderSettings(root, version), guide: () => renderGuide(root),
-      calm: () => renderCalm(root, nav), library: () => renderLibrary(root, nav), alarms: () => renderAlarms(root, nav), report: () => renderReport(root, nav, arg, decodeURIComponent(arg2 || '')), retro: () => renderRetro(root, nav, decodeURIComponent(arg || '')), retros: () => renderRetros(root, nav), goals: () => renderGoals(root, nav), journal: () => renderJournal(root, nav),
+      calm: () => renderCalm(root, nav), library: () => renderLibrary(root, nav), alarms: () => renderAlarms(root, nav), report: () => renderReport(root, nav, arg, decodeURIComponent(arg2 || '')), retro: () => renderRetro(root, nav, decodeURIComponent(arg || ''), arg2, arg3), retros: () => renderRetros(root, nav), goals: () => renderGoals(root, nav), journal: () => renderJournal(root, nav),
     };
     // The route comes from the address bar: look it up as OWN data only ("#/constructor" or "#/__proto__" must fall back to home).
     const out = await (Object.hasOwn(views, view) ? views[view] : views.home)();

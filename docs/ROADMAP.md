@@ -32,7 +32,8 @@ Status: 💡 idea · 🔬 needs a decision / research · ✅ built (see CHANGELO
 - 💡 Learn from rejected suggestions; per-child smart-time history for parents; more helper-step types.
 
 - ✅ (1.14) **Retrospective** with applicable changes, before/after impact tracking, conclusions and reports.
-- 💡 Undo an applied change from the retrospective; parent view of a child's look-backs; retrospective reminders by schedule.
+- ✅ (1.15) Undo applied changes; guided / free / partial / several look-backs per run; focus and worked-vs-not views; follow-up card.
+- 💡 Parent view of a child's look-backs; retrospective reminders by schedule.
 
 ## Family
 - ✅ (1.10) **Weekly parent digest** with plain-language insights ("shoes are the slowest step; try preparing them the night before").

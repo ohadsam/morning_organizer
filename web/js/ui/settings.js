@@ -94,6 +94,7 @@ export function renderSettings(root, version) {
         h('div', { class: 'chips' }, S.activeProfile().focus.length ? S.activeProfile().focus.map((a) => h('span', { class: 'chip solid' }, `${AREA_EMOJI[a]} ${t(`area_${a}`)}`)) : h('span', { class: 'muted' }, t('focusNone'))),
         h('div', { class: 'toolbar wrap' }, h('button', { class: 'btn primary', type: 'button', onclick: () => openMyFocus(draw) }, `🎯 ${t('focusChoose')}`),
           h('a', { class: 'btn', href: '#/calm' }, `🌬️ ${t('calmTitle')}`), h('a', { class: 'btn', href: '#/journal' }, `📓 ${t('journal')}`)),
+        select(t('rcSettingStyle'), st.retroStyle, [['ask', t('rcStyleAsk')], ['guided', t('rcStyleGuided')], ['free', t('rcStyleFree')]], (v) => set({ retroStyle: v })),
         toggle(t('transcribeOn'), t('transcribeHint'), st.transcribe, (v) => set({ transcribe: v }))),
       group('pace', t('paceMode'), false,
         select(t('timerStyle'), st.timerStyle, [['auto', t('timerAuto')], ['ring', t('timerRing')], ['pie', t('timerPie')], ['bar', t('timerBar')], ['sand', t('timerSand')]], (v) => set({ timerStyle: v })),

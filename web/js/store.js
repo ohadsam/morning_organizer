@@ -17,7 +17,7 @@ import { widgetItems } from './widgetData.js';
 import { sanitizeMood } from './mood.js';
 import { sanitizeUnplanned, sanitizeWatch } from './unplanned.js';
 import { sanitizeGoal, MAX_GOALS } from './cogfun.js';
-import { sanitizeRetro, sanitizeRetros, applyActions, MAX_RETROS } from './retro.js';
+import { sanitizeRetro, sanitizeRetros, applyActions, undoActions, MAX_RETROS } from './retro.js';
 import { sanitizeLibrary, mergeLibrary, upsert, fromTemplate, fromTask, MAX_ROUTINES as LIB_R, MAX_TASKS as LIB_T, IDEA_ROUTINES } from './library.js';
 import { eraseJournal } from './journal.js';
 import { newProfile, normalizeProfile, runsOf, MAX_PROFILES } from './profiles.js';
@@ -25,7 +25,7 @@ import { newProfile, normalizeProfile, runsOf, MAX_PROFILES } from './profiles.j
 export const DEFAULT_SETTINGS = Object.freeze({
   lang: 'he', theme: 'auto', mode: 'both', volume: 80, warnSec: 10, defTaskSec: 300, defEstSec: 0,
   autoAdvance: false, keepAwake: true, keepAwakeApp: false, personName: '', mascot: '🦊', feedback: true, speak: false, age: null, gender: 'other', profileDone: false,
-  textStyle: 'auto', timerStyle: 'auto', alarmsMig: false, paceMode: 'normal', accent: '', simpleMode: false, announceTasks: false, fontScale: 100, colorSafe: false, contrast: 'normal', srAnnounce: false,
+  textStyle: 'auto', timerStyle: 'auto', retroStyle: 'ask', alarmsMig: false, paceMode: 'normal', accent: '', simpleMode: false, announceTasks: false, fontScale: 100, colorSafe: false, contrast: 'normal', srAnnounce: false,
   coachButton: true, coachAuto: false, coachSpeak: false, voiceURI: '', voicePreset: 'natural', seeded: false,
   avatar: defaultAvatar(), activeProfile: '', transcribe: false,
 });
@@ -111,23 +111,33 @@ export async function init() {
 
 // ── retrospectives: look back at a run, change the routine, check later whether it helped ──
 export const retros = (profileId = activeProfile().id) => state.retros.filter((r) => r.profileId === profileId);
-export const retroForRun = (runId) => state.retros.find((r) => r.runId === runId) ?? null;
+export const retrosForRun = (runId) => state.retros.filter((r) => r.runId === runId).sort((a, b) => a.at - b.at);
+export const retroById = (id) => state.retros.find((r) => r.id === id) ?? null;
 const persistRetros = async () => { await db.put('kv', state.retros, 'retros'); emit(); };
-/** One retrospective per run (saving again updates it). */
+/** Create (no id) or update (id) a retrospective. A run can have several - e.g. a quick one now and another part later. */
 export async function saveRetro(r) {
-  const prev = state.retros.find((x) => x.runId === r.runId), clean = sanitizeRetro({ ...r, id: prev?.id ?? r.id, profileId: r.profileId || activeProfile().id });
+  const prev = r.id ? state.retros.find((x) => x.id === r.id) : null, clean = sanitizeRetro({ ...prev, ...r, id: prev?.id ?? undefined, profileId: r.profileId || prev?.profileId || activeProfile().id, at: prev?.at ?? Date.now() });
   if (!clean.runId) return null;
   state.retros = [...state.retros.filter((x) => x.id !== clean.id), clean].slice(-MAX_RETROS); await persistRetros(); return clean;
 }
-/** Applies the chosen suggested changes to the routine (and creates goals) and starts the "did it help?" clock. -> { applied: n, goals: n } */
+/** Applies the chosen suggested changes to the routine (and creates goals), remembers how to undo each, and starts the "did it help?" clock. -> { applied, goals } */
 export async function applyRetro(retroId, actionIds) {
   const r = state.retros.find((x) => x.id === retroId), tpl = r && getTemplate(r.templateId); if (!r || !tpl) return { applied: 0, goals: 0 };
   const chosen = r.actions.filter((a) => actionIds.includes(a.id) && !a.applied); if (!chosen.length) return { applied: 0, goals: 0 };
-  const out = applyActions(tpl, chosen, { stepName: (k) => t(k) });
-  await saveTemplate(out.tpl);
-  for (const g of out.goals) await saveGoal({ ...g, since: Date.now() }, r.profileId);
-  state.retros = state.retros.map((x) => (x.id === retroId ? { ...x, appliedAt: Date.now(), actions: x.actions.map((a) => (chosen.some((c) => c.id === a.id) ? { ...a, applied: true } : a)) } : x)); await persistRetros();
+  const out = applyActions(tpl, chosen, { stepName: (k) => t(k) }); await saveTemplate(out.tpl);
+  const goalIds = []; for (const g of out.goals) { const made = await saveGoal({ ...g, since: Date.now() }, r.profileId); goalIds.push(made?.id || ''); }
+  let gi = 0; const undoOf = (a) => (a.type === 'goal' ? { goalId: goalIds[gi++] || '' } : out.undos[a.id] || null);
+  state.retros = state.retros.map((x) => (x.id === retroId ? { ...x, appliedAt: Date.now(), actions: x.actions.map((a) => (chosen.some((c) => c.id === a.id) ? { ...a, applied: true, undo: undoOf(a) } : a)) } : x)); await persistRetros();
   return { applied: chosen.length, goals: out.goals.length };
+}
+/** Takes applied changes back (the ones still recognisable in the routine). -> { undone } */
+export async function undoRetro(retroId, actionIds) {
+  const r = state.retros.find((x) => x.id === retroId), tpl = r && getTemplate(r.templateId); if (!r) return { undone: 0 };
+  const chosen = r.actions.filter((a) => actionIds.includes(a.id) && a.applied); if (!chosen.length) return { undone: 0 };
+  if (tpl) { const out = undoActions(tpl, chosen); await saveTemplate(out.tpl); for (const id of out.goalIds) await removeGoal(id); }
+  const rest = r.actions.map((a) => (chosen.some((c) => c.id === a.id) ? { ...a, applied: false, undo: null } : a));
+  state.retros = state.retros.map((x) => (x.id === retroId ? { ...x, actions: rest, appliedAt: rest.some((a) => a.applied) ? x.appliedAt : 0 } : x)); await persistRetros();
+  return { undone: chosen.length };
 }
 export async function removeRetro(id) { state.retros = state.retros.filter((x) => x.id !== id); await persistRetros(); }
 
@@ -280,6 +290,7 @@ export async function updateSettings(patch) {
   if ('age' in patch) { const n = Math.round(Number(patch.age)); patch = { ...patch, age: Number.isFinite(n) && n >= 3 && n <= 120 ? n : null }; }
   if ('fontScale' in patch && ![100, 115, 130, 150].includes(patch.fontScale)) delete patch.fontScale;
   if ('textStyle' in patch && !['auto', 'playful', 'plain'].includes(patch.textStyle)) delete patch.textStyle;
+  if ('retroStyle' in patch && !['ask', 'guided', 'free'].includes(patch.retroStyle)) delete patch.retroStyle;
   if ('timerStyle' in patch && !['auto', 'ring', 'pie', 'bar', 'sand'].includes(patch.timerStyle)) delete patch.timerStyle;
   if ('paceMode' in patch && !['normal', 'quick', 'calm'].includes(patch.paceMode)) delete patch.paceMode;
   if ('contrast' in patch && !['normal', 'high'].includes(patch.contrast)) delete patch.contrast;
@@ -335,7 +346,7 @@ export function exportAll() {
 export function sanitizeSettings(raw) {
   const out = {};
   if (!raw || typeof raw !== 'object') return out;
-  const ENUM = { lang: ['auto', 'he', 'en'], theme: ['auto', 'light', 'dark'], mode: ['both', 'beep', 'vibrate', 'silent'], paceMode: ['normal', 'quick', 'calm'], contrast: ['normal', 'high'], textStyle: ['auto', 'playful', 'plain'], timerStyle: ['auto', 'ring', 'pie', 'bar', 'sand'], fontScale: [100, 115, 130, 150] };
+  const ENUM = { lang: ['auto', 'he', 'en'], theme: ['auto', 'light', 'dark'], mode: ['both', 'beep', 'vibrate', 'silent'], paceMode: ['normal', 'quick', 'calm'], contrast: ['normal', 'high'], textStyle: ['auto', 'playful', 'plain'], timerStyle: ['auto', 'ring', 'pie', 'bar', 'sand'], retroStyle: ['ask', 'guided', 'free'], fontScale: [100, 115, 130, 150] };
   for (const [k, def] of Object.entries(DEFAULT_SETTINGS)) {
     if (k === 'seeded' || !(k in raw)) continue;
     const v = raw[k];

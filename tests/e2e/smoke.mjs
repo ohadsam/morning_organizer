@@ -865,35 +865,63 @@ const seedRetroRuns = (page, spec) => page.evaluate(async (items) => {   // item
   for (const it of items) { const tasks = tpl.tasks.map((t, k) => ({ id: t.id, name: t.name, icon: t.icon, plannedSec: t.sec, estSec: t.sec, extraSec: 0, actualSec: t.sec + (k === 0 ? it.over : 0), done: true, skipped: false, difficulty: k === 0 ? it.diff : 0, help: { note: 0, thought: 0, relax: 0 } })), tot = tasks.reduce((a, x) => a + x.plannedSec, 0), act = tasks.reduce((a, x) => a + x.actualSec, 0);
     await S.saveRun({ id: it.id, profileId: S.activeProfile().id, templateId: tpl.id, templateName: tpl.name, icon: tpl.icon, color: '#6c5ce7', startedAt: now + it.startOffsetSec * 1000, endedAt: now + it.startOffsetSec * 1000 + 600_000, status: 'done', current: 0, pausedMs: 0, plannedTotal: tot, estTotal: tot, actualTotal: act, tasks, unplanned: [] }); }
 }, spec);
-await step('v1.14: look back at a run, apply suggested changes to the routine, then see whether they helped (before/after) with conclusions', async () => {
+await step('v1.14: look back (free style), apply suggested changes, see whether they helped, what worked / focus, undo', async () => {
   const { page, errors } = await newPage(); await page.goto(base); await page.waitForSelector('.routine');
   await seedRetroRuns(page, [{ id: 'b1', startOffsetSec: -5 * 86400, over: 200, diff: 5 }, { id: 'b2', startOffsetSec: -3 * 86400, over: 180, diff: 5 }, { id: 'b3', startOffsetSec: -1 * 86400, over: 220, diff: 4 }]);
-  await page.goto(base + '#/'); await page.waitForSelector('.retro-card'); await page.click('.retro-card button.primary'); await page.waitForSelector('.retro-task');
-  assert.ok(await page.locator('.retro-task input[type=checkbox]:checked').count() >= 1, 'tasks the data points at are pre-ticked');
-  await page.click('.retro-task >> nth=0 >> .cause:has-text("Not enough time")'); await page.click('.retro-task >> nth=0 >> .cause:has-text("Hard to start")'); await page.click('.card:has(h2:has-text("How did it go?")) .mood >> nth=2');
-  await page.waitForSelector('.strat-pick:has-text("more time")'); assert.ok(await page.locator('.strat-pick').count() >= 2); const before = await page.evaluate(async () => { const S = await import('./js/store.js'); return S.get().templates[0].tasks.map((t) => [t.name, t.sec]); });
+  await page.goto(base + '#/'); await page.waitForSelector('.retro-card'); await page.click('.retro-card button.primary'); await page.waitForSelector('h1:has-text("How do you want to look back?")');
+  await page.check('input[name=mode] >> nth=1'); await page.click('button:has-text("Start")'); await page.waitForSelector('.retro-task');
+  assert.ok(await page.locator('.retro-task button[aria-pressed=true]:has-text("Stuck")').count() >= 1, 'tasks the data points at start as "stuck"'); assert.ok(await page.locator('.retro-task button[aria-pressed=true]:has-text("Went well")').count() >= 1, 'smooth tasks start as "went well"');
+  const stuckCard = page.locator('.retro-task:has(button[aria-pressed=true]:has-text("Stuck"))').first(); await stuckCard.locator('.cause:has-text("Not enough time")').click(); await stuckCard.locator('.cause:has-text("Hard to start")').click(); await page.click('.card:has(h2:has-text("How did it go?")) .mood >> nth=2');
+  await page.waitForSelector('.strat-pick:has-text("more time")'); const before = await page.evaluate(async () => { const S = await import('./js/store.js'); return S.get().templates[0].tasks.map((t) => [t.name, t.sec]); });
   await page.click('button:has-text("Save and apply")'); await page.waitForSelector('#toast:has-text("applied")');
   const after = await page.evaluate(async () => { const S = await import('./js/store.js'); return { tasks: S.get().templates[0].tasks.map((t) => [t.name, t.sec, t.helperKey]), retro: S.retros()[0] }; });
-  assert.ok(after.tasks.length === before.length + 1 && after.tasks.some((t) => t[2] === 'sx_pickone')); assert.ok(after.tasks.find((t) => t[0] === before[0][0])[1] > before[0][1]); assert.ok(after.retro.appliedAt > 0 && after.retro.actions.every((a) => a.applied));
+  assert.ok(after.tasks.length === before.length + 1 && after.tasks.some((t) => t[2] === 'sx_pickone')); assert.ok(after.retro.appliedAt > 0 && after.retro.actions.every((a) => a.applied && a.undo)); assert.equal(after.retro.mode, 'free'); assert.equal(after.retro.status, 'done');
   await page.waitForSelector('.verdict.waiting'); assert.match(await page.textContent('.verdict'), /Waiting for 3 more/);
-  // three better runs after the change -> "Helped"
   await seedRetroRuns(page, [{ id: 'a1', startOffsetSec: 60, over: 0, diff: 2 }, { id: 'a2', startOffsetSec: 120, over: 0, diff: 2 }, { id: 'a3', startOffsetSec: 180, over: 0, diff: 1 }]);
-  await page.reload(); await page.waitForSelector('.verdict.improved'); assert.match(await page.textContent('.card.kvs'), /Average over\/under/);
-  await page.goto(base + '#/retros'); await page.waitForSelector('.retro-item'); assert.match(await page.textContent('.card.stack'), /helped in 1 of 1/); assert.match(await page.textContent('.retro-item'), /Helped/);
+  await page.goto(base + '#/'); await page.waitForSelector('.retro-card:has-text("was checked")'); assert.match(await page.textContent('.retro-card'), /helped/); await page.click('.retro-card button.primary'); await page.waitForSelector('.verdict.improved'); assert.match(await page.textContent('.card.kvs'), /Average over\/under/);
+  await page.goto(base + '#/retros'); await page.waitForSelector('.retro-item'); assert.match(await page.textContent('.card.stack'), /helped in 1 of 1/); assert.ok(await page.locator('.focus-item').count() >= 1, 'a focus list'); assert.match(await page.textContent('.rcv-cols'), /What worked/); assert.ok(await page.locator('.rcv-cols a').count() >= 1, 'the helpful change is listed');
   await page.goto(base + '#/report/period/0-all'); await page.waitForSelector('.rpt'); assert.match(await page.textContent('.rpt'), /Looking back/);
-  await page.goto(base + '#/stats'); await page.waitForSelector('a[href="#/retros"]'); assert.deepEqual(errors, []);
+  // undo: take the applied changes back
+  await page.goto(base + '#/retros'); await page.locator('.retro-item').first().click(); await page.waitForSelector('.verdict.improved'); await page.locator('button:has-text("Undo")').first().click(); await page.waitForSelector('#toast:has-text("undone")');
+  const undone = await page.evaluate(async () => { const S = await import('./js/store.js'); return { n: S.get().templates[0].tasks.length, applied: S.retros()[0].actions.filter((a) => a.applied).length }; }); assert.ok(undone.n <= before.length + 1 && undone.applied < after.retro.actions.length);
+  assert.deepEqual(errors, []);
 });
 
-await step('v1.14: axe on retrospective page, overview and home prompt (he + en)', async () => {
+await step('v1.14: guided look-back of only a part, saved as a draft and finished later; several look-backs for one run; focus on one task', async () => {
+  const { page, errors } = await newPage(); await page.goto(base); await page.waitForSelector('.routine');
+  await seedRetroRuns(page, [{ id: 'g1', startOffsetSec: -4 * 86400, over: 200, diff: 5 }, { id: 'g2', startOffsetSec: -2 * 86400, over: 200, diff: 5 }, { id: 'g3', startOffsetSec: -86400, over: 200, diff: 5 }]);
+  await page.goto(base + '#/retro/g3/new'); await page.waitForSelector('h1:has-text("How do you want to look back?")');
+  await page.check('.switch:has-text("only some parts") input'); await page.uncheck('.strat-pick:has-text("How it felt") input'); await page.uncheck('.strat-pick:has-text("🌟") input'); await page.waitForSelector('input[name=scope]');
+  await page.check('input[name=scope] >> nth=1'); await page.click('button:has-text("Start")'); await page.waitForSelector('.stepper:has-text("Step 1 of 2")'); assert.match(await page.textContent('h2'), /Where did we get stuck/);
+  await page.click('button:has-text("Next")'); await page.waitForSelector('.stepper:has-text("Step 2 of 2")'); assert.match(await page.textContent('main h2, #app h2'), /change/i);
+  await page.click('.toolbar.wrap button:has-text("Back")'); await page.waitForSelector('.stepper:has-text("Step 1 of 2")'); await page.click('button:has-text("Save and continue later")'); await page.waitForSelector('.retro-item:has-text("In progress")');
+  const draft = await page.evaluate(async () => { const S = await import('./js/store.js'); const r = S.retros()[0]; return { status: r.status, step: r.step, parts: r.parts, scope: r.scope, mode: r.mode }; }); assert.deepEqual(draft, { status: 'draft', step: 0, parts: ['tasks', 'change'], scope: 'routine', mode: 'guided' });
+  await page.click('.retro-item a:has-text("Continue")'); await page.waitForSelector('.stepper'); await page.click('button:has-text("Next")'); await page.click('button:has-text("Finish")'); await page.waitForSelector('#toast:has-text("Saved")');
+  assert.equal(await page.evaluate(async () => (await import('./js/store.js')).retros()[0].status), 'done');
+  // a second, separate look-back of the same run (free, everything)
+  await page.goto(base + '#/retro/g3'); await page.waitForSelector('.retro-item'); await page.click('a:has-text("Start another look-back")'); await page.check('input[name=mode] >> nth=1'); await page.click('button:has-text("Start")'); await page.waitForSelector('.retro-task'); await page.click('button:has-text("Save")'); await page.waitForSelector('#toast');
+  assert.equal(await page.evaluate(async () => (await import('./js/store.js')).retrosForRun('g3').length), 2);
+  // overview: focus item -> look at just that task
+  await page.goto(base + '#/retros'); await page.waitForSelector('.focus-item a'); await page.click('.focus-item a >> nth=0'); await page.waitForSelector('h1:has-text("How do you want to look back?")'); assert.match(await page.textContent('.chip.solid'), /Focusing on/);
+  await page.click('button:has-text("Start")'); await page.waitForSelector('.stepper:has-text("Step 1 of 2")'); assert.equal(await page.locator('.retro-task button[aria-pressed=true]:has-text("Stuck")').count(), 1);
+  // the remembered style skips the question next time
+  await page.goto(base + '#/retro/g1/new'); await page.check('input[name=mode] >> nth=1'); await page.check('.switch:has-text("Use this style next time") input'); await page.click('button:has-text("Start")'); await page.waitForSelector('.retro-task'); await page.click('button:has-text("Save")'); await page.waitForSelector('#toast');
+  await page.goto(base + '#/retro/g2'); await page.waitForSelector('.retro-task'); assert.equal(await page.locator('h1:has-text("How do you want to look back?")').count(), 0); assert.deepEqual(errors, []);
+});
+
+await step('v1.14: axe on look-back start screen, guided step, free form, hub and overview with focus (he + en)', async () => {
   const bad = [];
   for (const [lang, scheme] of [['he', 'light'], ['en', 'dark']]) {
     const { page } = await newPage({ lang, ctx: { colorScheme: scheme } }); await page.goto(base); if (lang === 'he') await dismissWelcome(page); const L = `${lang}/${scheme}`;
     await page.waitForSelector('.routine'); await seedRetroRuns(page, [{ id: 'x1', startOffsetSec: -3 * 86400, over: 200, diff: 5 }, { id: 'x2', startOffsetSec: -86400, over: 200, diff: 5 }]);
     await page.goto(base + '#/'); await page.waitForSelector('.retro-card .btn.primary'); bad.push(...await audit(page, `${L}/home-retro-prompt`));
-    await page.goto(base + '#/retros'); await page.waitForSelector('h1'); bad.push(...await audit(page, `${L}/retros-empty`));
-    await page.locator('a.retro-link').first().click(); await page.waitForSelector('.retro-task'); await page.click('.retro-task >> nth=0 >> .cause >> nth=0'); await page.waitForSelector('.strat-pick'); bad.push(...await audit(page, `${L}/retro-form`));
-    await page.click('.card:has(.mood) .mood >> nth=1'); await page.click('button:has(+ button.primary), .toolbar.wrap button >> nth=0'); await page.waitForTimeout(500);
-    await page.goto(base + '#/retros'); await page.waitForSelector('.retro-item'); bad.push(...await audit(page, `${L}/retros-list`));
+    await page.goto(base + '#/retro/x2/new'); await page.waitForSelector('input[name=mode]'); bad.push(...await audit(page, `${L}/retro-start`)); await page.check('.switch input >> nth=0'); await page.waitForTimeout(150); bad.push(...await audit(page, `${L}/retro-start-parts`));
+    await page.click('.toolbar.wrap button.primary'); await page.waitForSelector('.stepper'); bad.push(...await audit(page, `${L}/retro-guided-step`));
+    await page.click('.retro-task >> nth=0 >> .seg-group button >> nth=1').catch(() => {}); await page.waitForTimeout(150);
+    await page.click('.toolbar.wrap button >> nth=-1'); await page.waitForSelector('.retro-item'); bad.push(...await audit(page, `${L}/retro-hub`));
+    await page.goto(base + '#/retro/x1/new'); await page.check('input[name=mode] >> nth=1'); await page.click('.toolbar.wrap button.primary'); await page.waitForSelector('.retro-task'); await page.locator('.retro-task:has(button[aria-pressed=true]:has-text("Stuck"), button[aria-pressed=true]:has-text("נתקע")) .cause').first().click(); bad.push(...await audit(page, `${L}/retro-free`));
+    await page.click('.toolbar.wrap button >> nth=1'); await page.waitForTimeout(500);
+    await page.goto(base + '#/retros'); await page.waitForSelector('.focus-item'); bad.push(...await audit(page, `${L}/retros-overview`));
   }
   if (bad.length) console.error([...new Set(bad)].join('\n'));
   assert.deepEqual(bad, []);

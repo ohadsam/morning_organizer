@@ -11,7 +11,10 @@ import { rewardProgress } from '../rewards.js';
 import { avatarNode, openProfiles } from './avatar.js';
 import { levelInfo } from '../levels.js';
 import { splitForToday } from '../schedule.js';
-import { icon, iconBtn, toast, confirmBox } from './common.js';
+import { icon, iconBtn, toast, confirmBox, fold } from './common.js';
+import { openSearch } from './search.js';
+import { runAction } from './actions.js';
+import { suggestionCard } from './suggest.js';
 import { openShare, openImport } from './share.js';
 import { focusCard } from './focus.js';
 import { openMenu } from './menu.js';
@@ -54,7 +57,7 @@ export function renderHome(root, nav) {
     const awake = isAwakeWanted(), simple = settings.simpleMode, lv = levelInfo(starsN);
     const goals = F.childLinks().filter((l) => l.parent.goal).map((l) => ({ g: l.parent.goal, p: rewardProgress(l.parent.goal, done) }));
     const favs = templates.filter((x) => x.favorite);
-    const next = nextAcross(templates);
+    const next = nextAcross(templates), focusEl = simple ? null : focusCard();
     setChildren(root,
       h('div', { class: 'hero' }, h('button', { class: 'hero-buddy', type: 'button', 'aria-label': `${t('switchProfile')}: ${settings.personName || ''}`, onclick: () => openProfiles(nav) }, avatarNode(settings.avatar, { size: 76 })), h('h1', {}, t('appName')), h('p', {}, settings.personName ? t('greetName', { name: settings.personName }) : t('hello')),
         h('div', { class: 'chips' }, days ? h('span', { class: 'chip' }, `🔥 ${t('streakDays', { n: days })}`) : null, starsN ? h('span', { class: 'chip' }, `⭐ ${t('starsTotal', { n: starsN })}`) : null,
@@ -63,22 +66,25 @@ export function renderHome(root, nav) {
           h('button', { class: `chip btn-chip ${awake ? 'on' : ''}`, type: 'button', 'aria-pressed': String(awake), onclick: async () => { await S.updateSettings({ keepAwakeApp: !awake }); setAwake('app', !awake); draw(); } }, awake ? `☀️ ${t('screenOn')}` : `🌙 ${t('screenOff')}`)),
         next ? h('a', { class: 'chip', href: '#/alarms' }, icon('bell', 16), t('alarmNext', { name: next.template.name, time: next.at.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) })) : null),
       activeCard(),
-      simple ? null : focusCard(),
+      focusEl,
       simple ? null : followUpCard(nav, draw) ?? dueCard(nav, draw),
       simple ? null : (() => { const g = S.goals().find((x) => needsCheck(x)); return g ? h('section', { class: 'card focus-card' }, h('strong', {}, `🎯 ${t('checkDue')}`), h('p', {}, g.title), h('button', { class: 'btn primary', type: 'button', onclick: () => openCheckin(g, draw) }, `✔ ${t('checkTitle')}`)) : null; })(),
-      simple ? null : (() => { const f = S.features(); return h('div', { class: 'quick', role: 'group', 'aria-label': t('quickTitle') },
+      simple ? null : h('button', { class: 'home-search', type: 'button', 'aria-haspopup': 'dialog', onclick: () => openSearch(nav) }, h('span', { 'aria-hidden': 'true' }, '🔍'), h('span', {}, t('homeSearch'))),
+      simple ? null : h('div', { class: 'toolbar' },
+        h('button', { class: 'btn primary', type: 'button', onclick: () => runAction('newRoutine', nav) }, icon('plus', 18), t('newRoutine')),
+        h('button', { class: 'btn', type: 'button', onclick: () => runAction('wizard', nav) }, `🪄 ${t('homeWizard')}`)),
+      simple || focusEl ? null : suggestionCard(nav, draw),
+      simple ? null : (() => { const f = S.features(); return fold(t('homeMore'), t('homeMoreSub'), h('div', { class: 'quick', role: 'group', 'aria-label': t('quickTitle') },
         h('button', { class: 'btn', type: 'button', onclick: () => nav('#/alarms') }, `⏰ ${t('alarmsTitle')}`),
         h('button', { class: 'btn', type: 'button', onclick: () => nav('#/goals') }, `🎯 ${t('goalsTitle')}`),
         h('button', { class: 'btn', type: 'button', onclick: () => nav('#/retros') }, `🔄 ${t('rcvTitle')}`),
         f.calmCorner ? h('button', { class: 'btn', type: 'button', onclick: () => nav('#/calm') }, `🌬️ ${t('calmTitle')}`) : null,
         f.journal ? h('button', { class: 'btn', type: 'button', onclick: () => nav('#/journal') }, `📓 ${t('journal')}`) : null,
         f.journal ? h('button', { class: 'btn', type: 'button', onclick: () => openCapture({}) }, `🎙️ ${t('jQuick')}`) : null,
-        f.rewardMenu ? h('button', { class: 'btn', type: 'button', onclick: () => openMenu() }, `🎁 ${t('menuTitle')}`) : null); })(),
-      simple ? null : h('div', { class: 'toolbar' },
-        h('button', { class: 'btn primary', type: 'button', onclick: async () => { try { const x = S.newTemplate(t('untitled')); await S.saveTemplate(x); nav(`#/edit/${x.id}`); } catch { toast(t('error')); } } }, icon('plus', 18), t('newRoutine')),
+        f.rewardMenu ? h('button', { class: 'btn', type: 'button', onclick: () => openMenu() }, `🎁 ${t('menuTitle')}`) : null,
         h('button', { class: 'btn', type: 'button', onclick: () => openRoutinePicker(nav) }, `📚 ${t('libFromTemplate')}`),
         h('button', { class: 'btn', type: 'button', onclick: () => nav('#/library') }, `⚙️ ${t('libManage')}`),
-        h('button', { class: 'btn', type: 'button', onclick: () => openImport() }, icon('download', 18), t('import'))),
+        h('button', { class: 'btn', type: 'button', onclick: () => openImport() }, icon('download', 18), t('import')))).el; })(),
       favs.length ? h('section', {}, h('h2', {}, t('favorites')), h('div', { class: 'stack' }, favs.map((x) => card(x, nav)))) : null,
       (() => { const sp = splitForToday(templates, new Date().getDay()); return [
         h('section', {}, h('h2', {}, sp.scheduled ? t('today') : t('allRoutines')), sp.today.length ? h('div', { class: 'stack' }, sp.today.map((x) => card(x, nav))) : h('p', { class: 'empty' }, templates.length ? t('noRoutinesToday') : t('noRoutines'))),

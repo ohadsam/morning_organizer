@@ -1,7 +1,7 @@
 // Entry point: boot, hash router, bottom navigation, service worker.
 import * as S from './store.js';
 import { setLang, t, setPlayful, isPlayful, shouldBePlayful } from './i18n.js';
-import { h, debounce } from './util.js';
+import { h, debounce, setChildren } from './util.js';
 import { native, onNativeEvent } from './native.js';
 import { scheduleWebReminders } from './reminders.js';
 import { renderHome } from './ui/home.js';
@@ -29,12 +29,15 @@ import { renderGoals } from './ui/goals.js';
 import { maybeShowWhatsNew, setVersion } from './ui/whatsnew.js';
 import { renderLibrary } from './ui/library.js';
 import { renderCalm } from './ui/calm.js';
+import { openSearch } from './ui/search.js';
 import { renderJournal } from './ui/journal.js';
 import { lockAll } from './journal.js';
 
 const root = document.getElementById('app');
 let cleanup = () => {}, version = '0';
 const nav = (hash) => { if (location.hash === hash) route(); else location.hash = hash; };
+// Ctrl/Cmd+K opens the search from anywhere (not while a sheet is already open, nor in the kids' mode).
+document.addEventListener('keydown', (e) => { if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k' && !document.querySelector('dialog[open]') && !S.get().settings.simpleMode) { e.preventDefault(); openSearch(nav); } });
 
 async function route() {
   cleanup(); cleanup = () => {};
@@ -48,13 +51,13 @@ async function route() {
   try {
     const views = {
       home: () => renderHome(root, nav), edit: () => renderEditor(root, arg, nav), run: () => renderRunner(root, arg, nav),
-      stats: () => renderStats(root, arg, nav), family: () => renderFamily(root), settings: () => renderSettings(root, version), guide: () => renderGuide(root),
+      stats: () => renderStats(root, arg, nav), family: () => renderFamily(root), settings: () => renderSettings(root, version, arg || ''), guide: () => renderGuide(root),
       calm: () => renderCalm(root, nav), library: () => renderLibrary(root, nav), alarms: () => renderAlarms(root, nav), report: () => renderReport(root, nav, arg, decodeURIComponent(arg2 || '')), retro: () => renderRetro(root, nav, decodeURIComponent(arg || ''), arg2, arg3), retros: () => renderRetros(root, nav), goals: () => renderGoals(root, nav), journal: () => renderJournal(root, nav),
     };
     // The route comes from the address bar: look it up as OWN data only ("#/constructor" or "#/__proto__" must fall back to home).
     const out = await (Object.hasOwn(views, view) ? views[view] : views.home)();
     cleanup = typeof out === 'function' ? out : () => {};
-  } catch (e) { console.error(e); root.replaceChildren(h('p', { class: 'empty' }, t('error'))); }
+  } catch (e) { console.error(e); setChildren(root, h('p', { class: 'empty' }, t('error'))); }
   drawNav(view);
 }
 
@@ -62,7 +65,8 @@ function drawNav(view) {
   const simple = S.get().settings.simpleMode;
   const tabs = simple ? [['home', 'home', '#/'], ['settings', 'gear', '#/settings']] : [['home', 'home', '#/'], ['stats', 'chart', '#/stats'], ['family', 'users', '#/family'], ['guide', 'book', '#/guide'], ['settings', 'gear', '#/settings']];
   const parentTab = { edit: 'home', run: 'home', library: 'home', alarms: 'home', goals: 'home', report: 'stats', retro: 'stats', retros: 'stats' }, active = Object.hasOwn(parentTab, view) ? parentTab[view] : view;
-  document.getElementById('nav').replaceChildren(...tabs.map(([key, ic, href]) => h('a', { href, class: key === active ? 'on' : '', 'aria-current': key === active ? 'page' : null }, icon(ic, 24), h('span', {}, t(key === 'family' ? 'tabFamily' : key)))));
+  setChildren(document.getElementById('nav'), ...tabs.map(([key, ic, href]) => h('a', { href, class: key === active ? 'on' : '', 'aria-current': key === active ? 'page' : null }, icon(ic, 24), h('span', {}, t(key === 'family' ? 'tabFamily' : key)))),
+    simple || view === 'run' ? null : h('button', { class: 'nav-search', type: 'button', 'aria-haspopup': 'dialog', 'aria-label': t('searchOpen'), title: t('searchOpen'), onclick: () => openSearch(nav) }, icon('search', 24), h('span', {}, t('searchOpen'))));
 }
 
 async function boot() {

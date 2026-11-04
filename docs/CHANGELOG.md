@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.17.0
+- **Global search**: one box (🔍 on the bottom bar and on Home, or Ctrl/Cmd+K) finds any feature, settings group or your own routines ("Start / Edit …"), in Hebrew and English, and opens the exact place (settings groups open via `#/settings/<group>`).
+- **Routine wizard** (Home, search, suggestions): who / how old / what helps (focus, organizing, calm, motivation) / which routine / when -> a routine with age- and help-adjusted times (or your own history), optional calm/focus breaks, an alarm, and the chosen help areas saved; then Start / Edit / Done.
+- **Gentle suggestions**: one idea at a time on Home with Try it / Not now / Don't show again, at most one a day; can be switched off in Settings.
+- **Calmer screens**: Home keeps search, New routine and the wizard, with the rest under "More"; the edit page folds Schedule / Gear / If-then / Leave-by / Alarm and per-task expected time; the run screen shows Done + Pause, with the other buttons under "More" and difficulty behind one tap; settings groups start closed.
+- **Fixes**: Statistics showed "nullnull…" when there were no runs (every `replaceChildren(...)` now goes through `setChildren`, enforced by the static check); sheets and pages no longer grow wider than the screen (grid/flex min-width, wrapping text), verified by a new layout sweep (`tests/e2e/layout.mjs`) across 8 sizes x Hebrew/English x big text.
+- **Voices**: stronger character differences (pitch/pace); in the Android app the phone's own text-to-speech is used (all installed voices, exact pitch and pace) with a "Get more voices" button.
+
 ## 1.16.0
 - **A much more human voice**: read-aloud now speaks in **phrases with natural pauses**, rising/falling intonation and a calm human pace (instead of one flat, fast run-on), cleans the text first (no emoji, "4ד׳ 40ש״נ" -> "4 דקות 40 שניות"), and adds tiny variations so it never sounds copy-pasted.
 - **Real characters, not just pitch/speed**: 17 new characters - everyday (woman, man, girl, boy, grandma, grandpa), speaking styles (coach, calm guide, storyteller, radio host, teacher) and fun (cat, dog, lion, frog, pirate, dinosaur; animals say their sound) - each **picks a matching installed voice** (male/female, most natural first, variety between characters).

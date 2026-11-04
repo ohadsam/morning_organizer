@@ -2,7 +2,7 @@ import { alarmEditor } from './alarmEditor.js';
 import { h, fmtHuman, debounce, uid, setChildren } from '../util.js';
 import { t, units } from '../i18n.js';
 import * as S from '../store.js';
-import { icon, iconBtn, toast } from './common.js';
+import { icon, iconBtn, toast, fold } from './common.js';
 import { requestWebNotifications } from '../reminders.js';
 import { native } from '../native.js';
 import { suggestIcon, PICKER_ICONS } from '../taskIcons.js';
@@ -35,10 +35,10 @@ export function renderEditor(root, id, nav) {
       h('div', { class: 'task-body' },
         h('div', { class: 'task-top' }, h('button', { class: 'task-icon', type: 'button', 'aria-label': `${t('taskIcon')}: ${task.icon || suggestIcon(task.name)}`, title: t('pickIcon'), onclick: (e) => pickIcon(task, e.currentTarget) }, iconNode(task)),
         h('input', { class: 'task-name', type: 'text', maxLength: 80, value: task.name, placeholder: t('taskName'), 'aria-label': t('taskName'), oninput: (e) => change(() => { task.name = e.target.value; if (!task.icon && !task.photo) row.querySelector('.task-icon').textContent = suggestIcon(task.name); }), onchange: () => { const slot = row.querySelector('.smart-slot'), key = `${task.name}|${task.sec}`; if (slot.dataset.key === key) return;   // a blur right after typing must not rebuild (and swallow) a hint that is being clicked
-          slot.dataset.key = key; slot.replaceChildren(timeHint(task, (sec) => { change(() => { task.sec = sec; }, true); }) ?? ''); } })),
+          slot.dataset.key = key; setChildren(slot, timeHint(task, (sec) => { change(() => { task.sec = sec; }, true); }) ?? ''); } })),
         h('div', { class: 'smart-slot' }, timeHint(task, (sec) => { change(() => { task.sec = sec; }, true); }) ?? ''),
-        h('div', { class: 'task-times' },
-          timeField(t('duration'), task.sec, (v) => change(() => { task.sec = Math.max(1, v); })),
+        h('div', { class: 'task-times' }, timeField(t('duration'), task.sec, (v) => change(() => { task.sec = Math.max(1, v); }))),
+        h('details', { class: 'task-more' }, h('summary', {}, t('taskMoreTime')),
           timeField(t('estimate'), task.est, (v) => change(() => { task.est = v; }), { allowEmpty: true, emptyLabel: t('tpSame') }))),
       h('button', { class: 'btn icon-btn task-menu-btn', type: 'button', 'aria-haspopup': 'dialog', 'aria-label': `${t('taskMenu')}: ${task.name || t('newTask')}`, title: t('taskMenu'), onclick: () => openTaskMenu(i) }, icon('menu', 22)));
     row.querySelector('.handle').addEventListener('pointerdown', (e) => startDrag(e, row));
@@ -63,7 +63,7 @@ export function renderEditor(root, id, nav) {
       item('🗑️', t('removeTask'), () => change(() => tpl.tasks.splice(i, 1), true), { danger: true })), [{ label: t('close') }]);
   }
   function pickIcon(task, btn) {
-    const refresh = () => { btn.replaceChildren(iconNode(task)); save(); m.close(); };
+    const refresh = () => { setChildren(btn, iconNode(task)); save(); m.close(); };
     const file = h('input', { type: 'file', accept: 'image/*', hidden: true, onchange: async (e) => {
       const f = e.target.files[0]; e.target.value = '';
       try { task.photo = await resizeToDataUrl(f); refresh(); } catch { toast(t('photoBad')); }
@@ -139,31 +139,34 @@ export function renderEditor(root, id, nav) {
     h('button', { type: 'button', class: `emoji-pick ${tpl.icon === ic ? 'on' : ''}`, role: 'radio', 'aria-checked': String(tpl.icon === ic),
       onclick: (e) => { tpl.icon = ic; save(); icons.querySelectorAll('.emoji-pick').forEach((b) => { b.classList.toggle('on', b === e.currentTarget); b.setAttribute('aria-checked', String(b === e.currentTarget)); }); } }, ic)));
 
-  root.replaceChildren(
+  const dayNames = (d) => (d && d.length ? d.map((x) => t(`day${x}`)).join(' ') : t('presetEvery'));
+  const foldSched = dayNames(tpl.days), foldGear = tpl.gear?.length ? String(tpl.gear.length) : t('foldNone'), foldPlans = tpl.plans?.length ? String(tpl.plans.length) : t('foldNone');
+  const foldLeave = tpl.leaveBy || t('foldNone'), foldAlarm = tpl.alarm?.enabled ? `⏰ ${tpl.alarm.time || ''}` : t('foldOff');
+  setChildren(root, 
     h('div', { class: 'page-head' }, iconBtn('back', t('back'), () => { save.flush(); nav('#/'); }), h('h1', {}, t('edit'))),
     h('label', { class: 'field' }, h('span', { class: 'lbl' }, t('routineName')),
       h('input', { type: 'text', maxLength: 80, value: tpl.name, oninput: (e) => { tpl.name = e.target.value; save(); } })),
     h('div', { class: 'field' }, h('span', { class: 'lbl' }, t('routineIcon')), icons),
     h('div', { class: 'field' }, h('span', { class: 'lbl' }, t('routineColor')), colors),
     h('div', { class: 'row between' }, h('h2', {}, t('tasks')), totalEl),
-    h('p', { class: 'note' }, t('dragHint')), h('p', { class: 'note' }, t('estimateHint')),
     list,
     h('button', { class: 'btn add', type: 'button', onclick: () => { const nt = S.newTask(); nt.name = ''; change(() => tpl.tasks.push(nt), true); list.lastElementChild?.querySelector('.task-name')?.focus(); } }, icon('plus', 18), t('addTask')),
     h('div', { class: 'toolbar wrap' }, h('button', { class: 'btn', type: 'button', onclick: () => openTaskPicker((task) => { const nt = { ...S.newTask(), ...task, id: uid() }; change(() => tpl.tasks.push(nt), true); }) }, `📚 ${t('libAddFrom')}`),
+      h('button', { class: 'btn', type: 'button', onclick: () => openSmartTimes(tpl, (m) => change(() => { for (const [i, sec] of m) if (tpl.tasks[i]) tpl.tasks[i].sec = sec; }, true)) }, `✨ ${t('smTimesBtn')}`)),
+    fold(t('moreTools'), t('moreToolsSub'), h('div', { class: 'stack' },
+      h('button', { class: 'btn', type: 'button', onclick: () => openSmartSteps(tpl, (tasks) => change(() => { tpl.tasks = tasks; }, true)) }, `🧩 ${t('smStepsBtn')}`),
       h('button', { class: 'btn', type: 'button', onclick: () => { save.flush(); saveRoutineAsTemplate(tpl); } }, `💾 ${t('libSaveRoutine')}`),
-      h('button', { class: 'btn', type: 'button', onclick: () => openSmartTimes(tpl, (m) => change(() => { for (const [i, sec] of m) if (tpl.tasks[i]) tpl.tasks[i].sec = sec; }, true)) }, `✨ ${t('smTimesBtn')}`),
-      h('button', { class: 'btn', type: 'button', onclick: () => openSmartSteps(tpl, (tasks) => change(() => { tpl.tasks = tasks; }, true)) }, `🧩 ${t('smStepsBtn')}`)),
-    h('h2', {}, t('schedule')), scheduleBox,
-    h('h2', {}, t('gear')), gearBox,
-    h('h2', {}, t('plansTitle')), plansBox,
-    h('h2', {}, t('leaveBy')),
-    h('div', { class: 'card stack' }, h('p', { class: 'note' }, t('leaveHint')),
+      h('p', { class: 'note' }, t('dragHint')), h('p', { class: 'note' }, t('estimateHint')))).el,
+    fold(t('schedule'), foldSched, scheduleBox).el,
+    fold(t('gear'), foldGear, gearBox).el,
+    fold(t('plansTitle'), foldPlans, plansBox).el,
+    fold(t('leaveBy'), foldLeave, h('div', { class: 'stack' }, h('p', { class: 'note' }, t('leaveHint')),
       h('div', { class: 'row' }, h('input', { type: 'time', value: tpl.leaveBy || '', 'aria-label': t('leaveBy'), oninput: (e) => { tpl.leaveBy = validLeaveBy(e.target.value); save(); } }),
         h('button', { class: 'btn', type: 'button', onclick: () => {
           const at = suggestStart(tpl.leaveBy, S.totalSec(tpl)); if (!at) return;
           tpl.alarm.time = at; save(); drawAlarm(); toast(t('startBy', { time: at }));
-        } }, t('suggestStart')))),
-    h('h2', {}, t('alarm')), alarmBox,
+        } }, t('suggestStart'))))).el,
+    fold(t('alarm'), foldAlarm, alarmBox).el,
     h('div', { class: 'sticky-actions' },
       h('button', { class: 'btn', type: 'button', onclick: () => { save.flush(); nav('#/'); } }, t('save')),
       h('button', { class: 'btn primary', type: 'button', disabled: !tpl.tasks.length, onclick: () => { save.flush(); nav(`#/run/${tpl.id}`); } }, icon('play', 18), t('start'))));

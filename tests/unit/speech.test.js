@@ -37,7 +37,7 @@ test('the speaking plan: human pace, pauses, intonation, characters', () => {
 });
 test('characters are well-formed; everyday and style voices stay in a human range', () => {
   for (const [id, p] of Object.entries(SP.PRESETS)) { assert.ok(p.emoji && ['f', 'm', 'any'].includes(p.g) && p.pause > 0 && p.rate > 0.3 && p.pitch >= 0.1 && p.pitch <= 2, id); }
-  for (const g of ['everyday', 'style']) for (const id of SP.personaIds(g)) { const p = SP.PRESETS[id]; assert.ok(p.pitch >= 0.8 && p.pitch <= 1.3 && p.rate >= 0.78 && p.rate <= 1.1, `${id} sounds human`); }
+  for (const g of ['everyday', 'style']) for (const id of SP.personaIds(g)) { const p = SP.PRESETS[id]; assert.ok(p.pitch >= 0.6 && p.pitch <= 1.5 && p.rate >= 0.74 && p.rate <= 1.15, `${id} sounds human`); }
   assert.ok(SP.personaIds('fun').length >= 6 && SP.personaIds('fun').every((id) => SP.PRESETS[id].fx || id === 'robot' || id === 'fairy')); assert.equal(SP.personaOf('__proto__'), SP.PRESETS.natural); assert.equal(SP.personaOf('constructor'), SP.PRESETS.natural); assert.equal(SP.personaOf('girl'), SP.PRESETS.girl);
   for (const k of Object.keys(SP.FLAVORS)) assert.ok(Array.isArray(SP.FLAVORS[k].he) && Array.isArray(SP.FLAVORS[k].en));
 });

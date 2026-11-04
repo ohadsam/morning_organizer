@@ -9,7 +9,7 @@ let bad = 0; const fail = (m) => { console.error('✖', m); bad++; };
 for (const f of js) { try { execFileSync(process.execPath, ['--check', f], { stdio: 'pipe' }); } catch (e) { fail(`syntax: ${f}\n${e.stderr}`); } }
 
 // Security: user data must never reach an HTML sink or eval-like API. h() builds text nodes only.
-const BANNED = [[/\binnerHTML\b/, 'innerHTML'], [/\bouterHTML\b/, 'outerHTML'], [/\binsertAdjacentHTML\b/, 'insertAdjacentHTML'], [/\beval\s*\(/, 'eval'], [/new Function\s*\(/, 'new Function'], [/document\.write\s*\(/, 'document.write'], [/\bsetTimeout\s*\(\s*['"`]/, 'string setTimeout']];
+const BANNED = [[/\binnerHTML\b/, 'innerHTML'], [/\bouterHTML\b/, 'outerHTML'], [/\binsertAdjacentHTML\b/, 'insertAdjacentHTML'], [/\beval\s*\(/, 'eval'], [/new Function\s*\(/, 'new Function'], [/document\.write\s*\(/, 'document.write'], [/\bsetTimeout\s*\(\s*['"`]/, 'string setTimeout'], [/\.replaceChildren\((?!\)|\s*\.\.\.)/, 'replaceChildren(args) renders null as text - use setChildren()']];
 for (const f of js) { const src = readFileSync(f, 'utf8'); for (const [re, name] of BANNED) if (re.test(src)) fail(`${f}: uses ${name}`); }
 
 // No remote code/fonts/analytics: the CSP says 'self' only, make sure the sources agree.

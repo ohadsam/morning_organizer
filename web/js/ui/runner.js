@@ -65,7 +65,7 @@ export async function renderRunner(root, id, nav) {
     if (!c) return; lastPick[event] = c.index;
     if (st().srAnnounce) announce(c.text);
     if (feedback) {
-      bubble.replaceChildren(h('span', { class: 'bm' }, avatarNode(st().avatar, { size: 44, anim: BUBBLE_ANIM[event] || 'idle' })), h('span', { class: 'bt' }, `${c.text} ${c.emoji}`));
+      setChildren(bubble, h('span', { class: 'bm' }, avatarNode(st().avatar, { size: 44, anim: BUBBLE_ANIM[event] || 'idle' })), h('span', { class: 'bt' }, `${c.text} ${c.emoji}`));
       animate(buddyNode, BUBBLE_ANIM[event] || 'idle', 2200);
       bubble.hidden = false; bubble.classList.remove('pop'); void bubble.offsetWidth; bubble.classList.add('pop');
       clearTimeout(bubbleTimer); bubbleTimer = setTimeout(() => { bubble.hidden = true; }, 4200);
@@ -118,7 +118,7 @@ export async function renderRunner(root, id, nav) {
   }
   function bodyDouble(now) {   // a quiet companion: a short friendly line every few minutes, never a pressure message
     if (!feat.bodyDouble || run.status !== 'running' || calm(run) || now - bodyAt < 240_000) return;
-    bodyAt = now; bodyN++; bubble.replaceChildren(h('span', { class: 'bm' }, avatarNode(st().avatar, { size: 44, anim: 'idle' })), h('span', { class: 'bt' }, `${t(`buddy${(bodyN % 4) + 1}`)} 🤝`)); bubble.hidden = false;
+    bodyAt = now; bodyN++; setChildren(bubble, h('span', { class: 'bm' }, avatarNode(st().avatar, { size: 44, anim: 'idle' })), h('span', { class: 'bt' }, `${t(`buddy${(bodyN % 4) + 1}`)} 🤝`)); bubble.hidden = false;
     clearTimeout(bubbleTimer); bubbleTimer = setTimeout(() => { bubble.hidden = true; }, 5000);
   }
   const gearBox = h('details', { class: 'card gear-card', hidden: true });
@@ -182,7 +182,7 @@ export async function renderRunner(root, id, nav) {
   }
   function paintStatic() {
     const cur = run.tasks[run.current], paused = run.status === 'paused';
-    taskName.textContent = cur?.name || ''; ti.replaceChildren(cur ? taskIcon(cur) : '');
+    taskName.textContent = cur?.name || ''; setChildren(ti, cur ? taskIcon(cur) : '');
     if (cur && run.current !== lastCur) { lastCur = run.current; announceTask(cur); }
     ring.classList.toggle('calm', calm(run)); { const ts = st().timerStyle, style = ts && ts !== 'auto' ? ts : feat.timerPie ? 'pie' : 'ring'; ring.classList.toggle('pie', style === 'pie'); ring.classList.toggle('bar', style === 'bar'); ring.classList.toggle('sandy', style === 'sand'); }
     ring.classList.toggle('paused', paused); pausedBadge.hidden = !paused || !!run.interrupt;
@@ -197,11 +197,11 @@ export async function renderRunner(root, id, nav) {
       setChildren(controls, h('div', { class: 'main-btns' }, h('button', { class: 'btn primary xl', type: 'button', onclick: endUnplanned }, icon('play', 22), t('unpBack'))));
       return;
     }
-    controls.replaceChildren(
+    setChildren(controls, 
       h('div', { class: 'main-btns' },
         h('button', { class: 'btn primary xl', type: 'button', onclick: doComplete }, icon('check', 22), t('doneNext')),
         h('button', { class: `btn xl pause-btn ${paused ? 'resume' : ''}`, type: 'button', 'aria-pressed': String(paused), onclick: togglePause }, icon(paused ? 'play' : 'pause', 22), paused ? t('resume') : t('pause'))),
-      h('div', { class: 'row-btns' },
+      h('details', { class: 'fold run-more' }, h('summary', {}, h('span', { class: 'fold-t' }, `⋯ ${t('runMore')}`), h('small', { class: 'fold-s' }, t('runMoreSub'))), h('div', { class: 'row-btns' },
         h('button', { class: 'btn', type: 'button', onclick: () => { E.addTime(run, 60); persist(); paintLive(); pushWidget(); } }, icon('plus', 18), t('addMinute')),
         st().coachButton ? h('button', { class: 'btn tip-main', type: 'button', onclick: () => coach.show('any', cur?.name) }, '💡', t('tipBtn')) : null,
         feat.journal ? h('button', { class: 'btn', type: 'button', 'aria-label': t('jNoteFor', { task: cur?.name || '' }), onclick: () => openCapture({ routine: run.templateName, task: cur?.name || '' }) }, '🎙️', t('jQuick')) : null,
@@ -209,7 +209,7 @@ export async function renderRunner(root, id, nav) {
         h('button', { class: 'btn', type: 'button', disabled: paused, onclick: startUnplanned }, '⚡', t('unpBtn')),
         feat.calmCorner ? h('button', { class: 'btn', type: 'button', onclick: openCalm }, '🌬️', t('calmTitle')) : null,
         h('button', { class: 'btn', type: 'button', onclick: () => act(E.skipCurrent) }, icon('skip', 18), t('skip')),
-        h('button', { class: 'btn danger', type: 'button', onclick: async () => { if (await confirmBox(t('stopConfirm'), t('stop'), true)) act(E.finish); } }, icon('stop', 18), t('stop'))));
+        h('button', { class: 'btn danger', type: 'button', onclick: async () => { if (await confirmBox(t('stopConfirm'), t('stop'), true)) act(E.finish); } }, icon('stop', 18), t('stop')))));
   }
 
   function paintLive() {
@@ -234,7 +234,7 @@ export async function renderRunner(root, id, nav) {
       leaveEl.className = `leave-line ${late ? 'late' : 'ok'}`;
       leaveEl.textContent = `${t('leaveLine', { leave: clock(ls.leaveAt), eta: clock(E.etaMs(run, now)) })} · ${late ? t('lateBy', { t: tm(ls.marginSec) }) : t('spare', { t: tm(ls.marginSec) })}`;
     }
-    head.replaceChildren(h('span', {}, `${t('startedAt')} ${clock(run.startedAt)}`), h('span', {}, `${t('plannedEnd')} ${clock(run.startedAt + planned * 1000)}`), h('span', {}, `${t('elapsed')} ${fmtDur((now - run.startedAt) / 1000)}`));
+    setChildren(head, h('span', {}, `${t('startedAt')} ${clock(run.startedAt)}`), h('span', {}, `${t('plannedEnd')} ${clock(run.startedAt + planned * 1000)}`), h('span', {}, `${t('elapsed')} ${fmtDur((now - run.startedAt) / 1000)}`));
     paintSprints(cur, now); bodyDouble(now);
     const nx = run.tasks[run.current + 1];
     if (nx && left <= 30 && left > 0 && run.status === 'running' && !warnedNext.has(cur.id) && total >= 90) {
@@ -268,8 +268,8 @@ export async function renderRunner(root, id, nav) {
     if (E.isActive(run)) { persist(); paintStatic(); paintLive(); pushActive(); return; }
     await S.saveActive(null); await S.saveRun(run); setAwake('run', false); pushWidget();
     renderSummary();
-    { const tpl = S.getTemplate(run.templateId), slot = root.querySelector('.pattern-slot'); if (tpl && slot) { const c = patternCards(tpl, nav, () => {}); if (c) slot.replaceChildren(c); } }
-    celebrationFor(run).then((card) => { const slot = root.querySelector('.celebrate-slot'); if (card && slot) slot.replaceChildren(card); }).catch(() => {});
+    { const tpl = S.getTemplate(run.templateId), slot = root.querySelector('.pattern-slot'); if (tpl && slot) { const c = patternCards(tpl, nav, () => {}); if (c) setChildren(slot, c); } }
+    celebrationFor(run).then((card) => { const slot = root.querySelector('.celebrate-slot'); if (card && slot) setChildren(slot, card); }).catch(() => {});
     afterRun(run.profileId).then(celebrateGoals).catch(() => {});
   }
 
@@ -279,7 +279,7 @@ export async function renderRunner(root, id, nav) {
     const dRow = (k, v, cls = '') => h('div', { class: `kv ${cls}` }, h('span', {}, k), h('strong', {}, v));
     const done = run.status === 'done';
     const starRow = h('div', { class: 'stars', role: 'img', 'aria-label': `${t('starsEarned')}: ${n}/3` }, [0, 1, 2].map((i) => h('span', { class: `star ${i < n ? 'on' : ''}`, style: { '--i': String(i) } }, '⭐')));
-    root.replaceChildren(h('div', { class: 'summary' },
+    setChildren(root, h('div', { class: 'summary' },
       h('div', { class: 'big-emoji' }, avatarNode(st().avatar, { size: 110, anim: done ? 'dance' : 'think' })), h('h1', {}, done ? t('allDone') : t('stopped')), starRow,
       h('p', { class: 'muted' }, run.templateName), h('div', { class: 'celebrate-slot' }), bubble,
       feat.moodCheck ? h('div', { class: 'card center' }, h('strong', {}, t('moodAsk')), moodRow(async (v) => { run.mood = v; await S.setRunMood(run.id, v); }, run.mood || null)) : null,
@@ -303,7 +303,7 @@ export async function renderRunner(root, id, nav) {
     say(done ? 'runDone' : 'runStopped');
   }
 
-  root.replaceChildren(h('div', { class: 'run' },
+  setChildren(root, h('div', { class: 'run' },
     h('div', { class: 'run-top', style: { '--accent': run.color || '#6c5ce7' } }, h('span', { class: 'emoji' }, run.icon), h('h1', { class: 'run-title' }, run.templateName)),
     bubble, coachHost, transEl, sitEl, intrEl, goalBox, planBox, gearBox, pw.el, head, leaveEl, h('div', { class: 'ring-wrap' }, ring, pausedBadge), sprintEl, taskName, pace, controls, helpCard?.el, list));
   paintStatic(); paintLive(); paintGear();

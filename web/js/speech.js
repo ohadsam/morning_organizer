@@ -1,3 +1,4 @@
+import { native } from './native.js';
 // Read-aloud with the device's own text-to-speech (Web Speech API; browsers and the Android WebView). Nothing leaves the device and nothing is installed.
 // How natural it sounds depends mostly on the VOICES installed on the device, so this module
 //   1. picks the best installed voice for a character (quality ranking, male / female match, variety between characters),
@@ -10,17 +11,17 @@
 /** id -> { emoji, g: 'f'|'m'|'any' (voice gender wanted), pitch, rate (human-range baselines), pause (x pauses), variant, group, fx?, flavor? }. Legacy ids stay valid (old settings, alarms). */
 export const PRESETS = {
   natural: { emoji: '🙂', g: 'any', pitch: 1, rate: 0.95, pause: 1, variant: 0, group: 'everyday' },
-  woman: { emoji: '👩', g: 'f', pitch: 1, rate: 0.95, pause: 1, variant: 0, group: 'everyday' },
-  man: { emoji: '👨', g: 'm', pitch: 0.97, rate: 0.95, pause: 1, variant: 0, group: 'everyday' },
-  girl: { emoji: '👧', g: 'f', pitch: 1.22, rate: 1.02, pause: 0.9, variant: 1, group: 'everyday' },
-  boy: { emoji: '👦', g: 'f', pitch: 1.14, rate: 1.04, pause: 0.9, variant: 1, group: 'everyday' },
-  grandma: { emoji: '👵', g: 'f', pitch: 0.9, rate: 0.82, pause: 1.35, variant: 0, group: 'everyday' },
-  grandpa: { emoji: '👴', g: 'm', pitch: 0.84, rate: 0.82, pause: 1.35, variant: 0, group: 'everyday' },
-  coach: { emoji: '🏅', g: 'm', pitch: 1.06, rate: 1.06, pause: 0.7, variant: 1, group: 'style', flavor: 'coach' },
-  calm: { emoji: '🧘', g: 'f', pitch: 0.93, rate: 0.8, pause: 1.9, variant: 1, group: 'style' },
-  story: { emoji: '📖', g: 'm', pitch: 0.92, rate: 0.86, pause: 1.45, variant: 0, group: 'style', flavor: 'story' },
-  announcer: { emoji: '🎙️', g: 'm', pitch: 0.96, rate: 1.08, pause: 0.85, variant: 1, group: 'style' },
-  teacher: { emoji: '🧑‍🏫', g: 'f', pitch: 1, rate: 0.9, pause: 1.2, variant: 1, group: 'style' },
+  woman: { emoji: '👩', g: 'f', pitch: 1.08, rate: 0.95, pause: 1, variant: 0, group: 'everyday' },
+  man: { emoji: '👨', g: 'm', pitch: 0.85, rate: 0.95, pause: 1, variant: 0, group: 'everyday' },
+  girl: { emoji: '👧', g: 'f', pitch: 1.45, rate: 1.08, pause: 0.9, variant: 1, group: 'everyday' },
+  boy: { emoji: '👦', g: 'm', pitch: 1.35, rate: 1.08, pause: 0.9, variant: 1, group: 'everyday' },
+  grandma: { emoji: '👵', g: 'f', pitch: 0.82, rate: 0.78, pause: 1.35, variant: 0, group: 'everyday' },
+  grandpa: { emoji: '👴', g: 'm', pitch: 0.65, rate: 0.78, pause: 1.35, variant: 0, group: 'everyday' },
+  coach: { emoji: '🏅', g: 'm', pitch: 0.95, rate: 1.14, pause: 0.7, variant: 1, group: 'style', flavor: 'coach' },
+  calm: { emoji: '🧘', g: 'f', pitch: 0.9, rate: 0.76, pause: 1.9, variant: 1, group: 'style' },
+  story: { emoji: '📖', g: 'm', pitch: 0.8, rate: 0.82, pause: 1.45, variant: 0, group: 'style', flavor: 'story' },
+  announcer: { emoji: '🎙️', g: 'm', pitch: 1.02, rate: 1.14, pause: 0.85, variant: 1, group: 'style' },
+  teacher: { emoji: '🧑‍🏫', g: 'f', pitch: 1.14, rate: 0.9, pause: 1.2, variant: 1, group: 'style' },
   cat: { emoji: '🐱', g: 'f', pitch: 1.28, rate: 1, pause: 0.9, variant: 1, group: 'fun', fx: { he: 'מיאו', en: 'meow', pitch: 1.75, rate: 0.85 } },
   dog: { emoji: '🐶', g: 'm', pitch: 1.05, rate: 1.04, pause: 0.85, variant: 0, group: 'fun', fx: { he: 'הב הב', en: 'woof woof', pitch: 0.7, rate: 1.1 } },
   lion: { emoji: '🦁', g: 'm', pitch: 0.82, rate: 0.88, pause: 1.2, variant: 0, group: 'fun', fx: { he: 'ראאאר', en: 'roar', pitch: 0.4, rate: 0.7 } },
@@ -49,7 +50,17 @@ export const FLAVORS = {
 };
 export const FLAVOR_IDS = ['neutral', 'casual', 'warm', 'formal'];
 
-export const ttsSupported = () => typeof speechSynthesis !== 'undefined' && typeof SpeechSynthesisUtterance !== 'undefined';
+const webTts = () => typeof speechSynthesis !== 'undefined' && typeof SpeechSynthesisUtterance !== 'undefined';
+// In the Android app the phone's own engine is used (all installed voices, exact pitch and pace); in a browser the Web Speech API.
+let nativeOk;
+const useNative = () => (nativeOk ??= native.ttsAvailable());
+export const ttsSupported = () => useNative() || webTts();
+let nativeVoices = [];
+const readNativeVoices = () => { if (!nativeVoices.length) nativeVoices = native.ttsVoices().map((v) => ({ name: v.name, lang: v.lang, voiceURI: v.name, localService: !v.network, quality: v.quality })); return nativeVoices; };
+const allVoices = () => (useNative() ? readNativeVoices() : webTts() ? speechSynthesis.getVoices?.() || [] : []);
+/** True when the app can open the phone's own "download more voices" screen. */
+export const canInstallVoices = () => useNative();
+export const installVoices = () => native.ttsInstallVoices();
 const bcp = (lang) => (lang === 'he' ? 'he-IL' : 'en-US');
 const langMatch = (v, lang) => v.lang?.toLowerCase().replace('_', '-').startsWith(lang === 'he' ? 'he' : 'en') || (lang === 'he' && /^iw/i.test(v.lang || ''));
 
@@ -64,6 +75,7 @@ export function scoreVoice(v, lang) {
   const n = String(v?.name || ''); let s = 0;
   if (GOOD.test(n)) s += 6; if (/google/i.test(n)) s += 2; if (/microsoft/i.test(n)) s += 1; if (BAD.test(n)) s -= 8;
   if (/^he[-_]il$/i.test(v?.lang || '') || (lang === 'en' && /^en[-_]us$/i.test(v?.lang || ''))) s += 2;
+  if (v?.quality >= 400) s += 4; else if (v?.quality >= 300) s += 1;   // Android: very high / high quality voice data
   if (v?.default) s += 1; return s;
 }
 /** The installed voice for a character. `voiceURI` = an explicit choice (wins). Otherwise: best-scored voices of the wanted gender, `variant` picks the 1st/2nd best so characters differ. */
@@ -77,16 +89,18 @@ export function pickVoice(voices, lang, persona, voiceURI = '') {
   const use = pool.length ? pool : ranked;
   return use[(persona?.variant || 0) % use.length];
 }
-export const voiceLabel = (v, lang) => `${GOOD.test(v.name) ? '★ ' : ''}${v.name}${guessGender(v) === 'f' ? ' ♀' : guessGender(v) === 'm' ? ' ♂' : ''}`;
+export const voiceLabel = (v, lang) => `${GOOD.test(v.name) || v.quality >= 400 ? '★ ' : ''}${v.name}${guessGender(v) === 'f' ? ' ♀' : guessGender(v) === 'm' ? ' ♂' : ''}`;
 
 /** Voices installed for the language, best first. Voices load asynchronously in most browsers, so wait briefly. */
 export function voicesFor(lang) {
   if (!ttsSupported()) return Promise.resolve([]);
-  const read = () => speechSynthesis.getVoices().filter((v) => langMatch(v, lang)).sort((a, b) => scoreVoice(b, lang) - scoreVoice(a, lang));
+  const read = () => allVoices().filter((v) => langMatch(v, lang)).sort((a, b) => scoreVoice(b, lang) - scoreVoice(a, lang));
   const now = read(); if (now.length) return Promise.resolve(now);
   return new Promise((resolve) => {
-    const done = () => { speechSynthesis.removeEventListener?.('voiceschanged', done); resolve(read()); };
-    speechSynthesis.addEventListener?.('voiceschanged', done); setTimeout(done, 1200);
+    const done = () => { try { speechSynthesis.removeEventListener?.('voiceschanged', done); } catch { /* none */ } globalThis.removeEventListener?.('morning-native', onNative); resolve(read()); };
+    const onNative = (e) => { if (e.detail?.type === 'tts' && e.detail.status === 'ready') done(); };
+    try { speechSynthesis.addEventListener?.('voiceschanged', done); } catch { /* none */ }
+    globalThis.addEventListener?.('morning-native', onNative); setTimeout(done, 2500);
   });
 }
 
@@ -134,7 +148,9 @@ export function planSpeech(text, { persona = PRESETS.natural, lang = 'en', rate 
 }
 
 let token = 0, timer = null;
-export function stopSpeaking() { token++; clearTimeout(timer); try { speechSynthesis.cancel(); } catch { /* no TTS */ } }
+const nativeWaiters = new Map();   // phrase id -> "it finished" callback
+globalThis.addEventListener?.('morning-native', (e) => { const d = e.detail; if (d?.type === 'tts' && (d.status === 'done' || d.status === 'error')) nativeWaiters.get(d.id)?.(); });
+export function stopSpeaking() { token++; clearTimeout(timer); nativeWaiters.clear(); try { if (useNative()) native.ttsStop(); if (webTts()) speechSynthesis.cancel(); } catch { /* no TTS */ } }
 
 /** Speak `text`. opts: { lang, voiceURI, preset (character id), flavor, rate (pace multiplier, 1 = normal), kind }. Returns false when speech is unavailable. */
 export function speakText(text, { lang = 'en', voiceURI = '', preset = 'natural', flavor = 'neutral', rate = 1, kind = 'msg' } = {}) {
@@ -142,13 +158,13 @@ export function speakText(text, { lang = 'en', voiceURI = '', preset = 'natural'
   try {
     stopSpeaking(); const my = token, persona = personaOf(preset), plan = planSpeech(text, { persona, lang, rate, flavor, kind });
     if (!plan.length) return false;
-    const voice = pickVoice(speechSynthesis.getVoices?.() || [], lang, persona, voiceURI);
+    const voice = pickVoice(allVoices(), lang, persona, voiceURI), viaPhone = useNative();
     const go = (i) => {
       if (my !== token || i >= plan.length) return;
-      const c = plan[i], u = new SpeechSynthesisUtterance(c.text); u.lang = bcp(lang); u.pitch = c.pitch; u.rate = c.rate; if (voice) u.voice = voice;
-      let advanced = false; const next = () => { if (advanced || my !== token) return; advanced = true; clearTimeout(timer); timer = setTimeout(() => go(i + 1), c.pauseMs); };
-      u.onend = next; u.onerror = next;
-      speechSynthesis.speak(u);
+      const c = plan[i]; let advanced = false; const id = `${my}-${i}`;
+      const next = () => { if (advanced || my !== token) return; advanced = true; nativeWaiters.delete(id); clearTimeout(timer); timer = setTimeout(() => go(i + 1), c.pauseMs); };
+      if (viaPhone) { nativeWaiters.set(id, next); native.ttsSpeak(id, c.text, voice?.name || '', bcp(lang), c.pitch, c.rate); }
+      else { const u = new SpeechSynthesisUtterance(c.text); u.lang = bcp(lang); u.pitch = c.pitch; u.rate = c.rate; if (voice) u.voice = voice; u.onend = next; u.onerror = next; speechSynthesis.speak(u); }
       clearTimeout(timer); timer = setTimeout(next, Math.max(1500, (c.text.length * 95) / c.rate));   // some engines never fire "end": never get stuck
     };
     go(0); return true;

@@ -280,8 +280,8 @@ dialog header { display: flex; align-items: center; justify-content: space-betwe
 .tile-btn:hover, .tile-btn:focus-visible { border-color: var(--accent, var(--brand)); } .tile-btn:active { transform: scale(.97); }
 .tb-emoji { font-size: 2.2rem; line-height: 1; } .tile-btn small { color: var(--muted); } .tile-btn strong { font-size: .95rem; overflow-wrap: anywhere; }
 .lib-card { display: grid; gap: 8px; border-inline-start: 6px solid var(--accent, var(--brand)); } .lib-task { align-items: center; gap: 8px; flex-wrap: wrap; }
-.chips.filter .chip { background: var(--surface-2); color: var(--text); border: 2px solid var(--line); min-height: 40px; }
-.chips.filter .chip.on { background: color-mix(in srgb, var(--brand) 22%, var(--surface)); border-color: var(--brand); font-weight: 800; }
+.chips.filter .chip, .chip.cause { background: var(--surface-2); color: var(--text); border: 2px solid var(--line); min-height: 40px; }
+.chips.filter .chip.on, .chip.cause.on { background: color-mix(in srgb, var(--brand) 22%, var(--surface)); border-color: var(--brand); font-weight: 800; }
 
 /* ── alarms screen, goals ── */
 .alarm-line { color: var(--brand); font-weight: 600; } .alarm-card { border-inline-start: 6px solid var(--accent, var(--brand)); display: grid; gap: 8px; }

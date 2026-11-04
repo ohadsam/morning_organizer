@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.14.0
+- **Retrospective (looking back)**: after any run - or later - a short guided look-back: how it went, which tasks got stuck (the data pre-ticks tasks that ran over, were rated hard or were interrupted), why (8 causes), what went well, and **concrete suggested changes to the routine** (more time, a helper step, split a task, an earlier alarm, a gear item, planning for an interruption, a goal with a plan) that can be **applied in one tap**.
+- **Did it help?** The app compares the routine's runs before and after the applied changes (on time, over/under plan, difficulty, stuck tasks, interruptions) and says improved / no clear change / worse, waiting for enough runs first.
+- **Automatic conclusions and reports**: Looking back overview with what gets in the way, which kinds of change helped, tasks that keep coming back, unapplied suggestions; included in the PDF / HTML reports; a gentle prompt on Home after a run; retrospectives travel in backups.
+
 ## 1.13.0
 - **Alarms on by default**: new routines (and the ready-made ones, once) start with a wake-up alarm switched on so it is easy to find; Home → Alarms shows them all. The notification permission is requested up front in the Android app.
 - **Version number and a real "What's new"** (Home footer, Settings, and a sheet after each update) with the history of recent versions, in both languages.

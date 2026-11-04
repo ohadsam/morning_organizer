@@ -10,6 +10,7 @@ import { elementToPdf } from '../pdf.js';
 import { buildHtmlDocument, serializeNode } from '../reportHtml.js';
 import { toast } from './common.js';
 import { reasonName } from './unplanned.js';
+import { actionLabel, conclusionText } from './retro.js';
 import { APP_NAME_EN } from '../config.js';
 
 const BRAND = '#6c5ce7', GOOD = '#00b894', WARN = '#e17055', MUTED = '#636e72';
@@ -74,6 +75,9 @@ export function reportElement(m, { lang = getLang() } = {}) {
       h('tbody', {}, m.tasks.map((x) => h('tr', {}, h('td', {}, `${x.icon || '•'} ${x.name}`), h('td', {}, fmtDur(x.avgPlannedSec)), h('td', { class: x.avgActualSec > x.avgPlannedSec + 29 ? 'over' : '' }, fmtDur(x.avgActualSec)), h('td', {}, x.avgDifficulty ? `${levelEmoji(Math.round(x.avgDifficulty))} ${(Math.round(x.avgDifficulty * 10) / 10)}` : '—')))))));
     if (m.unplanned.count) root.append(sec(`⚡ ${t('unpStatsTitle')}`, ...m.unplanned.by.slice(0, 5).map((e) => bar(`${e.emoji} ${reasonName(e)}`, e.count / m.unplanned.by[0].count, `${e.count}× · ${fmt(e.sec)}`, WARN))));
     if (m.mood.n >= 2) root.append(sec(`🙂 ${t('moodStatsTitle')}`, h('p', { class: 'rpt-chips' }, MOODS.map((x) => h('span', {}, `${x.emoji} ${m.mood.byMood[x.v]?.n || 0}`)))));
+    if (m.retro?.total) root.append(sec(`🔄 ${t('rcvTitle')}`, h('p', { class: 'rpt-chips' }, h('span', {}, `${t('rcvLooks')}: ${m.retro.total}`), h('span', {}, `${t('rcvApplied')}: ${m.retro.applied}`), h('span', {}, `📈 ${m.retro.improved}`), h('span', {}, `➖ ${m.retro.same}`), h('span', {}, `📉 ${m.retro.worse}`), h('span', {}, `⏳ ${m.retro.waiting}`)),
+      m.retro.conclusions.length ? h('ul', { class: 'rpt-ul' }, m.retro.conclusions.map((c) => h('li', {}, conclusionText(c)))) : null,
+      ...m.retro.items.filter((x) => x.im.status !== 'none').slice(-6).map(({ r, im }) => h('p', { class: 'rpt-note' }, `${im.status === 'improved' ? '📈' : im.status === 'worse' ? '📉' : im.status === 'same' ? '➖' : '⏳'} ${r.templateName} (${dateStr(r.at)}): ${r.actions.filter((a) => a.applied).map(actionLabel).join('; ')}`))));
     if (m.goals.length) root.append(sec(`🎯 ${t('goalsTitle')}`, h('ul', { class: 'rpt-ul' }, m.goals.map((g) => h('li', {}, `${g.done ? '🏆 ' : ''}${g.title}${g.runs ? ` · ${t('goalOnTime', { a: g.onTime, b: g.runs })}` : ''}${g.checks ? ` · ${t('goalChecks', { n: g.checks })}` : ''}`)))));
   }
   if (m.kind === 'run' && m.insights.length) root.append(sec(`💡 ${t('rpInsights')}`, h('ul', { class: 'rpt-ul' }, m.insights.map((i) => h('li', {}, t(i.key, { ...i.p, sec: i.p.sec != null ? fmt(i.p.sec) : '' }))))));
@@ -89,7 +93,7 @@ async function makePdf(m) { return elementToPdf(reportElement(m), `${m.title || 
 async function download(blob, name) { const a = h('a', { href: URL.createObjectURL(blob), download: name }); document.body.append(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 4000); }
 /** The interactive HTML report: one self-contained file (tabs for 7/30/90 days/all for a period, a single page for one run). */
 export async function exportHtml(scope) {
-  const css = await reportCss(), p = S.activeProfile(), profile = { name: p.name, age: p.age }, base = { runs: S.myRuns(), templates: S.get().templates, goals: S.goals(), profile, now: Date.now() };
+  const css = await reportCss(), p = S.activeProfile(), profile = { name: p.name, age: p.age }, base = { runs: S.myRuns(), templates: S.get().templates, goals: S.goals(), retros: S.retros(), profile, now: Date.now() };
   const periods = scope.kind === 'run' ? [{ label: '', m: buildReport({ ...base, scope }) }] : [7, 30, 90, 0].map((d) => ({ label: d ? t('rpDays', { n: d }) : t('rpAll'), m: buildReport({ ...base, scope: { ...scope, days: d } }) }));
   const first = periods[0].m, title = `${t('rpTitle')}: ${first.title || t('rpAllRoutines')}`;
   const doc = buildHtmlDocument(periods.map((x) => ({ label: x.label, html: serializeNode(reportElement(x.m)) })), { title, lang: getLang(), dir: isRtl() ? 'rtl' : 'ltr', css, printLabel: t('rpPrint') });
@@ -112,7 +116,7 @@ export function renderReport(root, nav, kind, arg) {
   const profile = () => { const p = S.activeProfile(); return { name: p.name, age: p.age }; };
   let scope = kind === 'run' ? { kind: 'run', runId: arg } : (() => { const a = String(arg || '30-all'), i = a.indexOf('-'), d = i < 0 ? a : a.slice(0, i), id = i < 0 ? '' : a.slice(i + 1); return { kind: 'period', days: Math.max(0, Math.min(3650, Number(d) || 0)), templateId: id && id !== 'all' ? id : null }; })();
   const draw = () => {
-    const m = buildReport({ runs: S.myRuns(), templates: S.get().templates, goals: S.goals(), profile: profile(), scope }), page = reportElement(m);
+    const m = buildReport({ runs: S.myRuns(), templates: S.get().templates, goals: S.goals(), retros: S.retros(), profile: profile(), scope }), page = reportElement(m);
     const btn = (label, fn, cls = '') => h('button', { class: `btn ${cls}`, type: 'button', onclick: async (e) => { const b = e.currentTarget; b.disabled = true; try { await fn(); } catch (err) { console.error(err); toast(t('rpFailed')); } b.disabled = false; } }, label);
     setChildren(root, h('div', { class: 'row between rpt-toolbar' }, h('h1', {}, `📄 ${t('rpTitle')}`), h('button', { class: 'btn', type: 'button', onclick: () => history.length > 1 ? history.back() : nav('#/stats') }, t('back'))),
       scope.kind === 'period' ? h('div', { class: 'toolbar rpt-toolbar' }, [7, 30, 90, 0].map((d) => h('button', { class: `chip btn-chip ${scope.days === d ? 'on' : ''}`, type: 'button', 'aria-pressed': String(scope.days === d), onclick: () => { scope = { ...scope, days: d }; draw(); } }, d ? t('rpDays', { n: d }) : t('rpAll')))) : null,

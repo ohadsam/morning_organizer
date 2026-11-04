@@ -42,6 +42,8 @@ export function smartTimes(tasks, ctx) {
   return tasks.map((t, index) => { const s = suggestTime({ ...ctx, history, name: t.name }); return { index, current: t.sec, ...s, changes: Math.abs(s.sec - t.sec) >= 15 && Math.abs(s.sec - t.sec) / Math.max(1, t.sec) >= 0.15 }; });
 }
 
+/** The in-between step kinds (name = i18n key). Shared with the retrospective, which proposes the same steps. */
+export const STEP_META = { sx_breath: { icon: '🌬️', sec: 120, helper: 'calm' }, sx_calmcheck: { icon: '🧘', sec: 60, helper: 'calm' }, sx_goodthought: { icon: '💭', sec: 60, helper: 'thought' }, sx_pickone: { icon: '🎯', sec: 60, helper: '' }, sx_move: { icon: '🤸', sec: 120, helper: 'move' }, sx_clear: { icon: '🧹', sec: 60, helper: '' }, sx_say: { icon: '🗣️', sec: 60, helper: '' }, sx_gear: { icon: '✅', sec: 60, helper: '' }, sx_clock: { icon: '🕒', sec: 30, helper: '' } };
 const HARD_NAME = /homework|study|read|שיעורי|לימוד|קריא/i;
 /**
  * In-between steps that fit the chosen help. tasks: [{name, sec}], ctx: { areas, age, hardNames?: Set<normalized names the person rated hard> }.

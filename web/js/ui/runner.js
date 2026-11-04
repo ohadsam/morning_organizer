@@ -297,7 +297,8 @@ export async function renderRunner(root, id, nav) {
       h('div', { class: 'toolbar' },
         h('button', { class: 'btn primary', type: 'button', onclick: () => nav('#/') }, t('again')),
         h('button', { class: 'btn', type: 'button', onclick: () => nav(`#/stats/${run.templateId}`) }, icon('chart', 18), t('viewStats')),
-        h('button', { class: 'btn', type: 'button', onclick: () => nav(`#/report/run/${run.id}`) }, `📄 ${t('rpRunReport')}`))));
+        h('button', { class: 'btn', type: 'button', onclick: () => nav(`#/report/run/${run.id}`) }, `📄 ${t('rpRunReport')}`),
+        h('button', { class: 'btn', type: 'button', onclick: () => nav(`#/retro/${run.id}`) }, `🔄 ${t('rcLookBack')}`))));
     if (done) confetti(root, 44);
     say(done ? 'runDone' : 'runStopped');
   }

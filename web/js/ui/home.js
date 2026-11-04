@@ -16,6 +16,7 @@ import { openShare, openImport } from './share.js';
 import { focusCard } from './focus.js';
 import { openMenu } from './menu.js';
 import { openWhatsNew, getVersion } from './whatsnew.js';
+import { dueCard } from './retro.js';
 import { openCapture } from './capture.js';
 import { openRoutinePicker } from './library.js';
 import { alarmSummary } from './alarms.js';
@@ -63,10 +64,12 @@ export function renderHome(root, nav) {
         next ? h('a', { class: 'chip', href: '#/alarms' }, icon('bell', 16), t('alarmNext', { name: next.template.name, time: next.at.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) })) : null),
       activeCard(),
       simple ? null : focusCard(),
+      simple ? null : dueCard(nav, draw),
       simple ? null : (() => { const g = S.goals().find((x) => needsCheck(x)); return g ? h('section', { class: 'card focus-card' }, h('strong', {}, `🎯 ${t('checkDue')}`), h('p', {}, g.title), h('button', { class: 'btn primary', type: 'button', onclick: () => openCheckin(g, draw) }, `✔ ${t('checkTitle')}`)) : null; })(),
       simple ? null : (() => { const f = S.features(); return h('div', { class: 'quick', role: 'group', 'aria-label': t('quickTitle') },
         h('button', { class: 'btn', type: 'button', onclick: () => nav('#/alarms') }, `⏰ ${t('alarmsTitle')}`),
         h('button', { class: 'btn', type: 'button', onclick: () => nav('#/goals') }, `🎯 ${t('goalsTitle')}`),
+        h('button', { class: 'btn', type: 'button', onclick: () => nav('#/retros') }, `🔄 ${t('rcvTitle')}`),
         f.calmCorner ? h('button', { class: 'btn', type: 'button', onclick: () => nav('#/calm') }, `🌬️ ${t('calmTitle')}`) : null,
         f.journal ? h('button', { class: 'btn', type: 'button', onclick: () => nav('#/journal') }, `📓 ${t('journal')}`) : null,
         f.journal ? h('button', { class: 'btn', type: 'button', onclick: () => openCapture({}) }, `🎙️ ${t('jQuick')}`) : null,

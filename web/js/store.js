@@ -17,6 +17,7 @@ import { widgetItems } from './widgetData.js';
 import { sanitizeMood } from './mood.js';
 import { sanitizeUnplanned, sanitizeWatch } from './unplanned.js';
 import { sanitizeGoal, MAX_GOALS } from './cogfun.js';
+import { sanitizeRetro, sanitizeRetros, applyActions, MAX_RETROS } from './retro.js';
 import { sanitizeLibrary, mergeLibrary, upsert, fromTemplate, fromTask, MAX_ROUTINES as LIB_R, MAX_TASKS as LIB_T, IDEA_ROUTINES } from './library.js';
 import { eraseJournal } from './journal.js';
 import { newProfile, normalizeProfile, runsOf, MAX_PROFILES } from './profiles.js';
@@ -35,7 +36,7 @@ export const COLORS = ['#6c5ce7', '#0984e3', '#00b894', '#e17055', '#e84393', '#
 export const MASCOTS = ['🦊', '🐼', '🦄', '🐯', '🐸', '🤖', '🐶', '🐱'];
 export const ICONS = ['🌅', '☀️', '🎒', '🪥', '👕', '🥣', '🏃', '📚', '🧘', '🐶', '🚌', '⏰'];
 
-const state = { templates: [], runs: [], watch: [], library: { routines: [], tasks: [] }, profiles: [], settings: { ...DEFAULT_SETTINGS }, ready: false };
+const state = { templates: [], runs: [], watch: [], retros: [], library: { routines: [], tasks: [] }, profiles: [], settings: { ...DEFAULT_SETTINGS }, ready: false };
 const subs = new Set();
 export const subscribe = (fn) => { subs.add(fn); return () => subs.delete(fn); };
 const emit = () => subs.forEach((f) => f(state));
@@ -102,10 +103,33 @@ export async function init() {
   if (!state.profiles.some((p) => p.id === state.settings.activeProfile)) state.settings.activeProfile = state.profiles[0].id;
   mirrorActiveProfile();
   state.watch = sanitizeWatch(await db.get('kv', 'watch'));
+  state.retros = sanitizeRetros(await db.get('kv', 'retros'));
   state.library = sanitizeLibrary(await db.get('kv', 'library'));
   state.ready = true;
   emit();
 }
+
+// ── retrospectives: look back at a run, change the routine, check later whether it helped ──
+export const retros = (profileId = activeProfile().id) => state.retros.filter((r) => r.profileId === profileId);
+export const retroForRun = (runId) => state.retros.find((r) => r.runId === runId) ?? null;
+const persistRetros = async () => { await db.put('kv', state.retros, 'retros'); emit(); };
+/** One retrospective per run (saving again updates it). */
+export async function saveRetro(r) {
+  const prev = state.retros.find((x) => x.runId === r.runId), clean = sanitizeRetro({ ...r, id: prev?.id ?? r.id, profileId: r.profileId || activeProfile().id });
+  if (!clean.runId) return null;
+  state.retros = [...state.retros.filter((x) => x.id !== clean.id), clean].slice(-MAX_RETROS); await persistRetros(); return clean;
+}
+/** Applies the chosen suggested changes to the routine (and creates goals) and starts the "did it help?" clock. -> { applied: n, goals: n } */
+export async function applyRetro(retroId, actionIds) {
+  const r = state.retros.find((x) => x.id === retroId), tpl = r && getTemplate(r.templateId); if (!r || !tpl) return { applied: 0, goals: 0 };
+  const chosen = r.actions.filter((a) => actionIds.includes(a.id) && !a.applied); if (!chosen.length) return { applied: 0, goals: 0 };
+  const out = applyActions(tpl, chosen, { stepName: (k) => t(k) });
+  await saveTemplate(out.tpl);
+  for (const g of out.goals) await saveGoal({ ...g, since: Date.now() }, r.profileId);
+  state.retros = state.retros.map((x) => (x.id === retroId ? { ...x, appliedAt: Date.now(), actions: x.actions.map((a) => (chosen.some((c) => c.id === a.id) ? { ...a, applied: true } : a)) } : x)); await persistRetros();
+  return { applied: chosen.length, goals: out.goals.length };
+}
+export async function removeRetro(id) { state.retros = state.retros.filter((x) => x.id !== id); await persistRetros(); }
 
 // ── goals (Goal - Plan - Do - Check) live on the profile ──
 export const goals = (p = activeProfile()) => p?.goals ?? [];
@@ -191,6 +215,7 @@ export async function deleteProfile(id) {
   const mine = runsOf(state.runs, id, firstId()), wasActive = id === state.settings.activeProfile;
   state.runs = state.runs.filter((r) => !mine.includes(r)); for (const r of mine) await db.del('runs', r.id);
   state.profiles = state.profiles.filter((p) => p.id !== id); await persistProfiles(); await eraseJournal(id);
+  if (state.retros.some((x) => x.profileId === id)) { state.retros = state.retros.filter((x) => x.profileId !== id); await persistRetros(); }
   if (wasActive) { state.settings = { ...state.settings, activeProfile: state.profiles[0].id }; }
   mirrorActiveProfile(); await db.put('kv', state.settings, 'settings'); emit(); return true;
 }
@@ -304,7 +329,7 @@ export const saveActive = (run) => db.put('kv', run ? structuredClone(run) : nul
 export const loadActive = () => db.get('kv', 'activeRun');
 
 export function exportAll() {
-  return JSON.stringify({ app: 'morning-organizer', v: 1, templates: state.templates, runs: state.runs, profiles: state.profiles, library: state.library, settings: state.settings });
+  return JSON.stringify({ app: 'morning-organizer', v: 1, templates: state.templates, runs: state.runs, profiles: state.profiles, library: state.library, retros: state.retros, settings: state.settings });
 }
 /** Keep only known settings with the right type and sane ranges (a backup is untrusted input). */
 export function sanitizeSettings(raw) {
@@ -353,6 +378,10 @@ export async function importBackup(text, { mode = 'merge', settings = true } = {
     if (!state.profiles.length) state.profiles = [newProfile({})];
     if (!state.profiles.some((x) => x.id === state.settings.activeProfile)) state.settings.activeProfile = state.profiles[0].id;
     await persistProfiles(); mirrorActiveProfile();
+  }
+  if (Array.isArray(d.retros)) { // retrospectives: union by id; "replace" mirrors the backup
+    const incoming = sanitizeRetros(d.retros).map((x) => ({ ...x, profileId: x.profileId || activeProfile().id })), known = new Set(mode === 'replace' ? [] : state.retros.map((x) => x.id));
+    state.retros = (mode === 'replace' ? [] : state.retros).concat(incoming.filter((x) => !known.has(x.id))).slice(-MAX_RETROS); await persistRetros();
   }
   if (d.library && typeof d.library === 'object') { // the template library: merge by id; "replace" makes the backup's library the whole library
     const incoming = sanitizeLibrary(d.library), before = state.library.routines.length + state.library.tasks.length;

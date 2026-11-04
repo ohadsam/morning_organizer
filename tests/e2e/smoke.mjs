@@ -859,5 +859,45 @@ await step('v1.13: axe on smart times / extra steps sheets, what\'s new, guesses
   assert.deepEqual(bad, []);
 });
 
+// ── v1.14: retrospective ──
+const seedRetroRuns = (page, spec) => page.evaluate(async (items) => {   // items: [{ id, startOffsetSec, over, diff }]
+  const S = await import('./js/store.js'), tpl = S.get().templates[0], now = Date.now();
+  for (const it of items) { const tasks = tpl.tasks.map((t, k) => ({ id: t.id, name: t.name, icon: t.icon, plannedSec: t.sec, estSec: t.sec, extraSec: 0, actualSec: t.sec + (k === 0 ? it.over : 0), done: true, skipped: false, difficulty: k === 0 ? it.diff : 0, help: { note: 0, thought: 0, relax: 0 } })), tot = tasks.reduce((a, x) => a + x.plannedSec, 0), act = tasks.reduce((a, x) => a + x.actualSec, 0);
+    await S.saveRun({ id: it.id, profileId: S.activeProfile().id, templateId: tpl.id, templateName: tpl.name, icon: tpl.icon, color: '#6c5ce7', startedAt: now + it.startOffsetSec * 1000, endedAt: now + it.startOffsetSec * 1000 + 600_000, status: 'done', current: 0, pausedMs: 0, plannedTotal: tot, estTotal: tot, actualTotal: act, tasks, unplanned: [] }); }
+}, spec);
+await step('v1.14: look back at a run, apply suggested changes to the routine, then see whether they helped (before/after) with conclusions', async () => {
+  const { page, errors } = await newPage(); await page.goto(base); await page.waitForSelector('.routine');
+  await seedRetroRuns(page, [{ id: 'b1', startOffsetSec: -5 * 86400, over: 200, diff: 5 }, { id: 'b2', startOffsetSec: -3 * 86400, over: 180, diff: 5 }, { id: 'b3', startOffsetSec: -1 * 86400, over: 220, diff: 4 }]);
+  await page.goto(base + '#/'); await page.waitForSelector('.focus-card:has-text("Look back at")'); await page.click('.focus-card button:has-text("Look back")'); await page.waitForSelector('.retro-task');
+  assert.ok(await page.locator('.retro-task input[type=checkbox]:checked').count() >= 1, 'tasks the data points at are pre-ticked');
+  await page.click('.retro-task >> nth=0 >> .cause:has-text("Not enough time")'); await page.click('.retro-task >> nth=0 >> .cause:has-text("Hard to start")'); await page.click('.card:has(h2:has-text("How did it go?")) .mood >> nth=2');
+  await page.waitForSelector('.strat-pick:has-text("more time")'); assert.ok(await page.locator('.strat-pick').count() >= 2); const before = await page.evaluate(async () => { const S = await import('./js/store.js'); return S.get().templates[0].tasks.map((t) => [t.name, t.sec]); });
+  await page.click('button:has-text("Save and apply")'); await page.waitForSelector('#toast:has-text("applied")');
+  const after = await page.evaluate(async () => { const S = await import('./js/store.js'); return { tasks: S.get().templates[0].tasks.map((t) => [t.name, t.sec, t.helperKey]), retro: S.retros()[0] }; });
+  assert.ok(after.tasks.length === before.length + 1 && after.tasks.some((t) => t[2] === 'sx_pickone')); assert.ok(after.tasks.find((t) => t[0] === before[0][0])[1] > before[0][1]); assert.ok(after.retro.appliedAt > 0 && after.retro.actions.every((a) => a.applied));
+  await page.waitForSelector('.verdict.waiting'); assert.match(await page.textContent('.verdict'), /Waiting for 3 more/);
+  // three better runs after the change -> "Helped"
+  await seedRetroRuns(page, [{ id: 'a1', startOffsetSec: 60, over: 0, diff: 2 }, { id: 'a2', startOffsetSec: 120, over: 0, diff: 2 }, { id: 'a3', startOffsetSec: 180, over: 0, diff: 1 }]);
+  await page.reload(); await page.waitForSelector('.verdict.improved'); assert.match(await page.textContent('.card.kvs'), /Average over\/under/);
+  await page.goto(base + '#/retros'); await page.waitForSelector('.retro-item'); assert.match(await page.textContent('.card.stack'), /helped in 1 of 1/); assert.match(await page.textContent('.retro-item'), /Helped/);
+  await page.goto(base + '#/report/period/0-all'); await page.waitForSelector('.rpt'); assert.match(await page.textContent('.rpt'), /Looking back/);
+  await page.goto(base + '#/stats'); await page.waitForSelector('a[href="#/retros"]'); assert.deepEqual(errors, []);
+});
+
+await step('v1.14: axe on retrospective page, overview and home prompt (he + en)', async () => {
+  const bad = [];
+  for (const [lang, scheme] of [['he', 'light'], ['en', 'dark']]) {
+    const { page } = await newPage({ lang, ctx: { colorScheme: scheme } }); await page.goto(base); if (lang === 'he') await dismissWelcome(page); const L = `${lang}/${scheme}`;
+    await page.waitForSelector('.routine'); await seedRetroRuns(page, [{ id: 'x1', startOffsetSec: -3 * 86400, over: 200, diff: 5 }, { id: 'x2', startOffsetSec: -86400, over: 200, diff: 5 }]);
+    await page.goto(base + '#/'); await page.waitForSelector('.focus-card .btn.primary'); bad.push(...await audit(page, `${L}/home-retro-prompt`));
+    await page.goto(base + '#/retros'); await page.waitForSelector('h1'); bad.push(...await audit(page, `${L}/retros-empty`));
+    await page.locator('a.link-card').first().click(); await page.waitForSelector('.retro-task'); await page.click('.retro-task >> nth=0 >> .cause >> nth=0'); await page.waitForSelector('.strat-pick'); bad.push(...await audit(page, `${L}/retro-form`));
+    await page.click('.card:has(.mood) .mood >> nth=1'); await page.click('button:has(+ button.primary), .toolbar.wrap button >> nth=0'); await page.waitForTimeout(500);
+    await page.goto(base + '#/retros'); await page.waitForSelector('.retro-item'); bad.push(...await audit(page, `${L}/retros-list`));
+  }
+  if (bad.length) console.error([...new Set(bad)].join('\n'));
+  assert.deepEqual(bad, []);
+});
+
 await browser.close(); server.close();
 console.log(failures ? `\n${failures} e2e step(s) failed` : '\nall e2e steps passed'); process.exit(failures ? 1 : 0);

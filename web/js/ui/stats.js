@@ -11,6 +11,8 @@ import { unplannedCard, patternCards } from './unplanned.js';
 import { taskDifficulty, hardSpots, hardAndSlow, summary as diffSummary, levelEmoji } from '../difficulty.js';
 import { exportCard } from './report.js';
 import { estimateAccuracy } from '../awareness.js';
+import { overview as retroOverview } from '../retro.js';
+import { verdictChip } from './retro.js';
 
 const NS = 'http://www.w3.org/2000/svg';
 const svg = (tag, attrs = {}, ...kids) => { const e = document.createElementNS(NS, tag); for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v); e.append(...kids); return e; };
@@ -63,6 +65,13 @@ function awarenessCard(runs, templateId = null) {
     h('p', { class: 'note' }, t(`awBias_${a.bias}`)), a.trend ? h('p', { class: 'chip solid' }, t(a.trend > 0 ? 'awBetter' : 'awWorse', { n: Math.abs(a.trend) })) : null, h('p', { class: 'note' }, t('awTip')));
 }
 
+/** Looking back: how many, did the changes help (Stats front page). */
+function retroCard(runs) {
+  const rs = S.retros(), o = retroOverview(rs, runs);
+  return h('a', { class: 'card link-card', href: '#/retros' }, h('span', { class: 'emoji' }, '🔄'), h('span', { class: 'routine-text' }, h('strong', {}, t('rcvTitle')),
+    h('small', {}, o.total ? t('rcvCardLine', { n: o.total, helped: o.improved, applied: o.applied }) : t('rcvCardEmpty'))));
+}
+
 function insightText(i) {
   const u = units(), f = (s) => fmtHuman(s, u);
   switch (i.type) {
@@ -81,7 +90,7 @@ export function renderStats(root, templateId, nav) {
     if (!templateId) {
       const items = templates.map((x) => ({ x, n: ST.finished(runs, x.id).length }));
       const hasRuns = items.some((i) => i.n);
-      root.replaceChildren(h('h1', {}, t('statsTitle')), hasRuns ? overview(runs) : null, hasRuns ? achievementsCard(runs) : null, hasRuns ? moodCard(runs) : null, hasRuns ? unplannedCard(runs) : null, hasRuns ? awarenessCard(runs) : null, hasRuns ? difficultyCard(runs) : null, hasRuns ? exportCard(nav) : null,
+      root.replaceChildren(h('h1', {}, t('statsTitle')), hasRuns ? overview(runs) : null, hasRuns ? achievementsCard(runs) : null, hasRuns ? moodCard(runs) : null, hasRuns ? unplannedCard(runs) : null, hasRuns ? retroCard(runs) : null, hasRuns ? awarenessCard(runs) : null, hasRuns ? difficultyCard(runs) : null, hasRuns ? exportCard(nav) : null,
         hasRuns ? h('div', { class: 'stack' }, items.filter((i) => i.n).map(({ x, n }) =>
           h('a', { class: 'card link-card', href: `#/stats/${x.id}`, style: { '--accent': x.color } }, h('span', { class: 'emoji' }, x.icon), h('span', { class: 'routine-text' }, h('strong', {}, x.name), h('small', {}, t('runsCount', { n })))))) : h('p', { class: 'empty' }, t('noStats')));
       return;
@@ -113,7 +122,7 @@ export function renderStats(root, templateId, nav) {
         h('h2', {}, t('history')),
         h('table', { class: 'tbl' }, h('thead', {}, h('tr', {}, h('th', {}, t('colDate')), h('th', {}, t('colPlanned')), h('th', {}, t('colActual')), h('th', {}, h('span', { class: 'sr-only' }, t('rpTitle'))))),
           h('tbody', {}, [...rs].reverse().slice(0, 30).map((r) => h('tr', { class: r.actualTotal > r.plannedTotal ? 'over' : '' },
-            h('td', {}, new Date(r.startedAt).toLocaleString(getLang(), { dateStyle: 'medium', timeStyle: 'short' })), h('td', {}, fmtDur(r.plannedTotal)), h('td', {}, fmtDur(r.actualTotal)), h('td', {}, h('a', { href: `#/report/run/${r.id}`, 'aria-label': `${t('rpRunReport')} ${new Date(r.startedAt).toLocaleDateString(getLang())}` }, '📄')))))),
+            h('td', {}, new Date(r.startedAt).toLocaleString(getLang(), { dateStyle: 'medium', timeStyle: 'short' })), h('td', {}, fmtDur(r.plannedTotal)), h('td', {}, fmtDur(r.actualTotal)), h('td', {}, h('a', { href: `#/report/run/${r.id}`, 'aria-label': `${t('rpRunReport')} ${new Date(r.startedAt).toLocaleDateString(getLang())}` }, '📄'), ' ', h('a', { href: `#/retro/${r.id}`, 'aria-label': `${t('rcLookBack')} ${new Date(r.startedAt).toLocaleDateString(getLang())}` }, S.retroForRun(r.id) ? '✅' : '🔄')))))),
         h('button', { class: 'btn danger', type: 'button', onclick: async () => { if (await confirmBox(t('clearHistoryConfirm'), t('clearHistory'), true)) { await S.clearRuns(templateId); toast(t('deleted')); } } }, t('clearHistory'))]));
   };
   draw();

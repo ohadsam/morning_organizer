@@ -2,7 +2,7 @@
 // Layout uses CSS logical properties, so flipping <html dir> is all RTL needs.
 export const STR = {
   en: {
-    appName: 'Morning Organizer', home: 'Routines', stats: 'Stats', settings: 'Settings', guide: 'Guide',
+    appName: 'SonRise', home: 'Routines', stats: 'Stats', settings: 'Settings', guide: 'Guide',
     hello: 'Ready to start the day?', newRoutine: 'New routine', import: 'Import', favorites: 'Favorites', allRoutines: 'All routines',
     noRoutines: 'No routines yet. Create your first one!', tasksCount: '{n} tasks', start: 'Start', edit: 'Edit', delete: 'Delete',
     duplicate: 'Duplicate', share: 'Share', favorite: 'Favorite', unfavorite: 'Remove from favorites', back: 'Back', save: 'Save', cancel: 'Cancel',
@@ -35,7 +35,7 @@ export const STR = {
     language: 'Language', langAuto: 'Automatic', theme: 'Theme', themeAuto: 'Automatic', themeLight: 'Light', themeDark: 'Dark', test: 'Test',
     data: 'Data', exportAll: 'Back up all data', importAll: 'Restore from backup', restoreSamples: 'Add sample routines', backupDone: 'Backup saved', restoreDone: 'Restored {n} routines',
     app: 'Android app', downloadApk: 'Download Android app (APK)', apkNote: 'Always the latest version, with home-screen widgets and reliable alarms.', installPwa: 'Install on this device',
-    version: 'Version {v}', nativeActive: 'Running in the Android app', widgets: 'Add the widget from your home screen: long-press → Widgets → Morning Organizer.',
+    version: 'Version {v}', nativeActive: 'Running in the Android app', widgets: 'Add the widget from your home screen: long-press → Widgets → SonRise.',
     shareTitle: 'Share routine', shareCopy: 'Copy code', shareLink: 'Copy link', shareSend: 'Send…', shareNfc: 'Write to NFC tag', shareNfcRead: 'Read from NFC tag', shareBt: 'Bluetooth and Nearby Share are available from “Send…”.',
     shareCopied: 'Copied', shareNfcTap: 'Hold the back of the phone against an NFC tag…', shareNfcOk: 'Done', shareNfcFail: 'NFC failed or is not available', shareTooBig: 'Too big for a small NFC tag',
     importTitle: 'Import routine', importHint: 'Paste a code or link someone shared with you.', importBtn: 'Import', importOk: 'Imported “{name}”', importBad: 'This code is not valid.',
@@ -118,7 +118,7 @@ export const STR = {
     close: 'Close', loading: 'Loading…', error: 'Something went wrong', storageFail: 'Storage unavailable - changes will not be kept.',
   },
   he: {
-    appName: 'מארגן בוקר', home: 'שגרות', stats: 'סטטיסטיקות', settings: 'הגדרות', guide: 'מדריך',
+    appName: 'SonRise', home: 'שגרות', stats: 'סטטיסטיקות', settings: 'הגדרות', guide: 'מדריך',
     hello: 'מוכנים להתחיל את היום?', newRoutine: 'שגרה חדשה', import: 'ייבוא', favorites: 'מועדפים', allRoutines: 'כל השגרות',
     noRoutines: 'אין עדיין שגרות. צרו את הראשונה!', tasksCount: '{n} משימות', start: 'התחל', edit: 'עריכה', delete: 'מחיקה',
     duplicate: 'שכפול', share: 'שיתוף', favorite: 'מועדף', unfavorite: 'הסר ממועדפים', back: 'חזרה', save: 'שמירה', cancel: 'ביטול',
@@ -151,7 +151,7 @@ export const STR = {
     language: 'שפה', langAuto: 'אוטומטי', theme: 'ערכת נושא', themeAuto: 'אוטומטי', themeLight: 'בהיר', themeDark: 'כהה', test: 'בדיקה',
     data: 'נתונים', exportAll: 'גיבוי כל הנתונים', importAll: 'שחזור מגיבוי', restoreSamples: 'הוספת שגרות לדוגמה', backupDone: 'הגיבוי נשמר', restoreDone: 'שוחזרו {n} שגרות',
     app: 'אפליקציית אנדרואיד', downloadApk: 'הורדת אפליקציית אנדרואיד (APK)', apkNote: 'תמיד הגרסה האחרונה, עם ווידג׳טים והתראות אמינות.', installPwa: 'התקנה במכשיר',
-    version: 'גרסה {v}', nativeActive: 'רץ בתוך אפליקציית האנדרואיד', widgets: 'להוספת הווידג׳ט: לחיצה ארוכה על מסך הבית ← ווידג׳טים ← מארגן בוקר.',
+    version: 'גרסה {v}', nativeActive: 'רץ בתוך אפליקציית האנדרואיד', widgets: 'להוספת הווידג׳ט: לחיצה ארוכה על מסך הבית ← ווידג׳טים ← SonRise.',
     shareTitle: 'שיתוף שגרה', shareCopy: 'העתקת קוד', shareLink: 'העתקת קישור', shareSend: 'שליחה…', shareNfc: 'כתיבה לתג NFC', shareNfcRead: 'קריאה מתג NFC', shareBt: 'בלוטות׳ ו-Nearby Share זמינים דרך “שליחה…”.',
     shareCopied: 'הועתק', shareNfcTap: 'קרבו את גב הטלפון לתג NFC…', shareNfcOk: 'בוצע', shareNfcFail: 'NFC נכשל או אינו זמין', shareTooBig: 'גדול מדי לתג NFC קטן',
     importTitle: 'ייבוא שגרה', importHint: 'הדביקו קוד או קישור ששיתפו איתכם.', importBtn: 'ייבוא', importOk: 'יובאה “{name}”', importBad: 'הקוד אינו תקין.',

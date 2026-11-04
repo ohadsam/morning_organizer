@@ -41,4 +41,21 @@ class AlarmMathTest {
         val next = AlarmMath.nextFire(7, 0, setOf(0), sat)!!
         assertEquals(25, next.dayOfMonth); assertEquals(7, next.hour)
     }
+
+    @Test fun skipsQuietDaysAndFindsTheNextOrdinaryOne() {
+        val skip = setOf("2026-11-03", "2026-11-04", "2026-11-05")   // today (after the time), Wednesday, Thursday
+        val r = AlarmMath.nextFire(9, 0, emptySet(), tue8, skip = skip)!!
+        assertEquals(6, r.dayOfMonth)
+    }
+
+    @Test fun aLongVacationStillFindsTheEndOfIt() {
+        val skip = (0L until 60L).map { tue8.toLocalDate().plusDays(it).toString() }.toSet()
+        assertEquals(tue8.toLocalDate().plusDays(60), AlarmMath.nextFire(9, 0, emptySet(), tue8, skip = skip)!!.toLocalDate())
+    }
+
+    @Test fun pauseHoldsAlarmsBackUntilItEnds() {
+        val until = tue8.plusDays(2).withHour(12).toInstant().toEpochMilli()
+        assertEquals(tue8.plusDays(3).toLocalDate(), AlarmMath.nextFire(9, 0, emptySet(), tue8, pausedUntil = until)!!.toLocalDate())
+        assertNull(AlarmMath.nextFire(9, 0, emptySet(), tue8, pausedUntil = -1L))
+    }
 }

@@ -1,6 +1,6 @@
 {
-  "name": "מארגן בוקר - Morning Organizer",
-  "short_name": "מארגן בוקר",
+  "name": "SonRise",
+  "short_name": "SonRise",
   "description": "Build morning routines, time every task and see your progress.",
   "start_url": "./",
   "scope": "./",

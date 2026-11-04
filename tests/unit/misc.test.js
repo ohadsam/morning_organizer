@@ -13,7 +13,7 @@ test('move reorders without mutating', () => {
 });
 test('duration formatting incl. 5.5 minutes', () => {
   assert.equal(fmtDur(330), '5:30'); assert.equal(fmtDur(3725), '1:02:05'); assert.equal(fmtDur(-5), '-0:05');
-  assert.equal(fmtHuman(330), '5m 30s'); assert.equal(fmtHuman(3600), '1h'); assert.equal(fmtHuman(0), '0s');
+  assert.equal(fmtHuman(330), '5\u00A0m 30\u00A0s', 'a space between the number and its unit'); assert.equal(fmtHuman(3600), '1\u00A0h'); assert.equal(fmtHuman(0), '0\u00A0s'); assert.equal(fmtHuman(330, { h: 'ש׳', m: 'ד׳', s: 'ש״נ' }), '5\u00A0ד׳ 30\u00A0ש״נ');
 });
 test('cleanText/clamp', () => { assert.equal(cleanText('  a\u0007b  ', 10), 'ab'); assert.equal(cleanText(null, 5), ''); assert.equal(clamp(5, 0, 3), 3); });
 test('nextFire respects days, time and disabled state', () => {

@@ -9,6 +9,7 @@ import { playRing } from '../audio.js';
 import { SOUNDS, MAX_EXTRA, schedule, normalizeAlarm } from '../wake.js';
 import { requestWebNotifications } from '../reminders.js';
 import * as S from '../store.js';
+import { upcoming } from '../holidays.js';
 
 /** Returns { el, draw }. `save()` persists the template. */
 export function alarmEditor(tpl, save) {
@@ -17,8 +18,19 @@ export function alarmEditor(tpl, save) {
     const lbl = h('span', { class: 'lbl' }, fmt(value));
     return h('label', {}, lbl, h('input', { type: 'range', min, max, step, value, 'aria-label': label, oninput: (e) => { set(+e.target.value); lbl.textContent = fmt(+e.target.value); save(); } }));
   };
+  /** Type of ring: big tiles, tap one to choose it and hear it. "From my phone" (Android app only) opens the phone's own sound picker. */
+  const EMOJI = { alarm: '⏰', gentle: '🌿', ringtone: '📞', rising: '🌄', bell: '🔔', birds: '🐦', digital: '📟', melody: '🎵', device: '📱' };
+  const soundPicker = (r, name) => h('fieldset', { class: 'sound-picker' }, h('legend', {}, t('alarmRingType')),
+    h('div', { class: 'sound-grid', role: 'radiogroup', 'aria-label': `${name}: ${t('alarmRingType')}` }, SOUNDS.filter((x) => x !== 'device' || native.available).map((x) => h('button', { type: 'button', class: `sound-tile ${r.sound === x ? 'on' : ''}`, role: 'radio', 'aria-checked': String(r.sound === x),
+      onclick: () => { if (x === 'device') return pickDeviceSound(r); r.sound = x; save(); playRing(x, r.volume, false); draw(); } }, h('span', { class: 'st-e', 'aria-hidden': 'true' }, EMOJI[x]), h('span', {}, t(`snd_${x}`))))),
+    r.sound === 'device' ? h('small', { class: 'hint' }, r.toneTitle ? t('alarmToneChosen', { title: r.toneTitle }) : t('alarmPickDevice')) : null,
+    native.available ? null : h('small', { class: 'hint' }, t('alarmTonePreview')));
+  function pickDeviceSound(r) {
+    const on = (e) => { const d = e.detail; if (d?.type !== 'ringtone') return; globalThis.removeEventListener('morning-native', on); if (d.uri) { r.sound = 'device'; r.tone = d.uri; r.toneTitle = String(d.title || '').slice(0, 40); Object.assign(tpl.alarm, normalizeAlarm(tpl.alarm)); save(); } draw(); };
+    globalThis.addEventListener('morning-native', on); native.pickRingtone('ring');
+  }
   const ringFields = (r, name) => h('div', { class: 'ring-fields' },
-    h('label', { class: 'field' }, h('span', { class: 'lbl' }, t('alarmSound')), h('select', { 'aria-label': `${name}: ${t('alarmSound')}`, onchange: (e) => { r.sound = e.target.value; save(); } }, SOUNDS.map((x) => h('option', { value: x, selected: r.sound === x }, t(`snd_${x}`))))),
+    soundPicker(r, name),
     slider(`${name}: ${t('alarmVolume')}`, r.volume, 0, 100, 1, (v) => `${t('alarmVolume')}: ${v}%`, (v) => { r.volume = v; }),
     h('label', { class: 'switch row' }, h('span', {}, t('alarmVibrate')), h('input', { type: 'checkbox', checked: r.vibrate, 'aria-label': `${name}: ${t('alarmVibrate')}`, onchange: (e) => { r.vibrate = e.target.checked; save(); } })),
     slider(`${name}: ${t('alarmDuration')}`, r.durationSec, 5, 300, 5, (v) => `${t('alarmDuration')}: ${v} ${t('seconds')}`, (v) => { r.durationSec = v; }),
@@ -37,7 +49,10 @@ export function alarmEditor(tpl, save) {
       h('label', { class: 'field' }, h('span', { class: 'lbl' }, t('alarmGap')), h('span', { class: 'dur-in' }, h('input', { type: 'number', min: 1, max: 120, inputMode: 'numeric', value: m.afterMin, 'aria-label': `${t('alarmGap')} ${i + 2}`, onchange: (e) => { m.afterMin = Math.max(1, Math.min(120, Math.round(+e.target.value) || 5)); save(); draw(); } }), h('i', {}, t('minutes')))),
       ringFields(m, t('alarmRingShort', { n: i + 2 })));
     const rep = { n: 3, gap: 5 };
+    const offRuns = upcoming(new Date(), 3), fmt = (d) => new Intl.DateTimeFormat(getLang(), { day: 'numeric', month: 'short' }).format(d);
     setChildren(el, toggle,
+      h('label', { class: 'switch row' }, h('span', {}, t('alarmOffDays'), h('small', { class: 'hint' }, t('alarmOffDaysHint'))), h('input', { type: 'checkbox', checked: a.offDays, 'aria-label': t('alarmOffDays'), onchange: (e) => { a.offDays = e.target.checked; save(); draw(); } })),
+      a.offDays && offRuns.length ? h('small', { class: 'hint' }, t('alarmOffDaysNext', { list: offRuns.map((o) => `${t(`hol_${o.key}`)} ${o.from.getTime() === o.to.getTime() ? fmt(o.from) : t('calRange', { from: fmt(o.from), to: fmt(o.to) })}`).join(' · ') })) : null,
       h('div', { class: 'alarm-grid' },
         h('label', {}, h('span', { class: 'lbl' }, t('alarmTime')), h('input', { type: 'time', value: a.time, oninput: (e) => { a.time = e.target.value || '07:00'; save(); }, onchange: draw })),
         h('fieldset', { class: 'days' }, h('legend', {}, t('alarmDays')), [0, 1, 2, 3, 4, 5, 6].map((d) => h('label', { class: 'day' }, h('input', { type: 'checkbox', checked: a.days.includes(d), onchange: (e) => { a.days = e.target.checked ? [...a.days, d].sort() : a.days.filter((x) => x !== d); save(); } }), h('span', {}, t(`day${d}`))))),

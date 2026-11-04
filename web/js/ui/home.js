@@ -1,5 +1,5 @@
 import { h, fmtHuman, setChildren } from '../util.js';
-import { t, units } from '../i18n.js';
+import { t, units, getLang } from '../i18n.js';
 import * as S from '../store.js';
 import { nextAcross } from '../alarms.js';
 import { streak, totalStars, finished } from '../stats.js';
@@ -11,7 +11,10 @@ import { rewardProgress } from '../rewards.js';
 import { avatarNode, openProfiles } from './avatar.js';
 import { levelInfo } from '../levels.js';
 import { splitForToday } from '../schedule.js';
-import { icon, iconBtn, toast, confirmBox, topicMenus } from './common.js';
+import { icon, iconBtn, toast, confirmBox, toolbar } from './common.js';
+import { openPauseSheet, pausedBanner } from './pause.js';
+import { isPaused } from '../alarmPause.js';
+import { dayOff, hebrewLabel } from '../holidays.js';
 import { openSearch } from './search.js';
 import { runAction } from './actions.js';
 import { suggestionCard } from './suggest.js';
@@ -39,7 +42,7 @@ function card(tpl, nav) {
   const total = S.totalSec(tpl), simple = S.get().settings.simpleMode;
   return h('article', { class: `card routine ${tpl.alarm?.enabled ? 'armed' : ''}`, style: { '--accent': tpl.color } },
     h('button', { class: 'routine-main', type: 'button', onclick: () => nav(simple ? `#/run/${tpl.id}` : `#/edit/${tpl.id}`), 'aria-label': `${simple ? t('start') : t('edit')}: ${tpl.name}` },
-      h('span', { class: 'emoji', 'aria-hidden': 'true' }, tpl.icon),
+      h('span', { class: 'emoji', 'aria-hidden': tpl.alarm?.enabled ? null : 'true', role: tpl.alarm?.enabled ? 'img' : null, 'aria-label': tpl.alarm?.enabled ? t('alarmBadge') : null }, tpl.icon, tpl.alarm?.enabled ? h('i', { class: 'alarm-sticker', 'aria-hidden': 'true' }, '⏰') : null),
       h('span', { class: 'routine-text' }, h('strong', {}, tpl.name || t('untitled')),
         h('small', {}, `${t('tasksCount', { n: tpl.tasks.length })} · ${fmtHuman(total, units())}${tpl.from ? ` · ${t('fromParentTag', { name: tpl.from })}` : ''}`))),
     simple ? null : alarmSwitch(tpl),
@@ -67,10 +70,10 @@ export function renderHome(root, nav) {
     const awake = isAwakeWanted(), simple = settings.simpleMode, lv = levelInfo(starsN);
     const goals = F.childLinks().filter((l) => l.parent.goal).map((l) => ({ g: l.parent.goal, p: rewardProgress(l.parent.goal, done) }));
     const favs = templates.filter((x) => x.favorite);
-    const next = nextAcross(templates), focusEl = simple ? null : focusCard();
+    const next = nextAcross(templates), focusEl = simple ? null : focusCard(), suggestionBelow = simple || focusEl ? null : suggestionCard(nav, draw);
     setChildren(root,
       h('div', { class: 'hero' }, h('button', { class: 'hero-buddy', type: 'button', 'aria-label': `${t('switchProfile')}: ${settings.personName || ''}`, onclick: () => openProfiles(nav) }, avatarNode(settings.avatar, { size: 76 })), h('h1', {}, t('appName')), h('p', {}, settings.personName ? t('greetName', { name: settings.personName }) : t('hello')),
-        h('div', { class: 'chips' }, days ? h('span', { class: 'chip' }, `🔥 ${t('streakDays', { n: days })}`) : null, starsN ? h('span', { class: 'chip' }, `⭐ ${t('starsTotal', { n: starsN })}`) : null,
+        h('div', { class: 'chips' }, h('span', { class: 'chip', title: t('hebDate') }, `📅 ${hebrewLabel(new Date(), getLang())}`), dayOff(new Date()) ? h('span', { class: 'chip' }, `🕎 ${t(`hol_${dayOff(new Date()).key}`)}`) : null, days ? h('span', { class: 'chip' }, `🔥 ${t('streakDays', { n: days })}`) : null, starsN ? h('span', { class: 'chip' }, `⭐ ${t('starsTotal', { n: starsN })}`) : null,
           h('span', { class: 'chip', title: lv.next ? t('levelNext', { n: lv.toNext, l: lv.level + 1 }) : '' }, `🏅 ${t('levelLabel', { n: lv.level })}`),
           goals.map(({ g, p }) => h('span', { class: 'chip', title: g.title }, t('goalChip', { emoji: g.emoji, have: p.have, target: p.target }))),
           h('button', { class: `chip btn-chip ${awake ? 'on' : ''}`, type: 'button', 'aria-pressed': String(awake), onclick: async () => { await S.updateSettings({ keepAwakeApp: !awake }); setAwake('app', !awake); draw(); } }, awake ? `☀️ ${t('screenOn')}` : `🌙 ${t('screenOff')}`)),
@@ -80,14 +83,15 @@ export function renderHome(root, nav) {
       simple ? null : followUpCard(nav, draw) ?? dueCard(nav, draw),
       simple ? null : (() => { const g = S.goals().find((x) => needsCheck(x)); return g ? h('section', { class: 'card focus-card' }, h('strong', {}, `🎯 ${t('checkDue')}`), h('p', {}, g.title), h('button', { class: 'btn primary', type: 'button', onclick: () => openCheckin(g, draw) }, `✔ ${t('checkTitle')}`)) : null; })(),
       simple ? null : h('button', { class: 'home-search', type: 'button', 'aria-haspopup': 'dialog', onclick: () => openSearch(nav) }, h('span', { 'aria-hidden': 'true' }, '🔍'), h('span', {}, t('homeSearch'))),
-      simple ? null : h('div', { class: 'toolbar' },
-        h('button', { class: 'btn primary', type: 'button', onclick: () => runAction('newRoutine', nav) }, icon('plus', 18), t('newRoutine')),
-        h('button', { class: 'btn', type: 'button', onclick: () => runAction('wizard', nav) }, `🪄 ${t('homeWizard')}`)),
-      simple || focusEl ? null : suggestionCard(nav, draw),
-      simple ? null : (() => { const f = S.features(), b = (emoji, label, fn) => h('button', { class: 'btn', type: 'button', onclick: fn }, h('span', { 'aria-hidden': 'true' }, emoji), label); return topicMenus([
-        { id: 'plan', icon: '🗓️', label: t('grpPlan'), items: [b('⏰', t('alarmsTitle'), () => nav('#/alarms')), b('🎯', t('goalsTitle'), () => nav('#/goals')), b('📚', t('libFromTemplate'), () => openRoutinePicker(nav)), b('⚙️', t('libManage'), () => nav('#/library')), b('📥', t('import'), () => openImport())] },
-        { id: 'calm', icon: '🌬️', label: t('grpCalm'), items: [f.calmCorner ? b('🌬️', t('calmTitle'), () => nav('#/calm')) : null, f.journal ? b('📓', t('journal'), () => nav('#/journal')) : null, f.journal ? b('🎙️', t('jQuick'), () => openCapture({})) : null] },
-        { id: 'progress', icon: '📈', label: t('grpProgress'), items: [b('🔄', t('rcvTitle'), () => nav('#/retros')), f.rewardMenu ? b('🎁', t('menuTitle'), () => openMenu()) : null] }].filter((g) => g.items.some(Boolean)), t('quickTitle')); })(),
+      simple ? null : (() => { const f = S.features(), b = (emoji, label, fn) => h('button', { class: 'btn', type: 'button', onclick: fn }, h('span', { 'aria-hidden': 'true' }, emoji), label), paused = isPaused(settings.alarmsPause); return toolbar([
+        { id: 'new', icon: '➕', label: t('tbNew'), run: () => runAction('newRoutine', nav) },
+        { id: 'wizard', icon: '🪄', label: t('tbWizard'), run: () => runAction('wizard', nav) },
+        { id: 'plan', icon: '🗓️', label: t('tbPlan'), items: [b('⏰', t('alarmsTitle'), () => nav('#/alarms')), b('🎯', t('goalsTitle'), () => nav('#/goals')), b('📚', t('libFromTemplate'), () => openRoutinePicker(nav)), b('⚙️', t('libManage'), () => nav('#/library')), b('📥', t('import'), () => openImport())] },
+        { id: 'calm', icon: '🌬️', label: t('tbCalm'), items: [f.calmCorner ? b('🌬️', t('calmTitle'), () => nav('#/calm')) : null, f.journal ? b('📓', t('journal'), () => nav('#/journal')) : null, f.journal ? b('🎙️', t('jQuick'), () => openCapture({})) : null].filter(Boolean) },
+        { id: 'track', icon: '📈', label: t('tbTrack'), items: [b('📊', t('stats'), () => nav('#/stats')), b('🔄', t('rcvTitle'), () => nav('#/retros')), f.rewardMenu ? b('🎁', t('menuTitle'), () => openMenu()) : null] },
+        { id: 'alarms', icon: paused ? '🔕' : '🔔', label: paused ? t('pauseResume') : t('tbAlarms'), pressed: paused, run: () => openPauseSheet(draw) }], t('quickTitle')); })(),
+      simple ? null : pausedBanner(draw),
+      simple ? null : suggestionBelow,
       favs.length ? h('section', {}, h('h2', {}, t('favorites')), h('div', { class: 'stack' }, favs.map((x) => card(x, nav)))) : null,
       (() => { const sp = splitForToday(templates, new Date().getDay()); return [
         h('section', {}, h('h2', {}, sp.scheduled ? t('today') : t('allRoutines')), sp.today.length ? h('div', { class: 'stack' }, sp.today.map((x) => card(x, nav))) : h('p', { class: 'empty' }, templates.length ? t('noRoutinesToday') : t('noRoutines'))),

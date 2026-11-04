@@ -28,9 +28,9 @@ export function fmtHuman(sec, u = { h: 'h', m: 'm', s: 's' }) {
   const h = Math.floor(s / 3600); s -= h * 3600;
   const m = Math.floor(s / 60); s -= m * 60;
   const parts = [];
-  if (h) parts.push(`${h}${u.h}`);
-  if (m) parts.push(`${m}${u.m}`);
-  if (s || !parts.length) parts.push(`${s}${u.s}`);
+  if (h) parts.push(`${h}\u00A0${u.h}`);
+  if (m) parts.push(`${m}\u00A0${u.m}`);
+  if (s || !parts.length) parts.push(`${s}\u00A0${u.s}`);
   return (neg ? '-' : '') + parts.join(' ');
 }
 

@@ -18,7 +18,7 @@ export function buildPdf(pages, { title = 'Report' } = {}) {
     offsets[imageId(i)] = len; push(`${imageId(i)} 0 obj\n<< /Type /XObject /Subtype /Image /Width ${p.w} /Height ${p.h} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${p.jpeg.length} >>\nstream\n`); push(p.jpeg); push('\nendstream\nendobj\n');
   });
   const safe = String(title).replace(/[^\x20-\x7e]/g, '?').replace(/[()\\]/g, '');
-  obj(infoId, `<< /Title (${safe}) /Producer (Morning Organizer) >>`);
+  obj(infoId, `<< /Title (${safe}) /Producer (SonRise) >>`);
   const xref = len, total = infoId + 1;
   push(`xref\n0 ${total}\n0000000000 65535 f \n`); for (let i = 1; i < total; i++) push(`${String(offsets[i]).padStart(10, '0')} 00000 n \n`);
   push(`trailer\n<< /Size ${total} /Root 1 0 R /Info ${infoId} 0 R >>\nstartxref\n${xref}\n%%EOF\n`);

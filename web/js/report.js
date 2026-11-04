@@ -39,7 +39,7 @@ export function buildReport({ runs, templates = [], goals = [], retros = [], pro
   if (ro.total) { const j = ro.improved + ro.worse + ro.same; if (j) insights.push({ key: 'rcvHelped', p: { n: ro.improved, of: j } }); if (ro.stubborn[0]) insights.push({ key: 'rcvStubborn', p: { name: ro.stubborn[0].name, n: ro.stubborn[0].n } }); }
   return {
     kind: 'period', title: tpl ? tpl.name : null, icon: tpl?.icon || '', days: scope.days, from: rs[0]?.startedAt ?? from, to: now, person: profile.name || '', age: profile.age ?? null, empty: !rs.length,
-    kpis: { runs: tot.count, onTime: tot.onTime, onTimeRate: tot.count ? tot.onTime / tot.count : 0, avgActualSec: Math.round(tot.avgActual), bestSec: tot.best, stars: ST.totalStars(rs), unplannedCount: unp.count, unplannedSec: unp.sec, avgDifficulty: dif.avg, avgMood: mood.avg },
+    kpis: { runs: tot.count, onTime: tot.onTime, onTimeRate: tot.count ? tot.onTime / tot.count : 0, avgActualSec: Math.round(tot.avgActual) || 0, bestSec: Number.isFinite(tot.best) ? tot.best : 0, stars: ST.totalStars(rs), unplannedCount: unp.count, unplannedSec: unp.sec, avgDifficulty: dif.avg, avgMood: mood.avg },
     series: ST.series(rs), byRoutine, tasks: taskRows.slice(0, 15), hardTasks: hard.slice(0, 8), difficulty: dif, unplanned: unp, mood, heat: heatmap(rs, now, 5), insights,
     goals: goals.map((g) => ({ title: g.title, done: g.done, ...goalProgress(g, rs) })),
     retro: { ...ro, focus: focusItems(retros.filter((r) => (!scope.templateId || r.templateId === scope.templateId) && r.at >= from), runs).slice(0, 3), worked: workedItems(retros.filter((r) => (!scope.templateId || r.templateId === scope.templateId) && r.at >= from), runs) },

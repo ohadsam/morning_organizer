@@ -68,7 +68,7 @@ test('widget data: today + favourites first, bounded tasks, settings summary lin
   const out = widgetItems([mk('a', { days: [3] }), mk('b'), mk('c', { favorite: true, leaveBy: '07:45', gear: [{}, {}] })], 1, labels);
   assert.deepEqual(out.map((x) => x.id), ['c', 'b', 'a']);
   assert.equal(out[0].tasks.length, 8); assert.equal(out[0].more, 2);
-  assert.match(out[0].meta, /10m · leave 07:45 · gear 2/); assert.match(out[2].meta, /d3/);
+  assert.match(out[0].meta, /10\sm · leave 07:45 · gear 2/); assert.match(out[2].meta, /d3/);
 });
 
 test('wake chain: rings, schedule, next ring, native entries, sanitising', async () => {

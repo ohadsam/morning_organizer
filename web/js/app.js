@@ -95,6 +95,7 @@ async function boot() {
   const { finished: finishedRuns, streak: streakOf, totalStars: starsOf } = await import('./stats.js'), { weeklyReport } = await import('./weekly.js');
   const pushStats = debounce(() => { if (!native.available) return; const done = finishedRuns(S.myRuns()); native.setStats({ name: S.get().settings.personName, stars: starsOf(done), streak: streakOf(done), week: weeklyReport(done, Date.now()).onTime ?? 0 }); }, 800);
   S.subscribe(pushStats); pushStats();
+  if (native.available && S.get().settings.voiceEngine) native.ttsSetEngine(S.get().settings.voiceEngine);
   S.subscribe(() => scheduleWebReminders(onRing));
   scheduleWebReminders(onRing);
 

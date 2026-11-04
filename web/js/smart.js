@@ -43,15 +43,15 @@ export function smartTimes(tasks, ctx) {
 }
 
 /** The in-between step kinds (name = i18n key). Shared with the retrospective, which proposes the same steps. */
-export const STEP_META = { sx_breath: { icon: '🌬️', sec: 120, helper: 'calm' }, sx_calmcheck: { icon: '🧘', sec: 60, helper: 'calm' }, sx_goodthought: { icon: '💭', sec: 60, helper: 'thought' }, sx_pickone: { icon: '🎯', sec: 60, helper: '' }, sx_move: { icon: '🤸', sec: 120, helper: 'move' }, sx_clear: { icon: '🧹', sec: 60, helper: '' }, sx_say: { icon: '🗣️', sec: 60, helper: '' }, sx_gear: { icon: '✅', sec: 60, helper: '' }, sx_clock: { icon: '🕒', sec: 30, helper: '' } };
+export const STEP_META = { sx_breath: { icon: '🌬️', sec: 120, helper: 'calm' }, sx_calmcheck: { icon: '🧘', sec: 60, helper: 'calm' }, sx_goodthought: { icon: '💭', sec: 60, helper: 'thought' }, sx_pickone: { icon: '🎯', sec: 60, helper: '' }, sx_move: { icon: '🤸', sec: 120, helper: 'move' }, sx_clear: { icon: '🧹', sec: 60, helper: '' }, sx_say: { icon: '🗣️', sec: 60, helper: '' }, sx_gear: { icon: '✅', sec: 60, helper: '' }, sx_clock: { icon: '🕒', sec: 30, helper: '' }, sx_water: { icon: '💧', sec: 60, helper: '' }, sx_music: { icon: '🎧', sec: 120, helper: '' }, sx_reward: { icon: '🎉', sec: 60, helper: '' } };
 const HARD_NAME = /homework|study|read|שיעורי|לימוד|קריא/i;
 /**
  * In-between steps that fit the chosen help. tasks: [{name, sec}], ctx: { areas, age, hardNames?: Set<normalized names the person rated hard> }.
  * -> [{ key (i18n), icon, sec, afterIndex (-1 = before the first task), reason (i18n), helper }] - at most 6, never a duplicate of an existing step.
  */
-export function suggestInterstitials(tasks, { areas = [], age = null, hardNames = new Set() } = {}) {
+export function suggestInterstitials(tasks, { areas = [], age = null, hardNames = new Set(), rejected = new Set() } = {}) {
   const A = new Set(Array.isArray(areas) ? areas : []), kid = Number(age) > 0 && Number(age) <= 11, out = [], have = (k) => tasks.some((t) => t.helperKey === k);
-  const add = (key, icon, sec, afterIndex, reason, helper = '') => { if (!have(key) && !out.some((o) => o.key === key && o.afterIndex === afterIndex)) out.push({ key, icon, sec: kid ? Math.max(30, Math.round(sec * 0.75)) : sec, afterIndex, reason, helper }); };
+  const add = (key, icon, sec, afterIndex, reason, helper = '') => { if (!rejected.has(key) && !have(key) && !out.some((o) => o.key === key && o.afterIndex === afterIndex)) out.push({ key, icon, sec: kid ? Math.max(30, Math.round(sec * 0.75)) : sec, afterIndex, reason, helper }); };
   if (A.has('calm')) {
     add('sx_breath', '🌬️', 120, -1, 'sxWhyCalmStart', 'calm');
     tasks.forEach((t, i) => { if (hardNames.has(norm(t.name)) || t.sec >= 1200) add('sx_calmcheck', '🧘', 60, i - 1, 'sxWhyBeforeHard', 'calm'); });
@@ -64,6 +64,8 @@ export function suggestInterstitials(tasks, { areas = [], age = null, hardNames 
   }
   if (A.has('memory')) { add('sx_say', '🗣️', 60, -1, 'sxWhySay'); if (tasks.length > 1) add('sx_gear', '✅', 60, tasks.length - 2, 'sxWhyGear'); }
   if (A.has('time')) add('sx_clock', '🕒', 30, -1, 'sxWhyClock');
+  if (A.has('motivation')) { add('sx_music', '🎧', 120, -1, 'sxWhyMusic'); if (tasks.length) add('sx_reward', '🎉', 60, tasks.length - 1, 'sxWhyReward'); }
+  if (A.has('focus') || A.has('habits')) tasks.forEach((t, i) => { if (t.sec >= 1200 && i < tasks.length - 1) add('sx_water', '💧', 60, i, 'sxWhyWater'); });
   return out.slice(0, 6);
 }
 /** Inserts the chosen steps into a task list (new objects; positions refer to the ORIGINAL list). `name(key)` translates the key. */

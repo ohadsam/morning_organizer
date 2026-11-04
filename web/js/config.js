@@ -8,4 +8,4 @@ export const LIMITS = Object.freeze({
   maxTasks: 100, maxName: 80, maxTemplates: 200, maxTaskSec: 24 * 3600,
   maxShareChars: 64 * 1024, maxRuns: 2000,
 });
-export const APP_NAME_EN = 'Morning Organizer';
+export const APP_NAME_EN = 'SonRise';

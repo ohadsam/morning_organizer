@@ -2,14 +2,18 @@
 // voice; the routine is offered (or started automatically) at the LAST ring. Native Android gets every ring as its own independent alarm.
 import { clamp, cleanText } from './util.js';
 import { PRESETS } from './speech.js';
+import { dayOff } from './holidays.js';
 
-export const SOUNDS = ['alarm', 'gentle', 'ringtone', 'rising'];
+/** Ring types. The first four are system sounds in the Android app; the others are different synthesised tones in the browser (and the closest system sound in the app). 'device' = a sound picked from the phone (Android app only). */
+export const SOUNDS = ['alarm', 'gentle', 'ringtone', 'rising', 'bell', 'birds', 'digital', 'melody', 'device'];
+const TONE = /^content:\/\/[\w.\-/%:@]{1,280}$/;
 export const START_MODES = ['offer', 'auto'];
 export const MAX_EXTRA = 8, MAX_GAP_MIN = 120;
 const ring = (r, d) => ({
   sound: SOUNDS.includes(r?.sound) ? r.sound : d.sound, volume: clamp(Math.round(Number(r?.volume ?? d.volume)) || 0, 0, 100), vibrate: typeof r?.vibrate === 'boolean' ? r.vibrate : d.vibrate,
   durationSec: clamp(Math.round(Number(r?.durationSec)) || d.durationSec, 5, 600), text: cleanText(r?.text, 80), speak: r?.speak === true,
   voice: typeof r?.voice === 'string' && Object.hasOwn(PRESETS, r.voice) ? r.voice : 'natural',
+  tone: SOUNDS.includes(r?.sound) && r.sound === 'device' && typeof r?.tone === 'string' && TONE.test(r.tone) ? r.tone : '', toneTitle: cleanText(r?.toneTitle, 40),
 });
 const FIRST = { sound: 'alarm', volume: 80, vibrate: true, durationSec: 30 };
 
@@ -19,19 +23,26 @@ export function normalizeAlarm(a) {
   const more = (Array.isArray(a.more) ? a.more : []).filter((x) => x && typeof x === 'object').slice(0, MAX_EXTRA)
     .map((x) => ({ afterMin: clamp(Math.round(Number(x.afterMin)) || 5, 1, MAX_GAP_MIN), ...ring(x, { ...FIRST, sound: 'alarm', volume: Number(a.volume) || 80 }) }));
   return {
-    enabled: !!a.enabled, time: /^\d{2}:\d{2}$/.test(a.time) && Number(a.time.slice(0, 2)) < 24 && Number(a.time.slice(3)) < 60 ? a.time : '07:00',
+    enabled: !!a.enabled, offDays: a.offDays !== false, time: /^\d{2}:\d{2}$/.test(a.time) && Number(a.time.slice(0, 2)) < 24 && Number(a.time.slice(3)) < 60 ? a.time : '07:00',
     days: [...new Set((Array.isArray(a.days) ? a.days : []).filter((d) => Number.isInteger(d) && d >= 0 && d <= 6))].sort(),
     ...ring(a, FIRST), startMode: START_MODES.includes(a.startMode) ? a.startMode : 'offer', more,
   };
 }
 /** New routines come with the alarm ON (07:00 on school days) so it is easy to find; switch it off in the editor or on the Alarms screen. */
+/** Global rules from the app: `pausedUntil` = 0 (not paused) | -1 (paused until switched back on) | a time in ms (paused until then). */
+let rules = { pausedUntil: 0 };
+export function setAlarmRules(r) { const v = Number(r?.pausedUntil); rules = { pausedUntil: v === -1 ? -1 : Number.isFinite(v) && v > 0 ? v : 0 }; }
+export const getAlarmRules = () => rules;
+export const pausedAt = (ms) => rules.pausedUntil === -1 || ms < rules.pausedUntil;
+/** True when this alarm must stay quiet on that day (a holiday or school vacation, unless the person turned that off for the alarm). */
+export const quietDay = (alarm, date) => alarm?.offDays !== false && !!dayOff(date);
 export const defaultAlarm = (days = [0, 1, 2, 3, 4], time = '07:00', enabled = true) => normalizeAlarm({ enabled, time, days });
 
 /** Every ring with its offset (minutes after the first one). Index 0 is the main alarm. */
 export function ringsOf(alarm) {
   const a = normalizeAlarm(alarm); let off = 0;
   const out = [{ index: 0, offsetMin: 0, ...ring(a, FIRST) }];
-  for (const m of a.more) { off += m.afterMin; out.push({ index: out.length, offsetMin: off, sound: m.sound, volume: m.volume, vibrate: m.vibrate, durationSec: m.durationSec, text: m.text, speak: m.speak, voice: m.voice }); }
+  for (const m of a.more) { off += m.afterMin; out.push({ index: out.length, offsetMin: off, sound: m.sound, volume: m.volume, vibrate: m.vibrate, durationSec: m.durationSec, text: m.text, speak: m.speak, voice: m.voice, tone: m.tone, toneTitle: m.toneTitle }); }
   return out;
 }
 const hm = (time) => time.split(':').map(Number);
@@ -44,11 +55,12 @@ export function schedule(alarm) {
 export function nextRing(alarm, now = new Date()) {
   const a = normalizeAlarm(alarm); if (!a.enabled) return null;
   const [h, m] = hm(a.time), rs = ringsOf(a), days = a.days.length ? a.days : [0, 1, 2, 3, 4, 5, 6];
-  let best = null;
-  for (let add = -1; add < 8; add++) {
+  let best = null, found = -1;
+  for (let add = -1; add < 430; add++) {
+    if (found >= 0 && add > found + 1) break;                       // a day later cannot beat what we have
     const base = new Date(now.getFullYear(), now.getMonth(), now.getDate() + add, h, m, 0, 0);
-    if (!days.includes(base.getDay())) continue;
-    for (const r of rs) { const at = new Date(base.getTime() + r.offsetMin * 60_000); if (at > now && (!best || at < best.at)) best = { index: r.index, at, final: r.index === rs.length - 1, ring: r }; }
+    if (!days.includes(base.getDay()) || quietDay(a, base)) continue;
+    for (const r of rs) { const at = new Date(base.getTime() + r.offsetMin * 60_000); if (at > now && !pausedAt(at.getTime()) && (!best || at < best.at)) { best = { index: r.index, at, final: r.index === rs.length - 1, ring: r }; if (found < 0) found = add; } }
   }
   return best;
 }
@@ -59,7 +71,7 @@ export function nativeRings(tpl, lang = 'en') {
   return rs.map((r) => {
     const t = h * 60 + m + r.offsetMin, shift = Math.floor(t / 1440), mins = t % 1440, p = Object.hasOwn(PRESETS, r.voice) ? PRESETS[r.voice] : PRESETS.natural;
     return { id: `${tpl.id}#${r.index}`, templateId: tpl.id, name: tpl.name, hour: Math.floor(mins / 60), minute: mins % 60, days: a.days.map((d) => (d + shift) % 7),
-      volume: r.volume, vibrate: r.vibrate, durationSec: r.durationSec, sound: r.sound, text: r.text, speak: r.speak, pitch: p.pitch, rate: p.rate, lang: lang === 'he' ? 'he-IL' : 'en-US',
+      volume: r.volume, vibrate: r.vibrate, durationSec: r.durationSec, sound: r.sound, tone: r.tone, offDays: a.offDays, text: r.text, speak: r.speak, pitch: p.pitch, rate: p.rate, lang: lang === 'he' ? 'he-IL' : 'en-US',
       start: r.index === final ? a.startMode : 'offer', n: r.index + 1, of: rs.length };
   });
 }

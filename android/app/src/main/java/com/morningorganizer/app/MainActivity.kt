@@ -9,6 +9,7 @@ import androidx.core.content.FileProvider
 import java.io.File
 import android.content.pm.PackageManager
 import android.content.Intent
+import android.media.RingtoneManager
 import android.content.IntentFilter
 import android.net.Uri
 import android.nfc.NdefMessage
@@ -62,6 +63,18 @@ class MainActivity : ComponentActivity() {
     }
     private fun hasMic() = checkSelfPermission(Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED
     /** Runs [done] with whether the microphone may be used, asking the person first when needed. Main thread. */
+    private var ringtoneKey = ""
+    private val ringtonePicker = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { res ->
+        val uri: android.net.Uri? = if (res.resultCode == RESULT_OK) res.data?.let { if (android.os.Build.VERSION.SDK_INT >= 33) it.getParcelableExtra(RingtoneManager.EXTRA_RINGTONE_PICKED_URI, android.net.Uri::class.java) else @Suppress("DEPRECATION") it.getParcelableExtra(RingtoneManager.EXTRA_RINGTONE_PICKED_URI) } else null
+        val title = uri?.let { runCatching { RingtoneManager.getRingtone(this, it).getTitle(this) }.getOrNull() }.orEmpty()
+        deliver(JSONObject().put("type", "ringtone").put("key", ringtoneKey).put("uri", uri?.toString() ?: "").put("title", title))
+    }
+    /** Lets the person choose an alarm sound from the phone; the answer goes back to the page as a {type:'ringtone'} event. */
+    fun pickRingtone(key: String) {
+        ringtoneKey = key
+        val i = Intent(RingtoneManager.ACTION_RINGTONE_PICKER).putExtra(RingtoneManager.EXTRA_RINGTONE_TYPE, RingtoneManager.TYPE_ALARM or RingtoneManager.TYPE_RINGTONE or RingtoneManager.TYPE_NOTIFICATION).putExtra(RingtoneManager.EXTRA_RINGTONE_SHOW_SILENT, false)
+        runCatching { ringtonePicker.launch(i) }
+    }
     fun withMic(done: (Boolean) -> Unit) { if (hasMic()) done(true) else { micWaiters.add(done); micPermission.launch(Manifest.permission.RECORD_AUDIO) } }
 
     private var fileCallback: ValueCallback<Array<Uri>>? = null

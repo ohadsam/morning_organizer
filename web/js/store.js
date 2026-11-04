@@ -3,6 +3,9 @@ import { db, isPersistent } from './db.js';
 import { LIMITS } from './config.js';
 import { cleanText, clamp, uid, move } from './util.js';
 import { defaultAlarm } from './alarms.js';
+import { setAlarmRules } from './wake.js';
+import { cleanPause, activePause } from './alarmPause.js';
+import { skipDates } from './holidays.js';
 import { normalizeAlarm, nativeRings } from './wake.js';
 import { native } from './native.js';
 import { t, units, getLang } from './i18n.js';
@@ -26,7 +29,7 @@ export const DEFAULT_SETTINGS = Object.freeze({
   lang: 'he', theme: 'auto', mode: 'both', volume: 80, warnSec: 10, defTaskSec: 300, defEstSec: 0,
   autoAdvance: false, keepAwake: true, keepAwakeApp: false, personName: '', mascot: '🦊', feedback: true, speak: false, age: null, gender: 'other', profileDone: false,
   textStyle: 'auto', timerStyle: 'auto', retroStyle: 'ask', alarmsMig: false, paceMode: 'normal', accent: '', simpleMode: false, announceTasks: false, fontScale: 100, colorSafe: false, contrast: 'normal', srAnnounce: false,
-  coachButton: true, coachAuto: false, coachSpeak: false, voiceURI: '', voicePreset: 'natural', voiceFlavor: 'neutral', voiceRate: 100, seeded: false,
+  coachButton: true, coachAuto: false, coachSpeak: false, voiceURI: '', voicePreset: 'natural', voiceFlavor: 'neutral', voiceEngine: '', alarmsPause: 0, weeklyOn: true, weeklyDay: 5, voiceRate: 100, seeded: false,
   avatar: defaultAvatar(), activeProfile: '', transcribe: false,
 });
 /** The settings keys that mirror the ACTIVE profile (so the rest of the app can keep reading settings.personName etc.). */
@@ -88,11 +91,14 @@ export function sanitizeRun(r) {
   };
 }
 
+/** Pushes the global alarm rules (pause) into the alarm maths. */
+export function applyAlarmRules() { setAlarmRules({ pausedUntil: activePause(state.settings.alarmsPause) }); }
+
 export async function init() {
   const [templates, runs, kv] = await Promise.all([db.all('templates'), db.all('runs'), db.get('kv', 'settings')]);
   state.templates = templates.sort((a, b) => a.createdAt - b.createdAt);
   state.runs = runs;
-  state.settings = { ...DEFAULT_SETTINGS, ...(kv || {}) };
+  state.settings = { ...DEFAULT_SETTINGS, ...(kv || {}) }; state.settings.alarmsPause = cleanPause(state.settings.alarmsPause); applyAlarmRules();
   // Profiles: first start (or an upgrade from before profiles) creates one from the existing name/age/gender/mascot.
   const stored = await db.get('kv', 'profiles');
   state.profiles = (Array.isArray(stored) ? stored : []).slice(0, MAX_PROFILES).map(normalizeProfile);
@@ -302,7 +308,11 @@ export async function updateSettings(patch) {
   if ('voiceURI' in patch) patch = { ...patch, voiceURI: String(patch.voiceURI || '').slice(0, 200) };
   if ('avatar' in patch) patch = { ...patch, avatar: sanitizeAvatar(patch.avatar) };
   delete patch.activeProfile; // switching goes through switchProfile()
+  if ('voiceEngine' in patch) patch = { ...patch, voiceEngine: /^[\w.]{1,100}$/.test(String(patch.voiceEngine || '')) ? String(patch.voiceEngine) : '' };
+  if ('weeklyDay' in patch) { const n = Math.round(Number(patch.weeklyDay)); patch = { ...patch, weeklyDay: n >= 0 && n <= 6 ? n : 5 }; }
+  if ('alarmsPause' in patch) patch = { ...patch, alarmsPause: cleanPause(patch.alarmsPause) };
   state.settings = { ...state.settings, ...patch };
+  applyAlarmRules();
   const touched = PROFILE_KEYS.filter((k) => k in patch);
   if (touched.length && state.profiles.length) { // editing name/age/gender/avatar edits the ACTIVE profile
     const p = activeProfile(), upd = { ...p };
@@ -354,6 +364,8 @@ export function sanitizeSettings(raw) {
     const v = raw[k];
     if (ENUM[k]) { if (ENUM[k].includes(v)) out[k] = v; }
     else if (k === 'avatar') out.avatar = sanitizeAvatar(v);
+    else if (k === 'alarmsPause') out.alarmsPause = cleanPause(v);
+    else if (k === 'weeklyDay') { if (Number.isInteger(v) && v >= 0 && v <= 6) out.weeklyDay = v; }
     else if (k === 'activeProfile') continue;
     else if (k === 'accent') { if (v === '' || /^#[0-9a-f]{6}$/i.test(v)) out[k] = v; }
     else if (typeof def === 'boolean') { if (typeof v === 'boolean') out[k] = v; }
@@ -413,6 +425,7 @@ export async function importBackup(text, { mode = 'merge', settings = true } = {
 export function syncNative() {
   if (!native.available) return;
   native.setAlarms(state.templates.flatMap((x) => nativeRings(x, getLang())).slice(0, 190));
+  native.setAlarmRules({ pausedUntil: activePause(state.settings.alarmsPause), skipDates: skipDates(new Date(), 430) });
   const dayName = (d) => new Date(2024, 0, 7 + d).toLocaleDateString(getLang(), { weekday: 'short' });   // 2024-01-07 was a Sunday
   native.setWidget(widgetItems(state.templates, new Date().getDay(), { units: units(), day: dayName, leave: (tm) => t('leaveLine2', { time: tm }), gear: (n) => t('gearCount2', { n }) }));
 }

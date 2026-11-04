@@ -1,4 +1,4 @@
-/* Morning Organizer - design tokens first, logical properties everywhere so RTL (Hebrew) is just dir="rtl". */
+/* SonRise - design tokens first, logical properties everywhere so RTL (Hebrew) is just dir="rtl". */
 :root {
   --bg: #f6f4ff; --surface: #ffffff; --surface-2: #efecff; --text: #1f1b3a; --muted: #6a6785; --line: #e1ddf5;
   --brand: #6c5ce7; --brand-ink: #ffffff; --good: #0a8f6a; --bad: #d63a3a; --warn: #e08a00; --accent: var(--brand);
@@ -379,3 +379,24 @@ fieldset { min-width: 0; }
 .as-knob { position: absolute; top: 3px; inset-inline-start: 3px; width: 20px; height: 20px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.3); transition: inset-inline-start .2s; }
 .alarm-switch.on .as-track { background: var(--ok, #0a7a5f); } .alarm-switch.on .as-knob { inset-inline-start: 23px; }
 .as-text { display: grid; gap: 2px; min-width: 0; } .as-text small { color: var(--muted); } .routine.armed { box-shadow: 0 0 0 2px color-mix(in srgb, var(--ok, #0a7a5f) 35%, transparent), var(--shadow); }
+.welcome-logo { justify-self: center; width: 96px; height: 96px; border-radius: 22px; box-shadow: var(--shadow); }
+
+/* v1.18: ring type tiles */
+.sound-picker { border: 0; padding: 0; margin: 0; min-width: 0; } .sound-picker legend { font-size: .85rem; font-weight: 600; color: var(--muted); margin-block-end: 4px; }
+.sound-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(92px, 1fr)); gap: 8px; }
+.sound-tile { display: grid; justify-items: center; gap: 2px; min-height: 64px; padding: 8px 4px; border: 2px solid var(--line); border-radius: 14px; background: var(--surface); color: var(--text); font: inherit; font-size: .85rem; cursor: pointer; }
+.sound-tile.on { border-color: var(--brand); background: color-mix(in srgb, var(--brand) 14%, var(--surface)); } .sound-tile:focus-visible { outline: 3px solid var(--brand); outline-offset: 2px; } .st-e { font-size: 1.4rem; }
+
+/* v1.18: ONE unified toolbar (single row) + alarm sticker + pause banner */
+.tb-wrap { margin-block: 10px; }
+.toolbar-main { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); background: var(--surface); border: 1px solid var(--line); border-radius: 20px; box-shadow: var(--shadow); overflow: hidden; }
+.tb-btn { display: grid; justify-items: center; align-content: center; gap: 2px; min-height: 62px; padding: 8px 2px; border: 0; border-inline-start: 1px solid var(--line); background: none; color: var(--text); font: inherit; cursor: pointer; min-width: 0; }
+.tb-btn:first-child { border-inline-start: 0; } .tb-btn:focus-visible { outline: 3px solid var(--brand); outline-offset: -3px; }
+.tb-btn.open, .tb-btn.pressed { background: color-mix(in srgb, var(--brand) 14%, var(--surface)); }
+.tb-i { font-size: 1.35rem; line-height: 1; position: relative; } .tb-l { font-size: .72rem; font-weight: 600; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tb-btn[aria-haspopup]::after { content: "▾"; font-size: .6rem; color: var(--muted); line-height: 1; } .tb-btn[aria-expanded=true]::after { content: "▴"; }
+.tb-panel { display: grid; gap: 6px; margin-block-start: 8px; padding: 8px; background: var(--surface); border: 1px solid var(--line); border-radius: 16px; } .tb-panel[hidden] { display: none; }
+.tb-panel .btn { justify-content: flex-start; width: 100%; text-align: start; min-height: 48px; }
+.routine .emoji { position: relative; } .alarm-sticker { position: absolute; inset-block-end: -4px; inset-inline-end: -4px; font-style: normal; font-size: .85rem; line-height: 1; background: var(--surface); border: 1px solid var(--line); border-radius: 99px; padding: 2px 3px; box-shadow: 0 1px 3px rgba(0,0,0,.2); }
+.paused-banner { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; border-inline-start: 6px solid var(--warn); }
+.trend-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; } .trend-list li { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; } .tr-n { flex: 1 1 120px; min-width: 0; overflow-wrap: anywhere; } .spark { color: var(--brand); flex: none; }

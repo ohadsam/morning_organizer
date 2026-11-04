@@ -61,6 +61,9 @@ const allVoices = () => (useNative() ? readNativeVoices() : webTts() ? speechSyn
 /** True when the app can open the phone's own "download more voices" screen. */
 export const canInstallVoices = () => useNative();
 export const installVoices = () => native.ttsInstallVoices();
+/** Text-to-speech engines installed on the phone (Android app): [{ name, label, current }]. */
+export const listEngines = () => (useNative() ? native.ttsEngines() : []);
+export const setEngine = (pkg) => { nativeVoices = []; return native.ttsSetEngine(pkg); };
 const bcp = (lang) => (lang === 'he' ? 'he-IL' : 'en-US');
 const langMatch = (v, lang) => v.lang?.toLowerCase().replace('_', '-').startsWith(lang === 'he' ? 'he' : 'en') || (lang === 'he' && /^iw/i.test(v.lang || ''));
 
@@ -149,7 +152,7 @@ export function planSpeech(text, { persona = PRESETS.natural, lang = 'en', rate 
 
 let token = 0, timer = null;
 const nativeWaiters = new Map();   // phrase id -> "it finished" callback
-globalThis.addEventListener?.('morning-native', (e) => { const d = e.detail; if (d?.type === 'tts' && (d.status === 'done' || d.status === 'error')) nativeWaiters.get(d.id)?.(); });
+globalThis.addEventListener?.('morning-native', (e) => { const d = e.detail; if (d?.type === 'tts' && d.status === 'ready') nativeVoices = []; if (d?.type === 'tts' && (d.status === 'done' || d.status === 'error')) nativeWaiters.get(d.id)?.(); });
 export function stopSpeaking() { token++; clearTimeout(timer); nativeWaiters.clear(); try { if (useNative()) native.ttsStop(); if (webTts()) speechSynthesis.cancel(); } catch { /* no TTS */ } }
 
 /** Speak `text`. opts: { lang, voiceURI, preset (character id), flavor, rate (pace multiplier, 1 = normal), kind }. Returns false when speech is unavailable. */

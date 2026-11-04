@@ -8,6 +8,8 @@ import { native } from '../native.js';
 import { achievementsCard } from './progressUi.js';
 import { moodStats, MOODS } from '../mood.js';
 import { unplannedCard, patternCards } from './unplanned.js';
+import { taskDifficulty, hardSpots, hardAndSlow, summary as diffSummary, levelEmoji } from '../difficulty.js';
+import { exportCard } from './report.js';
 
 const NS = 'http://www.w3.org/2000/svg';
 const svg = (tag, attrs = {}, ...kids) => { const e = document.createElementNS(NS, tag); for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v); e.append(...kids); return e; };
@@ -43,6 +45,16 @@ function moodCard(runs) {
     m.insight ? h('p', { class: 'chip solid' }, t(m.insight.type === 'happyFaster' ? 'moodHappyFaster' : 'moodHappySlower', { pct: m.insight.pct })) : h('p', { class: 'note' }, t('moodNeedMore')));
 }
 
+/** Where is it hard? Average difficulty per task, the hard-and-slow ones, and what helped (notes, kind thoughts, relaxation). */
+function difficultyCard(runs, templateId = null) {
+  const stats = taskDifficulty(runs, templateId), sum = diffSummary(templateId ? runs.filter((r) => r.templateId === templateId) : runs); if (!stats.length) return null;
+  const spots = hardSpots(stats), slow = new Set(hardAndSlow(stats).map((x) => x.name)), colors = ['#55efc4', '#a3e635', '#fdcb6e', '#fab1a0', '#e17055'];
+  return h('section', { class: 'card stack' }, h('h2', {}, `🧗 ${t('rpWhereHard')}`), h('p', { class: 'note' }, t('rpDifficultyIntro', { n: sum.rated, avg: Math.round(sum.avg * 10) / 10, hard: `${Math.round(sum.hardShare * 100)}%` })),
+    h('div', { class: 'diff-bars' }, stats.slice(0, 8).map((x) => h('div', { class: 'diff-bar' }, h('span', {}, `${x.icon || ''} ${x.name}`), h('div', { class: 'bar', role: 'img', 'aria-label': `${x.name}: ${Math.round(x.avg * 10) / 10}/5` }, h('i', { style: { width: `${(x.avg / 5) * 100}%`, background: colors[Math.max(0, Math.min(4, Math.round(x.avg) - 1))] } })), h('small', {}, `${levelEmoji(Math.round(x.avg))} ${Math.round(x.avg * 10) / 10} · ${x.rated}×`)))),
+    spots.length ? h('ul', { class: 'unp-list' }, spots.map((x) => h('li', {}, t(slow.has(x.name) ? 'rpHardSlowTip' : 'rpHardTip', { name: x.name, avg: Math.round(x.avg * 10) / 10 })))) : h('p', { class: 'note' }, t('rpNoHard')),
+    h('p', { class: 'chips' }, h('span', { class: 'chip solid' }, `✍️ ${t('rpHelpNotes', { n: sum.help.note })}`), h('span', { class: 'chip solid' }, `💭 ${t('rpHelpThoughts', { n: sum.help.thought })}`), h('span', { class: 'chip solid' }, `🧘 ${t('rpHelpRelax', { n: sum.help.relax })}`)));
+}
+
 function insightText(i) {
   const u = units(), f = (s) => fmtHuman(s, u);
   switch (i.type) {
@@ -61,7 +73,7 @@ export function renderStats(root, templateId, nav) {
     if (!templateId) {
       const items = templates.map((x) => ({ x, n: ST.finished(runs, x.id).length }));
       const hasRuns = items.some((i) => i.n);
-      root.replaceChildren(h('h1', {}, t('statsTitle')), hasRuns ? overview(runs) : null, hasRuns ? achievementsCard(runs) : null, hasRuns ? moodCard(runs) : null, hasRuns ? unplannedCard(runs) : null,
+      root.replaceChildren(h('h1', {}, t('statsTitle')), hasRuns ? overview(runs) : null, hasRuns ? achievementsCard(runs) : null, hasRuns ? moodCard(runs) : null, hasRuns ? unplannedCard(runs) : null, hasRuns ? difficultyCard(runs) : null, hasRuns ? exportCard(nav) : null,
         hasRuns ? h('div', { class: 'stack' }, items.filter((i) => i.n).map(({ x, n }) =>
           h('a', { class: 'card link-card', href: `#/stats/${x.id}`, style: { '--accent': x.color } }, h('span', { class: 'emoji' }, x.icon), h('span', { class: 'routine-text' }, h('strong', {}, x.name), h('small', {}, t('runsCount', { n })))))) : h('p', { class: 'empty' }, t('noStats')));
       return;
@@ -79,7 +91,8 @@ export function renderStats(root, templateId, nav) {
         h('h2', {}, t('chartTitle')),
         rs.length >= 2 ? h('div', { class: 'card' }, lineChart(ST.series(rs)),
           h('div', { class: 'legend' }, h('span', { class: 'k actual' }, t('legendActual')), h('span', { class: 'k planned' }, t('legendPlanned')), h('span', { class: 'k est' }, t('legendEstimate')))) : h('p', { class: 'note' }, t('chartEmpty')),
-        patternCards(tpl, nav, draw), unplannedCard(rs),
+        patternCards(tpl, nav, draw), unplannedCard(rs), difficultyCard(runs, templateId),
+        h('div', { class: 'toolbar' }, h('button', { class: 'btn', type: 'button', onclick: () => nav(`#/report/period/30-${templateId}`) }, `📄 ${t('rpRoutineReport')}`)),
         h('h2', {}, t('insights')),
         h('ul', { class: 'insights' }, ins.map((i) => h('li', {}, h('span', {}, insightText(i)),
           (i.type === 'shorten' || i.type === 'extend') ? h('button', { class: 'btn small', type: 'button', onclick: async (e) => {
@@ -90,9 +103,9 @@ export function renderStats(root, templateId, nav) {
         h('table', { class: 'tbl' }, h('thead', {}, h('tr', {}, h('th', {}, t('colTask')), h('th', {}, t('colPlanned')), h('th', {}, t('colActual')))),
           h('tbody', {}, ST.taskStats(rs).map((s) => h('tr', { class: s.medActual > s.plannedNow ? 'over' : '' }, h('td', {}, s.name || '—'), h('td', {}, fmtDur(s.plannedNow)), h('td', {}, fmtDur(s.avgActual)))))),
         h('h2', {}, t('history')),
-        h('table', { class: 'tbl' }, h('thead', {}, h('tr', {}, h('th', {}, t('colDate')), h('th', {}, t('colPlanned')), h('th', {}, t('colActual')))),
+        h('table', { class: 'tbl' }, h('thead', {}, h('tr', {}, h('th', {}, t('colDate')), h('th', {}, t('colPlanned')), h('th', {}, t('colActual')), h('th', {}, h('span', { class: 'sr-only' }, t('rpTitle'))))),
           h('tbody', {}, [...rs].reverse().slice(0, 30).map((r) => h('tr', { class: r.actualTotal > r.plannedTotal ? 'over' : '' },
-            h('td', {}, new Date(r.startedAt).toLocaleString(getLang(), { dateStyle: 'medium', timeStyle: 'short' })), h('td', {}, fmtDur(r.plannedTotal)), h('td', {}, fmtDur(r.actualTotal)))))),
+            h('td', {}, new Date(r.startedAt).toLocaleString(getLang(), { dateStyle: 'medium', timeStyle: 'short' })), h('td', {}, fmtDur(r.plannedTotal)), h('td', {}, fmtDur(r.actualTotal)), h('td', {}, h('a', { href: `#/report/run/${r.id}`, 'aria-label': `${t('rpRunReport')} ${new Date(r.startedAt).toLocaleDateString(getLang())}` }, '📄')))))),
         h('button', { class: 'btn danger', type: 'button', onclick: async () => { if (await confirmBox(t('clearHistoryConfirm'), t('clearHistory'), true)) { await S.clearRuns(templateId); toast(t('deleted')); } } }, t('clearHistory'))]));
   };
   draw();

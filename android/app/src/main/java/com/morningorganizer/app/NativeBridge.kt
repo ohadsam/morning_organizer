@@ -29,6 +29,12 @@ class NativeBridge(private val activity: MainActivity) {
 
     @JavascriptInterface fun setWidget(json: String) { if (json.length <= MAX_JSON) { RoutineWidget.save(ctx, json); RoutineCardWidget.save(ctx, json) } }
 
+    /** A report PDF from the web app (base64, size-capped) goes to the system share sheet, so e-mail / Drive / messengers get it as an attachment. */
+    @JavascriptInterface fun sharePdf(name: String, b64: String, subject: String, text: String) {
+        if (b64.length > MAX_PDF_B64) return
+        activity.sharePdf(name.take(80), b64, subject.take(120), text.take(2000))
+    }
+
     @JavascriptInterface fun setStats(json: String) { if (json.length <= 2048) StatsWidget.save(ctx, json) }
 
     /** Snapshot of the routine in progress for the progress widget. */
@@ -104,5 +110,5 @@ class NativeBridge(private val activity: MainActivity) {
     /** A routine to start / text to import that arrived before the page was ready. Returns "" when nothing is pending. */
     @JavascriptInterface fun takePendingIntent(): String = activity.takePending()
 
-    private companion object { const val MAX_JSON = 256 * 1024; const val MAX_FILE = 16 * 1024 * 1024; const val FAMILY_CHANNEL = "family"; const val FAMILY_NOTIF_ID = 4301 }
+    private companion object { const val MAX_JSON = 256 * 1024; const val MAX_FILE = 16 * 1024 * 1024; const val MAX_PDF_B64 = 14 * 1024 * 1024; const val FAMILY_CHANNEL = "family"; const val FAMILY_NOTIF_ID = 4301 }
 }

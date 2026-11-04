@@ -3,7 +3,10 @@ package com.morningorganizer.app
 import android.annotation.SuppressLint
 import android.app.PendingIntent
 import android.Manifest
+import android.content.ClipData
 import android.content.Context
+import androidx.core.content.FileProvider
+import java.io.File
 import android.content.pm.PackageManager
 import android.content.Intent
 import android.content.IntentFilter
@@ -158,6 +161,20 @@ class MainActivity : ComponentActivity() {
         GmsBarcodeScanning.getClient(this, options).startScan()
             .addOnSuccessListener { b -> b.rawValue?.take(64 * 1024)?.let { deliver(JSONObject().put("type", "import").put("text", it)) } }
             .addOnFailureListener { deliver(JSONObject().put("type", "qrfail")) }
+    }
+
+    /** Writes the PDF to app-private cache and offers it to other apps through a FileProvider (read-only, temporary grant). */
+    fun sharePdf(name: String, b64: String, subject: String, text: String) {
+        val bytes = try { android.util.Base64.decode(b64, android.util.Base64.DEFAULT) } catch (_: Exception) { return }
+        if (bytes.size < 8 || String(bytes, 0, 5, Charsets.US_ASCII) != "%PDF-") return
+        val dir = File(cacheDir, "reports").apply { mkdirs() }
+        dir.listFiles()?.forEach { it.delete() }
+        val safe = name.replace(Regex("[^\\p{L}\\p{N}._-]"), "_").let { if (it.endsWith(".pdf", true)) it else "$it.pdf" }
+        val file = File(dir, safe).also { it.writeBytes(bytes) }
+        val uri = FileProvider.getUriForFile(this, "$packageName.files", file)
+        val send = Intent(Intent.ACTION_SEND).setType("application/pdf").putExtra(Intent.EXTRA_STREAM, uri).putExtra(Intent.EXTRA_SUBJECT, subject).putExtra(Intent.EXTRA_TEXT, text)
+            .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION).apply { clipData = ClipData.newRawUri("", uri) }
+        runOnUiThread { runCatching { startActivity(Intent.createChooser(send, null)) } }
     }
 
     fun armNfcWrite(text: String?) { nfcWriteText = text }

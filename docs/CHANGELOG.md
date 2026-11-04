@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.12.0
+- **Task feelings and help in every task**: rate how hard it is (5 icons), **write why it is hard** (note or voice, attached to the task), get **a different kind thought** (22, CBT-style reframes / self-compassion / starting small) or **a relaxation exercise** (13, breathing and body-based) every time, worded for the person's age. All of it is saved with the run.
+- **Difficulty statistics**: "Where is it hard?" ranks tasks by average difficulty, flags hard-and-slow tasks and shows how often help was used; the parent's weekly digest also names the hardest steps.
+- **Reports**: a designed report for one run or a period (7/30/90 days / all, all routines or one) with KPIs, plain-language insights, charts, activity calendar, task tables, difficulty, interruptions, mood and goals - on screen, **print**, **real PDF file** (made on the device, Hebrew/RTL correct) and **e-mail** (Android: share sheet with the PDF attached; browsers: share files where supported, else download + mail with summary).
+
 ## 1.11.0
 - **Alarms are easy to find**: a new ⏰ Alarms screen (home → Alarms) lists every routine with its alarm, switch on/off and edit (wake-up chain, sounds, messages, offer or auto start); each routine card shows its alarm; a one-time "What's new" sheet points to it.
 

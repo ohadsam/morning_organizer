@@ -16,7 +16,7 @@ const changed = () => { try { globalThis.dispatchEvent?.(new Event('journal-chan
 export function sanitizeEntry(e) {
   const t = e?.thought && typeof e.thought === 'object' ? e.thought : null, a = e?.audio && typeof e.audio === 'object' ? e.audio : null;
   return {
-    kind: KINDS.includes(e?.kind) ? e.kind : 'note', routine: str(e?.routine, 80), task: str(e?.task, 80), text: str(e?.text, 4000), transcript: str(e?.transcript, 6000), mood: sanitizeMood(e?.mood),
+    kind: KINDS.includes(e?.kind) ? e.kind : 'note', routine: str(e?.routine, 80), task: str(e?.task, 80), difficulty: clamp(Math.round(Number(e?.difficulty)) || 0, 0, 5), text: str(e?.text, 4000), transcript: str(e?.transcript, 6000), mood: sanitizeMood(e?.mood),
     items: (Array.isArray(e?.items) ? e.items : []).slice(0, 3).map((x) => str(x, 200)).filter(Boolean),
     thought: t ? { situation: str(t.situation, 600), thought: str(t.thought, 600), feeling: str(t.feeling, 60), intensity: clamp(Math.round(Number(t.intensity)) || 0, 0, 10), evidenceFor: str(t.evidenceFor, 600), evidenceAgainst: str(t.evidenceAgainst, 600), balanced: str(t.balanced, 600), after: clamp(Math.round(Number(t.after)) || 0, 0, 10) } : null,
     audio: a && typeof a.id === 'string' ? { id: a.id.slice(0, 64), mime: /^audio\/[a-z0-9.+-]+$/i.test(a.mime || '') ? a.mime.slice(0, 40) : 'audio/webm', sec: clamp(Math.round(Number(a.sec)) || 0, 0, MAX_AUDIO_SEC) } : null,

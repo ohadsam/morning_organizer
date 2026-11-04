@@ -294,3 +294,12 @@ dialog header { display: flex; align-items: center; justify-content: space-betwe
 .sand-svg { display: none; } .ring.sandy { width: min(86vw, 320px); aspect-ratio: auto; min-height: 260px; border-radius: 28px; background: var(--surface-2); } .ring.sandy::before { display: none; }
 .ring.sandy .sand-svg { display: block; width: 90px; height: 150px; margin-inline: auto; } .sand-svg .sand { fill: var(--brand); } .sand-svg .glass { stroke: var(--text); stroke-width: 2; stroke-linejoin: round; }
 .ring.sandy.over .sand-svg .sand { fill: var(--bad); }
+
+/* ── task help (difficulty icons, kind thought, relaxation) ── */
+.task-help { display: grid; gap: 8px; } .diff-row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; justify-content: center; }
+.diff { font-size: 1.8rem; width: 52px; height: 52px; border-radius: 50%; border: 2px solid var(--line); background: var(--surface); cursor: pointer; line-height: 1; } .diff.on, .diff[aria-pressed="true"] { border-color: var(--brand); background: color-mix(in srgb, var(--brand) 20%, var(--surface)); transform: scale(1.08); }
+.help-btns { justify-content: center; } .help-card { display: grid; gap: 6px; padding: 10px; border-radius: 14px; background: var(--surface-2); border: 1px solid var(--line); } .help-text { margin: 0; font-size: 1.1rem; } .help-steps { margin: 0; padding-inline-start: 1.3em; }
+.diff-bar { display: grid; grid-template-columns: 34% 1fr auto; gap: 8px; align-items: center; margin-block: 4px; } .diff-bar .bar { height: 12px; background: var(--surface-2); border-radius: 99px; overflow: hidden; } .diff-bar .bar i { display: block; height: 100%; border-radius: 99px; }
+/* report on screen + print */
+.rpt-page { border: 1px solid var(--line); border-radius: 12px; overflow: hidden; background: #fff; margin-block: 12px; max-width: 794px; margin-inline: auto; }
+@media print { body > *:not(#app), #nav, #toast, .rpt-toolbar { display: none !important; } #app { padding: 0 !important; } .rpt-page { border: 0; max-width: none; } .rpt-sec { break-inside: avoid; } }

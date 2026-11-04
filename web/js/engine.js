@@ -9,7 +9,7 @@ export function createRun(tpl, now, opts = {}) {
   const tasks = tpl.tasks.map((t) => ({
     id: t.id, name: t.name, icon: t.icon || '', photo: t.photo || '', plannedSec: sc(t.sec), estSec: sc(t.est || t.sec), extraSec: 0,
     accumMs: 0, actualSec: 0, startedAt: null, endedAt: null,
-    done: false, skipped: false, warned: false, ended: false,
+    done: false, skipped: false, warned: false, ended: false, difficulty: 0, help: { note: 0, thought: 0, relax: 0 },
   }));
   const run = {
     id: uid(), gear: (opts.gear || []).map((g) => ({ id: g.id, name: g.name, icon: g.icon || '', done: false })), mode: opts.mode || 'normal', leaveBy: tpl.leaveBy || '', templateId: tpl.id, templateName: tpl.name, icon: tpl.icon, color: tpl.color,
@@ -70,6 +70,11 @@ export function endInterruption(run, now) {
   return run;
 }
 export const unplannedSec = (run) => (run.unplanned || []).reduce((s, x) => s + x.sec, 0);
+
+/** How hard a task felt (1 very easy .. 5 very hard; 0/same value again = clear). Can be set any time during or after the run. */
+export function setDifficulty(run, i, v) { const t = run.tasks[i]; if (!t) return run; const n = Math.round(Number(v)); t.difficulty = n >= 1 && n <= 5 && n !== t.difficulty ? n : 0; return run; }
+/** Counts that the person used a helper on this task: 'note' (wrote why), 'thought' (kind thought), 'relax' (exercise). */
+export function noteHelp(run, i, kind) { const t = run.tasks[i]; if (t && ['note', 'thought', 'relax'].includes(kind)) { t.help ??= { note: 0, thought: 0, relax: 0 }; t.help[kind] = Math.min(99, (t.help[kind] || 0) + 1); } return run; }
 
 /** Add (or remove) time on the current task without changing the planned figure used in statistics. */
 export function addTime(run, sec, now = Date.now()) {

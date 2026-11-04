@@ -22,6 +22,7 @@ import { setProfileDeleteHook } from './ui/avatar.js';
 import { isUnlocked, requestGate } from './ui/gate.js';
 import { initTransports } from './transports.js';
 import { handleRing } from './ui/offer.js';
+import { renderReport } from './ui/report.js';
 import { renderAlarms } from './ui/alarms.js';
 import { renderGoals } from './ui/goals.js';
 import { maybeShowWhatsNew } from './ui/whatsnew.js';
@@ -36,7 +37,7 @@ const nav = (hash) => { if (location.hash === hash) route(); else location.hash 
 
 async function route() {
   cleanup(); cleanup = () => {};
-  const [, page, arg] = (location.hash.replace(/^#/, '') || '/').split('/');
+  const [, page, arg, arg2] = (location.hash.replace(/^#/, '') || '/').split('/');
   const view = page || 'home';
   // Simple (kids) mode: only routines and running them are open; everything else needs the grown-up gate.
   if (S.get().settings.simpleMode && !['home', 'run'].includes(view) && !isUnlocked() && !(await requestGate())) { if (location.hash !== '#/') location.hash = '#/'; else drawNav('home'); return; }
@@ -47,7 +48,7 @@ async function route() {
     const views = {
       home: () => renderHome(root, nav), edit: () => renderEditor(root, arg, nav), run: () => renderRunner(root, arg, nav),
       stats: () => renderStats(root, arg, nav), family: () => renderFamily(root), settings: () => renderSettings(root, version), guide: () => renderGuide(root),
-      calm: () => renderCalm(root, nav), library: () => renderLibrary(root, nav), alarms: () => renderAlarms(root, nav), goals: () => renderGoals(root, nav), journal: () => renderJournal(root, nav),
+      calm: () => renderCalm(root, nav), library: () => renderLibrary(root, nav), alarms: () => renderAlarms(root, nav), report: () => renderReport(root, nav, arg, decodeURIComponent(arg2 || '')), goals: () => renderGoals(root, nav), journal: () => renderJournal(root, nav),
     };
     // The route comes from the address bar: look it up as OWN data only ("#/constructor" or "#/__proto__" must fall back to home).
     const out = await (Object.hasOwn(views, view) ? views[view] : views.home)();
@@ -59,7 +60,7 @@ async function route() {
 function drawNav(view) {
   const simple = S.get().settings.simpleMode;
   const tabs = simple ? [['home', 'home', '#/'], ['settings', 'gear', '#/settings']] : [['home', 'home', '#/'], ['stats', 'chart', '#/stats'], ['family', 'users', '#/family'], ['guide', 'book', '#/guide'], ['settings', 'gear', '#/settings']];
-  const parentTab = { edit: 'home', run: 'home', library: 'home', alarms: 'home', goals: 'home' }, active = Object.hasOwn(parentTab, view) ? parentTab[view] : view;
+  const parentTab = { edit: 'home', run: 'home', library: 'home', alarms: 'home', goals: 'home', report: 'stats' }, active = Object.hasOwn(parentTab, view) ? parentTab[view] : view;
   document.getElementById('nav').replaceChildren(...tabs.map(([key, ic, href]) => h('a', { href, class: key === active ? 'on' : '', 'aria-current': key === active ? 'page' : null }, icon(ic, 24), h('span', {}, t(key === 'family' ? 'tabFamily' : key)))));
 }
 

@@ -133,7 +133,7 @@ await step('v1.2: mindful coach - tip button (task + main), age/gender personali
   await page.fill('input[type=number][max="120"]', '8'); await page.dispatchEvent('input[type=number][max="120"]', 'change');
   await page.selectOption('.two select', 'female'); await page.waitForTimeout(150);
   await page.locator('label.switch', { hasText: 'Automatic tips' }).locator('input').check(); await page.waitForTimeout(150);
-  assert.ok(await page.locator('text=Voice style').count(), 'voice controls present'); await shot(page, 'settings-coach');
+  assert.ok(await page.locator('.persona-grid').count() >= 3, 'voice characters present'); await shot(page, 'settings-coach');
   await page.goto(base + '#/'); await page.waitForSelector('.routine'); await page.locator('.routine .start').first().click(); await page.waitForSelector('.ring');
   assert.ok(await page.locator('.checklist .tip-btn').count() >= 5, 'per-task tip buttons');
   await page.click('.tip-main'); await page.waitForSelector('.coach-card'); const t1 = await page.textContent('.coach-text'); assert.ok(t1.length > 20 && !/[{}]/.test(t1), t1);
@@ -163,11 +163,11 @@ await step('voice: encouragement is spoken with the chosen voice style and the p
   await page.reload(); await page.waitForSelector('h1'); // init script applies on the next document load
   await page.fill('input[aria-describedby="pn-hint"]', 'Dana'); await page.dispatchEvent('input[aria-describedby="pn-hint"]', 'change');
   await page.locator('label.switch', { hasText: 'Read encouragement aloud' }).locator('input').check();
-  await page.selectOption('label.field:has-text("Voice style") select', 'robot'); await page.waitForTimeout(200);
+  await page.click('.persona:has-text("Woman")'); await page.waitForTimeout(300); await page.evaluate(() => { window.__spoken.length = 0; });   // choosing a character plays a sample: ignore it
   await page.goto(base + '#/'); await page.waitForSelector('.routine'); await page.locator('.routine .start').first().click(); await page.waitForSelector('.bubble .bt');
   const spoken = await page.evaluate(() => window.__spoken); assert.ok(spoken.length >= 1, 'start message spoken');
-  const bubbleText = (await page.textContent('.bubble .bt')).replace(/\s*\p{Extended_Pictographic}\uFE0F?\s*$/u, '').trim();
-  assert.equal(spoken[0].text.trim(), bubbleText); assert.equal(spoken[0].pitch, 0.1); assert.equal(spoken[0].lang, 'en-US');
+  const bubbleText = (await page.textContent('.bubble .bt')).replace(/\s*\p{Extended_Pictographic}\uFE0F?\s*$/u, '').trim(), letters = (x) => x.toLowerCase().replace(/[^\p{L}\p{N}]/gu, '');
+  assert.ok(letters(bubbleText).startsWith(letters(spoken[0].text)), 'the first spoken phrase is the start of the shown message'); assert.ok(Math.abs(spoken[0].pitch - 1) < 0.2 && spoken[0].rate < 1.05, 'a calm human pace and natural pitch'); assert.equal(spoken[0].lang, 'en-US');
   await page.goto(base + '#/settings'); await page.locator('label.switch', { hasText: 'Read encouragement aloud' }).locator('input').uncheck(); await page.waitForTimeout(150);
   await page.evaluate(() => { window.__spoken.length = 0; }); await page.goto(base + '#/'); await page.waitForSelector('.active-run'); await page.click('.active-run .primary'); await page.waitForSelector('.ring');
   await page.click('text=Done ✓'); await page.waitForSelector('.bubble .bt'); assert.equal((await page.evaluate(() => window.__spoken)).length, 0, 'text-only when voice is off');
@@ -922,6 +922,44 @@ await step('v1.14: axe on look-back start screen, guided step, free form, hub an
     await page.goto(base + '#/retro/x1/new'); await page.check('input[name=mode] >> nth=1'); await page.click('.toolbar.wrap button.primary'); await page.waitForSelector('.retro-task'); await page.locator('.retro-task:has(button[aria-pressed=true]:has-text("Stuck"), button[aria-pressed=true]:has-text("נתקע")) .cause').first().click(); bad.push(...await audit(page, `${L}/retro-free`));
     await page.click('.toolbar.wrap button >> nth=1'); await page.waitForTimeout(500);
     await page.goto(base + '#/retros'); await page.waitForSelector('.focus-item'); bad.push(...await audit(page, `${L}/retros-overview`));
+  }
+  if (bad.length) console.error([...new Set(bad)].join('\n'));
+  assert.deepEqual(bad, []);
+});
+
+// ── v1.16: voices ──
+await step('v1.16: voice characters pick matching installed voices, speak in phrases with a chosen pace, animals say their sound, wording style, tips', async () => {
+  const { page, errors } = await newPage();
+  await page.addInitScript(() => {
+    window.__said = [];
+    const voices = [{ name: 'Microsoft Aria Online (Natural)', lang: 'en-US', voiceURI: 'aria' }, { name: 'Daniel', lang: 'en-GB', voiceURI: 'daniel' }, { name: 'Samantha', lang: 'en-US', voiceURI: 'sam' }, { name: 'Zarvox', lang: 'en-US', voiceURI: 'zarvox' }];
+    window.SpeechSynthesisUtterance = class { constructor(t) { this.text = t; } };
+    Object.defineProperty(window, 'speechSynthesis', { configurable: true, value: { getVoices: () => voices, speak(u) { window.__said.push({ text: u.text, voice: u.voice?.name, pitch: u.pitch, rate: u.rate }); }, cancel() {}, addEventListener() {}, removeEventListener() {} } });
+  });
+  await page.reload(); await page.goto(base + '#/settings'); await page.waitForSelector('.persona-grid');
+  assert.ok(await page.locator('.persona').count() >= 17, 'many characters'); for (const g of ['Everyday voices', 'Speaking styles', 'Fun characters']) assert.ok(await page.locator(`legend:has-text("${g}")`).count() === 1, g);
+  const said = async () => page.evaluate(() => window.__said), clear = () => page.evaluate(() => { window.__said.length = 0; });
+  await clear(); await page.locator('.persona', { has: page.locator('span:text-is("Man")') }).click(); await page.waitForFunction(() => window.__said.length >= 1); assert.equal((await said())[0].voice, 'Daniel', 'a man gets the male voice');
+  await clear(); await page.click('.persona:has-text("Woman")'); await page.waitForFunction(() => window.__said.length >= 1); assert.equal((await said())[0].voice, 'Microsoft Aria Online (Natural)', 'a woman gets the best (natural) female voice');
+  await clear(); await page.click('.persona:has-text("Girl")'); await page.waitForFunction(() => window.__said.length >= 1); const girl = (await said())[0]; assert.ok(girl.voice === 'Samantha' && girl.pitch > 1.1, 'a girl: another female voice, higher');
+  assert.ok((await page.locator('label.field:has-text("Voice") select option').allTextContents()).some((x) => x.startsWith('★')), 'natural voices are marked'); assert.ok(!(await page.locator('label.field:has-text("Voice") select option').allTextContents()).some((x) => /zarvox/i.test(x) && x.startsWith('★')));
+  // pace (set, let the change samples settle, then measure with the Test button)
+  await page.click('.persona:has-text("Woman")'); const pace = async (v) => { await page.locator('input[type=range][aria-label="Speaking pace"]').fill(v); await page.dispatchEvent('input[type=range][aria-label="Speaking pace"]', 'change'); await page.waitForTimeout(1200); await clear(); await page.click('button:has-text("🔊")'); await page.waitForFunction(() => window.__said.length >= 1, null, { timeout: 60000 }); return (await said())[0].rate; };
+  const slow = await pace('70'); const fast = await pace('130'); assert.ok(fast > slow + 0.2, 'pace changes the speed');
+  // an animal says its sound (random 70%: try a few times)
+  await page.click('.persona:has-text("Cat")'); await page.waitForTimeout(600); let meow = false; for (let i = 0; i < 14 && !meow; i++) { await clear(); await page.locator('button:has-text("🔊")').dispatchEvent('click'); await page.waitForFunction(() => window.__said.length >= 1, null, { timeout: 3000 }).catch(() => {}); meow = (await said()).some((x) => x.text === 'meow' && x.pitch > 1.5); } assert.ok(meow, 'the cat meows');
+  // wording style + install tips
+  await page.selectOption('label.field:has-text("Wording style") select', 'casual'); assert.equal(await page.evaluate(async () => (await import('./js/store.js')).get().settings.voiceFlavor), 'casual');
+  await page.click('details:has(summary:has-text("Make the voices sound better")) summary'); assert.match(await page.textContent('details:has(summary:has-text("Make the voices sound better"))'), /Text-to-speech/);
+  assert.deepEqual(errors, []);
+});
+
+await step('v1.16: axe on the voice settings (he + en, big text)', async () => {
+  const bad = [];
+  for (const [lang, scheme] of [['he', 'light'], ['en', 'dark']]) {
+    const { page } = await newPage({ lang, ctx: { colorScheme: scheme } }); await page.goto(base); if (lang === 'he') await dismissWelcome(page);
+    await page.goto(base + '#/settings'); await page.waitForSelector('.persona-grid'); bad.push(...await audit(page, `${lang}/${scheme}/voice-settings`));
+    await page.evaluate(async () => { const S = await import('./js/store.js'); await S.updateSettings({ fontScale: 150, voicePreset: 'cat' }); }); await page.goto(base + '#/settings'); await page.waitForSelector('.persona.on'); bad.push(...await audit(page, `${lang}/${scheme}/voice-settings-big`));
   }
   if (bad.length) console.error([...new Set(bad)].join('\n'));
   assert.deepEqual(bad, []);

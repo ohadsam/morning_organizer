@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.16.0
+- **A much more human voice**: read-aloud now speaks in **phrases with natural pauses**, rising/falling intonation and a calm human pace (instead of one flat, fast run-on), cleans the text first (no emoji, "4ד׳ 40ש״נ" -> "4 דקות 40 שניות"), and adds tiny variations so it never sounds copy-pasted.
+- **Real characters, not just pitch/speed**: 17 new characters - everyday (woman, man, girl, boy, grandma, grandpa), speaking styles (coach, calm guide, storyteller, radio host, teacher) and fun (cat, dog, lion, frog, pirate, dinosaur; animals say their sound) - each **picks a matching installed voice** (male/female, most natural first, variety between characters).
+- **Choice**: device voice (★ = natural/neural), speaking pace slider, **wording style** (casual / warm and traditional / polite and formal), a sample on every change, and steps for installing better voices on Android, iPhone and Windows. Old voice settings and alarm rings keep working.
+
 ## 1.15.0
 - **Looking back, your way**: choose **guided** (step by step, can be paused and continued later as a draft) or **free** (everything on one page); for **this run or the routine's last 5 runs**; the **whole thing or only some parts** (feel / tasks / went well / changes); **several look-backs per run**; a remembered default style (Settings → Helpers).
 - **What worked and what did not**: each task is marked went well / stuck / not now; Looking back now shows **what to focus on** (tasks that keep getting stuck or were set aside, with a one-tap look at just that task), **what worked** (changes that helped, tasks that keep going well) and **what did not**.

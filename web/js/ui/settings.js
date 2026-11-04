@@ -4,7 +4,7 @@ import * as S from '../store.js';
 import { signal, unlockAudio } from '../audio.js';
 import { native } from '../native.js';
 import { setAwake } from '../awake.js';
-import { PRESETS, voicesFor, ttsSupported } from '../speech.js';
+import { PRESETS, GROUPS, personaIds, voicesFor, ttsSupported, voiceLabel } from '../speech.js';
 import { speakWithSettings } from './coach.js';
 import { applyA11y, FONT_SCALES } from '../a11y.js';
 import { requestGate } from './gate.js';
@@ -38,18 +38,26 @@ const minSec = (label, sec, onChange, allowZero) => {
     allowZero && sec === 0 ? h('small', { class: 'hint' }, t('defEstSame')) : null);
 };
 
-/** Voice picker (device voices for the current language) + character style + sample button. Voices load asynchronously. */
+/**
+ * Voice: pick a CHARACTER (everyday people, speaking styles, fun characters), optionally a specific installed voice, the pace and a wording style.
+ * Choosing something plays a short sample so you hear the difference straight away.
+ */
 function voiceControls(st, set) {
-  const voiceSel = h('select', { 'aria-label': t('voice'), onchange: (e) => set({ voiceURI: e.target.value }) }, h('option', { value: '' }, t('voiceAuto')));
+  const sample = () => setTimeout(() => speakWithSettings(t('voiceSample')), 60);
+  const voiceSel = h('select', { 'aria-label': t('voice'), onchange: async (e) => { await set({ voiceURI: e.target.value }); sample(); } }, h('option', { value: '' }, t('voiceAutoBest')));
   const note = h('small', { class: 'hint' }, t('voiceNote'));
   voicesFor(getLang()).then((vs) => {
     if (!vs.length) note.textContent = `${t('voiceNone')} ${t('voiceNote')}`;
-    for (const v of vs) voiceSel.append(h('option', { value: v.voiceURI, selected: v.voiceURI === st.voiceURI }, v.name));
+    for (const v of vs) voiceSel.append(h('option', { value: v.voiceURI, selected: v.voiceURI === st.voiceURI }, voiceLabel(v, getLang())));
   });
+  const rateLbl = h('span', { class: 'lbl' }, `${t('voicePace')}: ${st.voiceRate}%`);
   return h('div', { class: 'stack' },
+    GROUPS.map((g) => h('fieldset', { class: 'voice-group' }, h('legend', {}, t(`vg_${g}`)), h('div', { class: 'persona-grid', role: 'radiogroup', 'aria-label': t(`vg_${g}`) }, personaIds(g).map((k) => h('button', { type: 'button', class: `persona ${st.voicePreset === k ? 'on' : ''}`, role: 'radio', 'aria-checked': String(st.voicePreset === k), onclick: async () => { await set({ voicePreset: k }, true); sample(); } }, h('span', { class: 'pe', 'aria-hidden': 'true' }, PRESETS[k].emoji), h('span', {}, t(`p_${k}`))))))),
     h('label', { class: 'field' }, h('span', { class: 'lbl' }, t('voice')), voiceSel),
-    select(t('voiceChar'), st.voicePreset, Object.entries(PRESETS).map(([k, p]) => [k, `${p.emoji} ${t(`p_${k}`)}`]), (v) => set({ voicePreset: v })),
-    h('div', { class: 'toolbar' }, h('button', { class: 'btn', type: 'button', onclick: () => setTimeout(() => speakWithSettings(t('voiceSample')), 50) }, '🔊', t('voiceTest'))), note);
+    h('label', { class: 'field' }, rateLbl, h('input', { type: 'range', min: 70, max: 130, step: 5, value: st.voiceRate, 'aria-label': t('voicePace'), oninput: (e) => { rateLbl.textContent = `${t('voicePace')}: ${e.target.value}%`; }, onchange: async (e) => { await set({ voiceRate: +e.target.value }); sample(); } }), h('small', { class: 'hint' }, t('voicePaceHint'))),
+    select(t('voiceFlavorLabel'), st.voiceFlavor, ['neutral', 'casual', 'warm', 'formal'].map((k) => [k, t(`flv_${k}`)]), async (v) => { await set({ voiceFlavor: v }); sample(); }), h('small', { class: 'hint' }, t('voiceFlavorHint')),
+    h('div', { class: 'toolbar' }, h('button', { class: 'btn', type: 'button', onclick: sample }, '🔊', t('voiceTest'))), note,
+    h('details', { class: 'card' }, h('summary', {}, t('voiceTipTitle')), h('p', { class: 'note' }, t('voiceTipBody'))));
 }
 
 /** A collapsible settings group; its open/closed state is remembered per group. */

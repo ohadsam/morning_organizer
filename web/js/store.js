@@ -26,7 +26,7 @@ export const DEFAULT_SETTINGS = Object.freeze({
   lang: 'he', theme: 'auto', mode: 'both', volume: 80, warnSec: 10, defTaskSec: 300, defEstSec: 0,
   autoAdvance: false, keepAwake: true, keepAwakeApp: false, personName: '', mascot: '🦊', feedback: true, speak: false, age: null, gender: 'other', profileDone: false,
   textStyle: 'auto', timerStyle: 'auto', retroStyle: 'ask', alarmsMig: false, paceMode: 'normal', accent: '', simpleMode: false, announceTasks: false, fontScale: 100, colorSafe: false, contrast: 'normal', srAnnounce: false,
-  coachButton: true, coachAuto: false, coachSpeak: false, voiceURI: '', voicePreset: 'natural', seeded: false,
+  coachButton: true, coachAuto: false, coachSpeak: false, voiceURI: '', voicePreset: 'natural', voiceFlavor: 'neutral', voiceRate: 100, seeded: false,
   avatar: defaultAvatar(), activeProfile: '', transcribe: false,
 });
 /** The settings keys that mirror the ACTIVE profile (so the rest of the app can keep reading settings.personName etc.). */
@@ -291,6 +291,8 @@ export async function updateSettings(patch) {
   if ('fontScale' in patch && ![100, 115, 130, 150].includes(patch.fontScale)) delete patch.fontScale;
   if ('textStyle' in patch && !['auto', 'playful', 'plain'].includes(patch.textStyle)) delete patch.textStyle;
   if ('retroStyle' in patch && !['ask', 'guided', 'free'].includes(patch.retroStyle)) delete patch.retroStyle;
+  if ('voiceFlavor' in patch && !['neutral', 'casual', 'warm', 'formal'].includes(patch.voiceFlavor)) delete patch.voiceFlavor;
+  if ('voiceRate' in patch) { const n = Math.round(Number(patch.voiceRate)); patch = { ...patch, voiceRate: Number.isFinite(n) ? Math.min(130, Math.max(70, n)) : 100 }; }
   if ('timerStyle' in patch && !['auto', 'ring', 'pie', 'bar', 'sand'].includes(patch.timerStyle)) delete patch.timerStyle;
   if ('paceMode' in patch && !['normal', 'quick', 'calm'].includes(patch.paceMode)) delete patch.paceMode;
   if ('contrast' in patch && !['normal', 'high'].includes(patch.contrast)) delete patch.contrast;
@@ -346,7 +348,7 @@ export function exportAll() {
 export function sanitizeSettings(raw) {
   const out = {};
   if (!raw || typeof raw !== 'object') return out;
-  const ENUM = { lang: ['auto', 'he', 'en'], theme: ['auto', 'light', 'dark'], mode: ['both', 'beep', 'vibrate', 'silent'], paceMode: ['normal', 'quick', 'calm'], contrast: ['normal', 'high'], textStyle: ['auto', 'playful', 'plain'], timerStyle: ['auto', 'ring', 'pie', 'bar', 'sand'], retroStyle: ['ask', 'guided', 'free'], fontScale: [100, 115, 130, 150] };
+  const ENUM = { lang: ['auto', 'he', 'en'], theme: ['auto', 'light', 'dark'], mode: ['both', 'beep', 'vibrate', 'silent'], paceMode: ['normal', 'quick', 'calm'], contrast: ['normal', 'high'], textStyle: ['auto', 'playful', 'plain'], timerStyle: ['auto', 'ring', 'pie', 'bar', 'sand'], voiceFlavor: ['neutral', 'casual', 'warm', 'formal'], retroStyle: ['ask', 'guided', 'free'], fontScale: [100, 115, 130, 150] };
   for (const [k, def] of Object.entries(DEFAULT_SETTINGS)) {
     if (k === 'seeded' || !(k in raw)) continue;
     const v = raw[k];

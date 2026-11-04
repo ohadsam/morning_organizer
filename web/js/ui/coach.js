@@ -6,9 +6,10 @@ import { pickTip, CATEGORIES } from '../coach.js';
 import { speakText, stopSpeaking, ttsSupported } from '../speech.js';
 import { icon, iconBtn } from './common.js';
 
-export function speakWithSettings(text) {
+/** Speaks with the person's chosen character, device voice, pace and wording style. kind 'short' = a cue ("Breathe in"): no flavour openers. */
+export function speakWithSettings(text, { kind = 'msg' } = {}) {
   const s = S.get().settings;
-  return speakText(text, { lang: getLang(), voiceURI: s.voiceURI, preset: s.voicePreset });
+  return speakText(text, { lang: getLang(), voiceURI: s.voiceURI, preset: s.voicePreset, flavor: s.voiceFlavor, rate: (s.voiceRate || 100) / 100, kind });
 }
 
 /** host: element the card is rendered into. Returns { show(situation, taskName?), hide }. */

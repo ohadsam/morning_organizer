@@ -72,7 +72,8 @@ await step('drag handle reorders tasks (pointer events)', async () => {
   const first = await page.locator('.task-name').first().inputValue();
   const h = await page.locator('.task .handle').first().boundingBox(), h2 = await page.locator('.task .handle').nth(1).boundingBox();
   await page.mouse.move(h.x + h.width / 2, h.y + h.height / 2); await page.mouse.down();
-  await page.mouse.move(h2.x + h2.width / 2, h2.y + h2.height + 20, { steps: 8 }); await page.mouse.up();
+  const r2 = await page.locator('.task').nth(1).boundingBox();   // drop near the bottom edge of the second row (rows differ in height when a smart-time hint is showing)
+  await page.mouse.move(h2.x + h2.width / 2, r2.y + r2.height - 4, { steps: 8 }); await page.mouse.up();
   assert.notEqual(await page.locator('.task-name').first().inputValue(), first); assert.equal(await page.locator('.task-name').nth(1).inputValue(), first);
 });
 

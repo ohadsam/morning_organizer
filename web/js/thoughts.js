@@ -75,7 +75,7 @@ export function pickThought({ lang = 'en', age = null, gender = 'other', name = 
   return { id: x.id, kind: x.kind, text: personalize(x.text[tierOf(age)][l], { name, gender }) };
 }
 /** A relaxation exercise. -> { id, emoji, breath, title, steps[] } */
-export function pickExercise({ lang = 'en', age = null, gender = 'other', name = '', seen = new Set(), rnd = Math.random } = {}) {
-  const x = pickFrom(EXERCISES, seen, rnd), [title, steps] = x.text[lang === 'he' ? 'he' : 'en'][tierOf(age)];
+export function pickExercise({ lang = 'en', age = null, gender = 'other', name = '', seen = new Set(), rnd = Math.random, only = null } = {}) {
+  const x = pickFrom(only ? EXERCISES.filter((e) => only.includes(e.id)) : EXERCISES, seen, rnd), [title, steps] = x.text[lang === 'he' ? 'he' : 'en'][tierOf(age)];
   return { id: x.id, emoji: x.emoji, breath: x.breath, title, steps: steps.map((s) => personalize(s, { name, gender })) };
 }

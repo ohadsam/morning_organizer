@@ -102,3 +102,10 @@ test('weekly digest: slowest steps and repeated interruptions, last 7 days only'
   assert.deepEqual(d.slow, [{ name: 'Shoes', overSec: 80 }]); assert.equal(d.unp.length, 1); assert.equal(d.unp[0].n, 2);
   assert.deepEqual(sanitizeReport({ digest: { slow: [{ name: 'x'.repeat(200), overSec: -5 }], unp: 5 } }).digest, { hard: [], slow: [{ name: 'x'.repeat(80), overSec: 0 }], unp: [] });
 });
+
+test('in-app changelog: lists the running version first-class, both languages match, no empty lines', async () => {
+  const { CHANGES, changesFor } = await import('../../web/js/changelog.js'), v = JSON.parse((await import('node:fs')).readFileSync(new URL('../../web/version.json', import.meta.url), 'utf8')).version;
+  assert.ok(changesFor(v), `changelog.js must list ${v}`); assert.equal(CHANGES[0].v, v);
+  for (const c of CHANGES) { assert.equal(c.en.length, c.he.length, c.v); assert.ok(c.en.length >= 1 && [...c.en, ...c.he].every((x) => x.trim()), c.v); }
+  assert.equal(new Set(CHANGES.map((c) => c.v)).size, CHANGES.length);
+});

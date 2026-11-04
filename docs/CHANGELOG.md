@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.13.0
+- **Alarms on by default**: new routines (and the ready-made ones, once) start with a wake-up alarm switched on so it is easy to find; Home → Alarms shows them all. The notification permission is requested up front in the Android app.
+- **Version number and a real "What's new"** (Home footer, Settings, and a sheet after each update) with the history of recent versions, in both languages.
+- **Interactive HTML report** (animated, tabs for 7/30/90 days and all time, count-up numbers, growing bars, drawing charts) next to PDF.
+- **Smart times**: suggested durations from the person's own history, age and the chosen help areas (focus, calm, time...), for one task or the whole routine; a parent can suggest for a linked child.
+- **Smart extra steps**: breathing, movement, focus and check steps proposed between tasks according to the chosen help (anxiety / attention / memory ...), with a reason for each.
+- **More Cog-Fun-inspired tools**: estimate accuracy ("how close are my guesses"), which strategies helped (per goal), guiding questions for parents.
+
 ## 1.12.0
 - **Task feelings and help in every task**: rate how hard it is (5 icons), **write why it is hard** (note or voice, attached to the task), get **a different kind thought** (22, CBT-style reframes / self-compassion / starting small) or **a relaxation exercise** (13, breathing and body-based) every time, worded for the person's age. All of it is saved with the run.
 - **Difficulty statistics**: "Where is it hard?" ranks tasks by average difficulty, flags hard-and-slow tasks and shows how often help was used; the parent's weekly digest also names the hardest steps.

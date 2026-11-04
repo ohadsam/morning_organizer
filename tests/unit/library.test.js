@@ -22,7 +22,7 @@ test('store: save task/routine templates, create from them, undo delete, backup 
   const tpl = S.get().templates.find((x) => x.id === 'sample-kids');
   assert.ok(await S.saveToLibrary('routine', tpl)); assert.ok(await S.saveToLibrary('task', { name: 'Feed fish', icon: '🐟', sec: 90 })); assert.equal(await S.saveToLibrary('task', { name: '' }), null);
   assert.ok(await S.saveToLibrary('task', { name: 'feed FISH', sec: 120 })); assert.equal(S.library().tasks.length, 1); assert.equal(S.library().tasks[0].sec, 120);
-  const made = await S.createFromEntry(S.library().routines[0], 'Copy'); assert.notEqual(made.id, tpl.id); assert.equal(made.tasks.length, tpl.tasks.length); assert.notEqual(made.tasks[0].id, tpl.tasks[0].id); assert.equal(made.alarm.enabled, false);
+  const made = await S.createFromEntry(S.library().routines[0], 'Copy'); assert.notEqual(made.id, tpl.id); assert.equal(made.tasks.length, tpl.tasks.length); assert.notEqual(made.tasks[0].id, tpl.tasks[0].id); assert.equal(made.alarm.enabled, true);
   const json = S.exportAll(), parsed = JSON.parse(json); assert.equal(parsed.library.tasks.length, 1);
   const undo = await S.removeLibraryItem('task', S.library().tasks[0].id); assert.equal(S.library().tasks.length, 0); await undo(); assert.equal(S.library().tasks.length, 1);
   await S.removeLibraryItem('task', S.library().tasks[0].id); const r = await S.importBackup(json, { mode: 'merge', settings: false }); assert.equal(S.library().tasks.length, 1); assert.ok(r.library >= 1);

@@ -50,3 +50,15 @@ test('kind thoughts and relaxation: age-tiered, varied, no repeat until all show
   const seenE = new Set(), ids = new Set(); for (let n = 0; n < TH.EXERCISES.length; n++) ids.add(TH.pickExercise({ lang: 'he', age: 9, seen: seenE, rnd }).id); assert.equal(ids.size, TH.EXERCISES.length);
   const x = TH.pickExercise({ lang: 'en', age: 30, rnd }); assert.ok(x.title && x.steps.length >= 2 && !x.steps.some((s) => /\{/.test(s)));
 });
+
+import { buildHtmlDocument, serializeNode, SCRIPT } from '../../web/js/reportHtml.js';
+test('interactive html: serialiser escapes text/attributes and drops scripts/handlers; document is self-contained', () => {
+  const fake = (name, attrs, kids) => ({ nodeType: 1, localName: name, attributes: Object.entries(attrs).map(([name2, value]) => ({ name: name2, value })), childNodes: kids });
+  const txt = (v) => ({ nodeType: 3, nodeValue: v });
+  const html = serializeNode(fake('div', { class: 'a"b', onclick: 'evil()', title: '<x>' }, [txt('<img src=x onerror=1> & "q"'), fake('script', {}, [txt('alert(1)')]), fake('i', { style: 'width:5%' }, []), fake('br', {}, [])]));
+  assert.ok(!/onclick|<script|alert\(1\)/.test(html)); assert.ok(html.includes('&lt;img src=x onerror=1&gt; &amp; "q"')); assert.ok(html.includes('class="a&quot;b"')); assert.ok(html.includes('<i style="width:5%"></i>')); assert.ok(html.includes('<br>') && !html.includes('</br>'));
+  const doc = buildHtmlDocument([{ label: '7', html: '<p>one</p>' }, { label: '30 <b>', html: '<p>two</p>' }], { title: 'T <x>', lang: 'he', dir: 'rtl', css: '.rpt{}', printLabel: 'Print' });
+  assert.ok(doc.startsWith('<!doctype html>')); assert.ok(doc.includes('dir="rtl"')); assert.ok(doc.includes('<title>T &lt;x&gt;</title>')); assert.ok(doc.includes('30 &lt;b&gt;')); assert.equal((doc.match(/class="panel/g) || []).length, 2);
+  assert.ok(!/https?:\/\//.test(doc), 'no external resources'); assert.ok(doc.includes(SCRIPT.slice(0, 40)));
+  assert.doesNotThrow(() => new Function(SCRIPT));        // the embedded script is syntactically valid
+});

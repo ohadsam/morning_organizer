@@ -17,6 +17,7 @@ import { avatarNode } from './avatar.js';
 import { openFocusPicker } from './focus.js';
 import { openMenuEditor } from './menu.js';
 import { openGoalWizard } from './goals.js';
+import { parentQuestion } from '../cogfun.js';
 
 const ago = (ms) => (ms ? new Date(ms).toLocaleString(getLang(), { dateStyle: 'short', timeStyle: 'short' }) : '—');
 const mini = (pct) => h('div', { class: 'bar', role: 'progressbar', 'aria-valuemin': '0', 'aria-valuemax': '100', 'aria-valuenow': String(Math.round(pct * 100)) }, h('i', { style: { width: `${Math.round(clamp(pct, 0, 1) * 100)}%` } }));
@@ -163,6 +164,7 @@ export function renderFamily(root) {
     setChildren(root, h('h1', {}, `👨‍👩‍👧 ${t('family')}`), h('p', { class: 'note' }, t('famIntro')),
       h('div', { class: 'toolbar wrap' }, tapReceiveButton(), h('button', { class: 'btn primary', type: 'button', onclick: openInvite }, icon('plus', 18), t('addChild')), h('button', { class: 'btn', type: 'button', onclick: () => openJoin() }, t('joinParent')),
         h('button', { class: 'btn', type: 'button', onclick: () => { const ta = h('textarea', { rows: 4, class: 'code', placeholder: t('pasteHere'), 'aria-label': t('pasteAny') }); modal(t('pasteAny'), ta, [{ label: t('cancel') }, { label: t('importBtn'), primary: true, fn: async () => { await routeIncoming(ta.value); } }]); } }, t('pasteAny'))),
+      parents.length ? (() => { let shift = 0; const q = h('p', { class: 'pq-text' }); const set = () => { q.textContent = t(parentQuestion(Date.now(), shift)); }; set(); return h('section', { class: 'card stack' }, h('strong', {}, `🗨️ ${t('pqTitle')}`), h('p', { class: 'note' }, t('pqHint')), q, h('button', { class: 'btn small', type: 'button', onclick: () => { shift++; set(); } }, t('anotherOne'))); })() : null,
       parents.length ? h('section', {}, h('h2', {}, t('linkedChildren')), h('div', { class: 'stack' }, parents.map(childCard))) : null,
       kids.length ? h('section', {}, h('h2', {}, t('linkedParents')), h('div', { class: 'stack' }, kids.map(parentCard))) : null);
   };

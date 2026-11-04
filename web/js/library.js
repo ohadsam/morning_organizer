@@ -48,11 +48,11 @@ export const IDEA_TASKS = [
 ].map(([key, cat, s]) => ({ key, cat, sec: s }));
 /** The sample routines double as built-in templates (fixed ids so a merge never duplicates them). */
 export const IDEA_ROUTINES = [
-  { id: 'sample-kids', nameKey: 'sample1', icon: '🎒', color: '#0984e3', basic: true, items: [['s_wake', 2], ['s_bath', 4], ['s_dress', 5], ['s_eat', 15], ['s_bag', 3], ['s_shoes', 2]] },
-  { id: 'sample-adult', nameKey: 'sample2', icon: '🌅', color: '#e17055', basic: true, items: [['s_shower', 8], ['s_dress', 5], ['s_coffee', 10], ['s_plan', 5]] },
-  { id: 'sample-bedtime', nameKey: 'sample3', icon: '🌙', color: '#6c5ce7', items: [['s_tidy', 5], ['s_pajamas', 3], ['s_teeth', 3], ['s_story', 10], ['s_lights', 1]] },
-  { id: 'sample-homework', nameKey: 'sample4', icon: '📚', color: '#00b894', items: [['s_hands', 2], ['s_snack', 10], ['s_homework', 25], ['s_read', 15], ['s_bagprep', 3]] },
-  { id: 'sample-evening', nameKey: 'sample6', icon: '🌃', color: '#341f97', items: [['s_clothes', 3], ['s_bagprep', 3], ['s_good3', 3], ['s_teeth', 3], ['s_breathe', 2]] },
-  { id: 'sample-afterschool', nameKey: 'sample5', icon: '🏠', color: '#e84393', items: [['s_unpack', 3], ['s_hands', 2], ['s_lunch', 20], ['s_play', 30]] },
+  { id: 'sample-kids', alarmTime: '07:00', nameKey: 'sample1', icon: '🎒', color: '#0984e3', basic: true, items: [['s_wake', 2], ['s_bath', 4], ['s_dress', 5], ['s_eat', 15], ['s_bag', 3], ['s_shoes', 2]] },
+  { id: 'sample-adult', alarmTime: '06:45', nameKey: 'sample2', icon: '🌅', color: '#e17055', basic: true, items: [['s_shower', 8], ['s_dress', 5], ['s_coffee', 10], ['s_plan', 5]] },
+  { id: 'sample-bedtime', alarmTime: '20:00', nameKey: 'sample3', icon: '🌙', color: '#6c5ce7', items: [['s_tidy', 5], ['s_pajamas', 3], ['s_teeth', 3], ['s_story', 10], ['s_lights', 1]] },
+  { id: 'sample-homework', alarmTime: '16:00', nameKey: 'sample4', icon: '📚', color: '#00b894', items: [['s_hands', 2], ['s_snack', 10], ['s_homework', 25], ['s_read', 15], ['s_bagprep', 3]] },
+  { id: 'sample-evening', alarmTime: '21:00', nameKey: 'sample6', icon: '🌃', color: '#341f97', items: [['s_clothes', 3], ['s_bagprep', 3], ['s_good3', 3], ['s_teeth', 3], ['s_breathe', 2]] },
+  { id: 'sample-afterschool', alarmTime: '14:30', nameKey: 'sample5', icon: '🏠', color: '#e84393', items: [['s_unpack', 3], ['s_hands', 2], ['s_lunch', 20], ['s_play', 30]] },
 ];
 export const ideaIcon = (name) => suggestIcon(name);

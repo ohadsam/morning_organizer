@@ -15,6 +15,7 @@ import { icon, iconBtn, toast, confirmBox } from './common.js';
 import { openShare, openImport } from './share.js';
 import { focusCard } from './focus.js';
 import { openMenu } from './menu.js';
+import { openWhatsNew, getVersion } from './whatsnew.js';
 import { openCapture } from './capture.js';
 import { openRoutinePicker } from './library.js';
 import { alarmSummary } from './alarms.js';
@@ -78,7 +79,8 @@ export function renderHome(root, nav) {
       favs.length ? h('section', {}, h('h2', {}, t('favorites')), h('div', { class: 'stack' }, favs.map((x) => card(x, nav)))) : null,
       (() => { const sp = splitForToday(templates, new Date().getDay()); return [
         h('section', {}, h('h2', {}, sp.scheduled ? t('today') : t('allRoutines')), sp.today.length ? h('div', { class: 'stack' }, sp.today.map((x) => card(x, nav))) : h('p', { class: 'empty' }, templates.length ? t('noRoutinesToday') : t('noRoutines'))),
-        sp.other.length ? h('section', {}, h('h2', {}, t('otherDays')), h('div', { class: 'stack dim' }, sp.other.map((x) => card(x, nav)))) : null]; })());
+        sp.other.length ? h('section', {}, h('h2', {}, t('otherDays')), h('div', { class: 'stack dim' }, sp.other.map((x) => card(x, nav)))) : null]; })(),
+      h('p', { class: 'version-line' }, `${t('appName')} v${getVersion() || '?'} · `, h('button', { class: 'btn link', type: 'button', onclick: () => openWhatsNew(nav) }, t('wnLink'))));
   };
   draw();
   S.loadActive().then((r) => { if (r && isActive(r) && S.getTemplate(r.templateId)) { active = r; draw(); tick = setInterval(() => pw?.update(active), 1000); } });

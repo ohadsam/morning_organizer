@@ -9,7 +9,7 @@ import { t, units, getLang } from './i18n.js';
 import { suggestIcon } from './taskIcons.js';
 import { PRESETS } from './speech.js';
 import { validLeaveBy } from './leave.js';
-import { normDays } from './schedule.js';
+import { normDays, presetDays } from './schedule.js';
 import { isSafePhoto } from './photo.js';
 import { sanitizeAvatar, avatarEmoji, avatarFromMascot, defaultAvatar } from './avatar.js';
 import { toolsFor } from './focus.js';
@@ -24,7 +24,7 @@ import { newProfile, normalizeProfile, runsOf, MAX_PROFILES } from './profiles.j
 export const DEFAULT_SETTINGS = Object.freeze({
   lang: 'he', theme: 'auto', mode: 'both', volume: 80, warnSec: 10, defTaskSec: 300, defEstSec: 0,
   autoAdvance: false, keepAwake: true, keepAwakeApp: false, personName: '', mascot: '🦊', feedback: true, speak: false, age: null, gender: 'other', profileDone: false,
-  textStyle: 'auto', timerStyle: 'auto', paceMode: 'normal', accent: '', simpleMode: false, announceTasks: false, fontScale: 100, colorSafe: false, contrast: 'normal', srAnnounce: false,
+  textStyle: 'auto', timerStyle: 'auto', alarmsMig: false, paceMode: 'normal', accent: '', simpleMode: false, announceTasks: false, fontScale: 100, colorSafe: false, contrast: 'normal', srAnnounce: false,
   coachButton: true, coachAuto: false, coachSpeak: false, voiceURI: '', voicePreset: 'natural', seeded: false,
   avatar: defaultAvatar(), activeProfile: '', transcribe: false,
 });
@@ -48,7 +48,7 @@ export function newTask(settings = state.settings, name = '') {
 export function newTemplate(name = '') {
   const now = Date.now();
   return { id: uid(), name, icon: ICONS[0], color: COLORS[0], favorite: false, builtin: false,
-    leaveBy: '', from: '', days: [], gear: [], plans: [], tasks: [newTask()], alarm: defaultAlarm(), createdAt: now, updatedAt: now };
+    leaveBy: '', from: '', days: [], gear: [], plans: [], tasks: [newTask()], alarm: defaultAlarm(presetDays(getLang()).school), createdAt: now, updatedAt: now };
 }
 export const totalSec = (tpl) => tpl.tasks.reduce((s, x) => s + x.sec, 0);
 
@@ -66,7 +66,8 @@ export function normalizeTemplate(tpl) {
     gear: (Array.isArray(tpl.gear) ? tpl.gear : []).filter((g) => g && typeof g === 'object' && cleanText(g.name, 40)).slice(0, 20).map((g) => ({ id: typeof g.id === 'string' && g.id ? g.id.slice(0, 64) : uid(), name: cleanText(g.name, 40), icon: cleanText(g.icon, 8), days: normDays(g.days) })),
     tasks: (Array.isArray(tpl.tasks) ? tpl.tasks : []).slice(0, LIMITS.maxTasks).map((x) => ({
       id: typeof x?.id === 'string' && x.id ? x.id.slice(0, 64) : uid(), name: cleanText(x?.name, LIMITS.maxName), icon: cleanText(x?.icon, 8), photo: isSafePhoto(x?.photo) ? x.photo : '',
-      sec: clamp(Math.round(Number(x?.sec)) || 1, 1, LIMITS.maxTaskSec), est: clamp(Math.round(Number(x?.est)) || 0, 0, LIMITS.maxTaskSec) })),
+      sec: clamp(Math.round(Number(x?.sec)) || 1, 1, LIMITS.maxTaskSec), est: clamp(Math.round(Number(x?.est)) || 0, 0, LIMITS.maxTaskSec),
+      helper: ['calm', 'move', 'thought'].includes(x?.helper) ? x.helper : '', helperKey: typeof x?.helperKey === 'string' && /^sx_[a-z]+$/.test(x.helperKey) ? x.helperKey : '' })),
     alarm: normalizeAlarm(a),
   };
 }
@@ -81,7 +82,7 @@ export function sanitizeRun(r) {
     plannedTotal: n(r.plannedTotal, 1e7), estTotal: n(r.estTotal, 1e7), actualTotal: n(r.actualTotal, 1e7),
     tasks: r.tasks.slice(0, LIMITS.maxTasks).map((x) => ({ id: String(x?.id ?? '').slice(0, 64), name: cleanText(x?.name, LIMITS.maxName), icon: cleanText(x?.icon, 8),
       plannedSec: n(x?.plannedSec, LIMITS.maxTaskSec), estSec: n(x?.estSec, LIMITS.maxTaskSec), extraSec: n(x?.extraSec, LIMITS.maxTaskSec), actualSec: n(x?.actualSec, LIMITS.maxTaskSec),
-      done: !!x?.done, skipped: !!x?.skipped, difficulty: clamp(Math.round(Number(x?.difficulty)) || 0, 0, 5),
+      done: !!x?.done, skipped: !!x?.skipped, guess: x?.guess === true, difficulty: clamp(Math.round(Number(x?.difficulty)) || 0, 0, 5),
       help: { note: n(x?.help?.note, 99), thought: n(x?.help?.thought, 99), relax: n(x?.help?.relax, 99) } })),
   };
 }
@@ -115,7 +116,7 @@ export async function saveGoal(g, profileId = activeProfile().id) {
   await patchProfile(profileId, { goals: next }); return clean;
 }
 export async function removeGoal(id) { const p = activeProfile(); await patchProfile(p.id, { goals: p.goals.filter((x) => x.id !== id) }); }
-export async function addCheck(goalId, { rating, note = '' }) { const g = goals().find((x) => x.id === goalId); if (g) await saveGoal({ ...g, checks: [...g.checks, { at: Date.now(), rating, note }] }); }
+export async function addCheck(goalId, { rating, note = '', used = [] }) { const g = goals().find((x) => x.id === goalId); if (g) await saveGoal({ ...g, checks: [...g.checks, { at: Date.now(), rating, note, used }] }); }
 // ── template library: reusable tasks and routines ──
 export const library = () => state.library;
 const persistLib = async () => { await db.put('kv', state.library, 'library'); emit(); };
@@ -200,11 +201,21 @@ export async function seedIfNeeded() {
   await addSamples();
   await updateSettings({ seeded: true });
 }
+/** One-time: the ready-made routines that never had an alarm get one switched on (so the feature is visible); the person's own routines are never touched. */
+export async function migrateAlarms() {
+  if (state.settings.alarmsMig) return;
+  for (const x of state.templates) {
+    const d = IDEA_ROUTINES.find((r) => r.id === x.id);
+    if (d && x.builtin && !x.alarm?.enabled) { const evening = /bedtime|evening/.test(x.id); await saveTemplate({ ...x, alarm: defaultAlarm(evening ? [0, 1, 2, 3, 4, 5, 6] : presetDays(getLang()).school, d.alarmTime || '07:00') }, { touch: false }); }
+  }
+  await updateSettings({ alarmsMig: true });
+}
 export async function addSamples(all = false) {
   // Fixed ids: the same sample on the website and in the app is the SAME routine, so a manual-sync merge never duplicates it.
   const mk = (id, name, icon, color, items) => ({ ...newTemplate(name), id, icon, color, builtin: true,
     tasks: items.map(([k, min], i) => ({ id: `${id}-${i}`, name: t(k), icon: suggestIcon(t(k)), sec: Math.round(min * 60), est: 0 })) });
-  const samples = ideaRoutines().filter((r) => all || IDEA_ROUTINES.find((d) => d.id === r.id)?.basic).map((r) => mk(r.id, r.name, r.icon, r.color, IDEA_ROUTINES.find((d) => d.id === r.id).items));
+  const alarmFor = (id) => { const d = IDEA_ROUTINES.find((x) => x.id === id), evening = /bedtime|evening/.test(id); return defaultAlarm(evening ? [0, 1, 2, 3, 4, 5, 6] : presetDays(getLang()).school, d?.alarmTime || '07:00'); };
+  const samples = ideaRoutines().filter((r) => all || IDEA_ROUTINES.find((d) => d.id === r.id)?.basic).map((r) => ({ ...mk(r.id, r.name, r.icon, r.color, IDEA_ROUTINES.find((d) => d.id === r.id).items), alarm: alarmFor(r.id) }));
   const base = Date.now(); // distinct timestamps keep the list order (kids first) after reloads (IndexedDB returns rows by id)
   for (const [i, x] of samples.entries()) if (!getTemplate(x.id)) await saveTemplate({ ...x, createdAt: base + i });
 }

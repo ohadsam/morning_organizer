@@ -10,6 +10,7 @@ import { moodStats, MOODS } from '../mood.js';
 import { unplannedCard, patternCards } from './unplanned.js';
 import { taskDifficulty, hardSpots, hardAndSlow, summary as diffSummary, levelEmoji } from '../difficulty.js';
 import { exportCard } from './report.js';
+import { estimateAccuracy } from '../awareness.js';
 
 const NS = 'http://www.w3.org/2000/svg';
 const svg = (tag, attrs = {}, ...kids) => { const e = document.createElementNS(NS, tag); for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v); e.append(...kids); return e; };
@@ -55,6 +56,13 @@ function difficultyCard(runs, templateId = null) {
     h('p', { class: 'chips' }, h('span', { class: 'chip solid' }, `✍️ ${t('rpHelpNotes', { n: sum.help.note })}`), h('span', { class: 'chip solid' }, `💭 ${t('rpHelpThoughts', { n: sum.help.thought })}`), h('span', { class: 'chip solid' }, `🧘 ${t('rpHelpRelax', { n: sum.help.relax })}`)));
 }
 
+/** "How close are my guesses?" - self-awareness: the typed time estimates against what really happened. */
+function awarenessCard(runs, templateId = null) {
+  const a = estimateAccuracy(runs, templateId); if (a.n < 3) return null;
+  return h('section', { class: 'card stack' }, h('h2', {}, `🎯 ${t('awTitle')}`), h('div', { class: 'tiles' }, h('div', { class: 'tile' }, h('small', {}, t('awGuesses')), h('strong', {}, String(a.n))), h('div', { class: 'tile' }, h('small', {}, t('awAccuracy')), h('strong', {}, `${Math.round(a.avg * 100)}%`))),
+    h('p', { class: 'note' }, t(`awBias_${a.bias}`)), a.trend ? h('p', { class: 'chip solid' }, t(a.trend > 0 ? 'awBetter' : 'awWorse', { n: Math.abs(a.trend) })) : null, h('p', { class: 'note' }, t('awTip')));
+}
+
 function insightText(i) {
   const u = units(), f = (s) => fmtHuman(s, u);
   switch (i.type) {
@@ -73,7 +81,7 @@ export function renderStats(root, templateId, nav) {
     if (!templateId) {
       const items = templates.map((x) => ({ x, n: ST.finished(runs, x.id).length }));
       const hasRuns = items.some((i) => i.n);
-      root.replaceChildren(h('h1', {}, t('statsTitle')), hasRuns ? overview(runs) : null, hasRuns ? achievementsCard(runs) : null, hasRuns ? moodCard(runs) : null, hasRuns ? unplannedCard(runs) : null, hasRuns ? difficultyCard(runs) : null, hasRuns ? exportCard(nav) : null,
+      root.replaceChildren(h('h1', {}, t('statsTitle')), hasRuns ? overview(runs) : null, hasRuns ? achievementsCard(runs) : null, hasRuns ? moodCard(runs) : null, hasRuns ? unplannedCard(runs) : null, hasRuns ? awarenessCard(runs) : null, hasRuns ? difficultyCard(runs) : null, hasRuns ? exportCard(nav) : null,
         hasRuns ? h('div', { class: 'stack' }, items.filter((i) => i.n).map(({ x, n }) =>
           h('a', { class: 'card link-card', href: `#/stats/${x.id}`, style: { '--accent': x.color } }, h('span', { class: 'emoji' }, x.icon), h('span', { class: 'routine-text' }, h('strong', {}, x.name), h('small', {}, t('runsCount', { n })))))) : h('p', { class: 'empty' }, t('noStats')));
       return;
@@ -91,7 +99,7 @@ export function renderStats(root, templateId, nav) {
         h('h2', {}, t('chartTitle')),
         rs.length >= 2 ? h('div', { class: 'card' }, lineChart(ST.series(rs)),
           h('div', { class: 'legend' }, h('span', { class: 'k actual' }, t('legendActual')), h('span', { class: 'k planned' }, t('legendPlanned')), h('span', { class: 'k est' }, t('legendEstimate')))) : h('p', { class: 'note' }, t('chartEmpty')),
-        patternCards(tpl, nav, draw), unplannedCard(rs), difficultyCard(runs, templateId),
+        patternCards(tpl, nav, draw), unplannedCard(rs), awarenessCard(runs, templateId), difficultyCard(runs, templateId),
         h('div', { class: 'toolbar' }, h('button', { class: 'btn', type: 'button', onclick: () => nav(`#/report/period/30-${templateId}`) }, `📄 ${t('rpRoutineReport')}`)),
         h('h2', {}, t('insights')),
         h('ul', { class: 'insights' }, ins.map((i) => h('li', {}, h('span', {}, insightText(i)),

@@ -12,6 +12,8 @@ import { presetDays, normDays } from '../schedule.js';
 import { getLang } from '../i18n.js';
 import { modal } from './common.js';
 import { timeField } from './timePicker.js';
+import { openSmartTimes, openSmartSteps, timeHint, audiences, reasonText } from './smart.js';
+import { suggestTime } from '../smart.js';
 import { openTaskPicker, saveRoutineAsTemplate, saveTaskAsTemplate } from './library.js';
 
 /** Task picture if it has a photo, else its emoji. */
@@ -32,7 +34,9 @@ export function renderEditor(root, id, nav) {
       h('button', { class: 'handle', type: 'button', 'aria-label': t('dragHandle'), title: t('dragHandle') }, icon('drag', 20)),
       h('div', { class: 'task-body' },
         h('div', { class: 'task-top' }, h('button', { class: 'task-icon', type: 'button', 'aria-label': `${t('taskIcon')}: ${task.icon || suggestIcon(task.name)}`, title: t('pickIcon'), onclick: (e) => pickIcon(task, e.currentTarget) }, iconNode(task)),
-        h('input', { class: 'task-name', type: 'text', maxLength: 80, value: task.name, placeholder: t('taskName'), 'aria-label': t('taskName'), oninput: (e) => change(() => { task.name = e.target.value; if (!task.icon && !task.photo) row.querySelector('.task-icon').textContent = suggestIcon(task.name); }) })),
+        h('input', { class: 'task-name', type: 'text', maxLength: 80, value: task.name, placeholder: t('taskName'), 'aria-label': t('taskName'), oninput: (e) => change(() => { task.name = e.target.value; if (!task.icon && !task.photo) row.querySelector('.task-icon').textContent = suggestIcon(task.name); }), onchange: () => { const slot = row.querySelector('.smart-slot'), key = `${task.name}|${task.sec}`; if (slot.dataset.key === key) return;   // a blur right after typing must not rebuild (and swallow) a hint that is being clicked
+          slot.dataset.key = key; slot.replaceChildren(timeHint(task, (sec) => { change(() => { task.sec = sec; }, true); }) ?? ''); } })),
+        h('div', { class: 'smart-slot' }, timeHint(task, (sec) => { change(() => { task.sec = sec; }, true); }) ?? ''),
         h('div', { class: 'task-times' },
           timeField(t('duration'), task.sec, (v) => change(() => { task.sec = Math.max(1, v); })),
           timeField(t('estimate'), task.est, (v) => change(() => { task.est = v; }), { allowEmpty: true, emptyLabel: t('tpSame') }))),
@@ -53,6 +57,7 @@ export function renderEditor(root, id, nav) {
       item('⧉', t('menuDuplicate'), () => change(() => tpl.tasks.splice(i + 1, 0, { ...structuredClone(task), id: uid() }), true)),
       item('⬆️', t('moveUp'), () => moveTask(i, i - 1), { disabled: i === 0 }), item('⬇️', t('moveDown'), () => moveTask(i, i + 1), { disabled: i === last }),
       item('⏫', t('menuToTop'), () => moveTask(i, 0), { disabled: i === 0 }), item('⏬', t('menuToBottom'), () => moveTask(i, last), { disabled: i === last }),
+      item('✨', t('smSuggestTime'), () => { const sg = suggestTime({ name: task.name, runs: audiences()[0].runs, age: audiences()[0].age, areas: audiences()[0].areas, defaultSec: S.get().settings.defTaskSec }); change(() => { task.sec = sg.sec; }, true); toast(`${t('smApplied', { n: 1 })} ${reasonText(sg)}`); }),
       item('📚', t('libSaveTask'), () => saveTaskAsTemplate(task)),
       item('🖼️', t('pickIcon'), () => pickIcon(task, list.children[i]?.querySelector('.task-icon'))),
       item('🗑️', t('removeTask'), () => change(() => tpl.tasks.splice(i, 1), true), { danger: true })), [{ label: t('close') }]);
@@ -145,7 +150,9 @@ export function renderEditor(root, id, nav) {
     list,
     h('button', { class: 'btn add', type: 'button', onclick: () => { const nt = S.newTask(); nt.name = ''; change(() => tpl.tasks.push(nt), true); list.lastElementChild?.querySelector('.task-name')?.focus(); } }, icon('plus', 18), t('addTask')),
     h('div', { class: 'toolbar wrap' }, h('button', { class: 'btn', type: 'button', onclick: () => openTaskPicker((task) => { const nt = { ...S.newTask(), ...task, id: uid() }; change(() => tpl.tasks.push(nt), true); }) }, `📚 ${t('libAddFrom')}`),
-      h('button', { class: 'btn', type: 'button', onclick: () => { save.flush(); saveRoutineAsTemplate(tpl); } }, `💾 ${t('libSaveRoutine')}`)),
+      h('button', { class: 'btn', type: 'button', onclick: () => { save.flush(); saveRoutineAsTemplate(tpl); } }, `💾 ${t('libSaveRoutine')}`),
+      h('button', { class: 'btn', type: 'button', onclick: () => openSmartTimes(tpl, (m) => change(() => { for (const [i, sec] of m) if (tpl.tasks[i]) tpl.tasks[i].sec = sec; }, true)) }, `✨ ${t('smTimesBtn')}`),
+      h('button', { class: 'btn', type: 'button', onclick: () => openSmartSteps(tpl, (tasks) => change(() => { tpl.tasks = tasks; }, true)) }, `🧩 ${t('smStepsBtn')}`)),
     h('h2', {}, t('schedule')), scheduleBox,
     h('h2', {}, t('gear')), gearBox,
     h('h2', {}, t('plansTitle')), plansBox,

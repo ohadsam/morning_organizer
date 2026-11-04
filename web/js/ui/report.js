@@ -7,6 +7,7 @@ import { levelEmoji } from '../difficulty.js';
 import { MOODS } from '../mood.js';
 import { native } from '../native.js';
 import { elementToPdf } from '../pdf.js';
+import { buildHtmlDocument, serializeNode } from '../reportHtml.js';
 import { toast } from './common.js';
 import { reasonName } from './unplanned.js';
 import { APP_NAME_EN } from '../config.js';
@@ -23,7 +24,7 @@ export async function reportCss() { if (!cssText) { try { cssText = await (await
 
 const sec = (title, ...kids) => h('section', { class: 'rpt-sec' }, title ? h('h2', {}, title) : null, ...kids);
 const kpi = (v, label) => h('div', { class: 'rpt-kpi' }, h('b', {}, v), h('span', {}, label));
-const bar = (label, frac, text, color = BRAND) => h('div', { class: 'rpt-bar' }, h('span', {}, label), h('div', { class: 'tr' }, h('div', { class: 'fl', style: { width: `${Math.max(2, Math.min(100, frac * 100))}%`, background: color } })), h('span', { class: 'tx' }, text));
+const bar = (label, frac, text, color = BRAND) => h('div', { class: 'rpt-bar', title: `${label}: ${text}` }, h('span', {}, label), h('div', { class: 'tr' }, h('div', { class: 'fl', style: { width: `${Math.max(2, Math.min(100, frac * 100))}%`, background: color } })), h('span', { class: 'tx' }, text));
 
 const NS = 'http://www.w3.org/2000/svg';
 const sv = (tag, a = {}, ...kids) => { const e = document.createElementNS(NS, tag); for (const [k, v] of Object.entries(a)) e.setAttribute(k, v); e.append(...kids); return e; };
@@ -35,7 +36,7 @@ function timeline(series) {
   for (let i = 0; i <= 4; i++) { const v = (max * i) / 4, yy = y(v * 60); g.append(sv('line', { x1: m.l, x2: W - m.r, y1: yy, y2: yy, stroke: '#eceff1' }), sv('text', { x: m.l - 6, y: yy + 4, 'text-anchor': 'end', 'font-size': 10, fill: MUTED }, String(Math.round(v)))); }
   g.append(sv('text', { x: m.l, y: 10, 'font-size': 10, fill: MUTED }, t('u_m')));
   const line = (key, color, dash) => sv('polyline', { points: series.map((p, i) => `${x(i).toFixed(1)},${y(p[key]).toFixed(1)}`).join(' '), fill: 'none', stroke: color, 'stroke-width': 2.5, ...(dash ? { 'stroke-dasharray': '6 4' } : {}) });
-  g.append(line('planned', '#b2bec3', true), line('actual', BRAND)); series.forEach((p, i) => g.append(sv('circle', { cx: x(i), cy: y(p.actual), r: 3.5, fill: p.actual <= p.planned ? GOOD : WARN })));
+  g.append(line('planned', '#b2bec3', true), line('actual', BRAND)); series.forEach((p, i) => g.append(sv('circle', { cx: x(i), cy: y(p.actual), r: 3.5, fill: p.actual <= p.planned ? GOOD : WARN }, sv('title', {}, `${new Date(p.t).toLocaleDateString(getLang())}: ${fmtDur(p.actual)} / ${fmtDur(p.planned)}`))));
   const step = Math.ceil(series.length / 6); series.forEach((p, i) => { if (i % step === 0 || i === series.length - 1) g.append(sv('text', { x: x(i), y: Hh - 8, 'text-anchor': 'middle', 'font-size': 10, fill: MUTED }, new Date(p.t).toLocaleDateString(getLang(), { day: 'numeric', month: 'short' }))); });
   return g;
 }
@@ -86,6 +87,16 @@ const b64 = (bytes) => { let s = ''; for (let i = 0; i < bytes.length; i += 0x80
 /** PDF actions. Native app: the system share sheet with the PDF attached (pick your e-mail app). Browser: download / Web Share with the file. */
 async function makePdf(m) { return elementToPdf(reportElement(m), `${m.title || ''} ${t('rpTitle')}`, { css: await reportCss() }); }
 async function download(blob, name) { const a = h('a', { href: URL.createObjectURL(blob), download: name }); document.body.append(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 4000); }
+/** The interactive HTML report: one self-contained file (tabs for 7/30/90 days/all for a period, a single page for one run). */
+export async function exportHtml(scope) {
+  const css = await reportCss(), p = S.activeProfile(), profile = { name: p.name, age: p.age }, base = { runs: S.myRuns(), templates: S.get().templates, goals: S.goals(), profile, now: Date.now() };
+  const periods = scope.kind === 'run' ? [{ label: '', m: buildReport({ ...base, scope }) }] : [7, 30, 90, 0].map((d) => ({ label: d ? t('rpDays', { n: d }) : t('rpAll'), m: buildReport({ ...base, scope: { ...scope, days: d } }) }));
+  const first = periods[0].m, title = `${t('rpTitle')}: ${first.title || t('rpAllRoutines')}`;
+  const doc = buildHtmlDocument(periods.map((x) => ({ label: x.label, html: serializeNode(reportElement(x.m)) })), { title, lang: getLang(), dir: isRtl() ? 'rtl' : 'ltr', css, printLabel: t('rpPrint') });
+  const name = `${slug(first)}.html`;
+  if (native.available) { native.saveFile(name, doc); return; }
+  await download(new Blob([doc], { type: 'text/html' }), name); toast(t('rpSaved'));
+}
 export async function savePdf(m) { toast(t('rpMaking')); const blob = await makePdf(m); await download(blob, `${slug(m)}.pdf`); toast(t('rpSaved')); return blob; }
 export async function emailReport(m) {
   const text = reportText(m, t, fmt), subject = `${t('rpTitle')}: ${m.title || t('rpAllRoutines')}`;
@@ -106,7 +117,7 @@ export function renderReport(root, nav, kind, arg) {
     setChildren(root, h('div', { class: 'row between rpt-toolbar' }, h('h1', {}, `📄 ${t('rpTitle')}`), h('button', { class: 'btn', type: 'button', onclick: () => history.length > 1 ? history.back() : nav('#/stats') }, t('back'))),
       scope.kind === 'period' ? h('div', { class: 'toolbar rpt-toolbar' }, [7, 30, 90, 0].map((d) => h('button', { class: `chip btn-chip ${scope.days === d ? 'on' : ''}`, type: 'button', 'aria-pressed': String(scope.days === d), onclick: () => { scope = { ...scope, days: d }; draw(); } }, d ? t('rpDays', { n: d }) : t('rpAll')))) : null,
       scope.kind === 'period' ? h('label', { class: 'field rpt-toolbar' }, h('span', { class: 'lbl' }, t('rpWhichRoutine')), h('select', { onchange: (e) => { scope = { ...scope, templateId: e.target.value || null }; draw(); } }, [h('option', { value: '' }, t('rpAllRoutines')), ...S.get().templates.map((x) => h('option', { value: x.id, selected: x.id === scope.templateId }, `${x.icon} ${x.name}`))])) : null,
-      h('div', { class: 'toolbar wrap rpt-toolbar' }, btn(`📥 ${t('rpSavePdf')}`, () => savePdf(m), 'primary'), btn(`✉️ ${t('rpEmail')}`, () => emailReport(m)), btn(`🖨️ ${t('rpPrint')}`, async () => window.print()),
+      h('div', { class: 'toolbar wrap rpt-toolbar' }, btn(`📥 ${t('rpSavePdf')}`, () => savePdf(m), 'primary'), btn(`🌐 ${t('rpSaveHtml')}`, () => exportHtml(scope)), btn(`✉️ ${t('rpEmail')}`, () => emailReport(m)), btn(`🖨️ ${t('rpPrint')}`, async () => window.print()),
         btn(`📋 ${t('rpCopy')}`, async () => { try { await navigator.clipboard.writeText(reportText(m, t, fmt)); toast(t('shareCopied')); } catch { toast(t('error')); } })),
       h('p', { class: 'note rpt-toolbar' }, t('rpEmailNote')), h('div', { class: 'rpt-page' }, page));
   };

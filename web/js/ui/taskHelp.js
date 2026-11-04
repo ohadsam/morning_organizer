@@ -22,18 +22,20 @@ export function taskHelpCard(api, routineName) {
       h('div', { class: 'row-btns' }, h('button', { class: 'btn small', type: 'button', onclick: showThought }, t('anotherOne')), h('button', { class: 'btn small', type: 'button', onclick: () => speakWithSettings(x.text) }, `🔊 ${t('readAloud')}`), h('button', { class: 'btn small', type: 'button', onclick: () => setChildren(out) }, t('close')))));
     if (S.get().settings.coachSpeak) speakWithSettings(x.text);
   }
-  function showRelax() {
+  function showRelax(only = null) {
     const { task, index } = api.current(); if (!task) return;
-    const x = pickExercise({ ...profile(), seen: seenE }); api.helped(index, 'relax');
+    const x = pickExercise({ ...profile(), seen: seenE, only: Array.isArray(only) ? only : null }); api.helped(index, 'relax');
     setChildren(out, h('article', { class: 'help-card' }, h('strong', {}, `${x.emoji} ${x.title}`), h('ol', { class: 'help-steps', lang: getLang() }, x.steps.map((s) => h('li', {}, s))),
-      h('div', { class: 'row-btns' }, h('button', { class: 'btn small', type: 'button', onclick: showRelax }, t('anotherOne')), x.breath ? h('button', { class: 'btn small', type: 'button', onclick: api.openCalm }, `🌬️ ${t('calmTitle')}`) : null, h('button', { class: 'btn small', type: 'button', onclick: () => setChildren(out) }, t('close')))));
+      h('div', { class: 'row-btns' }, h('button', { class: 'btn small', type: 'button', onclick: () => showRelax(only) }, t('anotherOne')), x.breath ? h('button', { class: 'btn small', type: 'button', onclick: api.openCalm }, `🌬️ ${t('calmTitle')}`) : null, h('button', { class: 'btn small', type: 'button', onclick: () => setChildren(out) }, t('close')))));
   }
   const btns = h('div', { class: 'row-btns help-btns' });
   function update() {
     const { task, index } = api.current(); if (!task) { el.hidden = true; return; } el.hidden = false;
     setChildren(rated, h('span', { class: 'lbl' }, t('diffAsk')), LEVELS.map((l) => h('button', { class: `diff ${task.difficulty === l.v ? 'on' : ''}`, type: 'button', 'aria-pressed': String(task.difficulty === l.v), 'aria-label': t(`diff${l.v}`), title: t(`diff${l.v}`), onclick: () => { api.rate(index, l.v); update(); } }, l.emoji)));
     const hard = task.difficulty >= 4;
+    const HELPER = { calm: () => api.openCalm(), move: () => showRelax(['shake', 'stretch', 'wall', 'squeeze']), thought: showThought };
     setChildren(btns,
+      task.helper && Object.hasOwn(HELPER, task.helper) ? h('button', { class: 'btn primary', type: 'button', onclick: HELPER[task.helper] }, `▶ ${t(`helper_${task.helper}`)}`) : null,
       h('button', { class: `btn small ${hard ? 'primary' : ''}`, type: 'button', onclick: () => openCapture({ routine: routineName, task: task.name, difficulty: task.difficulty, hard: true, onSaved: () => api.helped(index, 'note') }) }, `✍️ ${t('whyHard')}`),
       h('button', { class: `btn small ${hard ? 'primary' : ''}`, type: 'button', onclick: showThought }, `💭 ${t('thoughtBtn')}`),
       h('button', { class: `btn small ${hard ? 'primary' : ''}`, type: 'button', onclick: showRelax }, `🧘 ${t('relaxBtn')}`));

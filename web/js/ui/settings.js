@@ -14,6 +14,7 @@ import { getLang } from '../i18n.js';
 import { APK_URL } from '../config.js';
 import { toast, icon } from './common.js';
 import { openMyFocus } from './focus.js';
+import { openWhatsNew, getVersion } from './whatsnew.js';
 import { AREA_EMOJI } from '../focus.js';
 
 let deferredInstall = null;
@@ -134,7 +135,8 @@ export function renderSettings(root, version) {
           h('div', { class: 'toolbar wrap' },
             h('a', { class: 'btn primary', href: APK_URL, rel: 'noopener', download: 'morning-organizer.apk' }, icon('download', 18), t('downloadApk')),
             deferredInstall ? h('button', { class: 'btn', type: 'button', onclick: async () => { deferredInstall.prompt(); await deferredInstall.userChoice; deferredInstall = null; draw(); } }, t('installPwa')) : null)],
-        h('p', { class: 'note' }, `${t('version', { v: version })} · ${t('offline')}`)));
+        h('p', { class: 'note' }, `${t('version', { v: version && version !== '0' ? version : getVersion() || '?' })} · ${t('offline')}`),
+        h('button', { class: 'btn', type: 'button', onclick: () => openWhatsNew((hash) => { location.hash = hash; }) }, `🎉 ${t('wnLink')}`)));
   };
   draw();
   return () => { alive = false; };

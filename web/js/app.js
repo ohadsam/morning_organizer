@@ -25,7 +25,7 @@ import { handleRing } from './ui/offer.js';
 import { renderReport } from './ui/report.js';
 import { renderAlarms } from './ui/alarms.js';
 import { renderGoals } from './ui/goals.js';
-import { maybeShowWhatsNew } from './ui/whatsnew.js';
+import { maybeShowWhatsNew, setVersion } from './ui/whatsnew.js';
 import { renderLibrary } from './ui/library.js';
 import { renderCalm } from './ui/calm.js';
 import { renderJournal } from './ui/journal.js';
@@ -79,8 +79,10 @@ async function boot() {
   document.title = t('appName');
   setAwake('app', st.keepAwakeApp); applyA11y(st);
   try { version = (await (await fetch('version.json', { cache: 'no-cache' })).json()).version; } catch { /* offline first load */ }
-  await S.seedIfNeeded();
+  setVersion(version);
+  await S.seedIfNeeded(); await S.migrateAlarms();
   S.syncNative();
+  if (S.get().templates.some((x) => x.alarm?.enabled)) native.requestNotifications();   // alarms are on by default: ask for the notification permission up front (Android 13+)
   const onRing = (tpl, r) => handleRing(tpl.id, r, nav);
   // young children (or "playful" in Settings) get lighter wording everywhere; re-draw only when that actually flips
   S.subscribe(() => { const { textStyle, age } = S.get().settings, on = shouldBePlayful(textStyle, age); if (on !== isPlayful()) { setPlayful(on); route(); } });

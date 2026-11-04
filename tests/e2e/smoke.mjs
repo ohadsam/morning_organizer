@@ -271,7 +271,8 @@ await step('family: invite -> join -> approve -> LIVE link (WebRTC, no server) -
   await closeDialogs(C.page); await P.page.goto(base + '#/family'); await P.page.click('button:has-text("Suggest a goal")'); await P.page.click('dialog .chip:has-text("Be ready on time")'); await P.page.check('dialog .strat-pick:has-text("Prepare things the night before") input'); await P.page.click('dialog footer button:has-text("Save")');
   await C.page.goto(base + '#/goals'); await C.page.waitForSelector('.goal-card:has-text("Suggested by Mom")', { timeout: 15000 });
   await C.page.goto(base + '#/'); await C.page.locator('.routine .start').first().click(); await C.page.waitForSelector('.ring');
-  await P.page.goto(base + '#/family'); await P.page.waitForSelector('.family-card button:has-text("Sit with me")', { timeout: 15000 }); await P.page.click('.family-card button:has-text("Sit with me")');
+  await P.page.goto(base + '#/family'); await P.page.waitForSelector('.pq-text'); const q1 = await P.page.textContent('.pq-text'); await P.page.click('.card:has(.pq-text) button'); assert.notEqual(await P.page.textContent('.pq-text'), q1);
+  await P.page.waitForSelector('.family-card button:has-text("Sit with me")', { timeout: 15000 }); await P.page.click('.family-card button:has-text("Sit with me")');
   await C.page.waitForSelector('.sit-chip:not([hidden])', { timeout: 15000 }); assert.match(await C.page.textContent('.sit-chip'), /Mom is with you/);
   assert.deepEqual(P.errors, []); assert.deepEqual(C.errors, []);
 });
@@ -537,7 +538,7 @@ await step('v1.10: axe finds no violations on calm corner, journal (open + locke
 await step('v1.10: alarm editor (no stray "null"), chain of rings with gaps, start mode, offer dialog starts the routine', async () => {
   const { page, errors } = await newPage(); await page.goto(base); await page.waitForSelector('.routine'); await page.locator('.routine-main').first().click(); await page.waitForSelector('.alarm');
   assert.ok(!/null/.test(await page.textContent('.alarm')), 'no "null" next to the alarm switch');
-  await page.check('.alarm .switch input'); await page.waitForSelector('.alarm .ring-card');
+  await page.check('.alarm .switch input >> nth=0'); await page.waitForSelector('.alarm .ring-card');
   await page.fill('.alarm input[type=time]', '07:00'); await page.dispatchEvent('.alarm input[type=time]', 'change');
   await page.click('.alarm button:has-text("Add another alarm")'); await page.click('.alarm button:has-text("Add another alarm")');
   const gaps = page.locator('.alarm input[type=number][aria-label^="Minutes after"]'); await gaps.nth(0).fill('15'); await gaps.nth(0).dispatchEvent('change'); await page.locator('.alarm input[type=number][aria-label^="Minutes after"]').nth(1).fill('5'); await page.locator('.alarm input[type=number][aria-label^="Minutes after"]').nth(1).dispatchEvent('change');
@@ -581,7 +582,7 @@ await step('v1.10: axe on alarm editor, unplanned sheet, pattern card and magnif
   const bad = [];
   for (const [lang, scheme] of [['he', 'light'], ['en', 'dark']]) {
     const { page } = await newPage({ lang, ctx: { colorScheme: scheme } }); await page.goto(base); if (lang === 'he') await dismissWelcome(page); const L = `${lang}/${scheme}`;
-    await page.waitForSelector('.routine'); await page.locator('.routine-main').first().click(); await page.waitForSelector('.alarm'); await page.check('.alarm .switch input'); await page.click('.alarm button >> text=/^\\+ /'); await page.waitForSelector('.alarm .ring-card >> nth=1');
+    await page.waitForSelector('.routine'); await page.locator('.routine-main').first().click(); await page.waitForSelector('.alarm'); await page.check('.alarm .switch input >> nth=0'); await page.click('.alarm button >> text=/^\\+ /'); await page.waitForSelector('.alarm .ring-card >> nth=1');
     bad.push(...await audit(page, `${L}/alarm-editor`));
     await page.goto(base + '#/'); await page.locator('.routine .start').first().click(); await page.waitForSelector('.ring'); await page.click('.row-btns button >> text=/⚡/'); await page.waitForSelector('dialog .reasons'); bad.push(...await audit(page, `${L}/unplanned-sheet`)); await closeDialogs(page);
     await page.click('.row-btns button >> text=/⚡/'); await page.click('dialog .reason >> nth=0'); await page.waitForSelector('.intr-banner:not([hidden])'); bad.push(...await audit(page, `${L}/interrupted`));
@@ -679,6 +680,7 @@ await step('v1.10: axe on template pickers and library page (young child too)', 
 // ── v1.11: alarms screen, goals (Goal-Plan-Do-Check), sand clock, what's new ──
 await step('v1.11: Alarms screen - find it from home, switch on, edit the chain in a sheet, schedule shows on the routine card', async () => {
   const { page, errors } = await newPage(); await page.goto(base); await page.waitForSelector('.routine');
+  await page.evaluate(async () => { const S = await import('./js/store.js'); for (const x of S.get().templates) await S.saveTemplate({ ...x, alarm: { ...x.alarm, enabled: false } }); });   // alarms are ON by default now; start this step from "all off"
   await page.click('.quick button:has-text("Alarms")'); await page.waitForSelector('.alarm-card'); assert.match(await page.textContent('.chip.solid'), /No alarm is on/);
   await page.locator('.alarm-card').first().locator('input[type=checkbox]').check(); await page.waitForFunction(() => !document.querySelector('.chip.solid'));
   await page.locator('.alarm-card').first().locator('button:has-text("Edit alarm")').click(); await page.waitForSelector('dialog .ring-card');
@@ -770,6 +772,87 @@ await step('v1.12: axe on task-help card, kind thought / relax, stats difficulty
     await page.goto(base + '#/stats'); await page.waitForSelector('.diff-bars'); bad.push(...await audit(page, `${L}/stats-difficulty`));
     await page.goto(base + '#/report/period/0-all'); await page.waitForSelector('.rpt .rpt-head'); bad.push(...await audit(page, `${L}/report-period`));
     await page.goto(base + '#/report/run/ax1'); await page.waitForSelector('.rpt .rpt-tbl'); bad.push(...await audit(page, `${L}/report-run`));
+  }
+  if (bad.length) console.error([...new Set(bad)].join('\n'));
+  assert.deepEqual(bad, []);
+});
+
+// ── v1.13: interactive HTML report ──
+await step('v1.13: interactive HTML report - self-contained file with tabs, animations, collapsible sections; works offline', async () => {
+  const { page, errors } = await newPage(); await page.goto(base); await page.waitForSelector('.routine');
+  await page.evaluate(async () => { const S = await import('./js/store.js'), tpl = S.get().templates[0], day = 86_400_000;
+    for (let i = 0; i < 6; i++) { const tasks = tpl.tasks.map((t, k) => ({ id: t.id, name: t.name, icon: t.icon, plannedSec: t.sec, estSec: t.sec, extraSec: 0, actualSec: t.sec + (k === 0 ? 100 : 0), done: true, skipped: false, difficulty: k === 0 ? 5 : 2, help: { note: 0, thought: 1, relax: 0 } })), tot = tasks.reduce((a, x) => a + x.plannedSec, 0);
+      await S.saveRun({ id: `h${i}`, profileId: S.activeProfile().id, templateId: tpl.id, templateName: tpl.name, icon: tpl.icon, color: '#6c5ce7', startedAt: Date.now() - (12 - i * 2) * day, endedAt: Date.now() - (12 - i * 2) * day + 900_000, status: 'done', current: 0, pausedMs: 0, plannedTotal: tot, estTotal: tot, actualTotal: tot + 100, mood: 4, tasks, unplanned: [] }); } });
+  await page.goto(base + '#/report/period/0-all'); await page.waitForSelector('.rpt .rpt-head');
+  const [dl] = await Promise.all([page.waitForEvent('download', { timeout: 30000 }), page.click('button:has-text("Save as interactive HTML")')]);
+  const fs = await import('node:fs'), path = await dl.path(); const html = fs.readFileSync(path, 'utf8'); const file = '/tmp/report-test.html'; fs.copyFileSync(path, file);   // the download itself has no .html extension, so open the copy
+  assert.ok(html.startsWith('<!doctype html>')); assert.ok(!/https?:\/\//.test(html), 'no external resources'); assert.equal((html.match(/role="tabpanel"/g) || []).length, 4);
+  // open the downloaded FILE in a fresh page (no server, network blocked) and exercise it
+  const ctx2 = await browser.newContext({ viewport: { width: 900, height: 900 }, offline: true }); const p2 = await ctx2.newPage(); const errs2 = []; p2.on('pageerror', (e) => errs2.push(e.message)); p2.on('console', (m) => { if (m.type() === 'error') errs2.push(m.text()); });
+  await p2.goto(`file://${file}`); await p2.waitForSelector('.panel.on .rpt-head');
+  assert.equal(await p2.locator('.tabs button[aria-selected=true]').count(), 1); const kpi = p2.locator('.panel.on .rpt-kpi b').first(); await p2.waitForFunction(() => { const b = document.querySelector('.panel.on .rpt-kpi b'); return b && b.textContent === b.dataset.t; }, null, { timeout: 5000 });   // the count-up finished on its true value
+  for (let y = 0; y <= 6000; y += 500) { await p2.evaluate((yy) => window.scrollTo(0, yy), y); await p2.waitForTimeout(60); }   // sections animate in as they scroll into view
+  await p2.waitForFunction(() => [...document.querySelectorAll('.panel.on .rpt-bar .fl')].every((f) => f.style.width && f.style.width !== '0px'), null, { timeout: 8000 });   // bars grew
+  assert.equal(await p2.evaluate(() => getComputedStyle(document.querySelector('.panel.on .rpt-sec polyline:not([stroke-dasharray])')).strokeDashoffset), '0px');
+  await p2.click('.tabs button >> nth=1'); assert.equal(await p2.getAttribute('.tabs button >> nth=1', 'aria-selected'), 'true'); assert.equal(await p2.locator('.panel.on').count(), 1); assert.ok((await p2.locator('.panel.on').getAttribute('role')) === 'tabpanel');
+  const h2 = p2.locator('.panel.on .rpt-sec h2').first(); await h2.click(); assert.ok(await p2.evaluate(() => document.querySelector('.panel.on .rpt-sec').classList.contains('closed'))); await h2.press('Enter'); assert.ok(!(await p2.evaluate(() => document.querySelector('.panel.on .rpt-sec').classList.contains('closed'))));
+  assert.deepEqual(errs2, []); await ctx2.close(); assert.deepEqual(errors, []);
+  // reduced motion: everything is visible immediately
+  const ctx3 = await browser.newContext({ reducedMotion: 'reduce', viewport: { width: 900, height: 900 } }); const p3 = await ctx3.newPage(); await p3.goto(`file://${file}`); await p3.waitForSelector('.panel.on .rpt-sec.in'); assert.equal(await p3.evaluate(() => getComputedStyle(document.querySelector('.panel.on .rpt-sec')).opacity), '1'); await ctx3.close();
+});
+
+// ── v1.13: alarms on by default, version + what's new, smart times / steps, estimate accuracy ──
+await step('v1.13: alarms are ON by default (new routines + ready-made ones), version number and What\'s new are always reachable', async () => {
+  const { page, errors } = await newPage(); await page.goto(base); await page.waitForSelector('.routine');
+  assert.ok(await page.locator('.routine .alarm-line').count() >= 2, 'the ready-made routines show their alarm'); assert.match(await page.textContent('.routine .alarm-line'), /\d\d:\d\d/);
+  await page.goto(base + '#/alarms'); await page.waitForSelector('.alarm-card'); assert.equal(await page.locator('.chip.solid').count(), 0); assert.ok(await page.locator('.alarm-card input[type=checkbox]:checked').count() >= 2);
+  await page.goto(base + '#/'); await page.click('.toolbar button:has-text("New routine")'); await page.waitForSelector('.alarm'); assert.ok(await page.locator('.alarm .switch input').first().isChecked(), 'a new routine starts with its alarm on'); await page.waitForTimeout(500);
+  await page.goto(base + '#/'); await page.waitForSelector('.version-line'); const ver = JSON.parse((await import('node:fs')).readFileSync('web/version.json', 'utf8')).version; assert.match(await page.textContent('.version-line'), new RegExp(`v${ver.replace(/\./g, '\\.')}`));
+  await page.click('.version-line button'); await page.waitForSelector(`dialog:has-text("New in ${ver}")`); assert.ok(await page.locator('dialog details').count() === 1); await closeDialogs(page);
+  await page.goto(base + '#/settings'); await page.waitForSelector('button:has-text("What\'s new")'); assert.match(await page.textContent('.settings-group:has(button:has-text("What\'s new"))'), new RegExp(ver.replace(/\./g, '\\.'))); await page.click('button:has-text("What\'s new")'); await page.waitForSelector('dialog:has-text("New in")'); await closeDialogs(page);
+  assert.deepEqual(errors, []);
+});
+
+await step('v1.13: smart times (hint, sheet, menu), smart extra steps by chosen help, helper step in the run, estimate accuracy card', async () => {
+  const { page, errors } = await newPage(); await page.goto(base); await page.waitForSelector('.routine');
+  await page.evaluate(async () => { const S = await import('./js/store.js'); await S.patchProfile(S.activeProfile().id, { age: 8, focus: ['focus', 'calm'], focusSet: true }); });
+  await page.click('.toolbar button:has-text("New routine")'); await page.waitForSelector('.task'); await page.fill('.task-name', 'Shower'); await page.dispatchEvent('.task-name', 'change');
+  await page.waitForSelector('.smart-hint'); assert.match(await page.textContent('.smart-hint'), /typical time for this kind of task/); await page.click('.smart-hint button'); await page.waitForSelector('.smart-hint', { state: 'detached' }); assert.ok(!/^5m$/.test((await page.textContent('.tp-val >> nth=0')).trim()));
+  await page.click('button:has-text("Add task")'); await page.locator('.task-name').nth(1).fill('Homework'); await page.dispatchEvent('.task >> nth=1 >> .task-name', 'change');
+  await page.click('.toolbar.wrap button:has-text("Smart times")'); await page.waitForSelector('dialog .smart-row'); assert.ok(await page.locator('dialog .smart-row').count() === 2); await page.click('dialog footer button:has-text("Apply")'); await page.waitForSelector('dialog', { state: 'detached' });
+  const n0 = await page.locator('.task').count();
+  await page.click('.toolbar.wrap button:has-text("Smart extra steps")'); await page.waitForSelector('dialog .smart-row'); assert.ok(await page.locator('dialog .smart-row').count() >= 3); assert.match(await page.textContent('dialog'), /Breathe slowly/); await page.click('dialog footer button:has-text("Apply")'); await page.waitForSelector('dialog', { state: 'detached' });
+  await page.waitForFunction((n) => document.querySelectorAll('.task').length > n, n0); assert.match(await page.locator('.task-name').first().inputValue(), /Breathe slowly|Pick the one thing/);
+  await page.waitForTimeout(500); await page.goto(base + '#/'); await page.locator('.routine').last().locator('.start').click(); await page.waitForSelector('.ring');
+  const first = await page.textContent('.now'); if (/Breathe slowly/.test(first)) { await page.click('.help-btns button:has-text("Breathe now")'); await page.waitForSelector('dialog .calm-menu'); await closeDialogs(page); } else { await page.waitForSelector('.help-btns button.primary'); }
+  // estimate accuracy card: seed runs with deliberate guesses
+  await page.evaluate(async () => { const S = await import('./js/store.js'), tpl = S.get().templates[0], day = 86_400_000;
+    for (let i = 0; i < 5; i++) { const tasks = tpl.tasks.map((t) => ({ id: t.id, name: t.name, icon: t.icon, plannedSec: t.sec, estSec: Math.round(t.sec * 0.6), guess: true, extraSec: 0, actualSec: t.sec, done: true, skipped: false, difficulty: 0, help: { note: 0, thought: 0, relax: 0 } })), tot = tasks.reduce((a, x) => a + x.plannedSec, 0);
+      await S.saveRun({ id: `aw${i}`, profileId: S.activeProfile().id, templateId: tpl.id, templateName: tpl.name, icon: tpl.icon, color: '#6c5ce7', startedAt: Date.now() - (9 - i) * day, endedAt: Date.now() - (9 - i) * day + 900_000, status: 'done', current: 0, pausedMs: 0, plannedTotal: tot, estTotal: tot, actualTotal: tot, tasks, unplanned: [] }); } });
+  await page.goto(base + '#/stats'); await page.waitForSelector('.card:has-text("How close are my guesses?")'); assert.match(await page.textContent('.card:has-text("How close are my guesses?")'), /too short/);
+  assert.deepEqual(errors, []);
+});
+
+await step('v1.13: goal check-in records which strategies were used; best strategy shows on the goal; parent question card', async () => {
+  const { page, errors } = await newPage(); await page.goto(base + '#/goals'); await page.waitForSelector('h1'); await page.click('button:has-text("New goal")'); await page.waitForSelector('dialog .strat-pick');
+  await page.fill('dialog input[type=text] >> nth=0', 'Be ready'); await page.check('dialog .strat-pick:has-text("Prepare things the night before") input'); await page.check('dialog .strat-pick:has-text("visible timer") input'); await page.click('dialog footer button:has-text("Save")'); await page.waitForSelector('.goal-card');
+  await page.click('.goal-card button:has-text("Check-in")'); await page.waitForSelector('dialog .mood'); await page.check('dialog fieldset .strat-pick:has-text("night before") input'); await page.click('dialog .mood >> nth=4'); await page.click('dialog footer button:has-text("Save")'); await page.waitForSelector('dialog', { state: 'detached' });
+  await page.waitForSelector('.goal-card:has-text("Went best with")'); assert.match(await page.textContent('.goal-card'), /night before.*5/); assert.deepEqual(errors, []);
+});
+
+await step('v1.13: axe on smart times / extra steps sheets, what\'s new, guesses card, interactive-report toolbar (he + en)', async () => {
+  const bad = [];
+  for (const [lang, scheme] of [['he', 'light'], ['en', 'dark']]) {
+    const { page } = await newPage({ lang, ctx: { colorScheme: scheme } }); await page.goto(base); if (lang === 'he') await dismissWelcome(page); const L = `${lang}/${scheme}`;
+    await page.waitForSelector('.routine'); await page.evaluate(async () => { const S = await import('./js/store.js'); await S.patchProfile(S.activeProfile().id, { age: 8, focus: ['focus', 'calm', 'memory'], focusSet: true }); });
+    await page.locator('.routine-main').first().click(); await page.waitForSelector('.task'); await page.locator('.task-name').first().fill('Shower'); await page.locator('.task-name').first().dispatchEvent('change'); await page.waitForSelector('.smart-hint'); bad.push(...await audit(page, `${L}/editor-hint`));
+    await page.click('.toolbar.wrap button >> nth=2'); await page.waitForSelector('dialog .smart-row'); bad.push(...await audit(page, `${L}/smart-times`)); await closeDialogs(page);
+    await page.click('.toolbar.wrap button >> nth=3'); await page.waitForSelector('dialog .smart-row'); bad.push(...await audit(page, `${L}/smart-steps`)); await closeDialogs(page);
+    await page.goto(base + '#/'); await page.waitForSelector('.version-line'); bad.push(...await audit(page, `${L}/home-version`)); await page.click('.version-line button'); await page.waitForSelector('dialog details'); bad.push(...await audit(page, `${L}/whatsnew`)); await closeDialogs(page);
+    await page.evaluate(async () => { const S = await import('./js/store.js'), tpl = S.get().templates[0], day = 86_400_000; for (let i = 0; i < 4; i++) { const tasks = tpl.tasks.map((t) => ({ id: t.id, name: t.name, icon: t.icon, plannedSec: t.sec, estSec: Math.round(t.sec * 0.7), guess: true, extraSec: 0, actualSec: t.sec, done: true, skipped: false, difficulty: 0, help: { note: 0, thought: 0, relax: 0 } })), tot = tasks.reduce((a, x) => a + x.plannedSec, 0);
+      await S.saveRun({ id: `a11y${i}`, profileId: S.activeProfile().id, templateId: tpl.id, templateName: tpl.name, icon: tpl.icon, color: '#6c5ce7', startedAt: Date.now() - (9 - i) * day, endedAt: Date.now() - (9 - i) * day + 600_000, status: 'done', current: 0, pausedMs: 0, plannedTotal: tot, estTotal: tot, actualTotal: tot, tasks, unplanned: [] }); } });
+    await page.goto(base + '#/stats'); await page.waitForSelector('.card:has-text("guesses"), .card:has-text("ההערכות")'); bad.push(...await audit(page, `${L}/stats-guesses`));
+    await page.goto(base + '#/report/period/0-all'); await page.waitForSelector('.rpt'); bad.push(...await audit(page, `${L}/report-toolbar`));
   }
   if (bad.length) console.error([...new Set(bad)].join('\n'));
   assert.deepEqual(bad, []);

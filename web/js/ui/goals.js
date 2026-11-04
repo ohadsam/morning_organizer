@@ -2,7 +2,7 @@
 import { h, setChildren } from '../util.js';
 import { t } from '../i18n.js';
 import * as S from '../store.js';
-import { STRATEGIES, DOMAINS, MAX_STRATS, MAX_GOALS, progress } from '../cogfun.js';
+import { STRATEGIES, DOMAINS, MAX_STRATS, MAX_GOALS, progress, strategyStats } from '../cogfun.js';
 import { MOODS } from '../mood.js';
 import { modal, toast, confirmBox } from './common.js';
 import { moodRow } from './capture.js';
@@ -37,9 +37,10 @@ export function openGoalWizard(goal, { parent = false, onSave } = {}) {
 
 /** "Check": did the plan work? Faces + one line. */
 export function openCheckin(goal, after) {
-  let rating = 0; const note = h('textarea', { rows: 3, maxLength: 200, placeholder: t('checkPh'), 'aria-label': t('checkNote') });
-  return modal(`✔ ${t('checkTitle')}`, h('div', { class: 'stack' }, h('strong', {}, goal.title), h('p', { class: 'note' }, planText(goal)), h('p', {}, t('checkAsk')), moodRow((v) => { rating = v; }), h('label', { class: 'field' }, h('span', { class: 'lbl' }, t('checkNote')), note)),
-    [{ label: t('cancel') }, { label: t('save'), primary: true, fn: async () => { if (!rating) { toast(t('checkPick')); return false; } await S.addCheck(goal.id, { rating, note: note.value }); toast(t('checkSaved')); after?.(); } }]);
+  let rating = 0; const used = new Set(), note = h('textarea', { rows: 3, maxLength: 200, placeholder: t('checkPh'), 'aria-label': t('checkNote') });
+  const usedBox = goal.strategies.length ? h('fieldset', { class: 'stack' }, h('legend', {}, t('checkUsed')), goal.strategies.map((id) => h('label', { class: 'strat-pick' }, h('input', { type: 'checkbox', onchange: (e) => { if (e.target.checked) used.add(id); else used.delete(id); } }), h('span', {}, stratText(id))))) : null;
+  return modal(`✔ ${t('checkTitle')}`, h('div', { class: 'stack' }, h('strong', {}, goal.title), h('p', { class: 'note' }, planText(goal)), h('p', {}, t('checkAsk')), moodRow((v) => { rating = v; }), usedBox, h('label', { class: 'field' }, h('span', { class: 'lbl' }, t('checkNote')), note)),
+    [{ label: t('cancel') }, { label: t('save'), primary: true, fn: async () => { if (!rating) { toast(t('checkPick')); return false; } await S.addCheck(goal.id, { rating, note: note.value, used: [...used] }); toast(t('checkSaved')); after?.(); } }]);
 }
 
 export function goalCard(g, runs, redraw) {
@@ -48,6 +49,7 @@ export function goalCard(g, runs, redraw) {
     tpl ? h('small', {}, `${tpl.icon} ${tpl.name}`) : null, h('p', { class: 'note' }, `${t('goalMyPlan')}: ${planText(g) || '—'}`),
     h('div', { class: 'chips' }, p.runs ? h('span', { class: 'chip solid' }, t('goalOnTime', { a: p.onTime, b: p.runs })) : null, p.checks ? h('span', { class: 'chip solid' }, `${MOODS[Math.round(p.avgRating) - 1]?.emoji ?? ''} ${t('goalChecks', { n: p.checks })}`) : null,
       p.trend > 0 ? h('span', { class: 'chip solid' }, `📈 ${t('goalBetter')}`) : null),
+    strategyStats(g)[0] ? h('p', { class: 'note' }, `⭐ ${t('goalBestStrat', { s: stratText(strategyStats(g)[0].id), avg: Math.round(strategyStats(g)[0].avg * 10) / 10 })}`) : null,
     g.done ? null : h('div', { class: 'row-btns' }, h('button', { class: 'btn small primary', type: 'button', onclick: () => openCheckin(g, redraw) }, `✔ ${t('checkTitle')}`),
       h('button', { class: 'btn small', type: 'button', onclick: () => openGoalWizard(g, { onSave: async (x) => { await S.saveGoal(x); redraw(); } }) }, t('edit')),
       h('button', { class: 'btn small', type: 'button', onclick: async () => { await S.saveGoal({ ...g, done: true, doneAt: Date.now() }); toast(t('goalCongrats')); redraw(); } }, `🎉 ${t('goalAchieved')}`)),

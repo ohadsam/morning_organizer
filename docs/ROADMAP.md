@@ -28,6 +28,12 @@ Status: 💡 idea · 🔬 needs a decision / research · ✅ built (see CHANGELO
 - ✅ (1.12) Task difficulty + kind thoughts + relaxation, difficulty statistics, report/PDF/e-mail export.
 - 💡 Selectable text in the PDF (needs an embedded font); scheduled weekly report reminder; per-task difficulty trends over time.
 
+- ✅ (1.13) Smart times and smart extra steps by chosen help, estimate-accuracy (self-awareness), strategies-used per goal, parent guiding questions, interactive HTML report, alarms on by default, in-app What's new.
+- 💡 Learn from rejected suggestions; per-child smart-time history for parents; more helper-step types.
+
+- ✅ (1.14) **Retrospective** with applicable changes, before/after impact tracking, conclusions and reports.
+- 💡 Undo an applied change from the retrospective; parent view of a child's look-backs; retrospective reminders by schedule.
+
 ## Family
 - ✅ (1.10) **Weekly parent digest** with plain-language insights ("shoes are the slowest step; try preparing them the night before").
 - ✅ (1.10) **Shared reward menu** and "reward given" confirmation flow.

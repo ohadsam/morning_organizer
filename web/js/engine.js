@@ -7,7 +7,7 @@ export function createRun(tpl, now, opts = {}) {
   const k = opts.scale && opts.scale > 0 && opts.scale < 1 ? opts.scale : 1;
   const sc = (v) => (k === 1 ? v : Math.max(5, Math.round((v * k) / 5) * 5));
   const tasks = tpl.tasks.map((t) => ({
-    id: t.id, name: t.name, icon: t.icon || '', photo: t.photo || '', plannedSec: sc(t.sec), estSec: sc(t.est || t.sec), extraSec: 0,
+    id: t.id, name: t.name, icon: t.icon || '', photo: t.photo || '', helper: t.helper || '', plannedSec: sc(t.sec), estSec: sc(t.est || t.sec), guess: !!t.est, extraSec: 0,
     accumMs: 0, actualSec: 0, startedAt: null, endedAt: null,
     done: false, skipped: false, warned: false, ended: false, difficulty: 0, help: { note: 0, thought: 0, relax: 0 },
   }));

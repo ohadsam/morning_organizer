@@ -179,7 +179,7 @@ class MainActivity : ComponentActivity() {
 
     fun armNfcWrite(text: String?) { nfcWriteText = text }
 
-    fun saveTextFile(name: String, text: String) { pendingSave = text; saveMime = if (name.endsWith(".csv", ignoreCase = true)) "text/csv" else "application/json"; runOnUiThread { createDoc.launch(name) } }
+    fun saveTextFile(name: String, text: String) { pendingSave = text; saveMime = if (name.endsWith(".csv", ignoreCase = true)) "text/csv" else if (name.endsWith(".html", ignoreCase = true)) "text/html" else "application/json"; runOnUiThread { createDoc.launch(name) } }
 
     fun takePending(): String = synchronized(lock) {
         jsReady = true

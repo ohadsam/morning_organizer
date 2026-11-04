@@ -6,12 +6,13 @@ import { moodStats } from './mood.js';
 import * as U from './unplanned.js';
 import * as D from './difficulty.js';
 import { progress as goalProgress } from './cogfun.js';
+import { overview as retroOverview } from './retro.js';
 
 const DAY = 86_400_000, avg = (a) => (a.length ? a.reduce((s, x) => s + x, 0) / a.length : 0);
 const done = (runs) => runs.filter((r) => r.endedAt);
 
 /** scope: { kind: 'period', days: 7|30|90|0 (all), templateId?: string } | { kind: 'run', runId }. */
-export function buildReport({ runs, templates = [], goals = [], profile = {}, scope = { kind: 'period', days: 30 }, now = Date.now() }) {
+export function buildReport({ runs, templates = [], goals = [], retros = [], profile = {}, scope = { kind: 'period', days: 30 }, now = Date.now() }) {
   if (scope.kind === 'run') return runReport(runs, scope.runId, profile, now);
   const from = scope.days ? now - scope.days * DAY : 0;
   const rs = done(runs).filter((r) => r.endedAt >= from && (!scope.templateId || r.templateId === scope.templateId)).sort((a, b) => a.startedAt - b.startedAt);
@@ -34,11 +35,14 @@ export function buildReport({ runs, templates = [], goals = [], profile = {}, sc
   if (mood.insight) insights.push({ key: mood.insight.type === 'happyFaster' ? 'rpMoodFaster' : 'rpMoodSlower', p: { pct: mood.insight.pct } });
   const patterns = scope.templateId ? U.recurring(rs, scope.templateId) : byRoutine.flatMap((r) => U.recurring(rs, r.id));
   if (patterns[0]) insights.push({ key: 'rpPattern', p: { name: patterns[0].label, hits: patterns[0].hits, runs: patterns[0].runs } });
+  const ro = retroOverview(retros.filter((r) => (!scope.templateId || r.templateId === scope.templateId) && r.at >= from), runs);
+  if (ro.total) { const j = ro.improved + ro.worse + ro.same; if (j) insights.push({ key: 'rcvHelped', p: { n: ro.improved, of: j } }); if (ro.stubborn[0]) insights.push({ key: 'rcvStubborn', p: { name: ro.stubborn[0].name, n: ro.stubborn[0].n } }); }
   return {
     kind: 'period', title: tpl ? tpl.name : null, icon: tpl?.icon || '', days: scope.days, from: rs[0]?.startedAt ?? from, to: now, person: profile.name || '', age: profile.age ?? null, empty: !rs.length,
     kpis: { runs: tot.count, onTime: tot.onTime, onTimeRate: tot.count ? tot.onTime / tot.count : 0, avgActualSec: Math.round(tot.avgActual), bestSec: tot.best, stars: ST.totalStars(rs), unplannedCount: unp.count, unplannedSec: unp.sec, avgDifficulty: dif.avg, avgMood: mood.avg },
     series: ST.series(rs), byRoutine, tasks: taskRows.slice(0, 15), hardTasks: hard.slice(0, 8), difficulty: dif, unplanned: unp, mood, heat: heatmap(rs, now, 5), insights,
     goals: goals.map((g) => ({ title: g.title, done: g.done, ...goalProgress(g, rs) })),
+    retro: ro,
   };
 }
 

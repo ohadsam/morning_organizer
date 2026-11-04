@@ -24,7 +24,8 @@ export function normalizeAlarm(a) {
     ...ring(a, FIRST), startMode: START_MODES.includes(a.startMode) ? a.startMode : 'offer', more,
   };
 }
-export const defaultAlarm = () => normalizeAlarm({ enabled: false, time: '07:00', days: [0, 1, 2, 3, 4] });
+/** New routines come with the alarm ON (07:00 on school days) so it is easy to find; switch it off in the editor or on the Alarms screen. */
+export const defaultAlarm = (days = [0, 1, 2, 3, 4], time = '07:00', enabled = true) => normalizeAlarm({ enabled, time, days });
 
 /** Every ring with its offset (minutes after the first one). Index 0 is the main alarm. */
 export function ringsOf(alarm) {

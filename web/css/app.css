@@ -51,7 +51,7 @@ input[type=range] { width: 100%; accent-color: var(--brand); } input[type=checkb
 .emoji { font-size: 2rem; width: 52px; height: 52px; display: grid; place-items: center; background: color-mix(in srgb, var(--accent) 16%, transparent); border-radius: 16px; flex: none; }
 .routine-text { display: grid; } .routine-text small { color: var(--muted); }
 .routine-actions { display: flex; align-items: center; gap: 2px; flex-wrap: wrap; margin-block-start: 6px; } .routine-actions .start { margin-inline-start: auto; }
-.link-card { display: flex; align-items: center; gap: 12px; text-decoration: none; color: inherit; border-inline-start: 6px solid var(--accent); }
+.link-card, .retro-link { display: flex; align-items: center; gap: 12px; text-decoration: none; color: inherit; border-inline-start: 6px solid var(--accent); }
 
 /* editor */
 .tasks { list-style: none; margin: 8px 0; padding: 0; display: grid; gap: 10px; }
@@ -236,7 +236,7 @@ dialog header { display: flex; align-items: center; justify-content: space-betwe
 
 /* ── v1.10 helpers: calm corner, journal, capture, focus areas, reward menu ── */
 .quick { display: flex; gap: 8px; flex-wrap: wrap; margin-block: 8px; } .quick .btn { flex: 1 1 auto; justify-content: center; }
-.focus-card { border-inline-start: 6px solid var(--brand); display: grid; gap: 8px; margin-block: 10px; }
+.focus-card, .retro-card { border-inline-start: 6px solid var(--brand); display: grid; gap: 8px; margin-block: 10px; }
 .area-grid { display: grid; gap: 8px; } .area-pick { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--radius); min-height: 48px; cursor: pointer; }
 .area-pick input { margin-block-start: 3px; } .area-body { display: grid; gap: 2px; } .area-body small { color: var(--muted); }
 .moods { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin-block: 8px; }
@@ -280,8 +280,8 @@ dialog header { display: flex; align-items: center; justify-content: space-betwe
 .tile-btn:hover, .tile-btn:focus-visible { border-color: var(--accent, var(--brand)); } .tile-btn:active { transform: scale(.97); }
 .tb-emoji { font-size: 2.2rem; line-height: 1; } .tile-btn small { color: var(--muted); } .tile-btn strong { font-size: .95rem; overflow-wrap: anywhere; }
 .lib-card { display: grid; gap: 8px; border-inline-start: 6px solid var(--accent, var(--brand)); } .lib-task { align-items: center; gap: 8px; flex-wrap: wrap; }
-.chips.filter .chip { background: var(--surface-2); color: var(--text); border: 2px solid var(--line); min-height: 40px; }
-.chips.filter .chip.on { background: color-mix(in srgb, var(--brand) 22%, var(--surface)); border-color: var(--brand); font-weight: 800; }
+.chips.filter .chip, .chip.cause { background: var(--surface-2); color: var(--text); border: 2px solid var(--line); min-height: 40px; }
+.chips.filter .chip.on, .chip.cause.on { background: color-mix(in srgb, var(--brand) 22%, var(--surface)); border-color: var(--brand); font-weight: 800; }
 
 /* ── alarms screen, goals ── */
 .alarm-line { color: var(--brand); font-weight: 600; } .alarm-card { border-inline-start: 6px solid var(--accent, var(--brand)); display: grid; gap: 8px; }
@@ -303,3 +303,6 @@ dialog header { display: flex; align-items: center; justify-content: space-betwe
 /* report on screen + print */
 .rpt-page { border: 1px solid var(--line); border-radius: 12px; overflow: hidden; background: #fff; margin-block: 12px; max-width: 794px; margin-inline: auto; }
 @media print { body > *:not(#app), #nav, #toast, .rpt-toolbar { display: none !important; } #app { padding: 0 !important; } .rpt-page { border: 0; max-width: none; } .rpt-sec { break-inside: avoid; } }
+.version-line { text-align: center; color: var(--muted); font-size: .85rem; margin-block: 16px 4px; } .version-line .btn.link { padding: 0 4px; min-height: 32px; }
+.smart-hint { margin: 0; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; font-size: .85rem; color: var(--muted); } .smart-slot:empty { display: none; }
+.smart-row { display: flex; gap: 10px; align-items: flex-start; padding: 8px 10px; border: 1px solid var(--line); border-radius: 12px; min-height: 44px; cursor: pointer; } .sr-body { display: grid; gap: 2px; } .smart-row input { margin-top: 3px; }

@@ -28,20 +28,22 @@ export function taskHelpCard(api, routineName) {
     setChildren(out, h('article', { class: 'help-card' }, h('strong', {}, `${x.emoji} ${x.title}`), h('ol', { class: 'help-steps', lang: getLang() }, x.steps.map((s) => h('li', {}, s))),
       h('div', { class: 'row-btns' }, h('button', { class: 'btn small', type: 'button', onclick: () => showRelax(only) }, t('anotherOne')), x.breath ? h('button', { class: 'btn small', type: 'button', onclick: api.openCalm }, `🌬️ ${t('calmTitle')}`) : null, h('button', { class: 'btn small', type: 'button', onclick: () => setChildren(out) }, t('close')))));
   }
-  const btns = h('div', { class: 'row-btns help-btns' });
+  const btns = h('div', { class: 'row-btns help-btns' }), helperSlot = h('div', { class: 'stack' }), sum = h('summary', {});
   function update() {
     const { task, index } = api.current(); if (!task) { el.hidden = true; return; } el.hidden = false;
     setChildren(rated, h('span', { class: 'lbl' }, t('diffAsk')), LEVELS.map((l) => h('button', { class: `diff ${task.difficulty === l.v ? 'on' : ''}`, type: 'button', 'aria-pressed': String(task.difficulty === l.v), 'aria-label': t(`diff${l.v}`), title: t(`diff${l.v}`), onclick: () => { api.rate(index, l.v); update(); } }, l.emoji)));
     const hard = task.difficulty >= 4;
     const HELPER = { calm: () => api.openCalm(), move: () => showRelax(['shake', 'stretch', 'wall', 'squeeze']), thought: showThought };
+    setChildren(helperSlot, task.helper && Object.hasOwn(HELPER, task.helper) ? h('button', { class: 'btn primary', type: 'button', onclick: HELPER[task.helper] }, `▶ ${t(`helper_${task.helper}`)}`) : null);
+    setChildren(sum, h('span', { class: 'fold-t' }, `${LEVELS.find((l) => l.v === task.difficulty)?.emoji || '🙂'} ${t('runHow')}`));
     setChildren(btns,
-      task.helper && Object.hasOwn(HELPER, task.helper) ? h('button', { class: 'btn primary', type: 'button', onclick: HELPER[task.helper] }, `▶ ${t(`helper_${task.helper}`)}`) : null,
       h('button', { class: `btn small ${hard ? 'primary' : ''}`, type: 'button', onclick: () => openCapture({ routine: routineName, task: task.name, difficulty: task.difficulty, hard: true, onSaved: () => api.helped(index, 'note') }) }, `✍️ ${t('whyHard')}`),
       h('button', { class: `btn small ${hard ? 'primary' : ''}`, type: 'button', onclick: showThought }, `💭 ${t('thoughtBtn')}`),
       h('button', { class: `btn small ${hard ? 'primary' : ''}`, type: 'button', onclick: showRelax }, `🧘 ${t('relaxBtn')}`));
     if (hard && !out.firstChild) setChildren(out, h('p', { class: 'note' }, t('diffHardHint')));
   }
-  const el = h('section', { class: 'card task-help' }, rated, btns, out);
+  const fold = h('details', { class: 'help-fold' }, sum, rated, btns);
+  const el = h('section', { class: 'card task-help' }, helperSlot, fold, out);
   update();
   return { el, update, clear: () => setChildren(out) };
 }

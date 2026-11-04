@@ -58,6 +58,12 @@ class NativeBridge(private val activity: MainActivity) {
     @JavascriptInterface fun dictationStart(lang: String) { activity.runOnUiThread { activity.dictation.start(lang.take(8)) } }
     @JavascriptInterface fun dictationStop() { activity.runOnUiThread { activity.dictation.stop() } }
 
+    @JavascriptInterface fun ttsAvailable(): Boolean = activity.voice.available()
+    @JavascriptInterface fun ttsVoices(): String = activity.voice.voices()
+    @JavascriptInterface fun ttsSpeak(id: String, text: String, voice: String, lang: String, pitch: Float, rate: Float) { if (text.length <= 600) activity.voice.speak(id, text, voice.take(120), lang.take(12), pitch, rate) }
+    @JavascriptInterface fun ttsStop() = activity.voice.stop()
+    @JavascriptInterface fun ttsInstallVoices() = activity.voice.installVoices()
+
     @JavascriptInterface fun keepAwake(on: Boolean) = activity.setKeepAwake(on)
 
     @JavascriptInterface fun vibrate(patternJson: String) {

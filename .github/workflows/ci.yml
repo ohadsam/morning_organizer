@@ -31,6 +31,8 @@ jobs:
         run: npx playwright install --with-deps chromium
       - name: End-to-end tests
         run: npm run e2e
+      - name: Layout sweep (sizes x languages x big text)
+        run: QUICK=1 node tests/e2e/layout.mjs
       - name: Dependency audit (dev tooling only - the shipped app has no dependencies)
         run: npm audit --audit-level=high
 

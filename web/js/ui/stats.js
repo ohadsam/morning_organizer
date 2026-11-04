@@ -1,4 +1,4 @@
-import { h, fmtDur, fmtHuman } from '../util.js';
+import { h, fmtDur, fmtHuman, setChildren } from '../util.js';
 import { t, units, getLang } from '../i18n.js';
 import * as S from '../store.js';
 import * as ST from '../stats.js';
@@ -90,7 +90,7 @@ export function renderStats(root, templateId, nav) {
     if (!templateId) {
       const items = templates.map((x) => ({ x, n: ST.finished(runs, x.id).length }));
       const hasRuns = items.some((i) => i.n);
-      root.replaceChildren(h('h1', {}, t('statsTitle')), hasRuns ? overview(runs) : null, hasRuns ? achievementsCard(runs) : null, hasRuns ? moodCard(runs) : null, hasRuns ? unplannedCard(runs) : null, hasRuns ? retroCard(runs) : null, hasRuns ? awarenessCard(runs) : null, hasRuns ? difficultyCard(runs) : null, hasRuns ? exportCard(nav) : null,
+      setChildren(root, h('h1', {}, t('statsTitle')), hasRuns ? overview(runs) : null, hasRuns ? achievementsCard(runs) : null, hasRuns ? moodCard(runs) : null, hasRuns ? unplannedCard(runs) : null, hasRuns ? retroCard(runs) : null, hasRuns ? awarenessCard(runs) : null, hasRuns ? difficultyCard(runs) : null, hasRuns ? exportCard(nav) : null,
         hasRuns ? h('div', { class: 'stack' }, items.filter((i) => i.n).map(({ x, n }) =>
           h('a', { class: 'card link-card', href: `#/stats/${x.id}`, style: { '--accent': x.color } }, h('span', { class: 'emoji' }, x.icon), h('span', { class: 'routine-text' }, h('strong', {}, x.name), h('small', {}, t('runsCount', { n })))))) : h('p', { class: 'empty' }, t('noStats')));
       return;
@@ -100,7 +100,7 @@ export function renderStats(root, templateId, nav) {
     if (!tpl) { nav('#/stats'); return; }
     const u = units(), tot = ST.totals(rs);
     const ins = ST.insights(rs);
-    root.replaceChildren(
+    setChildren(root, 
       h('div', { class: 'page-head' }, iconBtn('back', t('back'), () => nav('#/stats')), h('h1', {}, `${tpl.icon} ${tpl.name}`)),
       !rs.length ? h('p', { class: 'empty' }, t('noStats')) : h('div', {}, [
         h('div', { class: 'tiles' },

@@ -32,6 +32,10 @@ export const native = {
   nfcOffer: (text) => call('nfcOffer', text) === true, nfcOfferStop: () => call('nfcOfferStop'),
   nfcReceive: (seconds = 60) => call('nfcReceive', seconds), nfcReceiveStop: () => call('nfcReceiveStop'),
   dictationAvailable: () => call('dictationAvailable') === true, dictationStart: (lang) => call('dictationStart', lang), dictationStop: () => call('dictationStop'),
+  /** The phone's own text-to-speech (Android app): voices [{name, lang, quality, network}], speak one phrase with an exact voice/pitch/rate, stop, download more voices. */
+  ttsAvailable: () => call('ttsAvailable') === true,
+  ttsVoices: () => { try { const a = JSON.parse(call('ttsVoices') || '[]'); return Array.isArray(a) ? a : []; } catch { return []; } },
+  ttsSpeak: (id, text, voice, lang, pitch, rate) => call('ttsSpeak', id, text, voice, lang, pitch, rate), ttsStop: () => call('ttsStop'), ttsInstallVoices: () => call('ttsInstallVoices'),
   scanQr: () => call('scanQr'),
   nfcWrite: (text) => call('nfcWrite', text),
   nfcCancel: () => call('nfcCancel'),

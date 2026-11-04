@@ -1,5 +1,5 @@
 // The tip card: category + personalised tip, breathing animation for breathing tips, "another tip" and read-aloud.
-import { h } from '../util.js';
+import { h, setChildren } from '../util.js';
 import { t, getLang } from '../i18n.js';
 import * as S from '../store.js';
 import { pickTip, CATEGORIES } from '../coach.js';
@@ -22,7 +22,7 @@ export function createCoach(host) {
     const tip = pickTip({ situation, lang: getLang(), age: s.age, gender: s.gender, name: s.personName, seen, areas: S.activeProfile().focus });
     if (!tip) return;
     const cat = CATEGORIES[tip.cat];
-    host.replaceChildren(h('article', { class: `coach-card ${cat.breath ? 'has-breath' : ''}`, 'aria-label': t('coach') },
+    setChildren(host, h('article', { class: `coach-card ${cat.breath ? 'has-breath' : ''}`, 'aria-label': t('coach') },
       h('div', { class: 'coach-head' }, h('span', { class: 'coach-cat' }, `${cat.emoji} ${t(`cat_${tip.cat}`)}`),
         taskName ? h('small', {}, t('tipFor', { name: taskName })) : null, iconBtn('close', t('close'), hide)),
       cat.breath ? h('div', { class: 'breath', 'aria-hidden': 'true' }, h('i', {})) : null,

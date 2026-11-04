@@ -52,6 +52,7 @@ class MainActivity : ComponentActivity() {
     val nfcReader by lazy { NfcReaderLink(this) { deliver(it) } }
     val bt by lazy { BtLink(applicationContext) { deliver(it) } }
     val dictation by lazy { DictationLink(this) { deliver(it) } }
+    val voice by lazy { VoiceLink(this) { deliver(it) } }
     private var pendingSave: String? = null
     private var micRequest: PermissionRequest? = null
     private val micWaiters = mutableListOf<(Boolean) -> Unit>()
@@ -149,7 +150,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onPause() { dictation.stop(); nfcReader.stop(); NfcOffer.clear(); nfc?.disableForegroundDispatch(this); web.onPause(); super.onPause() }
 
-    override fun onDestroy() { dictation.stop(); bt.close(); web.destroy(); super.onDestroy() }
+    override fun onDestroy() { dictation.stop(); voice.shutdown(); bt.close(); web.destroy(); super.onDestroy() }
 
     fun setKeepAwake(on: Boolean) = runOnUiThread {
         if (on) window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON) else window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)

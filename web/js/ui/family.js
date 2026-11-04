@@ -68,7 +68,7 @@ function openInvite() {
   const make = h('button', { class: 'btn primary', type: 'button', onclick: async () => {
     make.disabled = true;
     const { code } = await F.createInvite(S.get().settings.personName || '', { live: live.checked });
-    out.replaceChildren(codeTools(code, t('inviteTitle')), h('small', { class: 'hint' }, t('inviteFresh')), reply,
+    setChildren(out, codeTools(code, t('inviteTitle')), h('small', { class: 'hint' }, t('inviteFresh')), reply,
       h('div', { class: 'toolbar wrap' }, h('button', { class: 'btn', type: 'button', onclick: async () => { if (reply.value.trim()) { await routeIncoming(reply.value); reply.value = ''; } } }, t('inviteProcess')), tapReceiveButton()));
   } }, t('inviteGenerate'));
   return modal(t('inviteTitle'), h('div', { class: 'stack' }, h('p', { class: 'note' }, t('inviteHint')),
@@ -79,7 +79,7 @@ function openInvite() {
 function openBluetooth(role) {
   const body = h('div', { class: 'stack' });
   const draw = () => {
-    if (!native.available || !btAvailable()) { body.replaceChildren(h('p', { class: 'note' }, t('btOnlyApp'))); return; }
+    if (!native.available || !btAvailable()) { setChildren(body, h('p', { class: 'note' }, t('btOnlyApp'))); return; }
     const st = native.btStatus(), bs = btState();
     const note = st === 'no-permission' ? t('btNoPerm') : st === 'off' ? t('btOff') : bs.state === 'listening' ? t('btListening') : bs.open ? `${t('btConnected')} ${bs.peer}` : bs.state.startsWith('error') ? t('btError') : '';
     const kids = [h('p', { class: 'note' }, t('btPairFirst')), note ? h('p', { role: 'status', class: 'chip solid' }, note) : null];

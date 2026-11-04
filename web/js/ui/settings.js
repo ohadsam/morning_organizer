@@ -1,11 +1,12 @@
-import { h } from '../util.js';
+import { h, setChildren } from '../util.js';
 import { t, setLang } from '../i18n.js';
 import * as S from '../store.js';
 import { signal, unlockAudio } from '../audio.js';
 import { native } from '../native.js';
 import { setAwake } from '../awake.js';
-import { PRESETS, GROUPS, personaIds, voicesFor, ttsSupported, voiceLabel } from '../speech.js';
+import { PRESETS, GROUPS, personaIds, voicesFor, ttsSupported, voiceLabel, canInstallVoices, installVoices } from '../speech.js';
 import { speakWithSettings } from './coach.js';
+import { suggestionsOn, setSuggestionsOn } from './suggest.js';
 import { applyA11y, FONT_SCALES } from '../a11y.js';
 import { requestGate } from './gate.js';
 import { avatarNode, openAvatarPicker, openProfiles, openProfileEditor } from './avatar.js';
@@ -56,34 +57,37 @@ function voiceControls(st, set) {
     h('label', { class: 'field' }, h('span', { class: 'lbl' }, t('voice')), voiceSel),
     h('label', { class: 'field' }, rateLbl, h('input', { type: 'range', min: 70, max: 130, step: 5, value: st.voiceRate, 'aria-label': t('voicePace'), oninput: (e) => { rateLbl.textContent = `${t('voicePace')}: ${e.target.value}%`; }, onchange: async (e) => { await set({ voiceRate: +e.target.value }); sample(); } }), h('small', { class: 'hint' }, t('voicePaceHint'))),
     select(t('voiceFlavorLabel'), st.voiceFlavor, ['neutral', 'casual', 'warm', 'formal'].map((k) => [k, t(`flv_${k}`)]), async (v) => { await set({ voiceFlavor: v }); sample(); }), h('small', { class: 'hint' }, t('voiceFlavorHint')),
-    h('div', { class: 'toolbar' }, h('button', { class: 'btn', type: 'button', onclick: sample }, '🔊', t('voiceTest'))), note,
+    h('div', { class: 'toolbar' }, h('button', { class: 'btn', type: 'button', onclick: sample }, '🔊', t('voiceTest')), canInstallVoices() ? h('button', { class: 'btn', type: 'button', onclick: () => installVoices() }, '⬇️', t('voiceGetMore')) : null), note,
     h('details', { class: 'card' }, h('summary', {}, t('voiceTipTitle')), h('p', { class: 'note' }, t('voiceTipBody'))));
 }
 
 /** A collapsible settings group; its open/closed state is remembered per group. */
+let focusGroup = '';
 function group(key, title, open, ...kids) {
   let saved = {}; try { saved = JSON.parse(localStorage.getItem('mo.sg') || '{}'); } catch { /* blocked */ }
-  const d = h('details', { class: 'card settings-group', open: key in saved ? saved[key] : open }, h('summary', {}, h('h2', {}, title)), h('div', { class: 'stack' }, kids));
+  const d = h('details', { class: 'card settings-group', dataset: { group: key }, open: key === focusGroup ? true : key in saved ? saved[key] : open }, h('summary', {}, h('h2', {}, title)), h('div', { class: 'stack' }, kids));
   d.addEventListener('toggle', () => { try { localStorage.setItem('mo.sg', JSON.stringify({ ...JSON.parse(localStorage.getItem('mo.sg') || '{}'), [key]: d.open })); } catch { /* blocked */ } });
   return d;
 }
 export const ACCENTS = ['', '#5b4bd5', '#0b6fc4', '#0a7a5f', '#c2410c', '#be185d', '#334155'];
 
-export function renderSettings(root, version) {
+export function renderSettings(root, version, focusKey = '') {
+  focusGroup = /^[a-z]{2,12}$/.test(focusKey) ? focusKey : '';
+  if (focusGroup) queueMicrotask(() => setTimeout(() => document.querySelector(`details[data-group="${focusGroup}"]`)?.scrollIntoView({ block: 'start' }), 60));
   let alive = true; // a redraw that finishes after the person already left this page must NOT overwrite the page they are on
   const draw = () => {
     if (!alive) return;
     const st = S.get().settings;
     const set = async (p, redraw = false) => { await S.updateSettings(p); if (redraw) draw(); };
-    root.replaceChildren(
+    setChildren(root, 
       h('h1', {}, t('settings')),
-      group('look', t('appearance'), true,
+      group('look', t('appearance'), false,
         select(t('language'), st.lang, [['auto', t('langAuto')], ['he', 'עברית'], ['en', 'English']], async (v) => { await S.updateSettings({ lang: v }); try { localStorage.setItem('mo.lang', v); } catch { /* blocked */ } setLang(v); location.reload(); }),
         select(t('theme'), st.theme, [['auto', t('themeAuto')], ['light', t('themeLight')], ['dark', t('themeDark')]], (v) => { applyTheme(v); try { localStorage.setItem('mo.theme', v); } catch { /* blocked */ } set({ theme: v }); }),
         select(t('textStyle'), st.textStyle, [['auto', t('textAuto')], ['playful', t('textPlayful')], ['plain', t('textPlain')]], (v) => set({ textStyle: v }, true)), h('small', { class: 'hint' }, t('textStyleHint')),
         h('div', { class: 'field' }, h('span', { class: 'lbl' }, t('accent')), h('div', { class: 'swatches', role: 'radiogroup', 'aria-label': t('accent') }, ACCENTS.map((c) => h('button', { type: 'button', class: `swatch ${st.accent === c ? 'on' : ''}`, style: { '--c': c || '#6c5ce7' }, role: 'radio', 'aria-checked': String(st.accent === c), 'aria-label': c || t('themeAuto'), onclick: async () => { await set({ accent: c }); applyA11y(S.get().settings); draw(); } })))),
         toggle(t('simpleMode'), t('simpleHint'), st.simpleMode, async (v) => { if (v && !(await requestGate())) { draw(); return; } await set({ simpleMode: v }); location.hash = '#/'; location.reload(); })),
-      group('profile', t('profile'), true,
+      group('profile', t('profile'), false,
         h('div', { class: 'field' }, h('span', { class: 'lbl' }, t('profilesTitle')),
           h('div', { class: 'profile-grid' }, S.profiles().map((p) => h('button', { type: 'button', class: `profile-card ${p.id === S.activeProfile().id ? 'on' : ''}`, 'aria-pressed': String(p.id === S.activeProfile().id), onclick: async () => { await S.switchProfile(p.id); draw(); } },
             avatarNode(p.avatar, { size: 52 }), h('strong', {}, p.name || t('untitledProfile')))),
@@ -116,10 +120,11 @@ export function renderSettings(root, version) {
       group('coach', `🧘 ${t('coach')}`, false,
         toggle(t('coachButton'), '', st.coachButton, (v) => set({ coachButton: v })),
         toggle(t('coachAuto'), t('coachAutoHint'), st.coachAuto, (v) => set({ coachAuto: v })),
+        toggle(t('sugSetting'), t('sugSettingHint'), suggestionsOn(), (v) => setSuggestionsOn(v)),
         h('small', { class: 'hint' }, t('coachDisclaimer'))),
       ttsSupported() ? group('voice', `🔊 ${t('voiceSection')}`, false, h('small', { class: 'hint' }, t('voiceHint')),
         toggle(t('speakOn'), '', st.speak, (v) => set({ speak: v })), toggle(t('coachSpeak'), '', st.coachSpeak, (v) => set({ coachSpeak: v })), voiceControls(st, set)) : null,
-      group('alerts', t('alertsSection'), true,
+      group('alerts', t('alertsSection'), false,
         select(t('soundMode'), st.mode, [['both', t('mBoth')], ['beep', t('mBeep')], ['vibrate', t('mVibrate')], ['silent', t('mSilent')]], (v) => set({ mode: v })),
         h('label', { class: 'field' }, h('span', { class: 'lbl' }, `${t('volume')}: ${st.volume}%`), h('input', { type: 'range', min: 0, max: 100, value: st.volume, oninput: (e) => { e.target.previousSibling.textContent = `${t('volume')}: ${e.target.value}%`; S.updateSettings({ volume: +e.target.value }); } })),
         select(t('warnBefore'), st.warnSec, [[0, t('warnOff')], [5, t('warnSec', { n: 5 })], [10, t('warnSec', { n: 10 })], [15, t('warnSec', { n: 15 })], [30, t('warnSec', { n: 30 })]], (v) => set({ warnSec: +v })),

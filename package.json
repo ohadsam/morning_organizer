@@ -1,6 +1,6 @@
 {
   "name": "morning-organizer",
-  "version": "1.16.0",
+  "version": "1.17.0",
   "private": true,
   "type": "module",
   "description": "Morning routine organizer - PWA + Android shell",
@@ -9,7 +9,8 @@
     "check": "node scripts/static-checks.mjs",
     "e2e": "node tests/e2e/smoke.mjs",
     "serve": "node scripts/serve.mjs",
-    "bump": "node scripts/bump-version.mjs"
+    "bump": "node scripts/bump-version.mjs",
+    "layout": "node tests/e2e/layout.mjs"
   },
   "devDependencies": {
     "axe-core": "^4.10.2",

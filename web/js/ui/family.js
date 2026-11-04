@@ -16,6 +16,7 @@ import { qrFits } from '../qr.js';
 import { avatarNode } from './avatar.js';
 import { openFocusPicker } from './focus.js';
 import { openMenuEditor } from './menu.js';
+import { openGoalWizard } from './goals.js';
 
 const ago = (ms) => (ms ? new Date(ms).toLocaleString(getLang(), { dateStyle: 'short', timeStyle: 'short' }) : '—');
 const mini = (pct) => h('div', { class: 'bar', role: 'progressbar', 'aria-valuemin': '0', 'aria-valuemax': '100', 'aria-valuenow': String(Math.round(pct * 100)) }, h('i', { style: { width: `${Math.round(clamp(pct, 0, 1) * 100)}%` } }));
@@ -140,6 +141,8 @@ function childCard(link) {
     h('div', { class: 'row-btns' },
       h('button', { class: 'btn', type: 'button', onclick: () => openAssign(link) }, '📋 ', t('assignRoutine')), h('button', { class: 'btn', type: 'button', onclick: () => openCheer(link) }, '👏 ', t('cheerTitle')), h('button', { class: 'btn', type: 'button', onclick: () => openGoal(link) }, '🎁 ', t('goalTitle')),
       h('button', { class: 'btn', type: 'button', onclick: () => openFocusPicker({ areas: c.focus?.areas || [], tools: c.focus?.tools || {}, title: t('focusFor', { name: link.peer.name }), intro: t('focusParentIntro', { name: link.peer.name }), onSave: async (v) => deliver(await F.setFocus(link.id, v), link.peer.name) }) }, '🎯 ', t('focusTitle')),
+      r?.active ? h('button', { class: 'btn', type: 'button', onclick: async () => deliver(await F.sitWith(link.id), link.peer.name) }, '👀 ', t('sitWith')) : null,
+      h('button', { class: 'btn', type: 'button', onclick: () => openGoalWizard(null, { parent: true, onSave: async (g) => deliver(await F.sendGoalPlan(link.id, g), link.peer.name) }) }, '🎯 ', t('goalSuggest')),
       h('button', { class: 'btn', type: 'button', onclick: () => openMenuEditor(c.menu || [], async (m) => deliver(await F.sendMenu(link.id, m), link.peer.name)) }, '🍦 ', t('menuTitle'))),
     transportRow(link, 'parent'));
 }

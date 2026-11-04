@@ -11,6 +11,7 @@ import { sanitizeAvatar, shareableAvatar, avatarEmoji } from './avatar.js';
 import { publicProfile, sanitizeTools } from './profiles.js';
 import { sanitizeAreas } from './focus.js';
 import { sanitizeMenu } from './menu.js';
+import { sanitizeGoal as sanitizeCogGoal } from './cogfun.js';
 
 export const INVITE_TTL_MS = 24 * 3600 * 1000;
 const state = { links: [], invites: [], live: new Map(), offers: new Map(), ready: false };
@@ -124,8 +125,13 @@ async function dispatch(link, msg) {
     if (msg.t === 'welcome') { link.parent.name = cleanText(p.parentName, 30) || link.parent.name; link.parent.goal = sanitizeGoal(p.goal); }
     else if (msg.t === 'cheer') { link.parent.cheers = [{ text: cleanText(p.text, 120), emoji: cleanText(p.emoji, 8), at: Date.now() }, ...(link.parent.cheers || [])].slice(0, 20); }
     else if (msg.t === 'goal') { link.parent.goal = sanitizeGoal(p.goal); }
+    else if (msg.t === 'sitwith') { link.parent.sitting = Date.now(); }   // the parent sits with the child (a quiet "body double")
     else if (msg.t === 'focus') { // the parent chooses which helpers this child gets; the child can still fine-tune them later
       const pid = linkProfileId(link); await S.patchProfile(pid, { focus: sanitizeAreas(p.areas), focusSet: true, tools: sanitizeTools(p.tools) });
+    } else if (msg.t === 'cogGoal') { // a parent suggests a goal + plan; the child can edit, link a routine, or delete it
+      const g = sanitizeCogGoal({ id: p.id, title: p.title, strategies: p.strategies, custom: p.custom, from: link.parent.name, since: Date.now() });
+      const mine = S.goals(S.profiles().find((x) => x.id === linkProfileId(link)));
+      if (g.title && mine.length < 5 && !mine.some((x) => x.id === g.id)) await S.saveGoal(g, linkProfileId(link));   // a full list is never silently trimmed by a suggestion
     } else if (msg.t === 'menu') { await S.patchProfile(linkProfileId(link), { menu: sanitizeMenu(p.menu) }); }
     else if (msg.t === 'given') {
       const prof = S.profiles().find((x) => x.id === linkProfileId(link)), id = cleanText(p.id, 64);
@@ -167,8 +173,8 @@ export async function reportFor(link) {
 export async function sendReport(linkId) { const link = linkById(linkId); return send(linkId, 'report', await reportFor(link)); }
 let lastPush = 0;
 /** Called by the runner on every task change: live links get fresh progress (throttled). */
-export function pushActive() {
-  if (Date.now() - lastPush < 15_000) return; lastPush = Date.now();
+export function pushActive(force = false) {
+  if (!force && Date.now() - lastPush < 15_000) return; lastPush = Date.now();
   for (const l of childLinks()) if (isLive(l.id)) sendReport(l.id).catch(() => {});
 }
 /** Called after a run is saved: report to live parents, flag the rest, and detect reached reward goals. -> goals reached [{link, goal}] */
@@ -198,6 +204,10 @@ export async function setFocus(linkId, { areas, tools }) {
   const link = linkById(linkId); link.child.focus = { areas: sanitizeAreas(areas), tools: sanitizeTools(tools) };
   return send(linkId, 'focus', { areas: link.child.focus.areas, tools: link.child.focus.tools });
 }
+export async function sendGoalPlan(linkId, g) { const c = sanitizeCogGoal({ ...g, id: g.id || undefined }); return send(linkId, 'cogGoal', { id: c.id, title: c.title, strategies: c.strategies, custom: c.custom }); }
+/** Parent: "I am with you" while the child does a routine. */
+export const sitWith = (linkId) => send(linkId, 'sitwith', {});
+export const sittingParent = (maxMs = 20 * 60_000) => childLinks().find((l) => l.parent.sitting && Date.now() - l.parent.sitting < maxMs)?.parent ?? null;
 export async function sendMenu(linkId, menu) { const link = linkById(linkId); link.child.menu = sanitizeMenu(menu); return send(linkId, 'menu', { menu: link.child.menu }); }
 export async function markGiven(linkId, id) { const link = linkById(linkId); link.child.requests = (link.child.requests || []).filter((r) => r.id !== id); return send(linkId, 'given', { id }); }
 /** Child side: ask the parent for a reward (the stars were already spent locally). */

@@ -16,6 +16,7 @@ import { toolsFor } from './focus.js';
 import { widgetItems } from './widgetData.js';
 import { sanitizeMood } from './mood.js';
 import { sanitizeUnplanned, sanitizeWatch } from './unplanned.js';
+import { sanitizeGoal, MAX_GOALS } from './cogfun.js';
 import { sanitizeLibrary, mergeLibrary, upsert, fromTemplate, fromTask, MAX_ROUTINES as LIB_R, MAX_TASKS as LIB_T, IDEA_ROUTINES } from './library.js';
 import { eraseJournal } from './journal.js';
 import { newProfile, normalizeProfile, runsOf, MAX_PROFILES } from './profiles.js';
@@ -104,6 +105,16 @@ export async function init() {
   emit();
 }
 
+// ── goals (Goal - Plan - Do - Check) live on the profile ──
+export const goals = (p = activeProfile()) => p?.goals ?? [];
+export async function saveGoal(g, profileId = activeProfile().id) {
+  const p = state.profiles.find((x) => x.id === profileId); if (!p) return null;
+  const clean = sanitizeGoal(g); if (!clean.title) return null;
+  const i = p.goals.findIndex((x) => x.id === clean.id), next = i >= 0 ? p.goals.map((x, k) => (k === i ? clean : x)) : [...p.goals, clean].slice(-MAX_GOALS);
+  await patchProfile(profileId, { goals: next }); return clean;
+}
+export async function removeGoal(id) { const p = activeProfile(); await patchProfile(p.id, { goals: p.goals.filter((x) => x.id !== id) }); }
+export async function addCheck(goalId, { rating, note = '' }) { const g = goals().find((x) => x.id === goalId); if (g) await saveGoal({ ...g, checks: [...g.checks, { at: Date.now(), rating, note }] }); }
 // ── template library: reusable tasks and routines ──
 export const library = () => state.library;
 const persistLib = async () => { await db.put('kv', state.library, 'library'); emit(); };
@@ -232,7 +243,7 @@ export async function updateSettings(patch) {
   if ('age' in patch) { const n = Math.round(Number(patch.age)); patch = { ...patch, age: Number.isFinite(n) && n >= 3 && n <= 120 ? n : null }; }
   if ('fontScale' in patch && ![100, 115, 130, 150].includes(patch.fontScale)) delete patch.fontScale;
   if ('textStyle' in patch && !['auto', 'playful', 'plain'].includes(patch.textStyle)) delete patch.textStyle;
-  if ('timerStyle' in patch && !['auto', 'ring', 'pie', 'bar'].includes(patch.timerStyle)) delete patch.timerStyle;
+  if ('timerStyle' in patch && !['auto', 'ring', 'pie', 'bar', 'sand'].includes(patch.timerStyle)) delete patch.timerStyle;
   if ('paceMode' in patch && !['normal', 'quick', 'calm'].includes(patch.paceMode)) delete patch.paceMode;
   if ('contrast' in patch && !['normal', 'high'].includes(patch.contrast)) delete patch.contrast;
   if ('accent' in patch && !(patch.accent === '' || /^#[0-9a-f]{6}$/i.test(patch.accent))) delete patch.accent;
@@ -287,7 +298,7 @@ export function exportAll() {
 export function sanitizeSettings(raw) {
   const out = {};
   if (!raw || typeof raw !== 'object') return out;
-  const ENUM = { lang: ['auto', 'he', 'en'], theme: ['auto', 'light', 'dark'], mode: ['both', 'beep', 'vibrate', 'silent'], paceMode: ['normal', 'quick', 'calm'], contrast: ['normal', 'high'], textStyle: ['auto', 'playful', 'plain'], timerStyle: ['auto', 'ring', 'pie', 'bar'], fontScale: [100, 115, 130, 150] };
+  const ENUM = { lang: ['auto', 'he', 'en'], theme: ['auto', 'light', 'dark'], mode: ['both', 'beep', 'vibrate', 'silent'], paceMode: ['normal', 'quick', 'calm'], contrast: ['normal', 'high'], textStyle: ['auto', 'playful', 'plain'], timerStyle: ['auto', 'ring', 'pie', 'bar', 'sand'], fontScale: [100, 115, 130, 150] };
   for (const [k, def] of Object.entries(DEFAULT_SETTINGS)) {
     if (k === 'seeded' || !(k in raw)) continue;
     const v = raw[k];

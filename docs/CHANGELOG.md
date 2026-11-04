@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.11.0
+- **Alarms are easy to find**: a new ⏰ Alarms screen (home → Alarms) lists every routine with its alarm, switch on/off and edit (wake-up chain, sounds, messages, offer or auto start); each routine card shows its alarm; a one-time "What's new" sheet points to it.
+
 ## 1.10.0
 - **Template library**: save tasks and whole routines as reusable templates, add them with big easy tiles (search + categories, 37 ready-made task ideas and 6 ready-made routines), a Templates page to use / rename / edit / share / delete (with Undo), included in backups and sync codes. Large, simple tiles also for children.
 - **Easier task editing**: a time sheet (quick times, steppers, exact minutes/seconds) with − / + buttons on every task, and a **☰ task menu** (add below, duplicate, move up/down/top/bottom, picture, remove).

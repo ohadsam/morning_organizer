@@ -282,3 +282,15 @@ dialog header { display: flex; align-items: center; justify-content: space-betwe
 .lib-card { display: grid; gap: 8px; border-inline-start: 6px solid var(--accent, var(--brand)); } .lib-task { align-items: center; gap: 8px; flex-wrap: wrap; }
 .chips.filter .chip { background: var(--surface-2); color: var(--text); border: 2px solid var(--line); min-height: 40px; }
 .chips.filter .chip.on { background: color-mix(in srgb, var(--brand) 22%, var(--surface)); border-color: var(--brand); font-weight: 800; }
+
+/* ── alarms screen, goals ── */
+.alarm-line { color: var(--brand); font-weight: 600; } .alarm-card { border-inline-start: 6px solid var(--accent, var(--brand)); display: grid; gap: 8px; }
+
+.goal-card { display: grid; gap: 8px; border-inline-start: 6px solid var(--brand); } .goal-card.achieved { opacity: .75; }
+.gpdc { display: flex; gap: 6px; flex-wrap: wrap; } .gpdc .chip { background: var(--surface-2); color: var(--text); border: 1px solid var(--line); }
+.strat-pick { display: flex; gap: 10px; align-items: flex-start; padding: 8px 10px; border: 1px solid var(--line); border-radius: 12px; min-height: 44px; cursor: pointer; }
+
+/* sand clock look */
+.sand-svg { display: none; } .ring.sandy { width: min(86vw, 320px); aspect-ratio: auto; min-height: 260px; border-radius: 28px; background: var(--surface-2); } .ring.sandy::before { display: none; }
+.ring.sandy .sand-svg { display: block; width: 90px; height: 150px; margin-inline: auto; } .sand-svg .sand { fill: var(--brand); } .sand-svg .glass { stroke: var(--text); stroke-width: 2; stroke-linejoin: round; }
+.ring.sandy.over .sand-svg .sand { fill: var(--bad); }

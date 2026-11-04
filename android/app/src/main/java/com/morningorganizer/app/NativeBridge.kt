@@ -29,6 +29,8 @@ class NativeBridge(private val activity: MainActivity) {
 
     @JavascriptInterface fun setWidget(json: String) { if (json.length <= MAX_JSON) { RoutineWidget.save(ctx, json); RoutineCardWidget.save(ctx, json) } }
 
+    @JavascriptInterface fun setStats(json: String) { if (json.length <= 2048) StatsWidget.save(ctx, json) }
+
     /** Snapshot of the routine in progress for the progress widget. */
     @JavascriptInterface fun setProgress(json: String) { if (json.length <= 4096) RunWidget.save(ctx, json) }
 

@@ -90,6 +90,10 @@
             <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE"/></intent-filter>
             <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_run_info"/>
         </receiver>
+        <receiver android:name=".StatsWidget" android:exported="false" android:label="@string/widget_stats_label">
+            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE"/></intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_stats_info"/>
+        </receiver>
         <receiver android:name=".CalmWidget" android:exported="false" android:label="@string/shortcut_calm">
             <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE"/></intent-filter>
             <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_calm_info"/>

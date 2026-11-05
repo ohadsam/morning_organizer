@@ -26,10 +26,11 @@ import { renderRetro, renderRetros } from './ui/retro.js';
 import { renderReport } from './ui/report.js';
 import { renderAlarms } from './ui/alarms.js';
 import { renderGoals } from './ui/goals.js';
-import { maybeShowWhatsNew, setVersion } from './ui/whatsnew.js';
+import { maybeShowWhatsNew, setVersion, getVersion } from './ui/whatsnew.js';
 import { renderLibrary } from './ui/library.js';
 import { renderCalm } from './ui/calm.js';
 import { openSearch } from './ui/search.js';
+import { createUpdater, canAutoUpdate } from './update.js';
 import { renderJournal } from './ui/journal.js';
 import { lockAll } from './journal.js';
 
@@ -122,11 +123,20 @@ async function boot() {
   if (!S.get().settings.profileDone) openWelcome(); else maybeShowWhatsNew(version, nav);
 
   if ('serviceWorker' in navigator && !native.available && location.protocol.startsWith('http')) {
+    const hadController = !!navigator.serviceWorker.controller;
     navigator.serviceWorker.register('sw.js').then((reg) => {
-      reg.addEventListener('updatefound', () => reg.installing?.addEventListener('statechange', function () {
-        if (this.state === 'installed' && navigator.serviceWorker.controller) toast(t('updateReady'), { label: t('reload'), fn: () => location.reload() });
-      }));
+      const apply = () => { try { sessionStorage.setItem('mo.updated', '1'); } catch { /* blocked */ } location.reload(); };
+      const gate = () => canAutoUpdate({ view: document.body.dataset.view || '', dialogOpen: !!document.querySelector('dialog[open]'), typing: /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement?.tagName || '') && document.activeElement?.type !== 'checkbox' && document.activeElement?.type !== 'radio' && document.activeElement?.type !== 'range' });
+      const up = createUpdater({ check: () => reg.update(), gate, apply, announce: () => toast(t('updateReady'), { label: t('reload'), fn: apply }) });
+      // a new version was downloaded and took over (skipWaiting): switch to it when it is safe
+      navigator.serviceWorker.addEventListener('controllerchange', () => { if (hadController) up.updateReady(); });
+      reg.addEventListener('updatefound', () => reg.installing?.addEventListener('statechange', function () { if (this.state === 'installed' && navigator.serviceWorker.controller) up.updateReady(); }));
+      // look for a new version when the app comes back, and every hour while it stays open; retry the switch while an update waits
+      document.addEventListener('visibilitychange', () => { if (!document.hidden) { up.checkNow(); up.tick(); } });
+      setInterval(() => up.checkNow(), 60 * 60 * 1000); setInterval(() => up.tick(), 15 * 1000);
+      up.checkNow();
     }).catch(() => {});
+    try { if (sessionStorage.getItem('mo.updated')) { sessionStorage.removeItem('mo.updated'); setTimeout(() => toast(t('updatedNow', { v: getVersion() || '' })), 1200); } } catch { /* blocked */ }
   }
 }
 boot();

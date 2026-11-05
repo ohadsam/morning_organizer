@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.18.1
+- **Automatic updates for the web app**: the service worker already downloaded new versions; now the app also looks for one when it comes back to the foreground and every hour, and **reloads into the new version by itself when that is safe** (not during a run, with a sheet open, or while typing - then the "Update ready" prompt appears once and the switch happens as soon as it is safe). A short "Updated to version X" note follows (`update.js`, unit-tested).
+- **Share the app itself** (PWA and Android app): Settings -> App -> Share, or search "share". Two blocks - the Android app (APK link) and the web app (PWA link) - each by **WhatsApp**, **e-mail**, the system share sheet or a copied link, in Hebrew or English (`appShare.js`, unit-tested). The Android app now also opens `mailto:` links.
+
 ## 1.18.0
 - **Renamed to SonRise** (display name in the app, PWA manifest, Android launcher, reports, notifications, docs) with a new **logo**: a sun rising over the horizon with the name "SonRise" inside it (`scripts/make-logo.py` + `scripts/make-icons.mjs` regenerate the SVG and every PNG / launcher icon). Package ids and URLs are unchanged so updates keep working.
 - **ONE unified toolbar** on Home: a single row (New · Wizard · Plan ▾ · Calm ▾ · Track ▾ · Alarms) where the dropdowns open one panel in the page flow; the Alarms button pauses/resumes everything.

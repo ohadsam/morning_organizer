@@ -97,6 +97,9 @@ Looking back (retrospective): after a run, tap “Look back” on its summary (o
 ## Alarms, quiet days and the toolbar
 Home has one toolbar - New, Wizard, Plan, Calm, Track and Alarms. Plan, Calm and Track open a short list under the bar; Alarms pauses all alarms (until tomorrow, for a week, or until you switch them on). Every routine card has an alarm switch and a ⏰ sticker when it has an alarm. In an alarm, choose the type of ring (tap a tile to hear it; in the Android app also a sound from your phone) and keep "Quiet on holidays and vacations" on to stay silent on Jewish holidays and school vacations, including the summer. Home shows the Hebrew date and today’s holiday.
 
+## Updates and sharing the app
+The web app updates itself - when you open it, and every hour - and switches to the new version on its own when nothing is running; if you are in the middle of something it asks first. The Android app updates from the latest download. To share SonRise open Settings → App → Share (or search "share"): choose the Android app or the web app, and send it by WhatsApp, e-mail, the share sheet or a copied link.
+
 ## Search, wizard and suggestions
 Tap 🔍 (bottom bar or Home, or press Ctrl+K) and type what you want, e.g. "alarm", "voice" or a routine name - tap a result to go straight there. The wizard (Home → Help me build one, or search "wizard") asks who it is for, how old, what helps, which routine and when, then builds the routine with fitting times and optional calm / focus breaks. Now and then Home shows one gentle suggestion; choose Try it, Not now or Don’t show this again (Settings can switch suggestions off). Screens are kept calm: look under "More" for the rest of the tools.
 

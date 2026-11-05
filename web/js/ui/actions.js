@@ -7,6 +7,7 @@ import { openCapture } from './capture.js';
 import { openMenu } from './menu.js';
 import { openWhatsNew } from './whatsnew.js';
 import { openWizard } from './wizard.js';
+import { openShareApp } from './shareApp.js';
 
 const ACTIONS = {
   newRoutine: async (nav) => { try { const x = S.newTemplate(t('untitled')); await S.saveTemplate(x); nav(`#/edit/${x.id}`); } catch { toast(t('error')); } },
@@ -15,6 +16,7 @@ const ACTIONS = {
   capture: () => openCapture({}),
   rewards: () => openMenu(),
   whatsnew: (nav) => openWhatsNew(nav),
+  shareApp: () => openShareApp(),
 };
 /** Runs a named action; unknown names do nothing (the name may come from stored data). */
 export function runAction(name, nav) { return Object.hasOwn(ACTIONS, name) ? ACTIONS[name](nav) : undefined; }

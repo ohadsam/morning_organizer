@@ -22,6 +22,7 @@ export const ENTRIES = [
   ['family', '👨‍👩‍👧', 'sr_family', { route: '#/family' }, 'family parent child link connect weekly digest', 'משפחה הורה ילד חיבור קישור סיכום שבועי'],
   ['guide', '📖', 'sr_guide', { route: '#/guide' }, 'guide help manual how to tutorial', 'מדריך עזרה הוראות איך'],
   ['whatsnew', '🆕', 'sr_whatsnew', { action: 'whatsnew' }, 'what is new changes version update changelog', 'מה חדש שינויים גרסה עדכון'],
+  ['shareapp', '📣', 'sr_shareapp', { action: 'shareApp' }, 'share app whatsapp email mail send friend invite install link apk', 'שיתוף אפליקציה וואטסאפ מייל שליחה חבר הזמנה התקנה קישור'],
   ['settings', '⚙️', 'sr_settings', { route: '#/settings' }, 'settings options preferences', 'הגדרות אפשרויות העדפות'],
   ['set_look', '🎨', 'sr_set_look', { route: '#/settings/look' }, 'theme dark light colour color language hebrew english appearance accent', 'מראה ערכת נושא כהה בהיר צבע שפה עברית אנגלית'],
   ['set_profile', '🙂', 'sr_set_profile', { route: '#/settings/profile' }, 'profile name age avatar gender kids mode simple', 'פרופיל שם גיל דמות מצב ילדים'],

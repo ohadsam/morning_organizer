@@ -6,6 +6,7 @@ import { native } from '../native.js';
 import { setAwake } from '../awake.js';
 import { PRESETS, GROUPS, personaIds, voicesFor, ttsSupported, voiceLabel, canInstallVoices, installVoices, listEngines, setEngine } from '../speech.js';
 import { speakWithSettings } from './coach.js';
+import { openShareApp } from './shareApp.js';
 import { suggestionsOn, setSuggestionsOn } from './suggest.js';
 import { applyA11y, FONT_SCALES } from '../a11y.js';
 import { requestGate } from './gate.js';
@@ -157,7 +158,7 @@ export function renderSettings(root, version, focusKey = '') {
             h('a', { class: 'btn primary', href: APK_URL, rel: 'noopener', download: 'morning-organizer.apk' }, icon('download', 18), t('downloadApk')),
             deferredInstall ? h('button', { class: 'btn', type: 'button', onclick: async () => { deferredInstall.prompt(); await deferredInstall.userChoice; deferredInstall = null; draw(); } }, t('installPwa')) : null)],
         h('p', { class: 'note' }, `${t('version', { v: version && version !== '0' ? version : getVersion() || '?' })} · ${t('offline')}`),
-        h('button', { class: 'btn', type: 'button', onclick: () => openWhatsNew((hash) => { location.hash = hash; }) }, `🎉 ${t('wnLink')}`)));
+        h('div', { class: 'toolbar wrap' }, h('button', { class: 'btn primary', type: 'button', onclick: () => openShareApp() }, `📣 ${t('shareApp')}`), h('button', { class: 'btn', type: 'button', onclick: () => openWhatsNew((hash) => { location.hash = hash; }) }, `🎉 ${t('wnLink')}`))));
   };
   draw();
   return () => { alive = false; };

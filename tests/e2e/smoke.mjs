@@ -1116,5 +1116,22 @@ await step('v1.18: axe + layout of the new toolbar, ring tiles, pause sheet, ban
   assert.deepEqual(bad, []);
 });
 
+// ── v1.18.1: share the app, auto-update ──
+await step('v1.18.1: share SonRise (Android app + web app) by WhatsApp / e-mail / copy; found by search; axe (he + en)', async () => {
+  const bad = [];
+  for (const lang of ['en', 'he']) {
+    const { page } = await newPage({ lang, foldsClosed: true }); await page.goto(base + '#/settings/app'); if (lang === 'he') await dismissWelcome(page); await page.waitForSelector('details[data-group=app][open]');
+    await page.click('details[data-group=app] button.primary:has-text("📣")'); await page.waitForSelector('dialog[open] a[href^="https://wa.me/"]');
+    assert.equal(await page.locator('dialog[open] section').count(), 2, 'android + web blocks');
+    const hrefs = await page.locator('dialog[open] a').evaluateAll((as) => as.map((a) => a.href)); assert.equal(hrefs.filter((x) => x.startsWith('https://wa.me/?text=')).length, 2); assert.equal(hrefs.filter((x) => x.startsWith('mailto:?subject=')).length, 2);
+    assert.ok(hrefs.some((x) => decodeURIComponent(x).includes('.apk')) && hrefs.some((x) => decodeURIComponent(x).includes('github.io')), 'APK link and PWA link');
+    assert.equal(await page.locator('dialog[open] a[target=_blank][rel~=noopener]').count(), 4);
+    bad.push(...await audit(page, `${lang}/share-app`)); await closeDialogs(page);
+    await page.goto(base + '#/'); await page.waitForSelector('.home-search'); await page.click('.home-search'); await page.fill('.search-input', lang === 'he' ? 'וואטסאפ' : 'whatsapp'); await page.keyboard.press('Enter'); await page.waitForSelector('dialog[open] a[href^="https://wa.me/"]');
+  }
+  if (bad.length) console.error([...new Set(bad)].join('\n'));
+  assert.deepEqual(bad, []);
+});
+
 await browser.close(); server.close();
 console.log(failures ? `\n${failures} e2e step(s) failed` : '\nall e2e steps passed'); process.exit(failures ? 1 : 0);

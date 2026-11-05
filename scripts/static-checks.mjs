@@ -14,7 +14,7 @@ for (const f of js) { const src = readFileSync(f, 'utf8'); for (const [re, name]
 
 // No remote code/fonts/analytics: the CSP says 'self' only, make sure the sources agree.
 for (const f of [...js, 'web/index.html', 'web/css/app.css']) {
-  const src = readFileSync(f, 'utf8').replace(/https:\/\/(github\.com|ohadsam\.github\.io)\S*/g, '');
+  const src = readFileSync(f, 'utf8').replace(/https:\/\/(github\.com|ohadsam\.github\.io|wa\.me)\S*/g, '');
   if (/https?:\/\/(?!www\.w3\.org)/.test(src.replace(/^\s*\/\/.*$/gm, ''))) fail(`${f}: external URL (CSP is 'self' only)`);
 }
 if (/ style="/.test(readFileSync('web/index.html', 'utf8').replace(/<noscript>[\s\S]*<\/noscript>/, ''))) fail('web/index.html: inline style attribute is blocked by CSP');

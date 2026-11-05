@@ -13,6 +13,7 @@ import { levelInfo } from '../levels.js';
 import { splitForToday } from '../schedule.js';
 import { icon, iconBtn, toast, confirmBox, toolbar } from './common.js';
 import { openPauseSheet, pausedBanner } from './pause.js';
+import { discardActiveRun } from './runAdmin.js';
 import { isPaused } from '../alarmPause.js';
 import { dayOff, hebrewLabel } from '../holidays.js';
 import { openSearch } from './search.js';
@@ -63,7 +64,10 @@ export function renderHome(root, nav) {
     pw = progressWidget(active, { mascot: settings.mascot, compact: true, buddyNode: avatarNode(settings.avatar, { size: 26 }) });
     return h('section', { class: 'card active-run', style: { '--accent': active.color || '#6c5ce7' } },
       h('div', { class: 'row between' }, h('strong', {}, `${active.icon} ${t('continueRun', { name: active.templateName })}`), h('span', { class: 'chip solid' }, t('activeRun'))),
-      pw.el, h('button', { class: 'btn primary', type: 'button', onclick: () => nav(`#/run/${active.templateId}`) }, icon('play', 18), t('resume')));
+      pw.el, h('button', { class: 'btn primary', type: 'button', onclick: () => nav(`#/run/${active.templateId}`) }, icon('play', 18), t('resume')),
+      h('div', { class: 'row-btns' },
+        h('button', { class: 'btn', type: 'button', onclick: async () => { if (await confirmBox(t('restartConfirm'), t('restartRun'))) { const id = active.templateId; await discardActiveRun(); active = null; nav(`#/run/${id}`); } } }, '↺', t('restartRun')),
+        h('button', { class: 'btn', type: 'button', onclick: async () => { if (await confirmBox(t('cancelConfirm'), t('cancelRun'), true)) { await discardActiveRun(); active = null; clearInterval(tick); toast(t('cancelledToast')); draw(); } } }, '✖', t('cancelRun'))));
   };
   const draw = () => {
     const { templates, settings } = S.get();

@@ -28,6 +28,7 @@ import { calmPanel } from './calm.js';
 import { modal } from './common.js';
 import { planText } from './goals.js';
 import { taskHelpCard } from './taskHelp.js';
+import { discardActiveRun } from './runAdmin.js';
 import { openUnplannedSheet, patternCards, reasonName } from './unplanned.js';
 
 const clock = (ms) => new Date(ms).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -47,7 +48,8 @@ export async function renderRunner(root, id, nav) {
   }
   const st = () => S.get().settings;
   unlockAudio();
-  const persist = () => S.saveActive(E.isActive(run) ? run : null);
+  let discarded = false;   // cancel / start over: this run must never be written back
+  const persist = () => (discarded ? undefined : S.saveActive(E.isActive(run) ? run : null));
   persist();
   setAwake('run', st().keepAwake);
   const onVis = () => { if (document.visibilityState === 'visible') loop(); else persist(); };
@@ -211,6 +213,8 @@ export async function renderRunner(root, id, nav) {
           h('button', { class: 'btn', type: 'button', onclick: () => { E.addTime(run, 60); persist(); paintLive(); pushWidget(); } }, icon('plus', 18), t('addMinute')),
           h('button', { class: 'btn', type: 'button', disabled: paused, onclick: startUnplanned }, '⚡', t('unpBtn')),
           h('button', { class: 'btn', type: 'button', onclick: () => act(E.skipCurrent) }, icon('skip', 18), t('skip')),
+          h('button', { class: 'btn', type: 'button', onclick: async () => { if (await confirmBox(t('restartConfirm'), t('restartRun'))) { discarded = true; clearInterval(timer); await discardActiveRun(); nav(`#/run/${run.templateId}`); } } }, '↺', t('restartRun')),
+          h('button', { class: 'btn', type: 'button', onclick: async () => { if (await confirmBox(t('cancelConfirm'), t('cancelRun'), true)) { discarded = true; clearInterval(timer); await discardActiveRun(); toast(t('cancelledToast')); nav('#/'); } } }, '✖', t('cancelRun')),
           h('button', { class: 'btn danger', type: 'button', onclick: async () => { if (await confirmBox(t('stopConfirm'), t('stop'), true)) act(E.finish); } }, icon('stop', 18), t('stop'))))));
   }
 
@@ -300,7 +304,8 @@ export async function renderRunner(root, id, nav) {
         h('button', { class: 'btn primary', type: 'button', onclick: () => nav('#/') }, t('again')),
         h('button', { class: 'btn', type: 'button', onclick: () => nav(`#/stats/${run.templateId}`) }, icon('chart', 18), t('viewStats')),
         h('button', { class: 'btn', type: 'button', onclick: () => nav(`#/report/run/${run.id}`) }, `📄 ${t('rpRunReport')}`),
-        h('button', { class: 'btn', type: 'button', onclick: () => nav(`#/retro/${run.id}`) }, `🔄 ${t('rcLookBack')}`))));
+        h('button', { class: 'btn', type: 'button', onclick: () => nav(`#/retro/${run.id}`) }, `🔄 ${t('rcLookBack')}`),
+        h('button', { class: 'btn danger', type: 'button', onclick: async () => { if (await confirmBox(t('runDeleteConfirm'), t('runDelete'), true)) { const undo = await S.removeRunWithUndo(run.id); toast(t('runDeleted'), { label: t('undo'), fn: undo }); nav('#/'); } } }, `🗑 ${t('runDelete')}`))));
     if (done) confetti(root, 44);
     say(done ? 'runDone' : 'runStopped');
   }
@@ -311,5 +316,5 @@ export async function renderRunner(root, id, nav) {
   paintStatic(); paintLive(); paintGear();
   if (fresh) { say('start'); pushActive(true); }   // the parent sees "doing now" from the very first task
   timer = setInterval(loop, 250);
-  return () => { clearInterval(timer); clearTimeout(bubbleTimer); clearTimeout(transTimer); coach.hide(); document.removeEventListener('visibilitychange', onVis); setAwake('run', false); if (E.isActive(run)) persist(); };
+  return () => { clearInterval(timer); clearTimeout(bubbleTimer); clearTimeout(transTimer); coach.hide(); document.removeEventListener('visibilitychange', onVis); setAwake('run', false); if (E.isActive(run) && !discarded) persist(); };
 }

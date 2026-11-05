@@ -1216,5 +1216,43 @@ await step('v1.19.1: example routines have the alarm OFF (also for an old instal
   const css = await page.evaluate(async () => (await fetch('css/app.css')).text()); assert.match(css, /@keyframes boot-rise/); assert.match(css, /@keyframes boot-load/);
 });
 
+// ── v1.19.2: start over / cancel / delete a run ──
+await step('v1.19.2: a routine in progress can be started over or cancelled (nothing saved), from the run screen and from Home; a finished run can be deleted (undo)', async () => {
+  const { page } = await newPage({ foldsClosed: true }); const active = () => page.evaluate(async () => { const r = await (await import('./js/store.js')).loadActive(); return r ? { id: r.id, current: r.current } : null; });
+  const runsN = () => page.evaluate(async () => (await import('./js/store.js')).get().runs.length);
+  await page.goto(base + '#/run/sample-kids'); await page.waitForSelector('.main-btns'); await page.click('.main-btns .primary'); await page.waitForFunction(async () => ((await (await import('./js/store.js')).loadActive())?.current ?? 0) === 1);
+  const first = await active(); assert.equal(first.current, 1);
+  // start over (from the run screen)
+  await page.click('.run-more summary'); await page.click('.run-more button:has-text("Start over")'); await page.click('dialog footer button >> nth=-1'); await page.waitForFunction(() => !document.querySelector('dialog[open]'));
+  await page.waitForFunction(() => document.querySelector('.pw')?.textContent.includes('0/')); await page.click('.main-btns .primary'); const again = await active(); assert.notEqual(again.id, first.id, 'a brand-new run'); assert.equal(again.current, 1); assert.equal(await runsN(), 0, 'nothing was saved to the history');
+  // cancel (from the run screen)
+  await page.click('.run-more summary'); await page.click('.run-more button:has-text("Cancel this run")'); await page.click('dialog footer button >> nth=-1'); await page.waitForFunction(() => location.hash === '#/');
+  assert.equal(await active(), null, 'no run in progress'); assert.equal(await runsN(), 0); assert.equal(await page.locator('.active-run').count(), 0);
+  // from the Home "continue" card: cancel, and start over
+  await page.goto(base + '#/run/sample-kids'); await page.waitForSelector('.main-btns'); await page.click('.main-btns .primary'); await page.goto(base + '#/'); await page.waitForSelector('.active-run');
+  assert.ok(await page.locator('.active-run button:has-text("Start over")').isVisible() && await page.locator('.active-run button:has-text("Cancel this run")').isVisible());
+  await page.click('.active-run button:has-text("Cancel this run")'); await page.click('dialog footer button >> nth=-1'); await page.waitForFunction(() => !document.querySelector('.active-run')); assert.equal(await active(), null);
+  await page.goto(base + '#/run/sample-kids'); await page.waitForSelector('.main-btns'); await page.click('.main-btns .primary'); await page.goto(base + '#/'); await page.waitForSelector('.active-run'); const before = await active();
+  await page.click('.active-run button:has-text("Start over")'); await page.click('dialog footer button >> nth=-1'); await page.waitForFunction(() => location.hash.startsWith('#/run/')); await page.waitForSelector('.main-btns'); await page.waitForFunction(() => document.querySelector('.pw')?.textContent.includes('0/'));
+  // finish a run, then delete it from the summary (undo brings it back)
+  for (let i = 0; i < 6; i++) await page.click('text=Done ✓'); await page.waitForSelector('.summary'); assert.equal(await runsN(), 1);
+  await page.click('.summary button:has-text("Delete this run")'); await page.click('dialog footer button >> nth=-1'); await page.waitForFunction(() => location.hash === '#/'); assert.equal(await runsN(), 0, 'deleted from the history');
+  await page.click('#toast button'); await page.waitForFunction(async () => (await import('./js/store.js')).get().runs.length === 1); assert.equal(await runsN(), 1, 'undo restores it'); void before;
+});
+
+await step('v1.19.2: axe on the Home continue card, the run More menu with start over / cancel, the confirm and the summary with delete (he + en, big text)', async () => {
+  const bad = [];
+  for (const [lang, big] of [['he', false], ['en', true]]) {
+    const { page } = await newPage({ lang, foldsClosed: true }); await page.goto(base); if (lang === 'he') await dismissWelcome(page);
+    if (big) await page.evaluate(async () => { const S = await import('./js/store.js'); await S.updateSettings({ fontScale: 150 }); });
+    await page.goto(base + '#/run/sample-kids'); await page.reload(); await page.waitForSelector('.main-btns'); await dismissWelcome(page); await page.click('.main-btns .primary');
+    await page.click('.run-more summary'); bad.push(...await audit(page, `${lang}/run-more`)); await page.click('.run-more button >> nth=-2'); await page.waitForSelector('dialog[open]'); bad.push(...await audit(page, `${lang}/cancel-confirm`)); await closeDialogs(page);
+    await page.goto(base + '#/'); await page.waitForSelector('.active-run'); bad.push(...await audit(page, `${lang}/home-continue`));
+    await page.goto(base + '#/run/sample-kids'); await page.waitForSelector('.main-btns'); for (let i = 0; i < 6; i++) await page.click('.main-btns .primary').catch(() => {}); await page.waitForSelector('.summary'); bad.push(...await audit(page, `${lang}/summary-delete`));
+  }
+  if (bad.length) console.error([...new Set(bad)].join('\n'));
+  assert.deepEqual(bad, []);
+});
+
 await browser.close(); server.close();
 console.log(failures ? `\n${failures} e2e step(s) failed` : '\nall e2e steps passed'); process.exit(failures ? 1 : 0);

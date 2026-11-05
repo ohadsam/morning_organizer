@@ -319,6 +319,7 @@ await step('UX: settings are collapsible groups (all closed by default - calm), 
   await page.waitForFunction(() => Object.values(JSON.parse(localStorage.getItem('mo.sg') || '{}')).filter(Boolean).length >= 1);
   await page.reload(); await page.waitForSelector('details.settings-group'); assert.equal(await page.locator('details.settings-group[open]').count(), 1, 'open/closed state survives reload');
   await page.goto(base + '#/settings/voice'); await page.reload(); await page.waitForSelector('details.settings-group[data-group=voice][open]');   // search deep link opens the right group
+  await page.evaluate(() => { document.querySelector('details[data-group=look]').open = true; });
   await page.locator('.swatches[role=radiogroup] .swatch').nth(1).click(); await page.waitForFunction(() => document.documentElement.dataset.accent === '1');
   await page.goto(base + '#/'); await page.waitForSelector('.routine'); assert.equal(await page.evaluate(() => getComputedStyle(document.querySelector('.btn.primary')).backgroundColor), 'rgb(91, 75, 213)');
 });
@@ -392,7 +393,7 @@ await step('v1.8: avatars (animated characters, photo, GIF), several people on o
   await page.click('.hero-buddy'); await page.waitForSelector('.profile-grid'); assert.deepEqual(await audit(page, 'profile-switcher'), []);
   await page.click('.profile-card.add'); await page.fill('dialog input[type=text]', 'Dan'); await page.fill('dialog input[type=number]', '7'); await page.click('dialog footer button:has-text("Save")');
   await page.waitForFunction(() => document.querySelector('.hero')?.textContent.includes('Dan')); assert.ok(await page.locator('.hero-buddy svg.avatar-char').count(), 'new person starts with the default character');
-  await page.locator('.routine .start').first().click(); await page.waitForSelector('.ring'); for (let i = 0; i < 6; i++) await page.click('text=Done ✓'); await page.waitForSelector('.summary'); assert.ok(await page.locator('.summary .avatar').count());
+  await page.locator('.routine .start').first().click(); await page.waitForSelector('.ring'); for (let i = 0; i < 6; i++) await page.click('.main-btns .primary'); await page.waitForSelector('.summary'); assert.ok(await page.locator('.summary .avatar').count());
   await page.goto(base + '#/stats'); await page.waitForSelector('.week'); assert.match(await page.textContent('.week'), /1 routines/);
   await page.goto(base + '#/'); await page.click('.hero-buddy'); await page.click('.profile-card:not(.on):not(.add)'); await page.waitForFunction(() => !document.querySelector('.hero')?.textContent.includes('Dan'));
   await page.goto(base + '#/stats'); await page.waitForSelector('h1'); assert.ok(!(await page.locator('.week').count()), 'the first person has no history of their own'); await shot(page, 'profiles');

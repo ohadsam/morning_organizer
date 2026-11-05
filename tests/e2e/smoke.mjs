@@ -482,7 +482,7 @@ await step('v1.10: calm corner page runs a breathing exercise and offers a mood 
 
 await step('v1.10: journal password (hash+salt), add while locked, wrong password, forgot via questions, encrypted at rest, erase', async () => {
   const { page, errors } = await newPage(); await page.goto(base + '#/journal'); await page.waitForSelector('.journal-page');
-  await page.click('.toolbar button:has-text("New note")'); await page.fill('dialog textarea', 'plain secret one'); await page.click('dialog footer button:has-text("Save")'); await page.waitForSelector('.entry:has-text("plain secret one")');
+  await page.click('.tb-btn[data-tb=note]'); await page.fill('dialog textarea', 'plain secret one'); await page.click('dialog footer button:has-text("Save")'); await page.waitForSelector('.entry:has-text("plain secret one")');
   await page.click('details.lock-card summary'); await page.click('button:has-text("Add a password")'); await page.waitForSelector('dialog .qa');
   const pws = page.locator('dialog input[type=password]'); await pws.nth(0).fill('abcd'); await pws.nth(1).fill('abcd');
   const ans = page.locator('dialog .qa input[type=text]'); // [custom, answer] per question
@@ -492,7 +492,7 @@ await step('v1.10: journal password (hash+salt), add while locked, wrong passwor
   assert.ok(!raw.includes('plain secret one') && !raw.includes('abcd') && !raw.includes('Zebraphant42'), 'secrets must not be stored in the clear');
   // lock now, add a note while locked, reload: locked screen
   await page.click('details.lock-card summary').catch(() => {}); await page.click('button:has-text("Lock now")'); await page.waitForSelector('.lock-screen');
-  await page.click('.toolbar button:has-text("New note")'); await page.fill('dialog textarea', 'added while locked'); await page.click('dialog footer button:has-text("Save")'); await page.waitForSelector('#toast:has-text("stays locked")'); // wait for the write before reloading
+  await page.click('.tb-btn[data-tb=note]'); await page.fill('dialog textarea', 'added while locked'); await page.click('dialog footer button:has-text("Save")'); await page.waitForSelector('#toast:has-text("stays locked")'); // wait for the write before reloading
   await page.reload(); await page.waitForSelector('.lock-screen'); assert.equal(await page.locator('text=added while locked').count(), 0);
   await page.fill('.lock-screen input[type=password]', 'nope'); await page.click('.lock-screen button:has-text("Unlock")'); await page.waitForSelector('.lock-screen .err:not(:empty)');
   // forgot password -> questions -> new password
@@ -526,10 +526,10 @@ await step('v1.10: axe finds no violations on calm corner, journal (open + locke
     const L = `${lang}/${scheme}`;
     await page.goto(base + '#/calm'); await page.waitForSelector('.calm-menu'); bad.push(...await audit(page, `${L}/calm`));
     await page.goto(base + '#/journal'); await page.waitForSelector('.journal-page'); bad.push(...await audit(page, `${L}/journal-empty`));
-    await page.click('.toolbar button >> nth=0'); await page.waitForSelector('dialog'); bad.push(...await audit(page, `${L}/note-sheet`)); await closeDialogs(page);
-    await page.click('.toolbar button >> nth=2'); await page.waitForSelector('dialog'); bad.push(...await audit(page, `${L}/thought`)); await closeDialogs(page);
-    await page.click('.toolbar button >> nth=3'); await page.waitForSelector('dialog'); bad.push(...await audit(page, `${L}/gratitude`)); await closeDialogs(page);
-    await page.click('.toolbar button >> nth=4'); await page.waitForSelector('dialog'); bad.push(...await audit(page, `${L}/park`)); await closeDialogs(page);
+    await page.click('.tb-btn[data-tb=note]'); await page.waitForSelector('dialog'); bad.push(...await audit(page, `${L}/note-sheet`)); await closeDialogs(page);
+    await page.click('.tb-btn[data-tb=reflect]'); await page.click('.tb-panel button >> nth=1'); await page.waitForSelector('dialog'); bad.push(...await audit(page, `${L}/thought`)); await closeDialogs(page);
+    await page.click('.tb-btn[data-tb=reflect]'); await page.click('.tb-panel button >> nth=2'); await page.waitForSelector('dialog'); bad.push(...await audit(page, `${L}/gratitude`)); await closeDialogs(page);
+    await page.click('.tb-btn[data-tb=reflect]'); await page.click('.tb-panel button >> nth=3'); await page.waitForSelector('dialog'); bad.push(...await audit(page, `${L}/park`)); await closeDialogs(page);
     await page.click('details.lock-card summary'); await page.click('details.lock-card .btn.primary'); await page.waitForSelector('dialog .qa'); bad.push(...await audit(page, `${L}/lock-setup`));
     const pws = page.locator('dialog input[type=password]'); await pws.nth(0).fill('abcd'); await pws.nth(1).fill('abcd'); const a = page.locator('dialog .qa input[type=text]'); await a.nth(1).fill('Zebraphant42'); await a.nth(3).fill('Quixotic Lane 9');
     await page.click('dialog footer .primary'); await page.waitForSelector('dialog', { state: 'detached' });
@@ -1020,15 +1020,19 @@ await step('v1.17: wizard - five calm questions build a routine for the person, 
   const { page } = await newPage({ foldsClosed: true }); await page.goto(base + '#/'); await page.waitForSelector('.routine');
   const before = await page.locator('.routine').count();
   await page.click('.tb-btn[data-tb=wizard]'); await page.waitForSelector('dialog.wizard-modal[open] .wz-opt');
-  assert.match(await page.textContent('.wz-step'), /Step 1 of 5/); await page.click('.wz-opt:has-text("My child")'); await page.click('.wz-opt:has-text("8–10")'); await page.click('.wz-nav .btn.primary');
+  assert.match(await page.textContent('.wz-step'), /Step 1 of 6/); await page.click('.wz-opt:has-text("My child")'); await page.click('.wz-opt:has-text("8–10")'); await page.click('.wz-nav .btn.primary');
   await page.click('.wz-opt:has-text("Staying focused")'); await page.click('.wz-opt:has-text("calmer")'); await page.click('.wz-nav .btn.primary');
+  await page.click('.wz-opt:has-text("A new goal")'); await page.fill('.wizard .wz-name', 'Calm evenings'); await page.click('.wz-nav .btn.primary');
   await page.click('.wz-opt:has-text("Bedtime")'); await page.click('.wz-nav .btn.primary');
   await page.fill('.wizard input[type=time]', '19:45'); await page.dispatchEvent('.wizard input[type=time]', 'change'); await page.click('.wz-opt:has-text("Every day")'); await page.click('.wz-nav .btn.primary');
   await page.waitForSelector('.wz-tasks li'); const withBreaks = await page.locator('.wz-tasks li').count(); await page.click('.wizard label.switch input'); const without = await page.locator('.wz-tasks li').count(); assert.ok(withBreaks > without, 'breaks can be switched off'); await page.click('.wizard label.switch input');
-  await page.click('.wz-nav .btn:has-text("Back")'); await page.click('.wz-nav .btn.primary');
+  // edit right here, before creating: rename, more time, remove a step, add a step
+  const n0 = await page.locator('.wz-task').count(); await page.locator('.wz-task .wz-name').first().fill('Tidy my room'); const t0 = await page.locator('.wz-time').first().textContent(); await page.locator('.wz-task').first().locator('button[aria-label="More time"]').click(); assert.notEqual(await page.locator('.wz-time').first().textContent(), t0, 'time changes');
+  await page.locator('.wz-task').last().locator('button[aria-label^="Remove this step"]').click(); assert.equal(await page.locator('.wz-task').count(), n0 - 1); await page.click('button:has-text("Add a step")'); await page.locator('.wz-task .wz-name').last().fill('Hug the dog');
+  await page.click('.wz-nav .btn:has-text("Back")'); await page.click('.wz-nav .btn.primary'); assert.equal(await page.locator('.wz-task .wz-name').first().inputValue(), 'Tidy my room', 'edits survive Back / Next');
   await page.click('.wz-nav .btn.primary:has-text("Create my routine")'); await page.waitForSelector('.wizard .btn:has-text("Start now")');
-  const made = await page.evaluate(async () => { const S = await import('./js/store.js'); const x = S.get().templates.at(-1); return { name: x.name, n: x.tasks.length, alarm: x.alarm.time, enabled: x.alarm.enabled, days: x.days.length, helper: x.tasks.some((k) => k.helperKey) }; });
-  assert.equal(made.alarm, '19:45'); assert.equal(made.enabled, true); assert.equal(made.days, 0, 'every day'); assert.ok(made.n >= 5 && made.helper, 'bedtime steps plus calm/focus breaks');
+  const made = await page.evaluate(async () => { const S = await import('./js/store.js'); const x = S.get().templates.at(-1); return { name: x.name, n: x.tasks.length, alarm: x.alarm.time, enabled: x.alarm.enabled, days: x.days.length, helper: x.tasks.some((k) => k.helperKey), names: x.tasks.map((k) => k.name), id: x.id, goal: S.goals().find((g) => g.templateId === x.id)?.title }; });
+  assert.equal(made.alarm, '19:45'); assert.equal(made.enabled, true); assert.equal(made.days, 0, 'every day'); assert.ok(made.n >= 5 && made.helper, 'bedtime steps plus calm/focus breaks'); assert.ok(made.names.includes('Tidy my room') && made.names.includes('Hug the dog'), 'the edits are what was created'); assert.equal(made.goal, 'Calm evenings', 'the goal was created and linked');
   await page.click('.wizard .btn:has-text("Edit it")'); await page.waitForFunction(() => location.hash.startsWith('#/edit/')); await page.goto(base + '#/'); await page.waitForSelector('.routine'); assert.equal(await page.locator('.routine').count(), before + 1);
 });
 
@@ -1060,7 +1064,7 @@ await step('v1.17: axe on search, wizard (every step), suggestion card, folded h
     await page.click('.tb-btn[data-tb=plan]'); bad.push(...await audit(page, `${lang}/home-menu-open`));
     await page.click('.home-search'); await page.waitForSelector('.search-item'); bad.push(...await audit(page, `${lang}/search`)); await page.fill('.search-input', 'a'); bad.push(...await audit(page, `${lang}/search-results`)); await page.keyboard.press('Escape'); await page.waitForSelector('dialog', { state: 'detached' });
     await page.click('.tb-btn[data-tb=wizard]'); await page.waitForSelector('.wz-opt');
-    for (let i = 0; i < 5; i++) { bad.push(...await audit(page, `${lang}/wizard-${i}`)); if (i < 4) await page.click('.wz-nav .btn.primary'); }
+    for (let i = 0; i < 6; i++) { bad.push(...await audit(page, `${lang}/wizard-${i}`)); if (i < 5) await page.click('.wz-nav .btn.primary'); }
     await page.keyboard.press('Escape'); await page.evaluate(() => document.querySelectorAll('dialog').forEach((d) => d.remove()));
     await page.goto(base + '#/edit/sample-kids'); await page.waitForSelector('.task'); bad.push(...await audit(page, `${lang}/edit-folded`));
     await page.click('details.fold summary >> nth=3'); bad.push(...await audit(page, `${lang}/edit-fold-open`));
@@ -1128,6 +1132,65 @@ await step('v1.18.1: share SonRise (Android app + web app) by WhatsApp / e-mail 
     assert.equal(await page.locator('dialog[open] a[target=_blank][rel~=noopener]').count(), 4);
     bad.push(...await audit(page, `${lang}/share-app`)); await closeDialogs(page);
     await page.goto(base + '#/'); await page.waitForSelector('.home-search'); await page.click('.home-search'); await page.fill('.search-input', lang === 'he' ? 'וואטסאפ' : 'whatsapp'); await page.keyboard.press('Enter'); await page.waitForSelector('dialog[open] a[href^="https://wa.me/"]');
+  }
+  if (bad.length) console.error([...new Set(bad)].join('\n'));
+  assert.deepEqual(bad, []);
+});
+
+// ── v1.19: calm guides, situation log (APRT), goals inside routines ──
+await step('v1.19: calm corner - guided imagery (four elements + 10 more), four kinds of body scan', async () => {
+  const { page } = await newPage({ foldsClosed: true }); await page.goto(base + '#/calm'); await page.waitForSelector('.calm-menu');
+  await page.click('.seg-group button:has-text("Guided imagery")'); assert.ok(await page.locator('.guide-grid .sound-tile').count() >= 10, 'many guides');
+  assert.ok(await page.locator('.guide-grid .sound-tile:has-text("earth, air, water, fire")').count() === 1, 'the four elements guide');
+  await page.click('.guide-grid .sound-tile:has-text("earth, air, water, fire")'); await page.click('.seg-group button:has-text("2 min")'); await page.click('button:has-text("Start")'); await page.waitForSelector('.calm-label');
+  await page.waitForFunction(() => /Earth/.test(document.querySelector('.calm-label')?.textContent || '')); assert.match(await page.textContent('.calm-sub'), /1\/9/); await page.click('button:has-text("Stop")');
+  await page.waitForSelector('.calm-menu'); await page.click('.seg-group button:has-text("Body scan")'); assert.equal(await page.locator('.seg-group[aria-label="Kind of body scan"] button').count(), 4);
+  await page.click('.seg-group button:has-text("Tense and release")'); await page.click('button:has-text("Start")'); await page.waitForFunction(() => /Tense your/.test(document.querySelector('.calm-label')?.textContent || '')); await page.click('button:has-text("Stop")');
+  await page.waitForSelector('.calm-menu'); await page.click('.seg-group button:has-text("Body scan")'); await page.click('.seg-group button:has-text("For sleep")'); await page.click('button:has-text("Start")'); await page.waitForFunction(() => /heavy/.test(document.querySelector('.calm-label')?.textContent || ''));
+  const he = await newPage({ lang: 'he', foldsClosed: true }); await he.page.goto(base + '#/calm'); await dismissWelcome(he.page); await he.page.click('.seg-group button:has-text("דמיון מודרך")'); await he.page.click('.guide-grid .sound-tile:has-text("ארבעת היסודות")'); await he.page.click('button:has-text("התחלה")');
+  await he.page.waitForFunction(() => /אדמה/.test(document.querySelector('.calm-label')?.textContent || ''));
+});
+
+await step('v1.19: situation log (APRT) - five calm steps, saved to the journal, pattern insights after three, found by search', async () => {
+  const { page } = await newPage({ foldsClosed: true }); await page.goto(base + '#/journal'); await page.waitForSelector('.toolbar-main');
+  const log = async (event, interp, feeling, n) => {
+    await page.click('.tb-btn[data-tb=reflect]'); await page.click('.tb-panel button:has-text("Situation log")'); await page.waitForSelector('.aprt');
+    assert.equal(await page.locator('.aprt-steps li').count(), 5); await page.fill('.aprt textarea', event); await page.click('.wz-nav .btn.primary');
+    await page.fill('.aprt textarea', interp); await page.click('.wz-nav .btn.primary'); await page.click(`.aprt .wz-opt:has-text("${feeling}")`); await page.locator('.aprt input[type=range]').fill(String(n)); await page.click('.wz-nav .btn.primary');
+    await page.click('.aprt .wz-opt:has-text("avoided")'); await page.click('.wz-nav .btn.primary'); await page.waitForSelector('.aprt textarea'); if (n < 7) { await page.fill('.aprt textarea', 'One small step is enough'); }
+    await page.click('.wz-nav .btn:has-text("Save now")'); await page.waitForSelector('dialog', { state: 'detached' });
+  };
+  await log('Homework with mom at the table', 'I will never get this right', 'worried', 8); await page.waitForSelector('.entry:has-text("Homework with mom")'); assert.equal(await page.locator('.aprt-insights').count(), 0, 'not before three');
+  await log('Homework alone in my room', 'I always ruin everything', 'worried', 7); await log('Homework before dinner', 'I should be faster', 'worried', 5);
+  await page.waitForSelector('.aprt-insights'); const txt = await page.textContent('.aprt-insights'); assert.match(txt, /worried/); assert.match(txt, /homework/i); assert.match(txt, /Catastrophizing|“Should”/); assert.match(txt, /not a diagnosis/);
+  const card = await page.textContent('.entry'); assert.match(card, /Event|What happened/); await page.goto(base + '#/'); await page.click('.home-search'); await page.fill('.search-input', 'aprt'); await page.keyboard.press('Enter'); await page.waitForSelector('.aprt');
+  const he = await newPage({ lang: 'he', foldsClosed: true }); await he.page.goto(base + '#/journal'); await dismissWelcome(he.page); await he.page.click('.tb-btn[data-tb=reflect]'); await he.page.click('.tb-panel button >> nth=0'); await he.page.waitForSelector('.aprt'); assert.match(await he.page.textContent('.aprt-steps'), /א.*פ.*ר.*ת/);
+});
+
+await step('v1.19: goals inside routines - chip on the card, goal section in the editor, "build a routine for this goal" from a goal', async () => {
+  const { page } = await newPage({ foldsClosed: true }); await page.goto(base + '#/'); await page.waitForSelector('.routine');
+  await page.evaluate(async () => { const S = await import('./js/store.js'); const { sanitizeGoal } = await import('./js/cogfun.js'); await S.saveGoal(sanitizeGoal({ title: 'Be ready by 7:30', templateId: 'sample-kids', strategies: ['quiet', 'timer'] })); });
+  await page.reload(); await page.waitForSelector('.routine .goal-chip'); assert.match(await page.textContent('.routine .goal-chip'), /Be ready by 7:30/);
+  await page.goto(base + '#/edit/sample-kids'); await page.waitForSelector('.task'); await page.click('details.fold:has(summary:has-text("Goal")) summary'); assert.match(await page.textContent('details.fold:has(summary:has-text("Goal"))'), /Be ready by 7:30/);
+  await page.click('details.fold:has(summary:has-text("Goal")) button:has-text("Unlink")'); await page.waitForFunction(async () => !(await import('./js/store.js')).get().profiles.some((p) => p.goals?.some((g) => g.templateId === 'sample-kids')));
+  await page.goto(base + '#/goals'); await page.waitForSelector('.goal-card'); await page.click('.goal-card button:has-text("Build a routine for this goal")'); await page.waitForSelector('.wizard-modal[open] .wz-opt'); assert.match(await page.textContent('.wz-step'), /Step 4 of 6/);
+  await page.click('.wz-opt:has-text("Bedtime")'); await page.click('.wz-nav .btn.primary'); await page.click('.wz-nav .btn.primary'); await page.waitForSelector('.wz-task'); assert.match(await page.textContent('.wizard'), /Be ready by 7:30/);
+  const names = await page.locator('.wz-task .wz-name').evaluateAll((xs) => xs.map((x) => x.value)); assert.ok(names.some((x) => /Clear the desk|Start the timer/.test(x)), 'the goal adds its strategy steps: ' + names.join('|'));
+  await page.click('.wz-nav .btn.primary:has-text("Create my routine")'); await page.waitForSelector('.wizard .btn:has-text("Start now")');
+  assert.equal(await page.evaluate(async () => { const S = await import('./js/store.js'), x = S.get().templates.at(-1); return S.goals().find((g) => g.title === 'Be ready by 7:30').templateId === x.id; }), true, 'the goal now points at the new routine');
+});
+
+await step('v1.19: axe on guided imagery, the situation log steps + insights, goal section, wizard goal step (he + en, big text)', async () => {
+  const bad = [];
+  for (const [lang, big] of [['he', false], ['en', true]]) {
+    const { page } = await newPage({ lang, foldsClosed: true }); await page.goto(base); if (lang === 'he') await dismissWelcome(page);
+    if (big) await page.evaluate(async () => { const S = await import('./js/store.js'); await S.updateSettings({ fontScale: 150 }); });
+    await page.goto(base + '#/calm'); await page.reload(); await page.waitForSelector('.calm-menu'); await dismissWelcome(page); await page.click('.seg-group button >> nth=3'); bad.push(...await audit(page, `${lang}/calm-guides`)); await page.click('.seg-group button >> nth=2'); bad.push(...await audit(page, `${lang}/calm-scan`));
+    await page.goto(base + '#/journal'); await page.waitForSelector('.toolbar-main'); await page.evaluate(async () => { const J = await import('./js/journal.js'), S = await import('./js/store.js'); for (let i = 0; i < 3; i++) await J.addEntry(S.activeProfile().id, { kind: 'aprt', aprt: { event: 'homework at home', interp: 'I always fail', emotion: 'worry', intensity: 6 - i, responses: ['avoided'] } }); });
+    await page.reload(); await page.waitForSelector('.aprt-insights'); bad.push(...await audit(page, `${lang}/aprt-insights`));
+    await page.click('.tb-btn[data-tb=reflect]'); await page.click('.tb-panel button >> nth=0'); await page.waitForSelector('.aprt'); for (let i = 0; i < 5; i++) { bad.push(...await audit(page, `${lang}/aprt-${i}`)); if (i < 4) await page.click('.wz-nav .btn.primary'); } await closeDialogs(page);
+    await page.goto(base + '#/'); await page.waitForSelector('.tb-btn[data-tb=wizard]'); await page.click('.tb-btn[data-tb=wizard]'); await page.waitForSelector('.wz-opt'); await page.click('.wz-nav .btn.primary'); await page.click('.wz-nav .btn.primary'); await page.waitForSelector('.wz-opt'); bad.push(...await audit(page, `${lang}/wizard-goal`)); await page.click('.wz-opt >> nth=0'); bad.push(...await audit(page, `${lang}/wizard-goal-new`));
+    await page.click('.wz-nav .btn.primary'); await page.click('.wz-nav .btn.primary'); await page.click('.wz-nav .btn.primary'); await page.waitForSelector('.wz-task'); bad.push(...await audit(page, `${lang}/wizard-edit`));
   }
   if (bad.length) console.error([...new Set(bad)].join('\n'));
   assert.deepEqual(bad, []);

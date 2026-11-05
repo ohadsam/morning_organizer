@@ -14,6 +14,8 @@ import { modal } from './common.js';
 import { timeField } from './timePicker.js';
 import { openSmartTimes, openSmartSteps, timeHint, audiences, reasonText } from './smart.js';
 import { suggestTime } from '../smart.js';
+import { openGoalWizard } from './goals.js';
+import { MAX_GOALS } from '../cogfun.js';
 import { openTaskPicker, saveRoutineAsTemplate, saveTaskAsTemplate } from './library.js';
 
 /** Task picture if it has a photo, else its emoji. */
@@ -117,6 +119,14 @@ export function renderEditor(root, id, nav) {
         iconBtn('trash', t('gearRemove'), () => { tpl.gear.splice(i, 1); save(); drawGear(); })), dayChips(g.days || [], (d) => { g.days = d; save(); drawGear(); }))),
       h('button', { class: 'btn add', type: 'button', onclick: () => { tpl.gear.push({ id: uid(), name: '', icon: '', days: [] }); save(); drawGear(); gearBox.querySelector('.gear-row:last-of-type input[type=text]')?.focus(); } }, icon('plus', 18), t('addGear')));
   }
+  const goalBox = h('section', { class: 'card stack' });
+  /** Goals linked to this routine (cogfun goals have a templateId): link / unlink / create one right here. */
+  function drawGoals() {
+    const linked = S.goals().filter((g) => g.templateId === tpl.id), free = S.goals().filter((g) => g.templateId !== tpl.id && !g.done);
+    const sel = h('select', { 'aria-label': t('edGoalLink'), onchange: async (e) => { const g = S.goals().find((x) => x.id === e.target.value); if (g) { await S.saveGoal({ ...g, templateId: tpl.id }); drawGoals(); } } }, h('option', { value: '' }, t('edGoalLink')), free.map((g) => h('option', { value: g.id }, g.title)));
+    setChildren(goalBox, h('p', { class: 'note' }, t('edGoalHint')), linked.length ? linked.map((g) => h('div', { class: 'row between' }, h('span', {}, `🎯 ${g.title}`), h('button', { class: 'btn small', type: 'button', onclick: async () => { await S.saveGoal({ ...g, templateId: '' }); drawGoals(); } }, t('edGoalUnlink')))) : h('p', { class: 'empty' }, t('edGoalNone')),
+      free.length ? sel : null, S.goals().length < MAX_GOALS ? h('button', { class: 'btn', type: 'button', onclick: () => openGoalWizard({ title: '', templateId: tpl.id, strategies: [], custom: '' }, { onSave: async (x) => { await S.saveGoal({ ...x, templateId: tpl.id }); drawGoals(); } }) }, `+ ${t('edGoalNew')}`) : null);
+  }
   const plansBox = h('section', { class: 'card stack' });
   function drawPlans() {
     tpl.plans ||= [];
@@ -141,6 +151,7 @@ export function renderEditor(root, id, nav) {
 
   const dayNames = (d) => (d && d.length ? d.map((x) => t(`day${x}`)).join(' ') : t('presetEvery'));
   const foldSched = dayNames(tpl.days), foldGear = tpl.gear?.length ? String(tpl.gear.length) : t('foldNone'), foldPlans = tpl.plans?.length ? String(tpl.plans.length) : t('foldNone');
+  const foldGoal = (() => { const n = S.goals().filter((g) => g.templateId === tpl.id).length; return n ? String(n) : t('foldNone'); })();
   const foldLeave = tpl.leaveBy || t('foldNone'), foldAlarm = tpl.alarm?.enabled ? `⏰ ${tpl.alarm.time || ''}` : t('foldOff');
   setChildren(root, 
     h('div', { class: 'page-head' }, iconBtn('back', t('back'), () => { save.flush(); nav('#/'); }), h('h1', {}, t('edit'))),
@@ -159,6 +170,7 @@ export function renderEditor(root, id, nav) {
       h('p', { class: 'note' }, t('dragHint')), h('p', { class: 'note' }, t('estimateHint')))).el,
     fold(t('schedule'), foldSched, scheduleBox).el,
     fold(t('gear'), foldGear, gearBox).el,
+    fold(t('edGoal'), foldGoal, goalBox).el,
     fold(t('plansTitle'), foldPlans, plansBox).el,
     fold(t('leaveBy'), foldLeave, h('div', { class: 'stack' }, h('p', { class: 'note' }, t('leaveHint')),
       h('div', { class: 'row' }, h('input', { type: 'time', value: tpl.leaveBy || '', 'aria-label': t('leaveBy'), oninput: (e) => { tpl.leaveBy = validLeaveBy(e.target.value); save(); } }),
@@ -170,6 +182,6 @@ export function renderEditor(root, id, nav) {
     h('div', { class: 'sticky-actions' },
       h('button', { class: 'btn', type: 'button', onclick: () => { save.flush(); nav('#/'); } }, t('save')),
       h('button', { class: 'btn primary', type: 'button', disabled: !tpl.tasks.length, onclick: () => { save.flush(); nav(`#/run/${tpl.id}`); } }, icon('play', 18), t('start'))));
-  draw(); drawAlarm(); drawSchedule(); drawGear(); drawPlans();
+  draw(); drawAlarm(); drawSchedule(); drawGear(); drawPlans(); drawGoals();
   return () => save.flush();
 }

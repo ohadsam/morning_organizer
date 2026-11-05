@@ -19,7 +19,7 @@ function context() {
   return { dow: new Date().getDay(), weeklyOn: settings.weeklyOn !== false, weeklyDay: Number.isInteger(settings.weeklyDay) ? settings.weeklyDay : 5, runsWeek: mine.filter((r) => r.endedAt && r.endedAt > week).length,
     retroWeek: S.retros(me.id).filter((r) => r.at > week).length, goalStale: !!g && (g.checks.at(-1)?.at || g.since) < week,
     runs, ownRoutines: templates.filter((x) => !x.builtin).length, alarmsOn: templates.some((x) => x.alarm?.enabled), goals: S.goals(me).length, retros: S.retros(me.id).length,
-    voiceChosen: !!settings.voiceURI || (settings.voicePreset && settings.voicePreset !== 'natural'), ttsOk: ttsSupported(), calmOn: S.features().calmCorner !== false };
+    voiceChosen: !!settings.voiceURI || (settings.voicePreset && settings.voicePreset !== 'natural'), ttsOk: ttsSupported(), calmOn: S.features().calmCorner !== false, journalOn: S.features().journal !== false };
 }
 
 /** null when there is nothing to suggest right now. `nav` opens places; `redraw` re-renders home after an answer. */

@@ -4,8 +4,9 @@ import { db } from './db.js';
 import * as Lock from './lock.js';
 import { uid, cleanText, clamp } from './util.js';
 import { sanitizeMood } from './mood.js';
+import { sanitizeAprt } from './aprt.js';
 
-export const KINDS = ['note', 'voice', 'thought', 'gratitude', 'mood', 'park', 'calm', 'insight'];
+export const KINDS = ['note', 'voice', 'thought', 'gratitude', 'mood', 'park', 'calm', 'insight', 'aprt'];
 export const MAX_ENTRIES = 2000, MAX_AUDIO_BYTES = 6 * 1024 * 1024, MAX_AUDIO_SEC = 180;
 const sessions = new Map();           // profileId -> private key, in MEMORY only
 const str = (v, m) => cleanText(v, m);
@@ -19,6 +20,7 @@ export function sanitizeEntry(e) {
     kind: KINDS.includes(e?.kind) ? e.kind : 'note', routine: str(e?.routine, 80), task: str(e?.task, 80), difficulty: clamp(Math.round(Number(e?.difficulty)) || 0, 0, 5), text: str(e?.text, 4000), transcript: str(e?.transcript, 6000), mood: sanitizeMood(e?.mood),
     items: (Array.isArray(e?.items) ? e.items : []).slice(0, 3).map((x) => str(x, 200)).filter(Boolean),
     thought: t ? { situation: str(t.situation, 600), thought: str(t.thought, 600), feeling: str(t.feeling, 60), intensity: clamp(Math.round(Number(t.intensity)) || 0, 0, 10), evidenceFor: str(t.evidenceFor, 600), evidenceAgainst: str(t.evidenceAgainst, 600), balanced: str(t.balanced, 600), after: clamp(Math.round(Number(t.after)) || 0, 0, 10) } : null,
+    aprt: e?.kind === 'aprt' ? sanitizeAprt(e?.aprt) : null,
     audio: a && typeof a.id === 'string' ? { id: a.id.slice(0, 64), mime: /^audio\/[a-z0-9.+-]+$/i.test(a.mime || '') ? a.mime.slice(0, 40) : 'audio/webm', sec: clamp(Math.round(Number(a.sec)) || 0, 0, MAX_AUDIO_SEC) } : null,
   };
 }

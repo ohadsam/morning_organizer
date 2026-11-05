@@ -97,6 +97,15 @@ Looking back (retrospective): after a run, tap “Look back” on its summary (o
 ## Alarms, quiet days and the toolbar
 Home has one toolbar - New, Wizard, Plan, Calm, Track and Alarms. Plan, Calm and Track open a short list under the bar; Alarms pauses all alarms (until tomorrow, for a week, or until you switch them on). Every routine card has an alarm switch and a ⏰ sticker when it has an alarm. In an alarm, choose the type of ring (tap a tile to hear it; in the Android app also a sound from your phone) and keep "Quiet on holidays and vacations" on to stay silent on Jewish holidays and school vacations, including the summer. Home shows the Hebrew date and today’s holiday.
 
+## Calm corner: body scans and guided imagery
+Choose Breathing, 5-4-3-2-1, Body scan or Guided imagery. Body scan has four kinds: quick, full (head to toe), tense and release, and for sleep. Guided imagery has 11 short journeys - the four elements (earth, air, water, fire), a safe place, waves, forest, mountain, leaves on a stream, a worry balloon, a worry box, warm light, a floating cloud and a kind helper - shown one step at a time and, if you like, read aloud. These are relaxation exercises, not treatment.
+
+## Situation log (EIER)
+A way to understand hard moments, from CBT. Four short questions - Event (what happened), Interpretation (what I told myself), Emotion (what I felt, how strong) and Response (what I did) - plus an optional step for another way to see it. Write it, dictate it or record it. Find it in Journal → Reflect, in the task help card (Log this moment), at the end of a calm exercise, or by search. After three logs the journal summarises your patterns (feelings, thinking traps, what eases things). It is private to this device and is a self-help overview, not a diagnosis.
+
+## Goals inside routines and the wizard
+A goal can be linked to a routine (the routine card shows a 🎯 chip, the editor has a Goal section, and the run screen shows the plan). In the wizard, the Goal step lets you pick or create a goal, and the goal adds its strategies as the first steps of the new routine. In the review step you can rename steps, change their time, remove steps and add your own before creating. From any goal, "Build a routine for this goal" starts the wizard.
+
 ## Updates and sharing the app
 The web app updates itself - when you open it, and every hour - and switches to the new version on its own when nothing is running; if you are in the middle of something it asks first. The Android app updates from the latest download. To share SonRise open Settings → App → Share (or search "share"): choose the Android app or the web app, and send it by WhatsApp, e-mail, the share sheet or a copied link.
 

@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.19.0
+- **Wizard: edit the steps before creating**: the review step lists every suggested step with its name and time (− / +), remove (✕) and "Add a step"; edits survive Back/Next and the calm-breaks switch only adds or removes the break steps.
+- **Wizard + goals**: a new "goal" step (an existing goal, a new one with ideas by the chosen help, or none). The goal's strategies become the routine's first steps (timer, pick the first small step, clear the desk, check the list...), a new goal is created and linked, and any goal can start the wizard with **"Build a routine for this goal"**.
+- **Goals inside routines**: a 🎯 chip on the routine card, a **Goal** section in the editor (link / unlink / create), the existing plan card in the run.
+- **Calm corner**: four kinds of **body scan** (quick, full head-to-toe, tense-and-release, for sleep) and **guided imagery** with 11 scripts, including the **four elements - earth, air, water, fire** (אדמה, אוויר, מים, אש), safe place, waves, forest, mountain, leaves on a stream, worry balloon, worry box, warm light, floating cloud and a kind helper. Hebrew and English, read on screen and optionally aloud.
+- **Situation log (APRT / EIER)**: Event - Interpretation - Emotion (with intensity) - Response, plus an optional "another way to see it" step, one question at a time, **written, dictated or recorded**, saved to the private journal. From the journal ("Reflect" menu), the task-help card, the end of a calm exercise, search and a suggestion. After three logs the journal shows **what the records show**: common feelings, intensity trend, typical responses, recurring themes and thinking traps with a gentle question each (self-help overview, not a diagnosis).
+- The journal toolbar is now one row (Note, Record, Reflect ▾).
+
 ## 1.18.1
 - **Automatic updates for the web app**: the service worker already downloaded new versions; now the app also looks for one when it comes back to the foreground and every hour, and **reloads into the new version by itself when that is safe** (not during a run, with a sheet open, or while typing - then the "Update ready" prompt appears once and the switch happens as soon as it is safe). A short "Updated to version X" note follows (`update.js`, unit-tested).
 - **Share the app itself** (PWA and Android app): Settings -> App -> Share, or search "share". Two blocks - the Android app (APK link) and the web app (PWA link) - each by **WhatsApp**, **e-mail**, the system share sheet or a copied link, in Hebrew or English (`appShare.js`, unit-tested). The Android app now also opens `mailto:` links.

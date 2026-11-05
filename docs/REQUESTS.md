@@ -54,3 +54,7 @@ Status: ✅ shipped (version) · 🟡 partly (what is missing) · ⛔ not possib
 | 28 | Alarm ring "type" in the Android app = phone sounds | ✅ picker (verified by CI compile only) |
 | 29 | Automatic update of the PWA on refresh / entry | ✅ 1.18.1 (checks on focus + hourly; reloads itself only when safe) |
 | 30 | Share the app (Android + PWA) by WhatsApp and e-mail | ✅ 1.18.1 |
+| 31 | Wizard: edit the suggested tasks before creating | ✅ 1.19 |
+| 32 | Calm corner: more body-scan abilities; the four-elements (earth, air, water, fire) imagery; more guided imagery (researched) | ✅ 1.19 (4 scans, 11 guided journeys) |
+| 33 | APRT / EIER (Event, Interpretation, Emotion, Response) from CBT, written and by voice, with later analysis, inside the journal and where relevant | ✅ 1.19 |
+| 34 | Goals shown inside routines; an automatic routine built from the goals and the problem world (ADHD, anxiety...) | ✅ 1.19 (goal chip, editor section, wizard goal step, "build a routine for this goal") |

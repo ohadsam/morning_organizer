@@ -6,6 +6,7 @@ import { LEVELS } from '../difficulty.js';
 import { pickThought, pickExercise } from '../thoughts.js';
 import { openCapture } from './capture.js';
 import { speakWithSettings } from './coach.js';
+import { openAprt } from './aprt.js';
 
 /**
  * api: { current(): {task, index}, rate(i, v), helped(i, kind), openCalm() }. -> { el, update() }.
@@ -39,7 +40,8 @@ export function taskHelpCard(api, routineName) {
     setChildren(btns,
       h('button', { class: `btn small ${hard ? 'primary' : ''}`, type: 'button', onclick: () => openCapture({ routine: routineName, task: task.name, difficulty: task.difficulty, hard: true, onSaved: () => api.helped(index, 'note') }) }, `✍️ ${t('whyHard')}`),
       h('button', { class: `btn small ${hard ? 'primary' : ''}`, type: 'button', onclick: showThought }, `💭 ${t('thoughtBtn')}`),
-      h('button', { class: `btn small ${hard ? 'primary' : ''}`, type: 'button', onclick: showRelax }, `🧘 ${t('relaxBtn')}`));
+      h('button', { class: `btn small ${hard ? 'primary' : ''}`, type: 'button', onclick: showRelax }, `🧘 ${t('relaxBtn')}`),
+      S.features().journal !== false ? h('button', { class: 'btn small', type: 'button', onclick: () => openAprt({ routine: routineName, task: task.name, onSaved: () => api.helped(index, 'note') }) }, `🧭 ${t('aprtLogMoment')}`) : null);
     if (hard && !out.firstChild) setChildren(out, h('p', { class: 'note' }, t('diffHardHint')));
   }
   const fold = h('details', { class: 'help-fold' }, sum, rated, btns);

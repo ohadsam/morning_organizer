@@ -68,7 +68,7 @@ export function fold(title, summary, ...children) {
 export function toolbar(items, label = '') {
   const panel = h('div', { class: 'tb-panel quick', hidden: true }); let openIt = null, openBtn = null;
   const close = () => { if (openBtn) { openBtn.setAttribute('aria-expanded', 'false'); openBtn.classList.remove('open'); } openIt = openBtn = null; panel.hidden = true; panel.replaceChildren(); };
-  const btns = items.map((it) => {
+  const btns = items.filter((it) => !it.items || it.items.length).map((it) => {
     const b = h('button', { type: 'button', class: `tb-btn ${it.pressed ? 'pressed' : ''}`, 'aria-haspopup': it.items ? 'true' : null, 'aria-expanded': it.items ? 'false' : null, 'aria-pressed': it.pressed === undefined ? null : String(!!it.pressed), 'data-tb': it.id || '',
       onclick: () => { if (!it.items) { close(); it.run?.(); return; } const was = openIt === it; close(); if (was) return; openIt = it; openBtn = b; b.setAttribute('aria-expanded', 'true'); b.classList.add('open'); setChildren(panel, it.items.filter(Boolean)); panel.hidden = false; } },
       h('span', { class: 'tb-i', 'aria-hidden': 'true' }, it.icon, it.badge ? h('i', { class: 'tb-dot' }) : null), h('span', { class: 'tb-l' }, it.label));

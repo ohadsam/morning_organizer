@@ -91,9 +91,9 @@ export function renderHome(root, nav) {
       simple ? null : (() => { const f = S.features(), b = (emoji, label, fn) => h('button', { class: 'btn', type: 'button', onclick: fn }, h('span', { 'aria-hidden': 'true' }, emoji), label), paused = isPaused(settings.alarmsPause); return toolbar([
         { id: 'new', icon: '➕', label: t('tbNew'), run: () => runAction('newRoutine', nav) },
         { id: 'wizard', icon: '🪄', label: t('tbWizard'), run: () => runAction('wizard', nav) },
-        { id: 'plan', icon: '🗓️', label: t('tbPlan'), items: [b('⏰', t('alarmsTitle'), () => nav('#/alarms')), b('🎯', t('goalsTitle'), () => nav('#/goals')), b('📚', t('libFromTemplate'), () => openRoutinePicker(nav)), b('⚙️', t('libManage'), () => nav('#/library')), b('📥', t('import'), () => openImport())] },
+        { id: 'plan', icon: '🗓️', label: t('tbPlan'), items: [b('⏰', t('alarmsTitle'), () => nav('#/alarms')), S.shows('goals') ? b('🎯', t('goalsTitle'), () => nav('#/goals')) : null, b('📚', t('libFromTemplate'), () => openRoutinePicker(nav)), b('⚙️', t('libManage'), () => nav('#/library')), b('📥', t('import'), () => openImport())].filter(Boolean) },
         { id: 'calm', icon: '🌬️', label: t('tbCalm'), items: [f.calmCorner ? b('🌬️', t('calmTitle'), () => nav('#/calm')) : null, f.journal ? b('📓', t('journal'), () => nav('#/journal')) : null, f.journal ? b('🎙️', t('jQuick'), () => openCapture({})) : null].filter(Boolean) },
-        { id: 'track', icon: '📈', label: t('tbTrack'), items: [b('📊', t('stats'), () => nav('#/stats')), b('🔄', t('rcvTitle'), () => nav('#/retros')), f.rewardMenu ? b('🎁', t('menuTitle'), () => openMenu()) : null] },
+        { id: 'track', icon: '📈', label: t('tbTrack'), items: [S.shows('stats') ? b('📊', t('stats'), () => nav('#/stats')) : null, S.shows('retros') ? b('🔄', t('rcvTitle'), () => nav('#/retros')) : null, f.rewardMenu && S.shows('rewards') ? b('🎁', t('menuTitle'), () => openMenu()) : null].filter(Boolean) },
         { id: 'alarms', icon: paused ? '🔕' : '🔔', label: paused ? t('pauseResume') : t('tbAlarms'), pressed: paused, run: () => openPauseSheet(draw) }], t('quickTitle')); })(),
       simple ? null : pausedBanner(draw),
       simple ? null : suggestionBelow,

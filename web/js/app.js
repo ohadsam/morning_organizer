@@ -30,6 +30,7 @@ import { maybeShowWhatsNew, setVersion, getVersion } from './ui/whatsnew.js';
 import { renderLibrary } from './ui/library.js';
 import { renderCalm } from './ui/calm.js';
 import { openSearch } from './ui/search.js';
+import { drawTopbar, maybeAskWho } from './ui/people.js';
 import { createUpdater, canAutoUpdate } from './update.js';
 import { renderJournal } from './ui/journal.js';
 import { lockAll } from './journal.js';
@@ -64,7 +65,7 @@ async function route() {
 
 function drawNav(view) {
   const simple = S.get().settings.simpleMode;
-  const tabs = simple ? [['home', 'home', '#/'], ['settings', 'gear', '#/settings']] : [['home', 'home', '#/'], ['stats', 'chart', '#/stats'], ['family', 'users', '#/family'], ['guide', 'book', '#/guide'], ['settings', 'gear', '#/settings']];
+  const tabs = simple ? [['home', 'home', '#/'], ['settings', 'gear', '#/settings']] : [['home', 'home', '#/'], S.shows('stats') ? ['stats', 'chart', '#/stats'] : null, S.shows('family') ? ['family', 'users', '#/family'] : null, ['guide', 'book', '#/guide'], ['settings', 'gear', '#/settings']].filter(Boolean);
   const parentTab = { edit: 'home', run: 'home', library: 'home', alarms: 'home', goals: 'home', report: 'stats', retro: 'stats', retros: 'stats' }, active = Object.hasOwn(parentTab, view) ? parentTab[view] : view;
   setChildren(document.getElementById('nav'), ...tabs.map(([key, ic, href]) => h('a', { href, class: key === active ? 'on' : '', 'aria-current': key === active ? 'page' : null }, icon(ic, 24), h('span', {}, t(key === 'family' ? 'tabFamily' : key)))),
     simple || view === 'run' ? null : h('button', { class: 'nav-search', type: 'button', 'aria-haspopup': 'dialog', 'aria-label': t('searchOpen'), title: t('searchOpen'), onclick: () => openSearch(nav) }, icon('search', 24), h('span', {}, t('searchOpen'))));
@@ -92,6 +93,13 @@ async function boot() {
   const onRing = (tpl, r) => handleRing(tpl.id, r, nav);
   // young children (or "playful" in Settings) get lighter wording everywhere; re-draw only when that actually flips
   S.subscribe(() => { const { textStyle, age } = S.get().settings, on = shouldBePlayful(textStyle, age); if (on !== isPlayful()) { setPlayful(on); route(); } });
+  // each profile has its own look / language / sizes: when the person (or the settings) change, re-apply them and redraw
+  let lookKey = '';
+  const look = () => { const x = S.get().settings; return [x.activeProfile, x.lang, x.theme, x.skin, x.easyRead, x.fontScale, x.colorSafe, x.contrast, x.accent, x.simpleMode].join('|'); };
+  lookKey = look();
+  S.subscribe(() => { const k = look(); if (k === lookKey) return; const was = lookKey.split('|'), x = S.get().settings; lookKey = k;
+    setLang(x.lang); applyTheme(x.theme); applyA11y(x); document.title = t('appName'); try { localStorage.setItem('mo.theme', x.theme); localStorage.setItem('mo.lang', x.lang); } catch { /* blocked */ }
+    if (was[0] !== x.activeProfile || was[1] !== x.lang || was[9] !== String(x.simpleMode)) { drawNav(document.body.dataset.view); route(); } });
   // progress widget (Android): a tiny snapshot whenever something changes
   const { finished: finishedRuns, streak: streakOf, totalStars: starsOf } = await import('./stats.js'), { weeklyReport } = await import('./weekly.js');
   const pushStats = debounce(() => { if (!native.available) return; const done = finishedRuns(S.myRuns()); native.setStats({ name: S.get().settings.personName, stars: starsOf(done), streak: streakOf(done), week: weeklyReport(done, Date.now()).onTime ?? 0 }); }, 800);
@@ -118,7 +126,11 @@ async function boot() {
   let hiddenAt = 0;
   document.addEventListener('visibilitychange', () => { if (document.hidden) hiddenAt = Date.now(); else if (hiddenAt && Date.now() - hiddenAt > 60_000) { lockAll(); if (location.hash === '#/journal') route(); } });
   window.addEventListener('hashchange', route);
+  // the top bar (who is using the app) follows the people and what they need
+  const peopleKey = () => JSON.stringify([S.get().settings.simpleMode, S.get().settings.activeProfile, S.profiles().map((p) => [p.id, p.name, p.avatar, p.view])]);
+  let pk = peopleKey(); drawTopbar(nav); S.subscribe(() => { const k = peopleKey(); if (k !== pk) { pk = k; drawTopbar(nav); drawNav(document.body.dataset.view); } });
   await route();
+  maybeAskWho(nav);
   document.getElementById('boot')?.remove();
   if (!S.get().settings.profileDone) openWelcome(); else maybeShowWhatsNew(version, nav);
 

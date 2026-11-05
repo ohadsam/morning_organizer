@@ -7,7 +7,8 @@ import { modal } from './common.js';
 import { go } from './actions.js';
 
 /** Features that can be switched off in settings are hidden from the results when they are off. */
-function hasFeature(id) { const f = S.features(); return id === 'calm' ? f.calmCorner !== false : id === 'journal' || id === 'note' ? f.journal !== false : id === 'rewards' ? f.rewardMenu !== false : true; }
+const NEED_ID = { goals: 'goals', retros: 'retros', aprt: 'aprt', stats: 'stats', report: 'reports', family: 'family' };
+function hasFeature(id) { if (NEED_ID[id] && !S.shows(NEED_ID[id])) return false; const f = S.features(); return id === 'calm' ? f.calmCorner !== false : id === 'journal' || id === 'note' ? f.journal !== false : id === 'rewards' ? f.rewardMenu !== false && S.shows('rewards') : true; }
 
 export function openSearch(nav) {
   let m; const routines = () => S.get().templates.map((x) => ({ id: x.id, name: x.name, icon: x.icon }));

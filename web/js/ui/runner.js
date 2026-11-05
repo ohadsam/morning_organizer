@@ -29,6 +29,8 @@ import { modal } from './common.js';
 import { planText } from './goals.js';
 import { taskHelpCard } from './taskHelp.js';
 import { discardActiveRun } from './runAdmin.js';
+import { createVoiceControl } from './voiceControl.js';
+import { dictationSupported } from '../dictation.js';
 import { openUnplannedSheet, patternCards, reasonName } from './unplanned.js';
 
 const clock = (ms) => new Date(ms).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -169,6 +171,31 @@ export async function renderRunner(root, id, nav) {
     if (E.isActive(run)) { say(ev); showTransition(t('nextUp', { task: run.tasks[run.current]?.name || '' })); }
     afterChange();
   };
+  const stopRun = async () => { if (await confirmBox(t('stopConfirm'), t('stop'), true)) act(E.finish); };
+
+  // ── voice commands (opt-in, see ui/voiceControl.js): one spoken phrase = one of the buttons; risky ones only open the usual question ──
+  const askDialog = () => document.querySelector('dialog.modal[open]');
+  function onVoice(id) {
+    const dlg = askDialog();
+    if (id === 'yes' || id === 'no') { const bs = dlg?.querySelectorAll('footer button'); if (bs?.length) (id === 'yes' ? bs[bs.length - 1] : bs[0]).click(); return; }
+    if (dlg || discarded || !E.isActive(run)) return;            // a question is open (or the run is over): only yes / no count
+    const cur = run.tasks[run.current], paused = run.status === 'paused';
+    switch (id) {
+      case 'done': if (!paused && !run.interrupt) doComplete(); break;
+      case 'addTime': if (!run.interrupt) { E.addTime(run, 60); persist(); paintLive(); pushWidget(); } break;
+      case 'pause': if (!paused && !run.interrupt) togglePause(); break;
+      case 'resume': if (paused) togglePause(); break;
+      case 'skip': if (!run.interrupt) act(E.skipCurrent); break;
+      case 'stop': stopRun(); break;
+      case 'journal': if (feat.journal) openCapture({ routine: run.templateName, task: cur?.name || '' }); break;
+      case 'calm': if (feat.calmCorner) openCalm(); break;
+      case 'remind': { const msg = t('nowTask', { task: cur?.name || '' }); toast(msg); speakWithSettings(msg, { kind: 'short' }); break; }
+      case 'timeLeft': { const msg = t('vcTimeLeft', { time: fmtHuman(Math.max(0, Math.ceil(E.remainingSec(run, Date.now()))), units()) }); toast(msg); speakWithSettings(msg, { kind: 'short' }); break; }
+      case 'tip': coach.show('any', cur?.name); break;
+      default: break;
+    }
+  }
+  const vc = dictationSupported() ? createVoiceControl({ onCommand: onVoice }) : null;
   const togglePause = () => {
     const was = run.status;
     run = was === 'paused' ? E.resume(run, Date.now()) : E.pause(run, Date.now());
@@ -215,7 +242,7 @@ export async function renderRunner(root, id, nav) {
           h('button', { class: 'btn', type: 'button', onclick: () => act(E.skipCurrent) }, icon('skip', 18), t('skip')),
           h('button', { class: 'btn', type: 'button', onclick: async () => { if (await confirmBox(t('restartConfirm'), t('restartRun'))) { discarded = true; clearInterval(timer); await discardActiveRun(); nav(`#/run/${run.templateId}`); } } }, '↺', t('restartRun')),
           h('button', { class: 'btn', type: 'button', onclick: async () => { if (await confirmBox(t('cancelConfirm'), t('cancelRun'), true)) { discarded = true; clearInterval(timer); await discardActiveRun(); toast(t('cancelledToast')); nav('#/'); } } }, '✖', t('cancelRun')),
-          h('button', { class: 'btn danger', type: 'button', onclick: async () => { if (await confirmBox(t('stopConfirm'), t('stop'), true)) act(E.finish); } }, icon('stop', 18), t('stop'))))));
+          h('button', { class: 'btn danger', type: 'button', onclick: stopRun }, icon('stop', 18), t('stop'))))));
   }
 
   function paintLive() {
@@ -272,7 +299,7 @@ export async function renderRunner(root, id, nav) {
 
   async function afterChange() {
     if (E.isActive(run)) { persist(); paintStatic(); paintLive(); pushActive(); return; }
-    await S.saveActive(null); await S.saveRun(run); setAwake('run', false); pushWidget();
+    vc?.stop(); await S.saveActive(null); await S.saveRun(run); setAwake('run', false); pushWidget();
     renderSummary();
     { const tpl = S.getTemplate(run.templateId), slot = root.querySelector('.pattern-slot'); if (tpl && slot) { const c = patternCards(tpl, nav, () => {}); if (c) setChildren(slot, c); } }
     celebrationFor(run).then((card) => { const slot = root.querySelector('.celebrate-slot'); if (card && slot) setChildren(slot, card); }).catch(() => {});
@@ -312,9 +339,10 @@ export async function renderRunner(root, id, nav) {
 
   setChildren(root, h('div', { class: 'run' },
     h('div', { class: 'run-top', style: { '--accent': run.color || '#6c5ce7' } }, h('span', { class: 'emoji' }, run.icon), h('h1', { class: 'run-title' }, run.templateName)),
-    bubble, coachHost, transEl, sitEl, intrEl, goalBox, planBox, gearBox, pw.el, head, leaveEl, h('div', { class: 'ring-wrap' }, ring, pausedBadge), sprintEl, taskName, pace, controls, helpCard?.el, list));
+    bubble, coachHost, transEl, sitEl, intrEl, goalBox, planBox, gearBox, pw.el, head, leaveEl, h('div', { class: 'ring-wrap' }, ring, pausedBadge), sprintEl, taskName, pace, vc?.el, controls, helpCard?.el, list));
   paintStatic(); paintLive(); paintGear();
+  if (vc && st().voiceCmdAuto && st().transcribe) vc.start();
   if (fresh) { say('start'); pushActive(true); }   // the parent sees "doing now" from the very first task
   timer = setInterval(loop, 250);
-  return () => { clearInterval(timer); clearTimeout(bubbleTimer); clearTimeout(transTimer); coach.hide(); document.removeEventListener('visibilitychange', onVis); setAwake('run', false); if (E.isActive(run) && !discarded) persist(); };
+  return () => { vc?.destroy(); clearInterval(timer); clearTimeout(bubbleTimer); clearTimeout(transTimer); coach.hide(); document.removeEventListener('visibilitychange', onVis); setAwake('run', false); if (E.isActive(run) && !discarded) persist(); };
 }

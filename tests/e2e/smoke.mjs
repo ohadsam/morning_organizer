@@ -19,7 +19,7 @@ const dismissWelcome = async (page) => { try { await page.waitForSelector('dialo
 async function newPage(opts = {}) {
   const ctx = await browser.newContext({ viewport: { width: 390, height: 800 }, locale: opts.locale || 'en-US', serviceWorkers: 'block', ...opts.ctx });
   // settings groups are collapsible (state remembered); most steps need every field reachable, so start with all groups open
-  if (!opts.collapsed) await ctx.addInitScript(() => { try { localStorage.setItem('mo.sg', JSON.stringify(Object.fromEntries(['look', 'profile', 'helpers', 'buddy', 'pace', 'a11y', 'coach', 'voice', 'alerts', 'defaults', 'sync', 'app'].map((k) => [k, true])))); } catch { /* blocked */ } });
+  if (!opts.collapsed) await ctx.addInitScript(() => { try { localStorage.setItem('mo.sg', JSON.stringify(Object.fromEntries(['needs', 'people', 'look', 'profile', 'helpers', 'buddy', 'pace', 'a11y', 'coach', 'voice', 'voicecmd', 'alerts', 'defaults', 'sync', 'app'].map((k) => [k, true])))); } catch { /* blocked */ } });
   // v1.17: sections ("More", edit-page folds, task help, run "More") start closed for people; most steps just need their buttons reachable, so open them as they appear
   if (!opts.foldsClosed) await ctx.addInitScript(() => { const open = () => document.querySelectorAll('details.fold:not([data-keep]), details.help-fold, details.task-more, details.menu-group').forEach((d) => { if (!d.open && !d.dataset.seen) { d.dataset.seen = '1'; d.open = true; } }); new MutationObserver(open).observe(document, { childList: true, subtree: true }); });
   if (opts.collapsed) await ctx.addInitScript(() => { try { if (!localStorage.getItem('mo.sg')) localStorage.setItem('mo.sg', JSON.stringify({ look: true })); } catch { /* blocked */ } });
@@ -1249,6 +1249,73 @@ await step('v1.19.2: axe on the Home continue card, the run More menu with start
     await page.click('.run-more summary'); bad.push(...await audit(page, `${lang}/run-more`)); await page.click('.run-more button >> nth=-2'); await page.waitForSelector('dialog[open]'); bad.push(...await audit(page, `${lang}/cancel-confirm`)); await closeDialogs(page);
     await page.goto(base + '#/'); await page.waitForSelector('.active-run'); bad.push(...await audit(page, `${lang}/home-continue`));
     await page.goto(base + '#/run/sample-kids'); await page.waitForSelector('.main-btns'); for (let i = 0; i < 6; i++) await page.click('.main-btns .primary').catch(() => {}); await page.waitForSelector('.summary'); bad.push(...await audit(page, `${lang}/summary-delete`));
+  }
+  if (bad.length) console.error([...new Set(bad)].join('\n'));
+  assert.deepEqual(bad, []);
+});
+
+// ── v1.20: what the app is for, several people, skins, settings search / jump bar, voice commands ──
+const FAKE_SPEECH = () => {
+  // a recogniser we can drive from the test: window.__say('done') delivers a final result; it ends by itself after each result, like a real one often does
+  window.__recs = [];
+  window.SpeechRecognition = window.webkitSpeechRecognition = class { constructor() { window.__recs.push(this); this.started = false; } start() { this.started = true; } stop() { this.started = false; this.onend?.(); } abort() { this.stop(); } };
+  window.__say = (text) => { const r = window.__recs.filter((x) => x.started).pop(); if (!r) return false; r.onresult?.({ resultIndex: 0, results: [Object.assign([{ transcript: text }], { isFinal: true })] }); r.started = false; r.onend?.(); return true; };
+};
+await step('v1.20: "what the app is for" hides what does not fit and "Show everything" brings it back', async () => {
+  const { page } = await newPage({ lang: 'he' }); await page.goto(base + '#/settings/needs'); await dismissWelcome(page);
+  await page.click('button:has-text("שינוי למה האפליקציה משמשת")'); await page.waitForSelector('dialog[open] .needs');
+  await page.click('dialog[open] .needs-opt:has-text("חרדה")'); await page.click('dialog[open] footer button.primary'); await page.waitForTimeout(300);
+  await page.goto(base + '#/'); await page.waitForSelector('.tb-btn');
+  assert.equal(await page.locator('.tb-btn:has-text("מעקב")').count() >= 0, true);
+  await page.click('.tb-btn[data-tb="plan"], .tb-btn >> nth=2'); assert.equal(await page.locator('.tb-panel:not([hidden]) button:has-text("מטרות")').count(), 0, 'goals are hidden for "anxiety"');
+  await page.goto(base + '#/settings/needs'); await page.click('button:has-text("להציג הכול")'); await page.waitForTimeout(300);
+  await page.goto(base + '#/'); await page.click('.tb-btn >> nth=2'); assert.ok(await page.locator('.tb-panel:not([hidden]) button:has-text("מטרות")').count(), 'goals are back');
+});
+await step('v1.20: several people - add one, switch from the top menu, each keeps its own settings', async () => {
+  const { page } = await newPage({ lang: 'he' }); await page.goto(base + '#/'); await dismissWelcome(page);
+  await page.waitForSelector('#topbar .pm-btn');
+  await page.evaluate(async () => { const S = await import('./js/store.js'); const p = await S.saveProfile({ name: 'דנה', avatar: S.activeProfile().avatar }); await S.switchProfile(p.id); await S.updateSettings({ skin: 'ocean' }); });
+  assert.equal(await page.evaluate(() => document.documentElement.dataset.skin), 'ocean');
+  await page.click('#topbar .pm-btn'); await page.click('.pm-panel .pm-item >> nth=0'); await page.waitForTimeout(400);
+  assert.notEqual(await page.evaluate(() => document.documentElement.dataset.skin), 'ocean', 'the first person keeps their own look');
+  await page.goto(base + '#/settings/people'); assert.ok(await page.locator('.person-row').count() >= 2);
+});
+await step('v1.20: settings search and jump bar', async () => {
+  const { page } = await newPage({ lang: 'en', collapsed: true }); await page.goto(base + '#/settings'); await page.waitForSelector('.settings-search');
+  await page.fill('.settings-search', 'voice comm'); await page.waitForTimeout(150);
+  assert.ok(await page.locator('details[data-group="voicecmd"]:not([hidden])').count()); assert.equal(await page.locator('details[data-group="sync"]:not([hidden])').count(), 0);
+  await page.fill('.settings-search', 'qqqqzzz'); assert.ok(await page.isVisible('#set-none'));
+  await page.fill('.settings-search', ''); await page.click('.sb-jump button:has-text("Voice commands")'); assert.ok(await page.locator('details[data-group="voicecmd"][open]').count());
+});
+await step('v1.20: voice commands - the "?" lists them, "done" / "pause" / "stop" (asks first) work by voice through several steps', async () => {
+  const { page } = await newPage({ lang: 'en', ctx: { permissions: [] } }); await page.addInitScript(FAKE_SPEECH);
+  await page.goto(base + '#/settings/voicecmd'); await page.reload(); await page.waitForSelector('.vc-list'); await dismissWelcome(page);
+  assert.ok((await page.locator('.vc-list li').count()) >= 10, 'the commands are listed in Settings');
+  await page.click('.vc-help'); await page.waitForSelector('dialog[open] .vc-list'); await closeDialogs(page);
+  await page.evaluate(async () => { const S = await import('./js/store.js'); await S.updateSettings({ transcribe: true }); });
+  await page.goto(base + '#/run/sample-kids'); await page.reload(); await page.waitForSelector('.main-btns'); await dismissWelcome(page);
+  await page.click('.vc-btn'); await page.waitForSelector('.vc-btn.on');
+  const cur = () => page.locator('.run h2.now').first().textContent();
+  const first = await cur();
+  assert.ok(await page.evaluate(() => window.__say('done'))); await page.waitForTimeout(500);
+  assert.notEqual(await cur(), first, 'the step moved on by voice'); assert.ok(await page.locator('.vc-btn.on').count(), 'still listening after a command');
+  await page.waitForTimeout(900); assert.ok(await page.evaluate(() => window.__say('pause'))); await page.waitForTimeout(300); assert.ok(await page.locator('.pause-btn.resume').count(), 'paused by voice');
+  await page.waitForTimeout(900); assert.ok(await page.evaluate(() => window.__say('resume'))); await page.waitForTimeout(300); assert.equal(await page.locator('.pause-btn.resume').count(), 0);
+  await page.waitForTimeout(900); assert.ok(await page.evaluate(() => window.__say('stop the routine'))); await page.waitForSelector('dialog[open]');
+  assert.ok(await page.locator('.summary').count() === 0, 'stop only asks first');
+  await page.waitForTimeout(900); assert.ok(await page.evaluate(() => window.__say('no'))); await page.waitForTimeout(300); assert.equal(await page.locator('dialog[open]').count(), 0, '"no" closes the question');
+  await page.waitForTimeout(900); assert.ok(await page.evaluate(() => window.__say('I think the bus is late today')), 'ordinary talking is heard but ignored'); assert.equal(await page.locator('.summary').count(), 0);
+});
+await step('v1.20: axe on settings (needs, people, voice commands), the top menu, the needs sheet, the voice help, skins (he + en, big text)', async () => {
+  const bad = [];
+  for (const [lang, big, skin] of [['he', false, 'default'], ['en', true, 'forest']]) {
+    const { page } = await newPage({ lang, foldsClosed: true }); await page.addInitScript(FAKE_SPEECH); await page.goto(base); if (lang === 'he') await dismissWelcome(page);
+    await page.evaluate(async ([b, sk]) => { const S = await import('./js/store.js'); await S.updateSettings({ skin: sk, fontScale: b ? 150 : 100, easyRead: !!b }); }, [big, skin]);
+    await page.goto(base + '#/settings/needs'); await page.reload(); await page.waitForSelector('.settings-bar'); bad.push(...await audit(page, `${lang}/settings-bar`));
+    await page.click('details[data-group="needs"] .btn.primary'); await page.waitForSelector('dialog[open] .needs'); bad.push(...await audit(page, `${lang}/needs-sheet`)); await closeDialogs(page);
+    await page.click('#topbar .pm-btn'); bad.push(...await audit(page, `${lang}/profile-menu`)); await page.keyboard.press('Escape');
+    await page.goto(base + '#/settings/voicecmd'); await page.reload(); await page.waitForSelector('.vc-help'); bad.push(...await audit(page, `${lang}/voicecmd`));
+    await page.click('.vc-help'); await page.waitForSelector('dialog[open] .vc-list'); bad.push(...await audit(page, `${lang}/voice-help`)); await closeDialogs(page);
   }
   if (bad.length) console.error([...new Set(bad)].join('\n'));
   assert.deepEqual(bad, []);

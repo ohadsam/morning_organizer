@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.20.0
+- **What the app is for**: in Settings choose a way of working (CBT, Cog-Fun) and/or what is hard (attention, anxiety, organising, motivation) plus an age; the app shows only what fits (toolbar, search, navigation, run-screen helpers). "Show everything" and a different choice are always one tap away; nothing is deleted.
+- **People**: several profiles, each with its own settings (look, text, sound, voice, pace...) and its own view; a small switcher at the top of every screen; "Who is using the app?" at the start (can be turned off); manage everyone in Settings → People.
+- **Settings**: a sticky search box and a jump bar; the welcome/setup screens can be reopened; **skins** (Classic, Ocean, Forest, Sunset, Candy, Slate), **easy-read text** and a custom accent colour.
+- **Voice commands in a routine**: a Listen button (and a ? that lists the commands) keeps listening through all steps - done, add time, pause, resume, skip, journal, calm corner, remind me the step, time left, tip, stop (asks first), yes / no. Listed in Settings → Voice commands; optional auto-start. Uses the same opt-in and recogniser as voice notes; the app ignores its own voice.
+
 ## 1.19.2
 - **Start over / Cancel / Delete a run**: a routine in progress is no longer a dead end. **Start over** (from the beginning, nothing saved) and **Cancel this run** (nothing saved, back to Home) are in the run screen's "More → Change the plan" and on the Home "continue" card; **Delete this run** removes a finished run from the history, with Undo. Parents' live view and the Android progress widget are cleared too (`ui/runAdmin.js`, `store.removeRunWithUndo`).
 

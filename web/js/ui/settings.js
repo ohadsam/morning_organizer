@@ -6,6 +6,13 @@ import { native } from '../native.js';
 import { setAwake } from '../awake.js';
 import { PRESETS, GROUPS, personaIds, voicesFor, ttsSupported, voiceLabel, canInstallVoices, installVoices, listEngines, setEngine } from '../speech.js';
 import { speakWithSettings } from './coach.js';
+import { openNeeds, peopleManager, needsLine } from './people.js';
+import { openWelcome } from './welcome.js';
+import { commandList, helpButton } from './voiceControl.js';
+import { dictationSupported } from '../dictation.js';
+import { isFull } from '../needs.js';
+import { SKINS, SKIN_SWATCH } from '../skins.js';
+import { normQuery } from '../searchIndex.js';
 import { openShareApp } from './shareApp.js';
 import { suggestionsOn, setSuggestionsOn } from './suggest.js';
 import { applyA11y, FONT_SCALES } from '../a11y.js';
@@ -68,7 +75,28 @@ function voiceControls(st, set) {
 }
 
 /** A collapsible settings group; its open/closed state is remembered per group. */
-let focusGroup = '';
+let focusGroup = '', query = '';
+const GROUP_META = [['needs', '🎯', 'needsTitle'], ['people', '👥', 'peopleTitle'], ['look', '🎨', 'appearance'], ['profile', '🙂', 'profile'], ['buddy', '🦊', 'buddySection'], ['helpers', '🧩', 'helpersTitle'], ['pace', '🐢', 'paceMode'], ['a11y', '♿', 'a11y'], ['coach', '🧘', 'coach'],
+  ['voice', '🔊', 'voiceSection'], ['voicecmd', '🎤', 'vcTitle'], ['alerts', '🔔', 'alertsSection'], ['defaults', '🛠️', 'defaultsSection'], ['sync', '💾', 'syncTitle'], ['app', 'ℹ️', 'app']];
+/** Show only the settings that match what was typed (group titles and the text of each row); matching groups open. Empty = everything as it was. */
+function applyFilter(root, q) {
+  const needle = normQuery(q), groups = [...root.querySelectorAll('details.settings-group')]; let any = false;
+  for (const g of groups) {
+    const title = normQuery(g.querySelector('summary')?.textContent), rows = [...g.querySelectorAll(':scope > .stack > *')];
+    if (!needle) { g.hidden = false; rows.forEach((r) => { r.hidden = false; }); continue; }
+    const titleHit = title.includes(needle); let hit = titleHit;
+    for (const r of rows) { const m = titleHit || normQuery(r.textContent).includes(needle); r.hidden = !m; hit ||= m; }
+    g.hidden = !hit; if (hit) { g.open = true; any = true; }
+  }
+  const none = root.querySelector('#set-none'); if (none) none.hidden = !needle || any;
+}
+function settingsBar() {
+  const search = h('input', { type: 'search', class: 'settings-search', placeholder: t('setSearchPh'), 'aria-label': t('setSearchPh'), value: query, maxLength: 40, oninput: (e) => { query = e.target.value; applyFilter(document.getElementById('app'), query); } });
+  const jump = (k) => { query = ''; search.value = ''; const root = document.getElementById('app'); applyFilter(root, ''); const d = root.querySelector(`details[data-group="${k}"]`); if (d) { d.open = true; d.scrollIntoView({ block: 'start', behavior: 'smooth' }); } };
+  return h('div', { class: 'settings-bar' }, h('div', { role: 'search', class: 'sb-search' }, h('span', { 'aria-hidden': 'true' }, '🔍'), search),
+    h('div', { class: 'sb-jump', role: 'group', 'aria-label': t('setJump') }, GROUP_META.map(([k, ic, key]) => h('button', { type: 'button', class: 'chip btn-chip', onclick: () => jump(k) }, `${ic} ${t(key)}`))),
+    h('p', { class: 'empty', id: 'set-none', hidden: true }, t('setNone')));
+}
 function group(key, title, open, ...kids) {
   let saved = {}; try { saved = JSON.parse(localStorage.getItem('mo.sg') || '{}'); } catch { /* blocked */ }
   const d = h('details', { class: 'card settings-group', dataset: { group: key }, open: key === focusGroup ? true : key in saved ? saved[key] : open }, h('summary', {}, h('h2', {}, title)), h('div', { class: 'stack' }, kids));
@@ -78,20 +106,34 @@ function group(key, title, open, ...kids) {
 export const ACCENTS = ['', '#5b4bd5', '#0b6fc4', '#0a7a5f', '#c2410c', '#be185d', '#334155'];
 
 export function renderSettings(root, version, focusKey = '') {
-  focusGroup = /^[a-z]{2,12}$/.test(focusKey) ? focusKey : '';
+  focusGroup = /^[a-z]{2,12}$/.test(focusKey) ? focusKey : ''; query = '';
   if (focusGroup) queueMicrotask(() => setTimeout(() => document.querySelector(`details[data-group="${focusGroup}"]`)?.scrollIntoView({ block: 'start' }), 60));
   let alive = true; // a redraw that finishes after the person already left this page must NOT overwrite the page they are on
   const draw = () => {
     if (!alive) return;
     const st = S.get().settings;
     const set = async (p, redraw = false) => { await S.updateSettings(p); if (redraw) draw(); };
+    const me = S.activeProfile();
     setChildren(root, 
       h('h1', {}, t('settings')),
+      settingsBar(),
+      group('needs', `🎯 ${t('needsTitle')}`, false,
+        h('p', { class: 'chip solid' }, `${me.name ? `${me.name}: ` : ''}${needsLine(me.view)}`), h('small', { class: 'hint' }, t('needsIntro')),
+        h('div', { class: 'toolbar wrap' }, h('button', { class: 'btn primary', type: 'button', onclick: () => openNeeds(me, draw) }, t('needChange')),
+          isFull(me.view) ? null : h('button', { class: 'btn', type: 'button', onclick: async () => { await S.setNeeds(me.id, { model: 'full', problems: [] }); toast(t('needAllToast')); draw(); } }, `🌐 ${t('needShowAll')}`),
+          h('button', { class: 'btn', type: 'button', onclick: () => openWelcome() }, `👋 ${t('setWelcome')}`)),
+        isFull(me.view) ? null : h('small', { class: 'hint' }, t('needHiddenNote')), h('small', { class: 'hint' }, t('setWelcomeHint'))),
+      group('people', `👥 ${t('peopleTitle')}`, false, peopleManager(draw),
+        toggle(t('askProfile'), t('askProfileHint'), st.askProfile !== false, (v) => set({ askProfile: v }))),
       group('look', t('appearance'), false,
         select(t('language'), st.lang, [['auto', t('langAuto')], ['he', 'עברית'], ['en', 'English']], async (v) => { await S.updateSettings({ lang: v }); try { localStorage.setItem('mo.lang', v); } catch { /* blocked */ } setLang(v); location.reload(); }),
         select(t('theme'), st.theme, [['auto', t('themeAuto')], ['light', t('themeLight')], ['dark', t('themeDark')]], (v) => { applyTheme(v); try { localStorage.setItem('mo.theme', v); } catch { /* blocked */ } set({ theme: v }); }),
         select(t('textStyle'), st.textStyle, [['auto', t('textAuto')], ['playful', t('textPlayful')], ['plain', t('textPlain')]], (v) => set({ textStyle: v }, true)), h('small', { class: 'hint' }, t('textStyleHint')),
         h('div', { class: 'field' }, h('span', { class: 'lbl' }, t('accent')), h('div', { class: 'swatches', role: 'radiogroup', 'aria-label': t('accent') }, ACCENTS.map((c) => h('button', { type: 'button', class: `swatch ${st.accent === c ? 'on' : ''}`, style: { '--c': c || '#6c5ce7' }, role: 'radio', 'aria-checked': String(st.accent === c), 'aria-label': c || t('themeAuto'), onclick: async () => { await set({ accent: c }); applyA11y(S.get().settings); draw(); } })))),
+        h('div', { class: 'field' }, h('span', { class: 'lbl' }, t('skinTitle')), h('div', { class: 'skin-grid', role: 'radiogroup', 'aria-label': t('skinTitle') }, SKINS.map((k) => h('button', { type: 'button', class: `skin-tile ${(st.skin || 'default') === k ? 'on' : ''}`, role: 'radio', 'aria-checked': String((st.skin || 'default') === k), onclick: () => set({ skin: k }, true) },
+          h('span', { class: 'skin-sw', style: { background: `linear-gradient(135deg, ${SKIN_SWATCH[k][0]} 50%, ${SKIN_SWATCH[k][1]} 50%)` }, 'aria-hidden': 'true' }), h('span', {}, t(`skin_${k}`)))))),
+        toggle(t('easyRead'), t('easyReadHint'), st.easyRead, (v) => set({ easyRead: v })),
+        h('label', { class: 'field' }, h('span', { class: 'lbl' }, t('customColor')), h('input', { type: 'color', class: 'color-in', value: /^#[0-9a-f]{6}$/i.test(st.accent || '') ? st.accent : '#6c5ce7', 'aria-label': t('customColor'), onchange: (e) => set({ accent: e.target.value }, true) })),
         toggle(t('simpleMode'), t('simpleHint'), st.simpleMode, async (v) => { if (v && !(await requestGate())) { draw(); return; } await set({ simpleMode: v }); location.hash = '#/'; location.reload(); })),
       group('profile', t('profile'), false,
         h('div', { class: 'field' }, h('span', { class: 'lbl' }, t('profilesTitle')),
@@ -132,6 +174,9 @@ export function renderSettings(root, version, focusKey = '') {
         h('small', { class: 'hint' }, t('coachDisclaimer'))),
       ttsSupported() ? group('voice', `🔊 ${t('voiceSection')}`, false, h('small', { class: 'hint' }, t('voiceHint')),
         toggle(t('speakOn'), '', st.speak, (v) => set({ speak: v })), toggle(t('coachSpeak'), '', st.coachSpeak, (v) => set({ coachSpeak: v })), voiceControls(st, set)) : null,
+      group('voicecmd', `🎤 ${t('vcTitle')}`, false, h('p', { class: 'note' }, t('vcSettingsIntro')),
+        dictationSupported() ? h('div', { class: 'vc-toggle-row' }, toggle(t('vcAuto'), t('vcAutoHint'), !!st.voiceCmdAuto, (v) => set({ voiceCmdAuto: v })), helpButton()) : h('p', { class: 'note' }, t('vcUnavailable')),
+        commandList()),
       group('alerts', t('alertsSection'), false,
         select(t('soundMode'), st.mode, [['both', t('mBoth')], ['beep', t('mBeep')], ['vibrate', t('mVibrate')], ['silent', t('mSilent')]], (v) => set({ mode: v })),
         h('label', { class: 'field' }, h('span', { class: 'lbl' }, `${t('volume')}: ${st.volume}%`), h('input', { type: 'range', min: 0, max: 100, value: st.volume, oninput: (e) => { e.target.previousSibling.textContent = `${t('volume')}: ${e.target.value}%`; S.updateSettings({ volume: +e.target.value }); } })),
@@ -159,6 +204,7 @@ export function renderSettings(root, version, focusKey = '') {
             deferredInstall ? h('button', { class: 'btn', type: 'button', onclick: async () => { deferredInstall.prompt(); await deferredInstall.userChoice; deferredInstall = null; draw(); } }, t('installPwa')) : null)],
         h('p', { class: 'note' }, `${t('version', { v: version && version !== '0' ? version : getVersion() || '?' })} · ${t('offline')}`),
         h('div', { class: 'toolbar wrap' }, h('button', { class: 'btn primary', type: 'button', onclick: () => openShareApp() }, `📣 ${t('shareApp')}`), h('button', { class: 'btn', type: 'button', onclick: () => openWhatsNew((hash) => { location.hash = hash; }) }, `🎉 ${t('wnLink')}`))));
+    if (query) applyFilter(root, query);
   };
   draw();
   return () => { alive = false; };

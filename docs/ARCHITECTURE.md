@@ -69,3 +69,10 @@ A look-back record now carries `mode` (guided|free), `scope` (run | the routine'
 - Android: the web app pushes `setAlarmRules({ pausedUntil, skipDates })`; `AlarmMath.nextFire(..., skip, pausedUntil)` skips those dates (JVM-tested), `AlarmStore` keeps the rules and re-arms; per-ring `offDays` and `tone` (a `content://` ringtone chosen with `pickRingtone`).
 - `ui/common.js#toolbar` is the single Home toolbar (one row; dropdown panel in the page flow). `ui/pause.js` = pause sheet + banner. `alarmPause.js` = pure pause values.
 - `rejections.js`, `suggestions.js` (weekly check-ins), `difficulty.js#difficultyTrends`, `rewards.js#parentView` (what a parent may see of a child's goals/look-backs).
+
+## Needs, people, skins and voice commands (1.20)
+- `needs.js` (pure): a profile's `view` = `{ model, problems }` -> the set of feature ids that stay visible (`visibleSet`); `S.shows(id)` and `S.features()` use it, so the toolbar, search, navigation and run helpers follow. Core features (alarms, library, wizard) are never hidden; "Show everything" resets the view.
+- Per-person settings: `profile.prefs` (validated by `PREF_RULES` in `profiles.js`) is mirrored into `state.settings` on profile switch and written back by `updateSettings`, so code that reads `settings.*` is unchanged.
+- `skins.js` + `data-skin` / `data-easy` set by `a11y.js` and `theme-boot.js` (no flash); skins are CSS variable sets that keep AA contrast (axe-checked).
+- `ui/people.js`: needs sheet, People manager, top-bar profile menu, start-up picker. Settings has a search/jump bar (`settingsBar`).
+- Voice commands: `voiceCommands.js` (pure: strict short-phrase matching, longest phrase wins, he + en, dedupe) + `ui/voiceControl.js` (restarting `dictation.js` session, ignores results while `speakingNow()`), wired in `ui/runner.js` (`onVoice`); risky commands only open the usual confirmation and a spoken yes / no answers it.

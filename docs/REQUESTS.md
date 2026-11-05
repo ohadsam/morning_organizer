@@ -61,3 +61,9 @@ Status: ✅ shipped (version) · 🟡 partly (what is missing) · ⛔ not possib
 | 35 | Ready-made example routines must not ring: alarm OFF by default | ✅ 1.19.1 (and switched off once for existing installs) |
 | 37 | A routine in progress needs start over / cancel / delete (it was a dead end) | ✅ 1.19.2 |
 | 36 | Start-up screen shows the new SonRise logo with a loading animation instead of the sun | ✅ 1.19.1 |
+| 38 | Define what the app is for (model: CBT / Cog-Fun; problem: attention, anxiety, organising...; age) and show only what fits; simple way back to everything and to another choice | ✅ 1.20 (Settings → What the app is for; hides toolbar items, search, navigation, run helpers) |
+| 39 | Several profiles, choose at entry, each with its own settings and tailored screens; manage all in Settings; small dropdown at the top | ✅ 1.20 (per-profile prefs, top switcher, start-up picker, Settings → People) |
+| 40 | First-run welcome/setup reachable from Settings | ✅ 1.20 |
+| 41 | Floating settings toolbar to jump to every group, with search inside settings | ✅ 1.20 (sticky search + jump bar) |
+| 42 | More convenience: skins to choose from, custom options | ✅ 1.20 (6 skins, easy-read text, custom accent colour) |
+| 43 | Voice commands during a routine (done, add time, journal, calm, stop, pause, remind me the step...), keeps listening; commands listed in Settings and a ? next to the toggle | ✅ 1.20 (run-screen Listen button + ?, Settings → Voice commands; real-device recognition unverified) |

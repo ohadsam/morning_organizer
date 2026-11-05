@@ -36,13 +36,13 @@ import { renderJournal } from './ui/journal.js';
 import { lockAll } from './journal.js';
 
 const root = document.getElementById('app');
-let cleanup = () => {}, version = '0';
+let cleanup = () => {}, version = '0', routeSeq = 0;
 const nav = (hash) => { if (location.hash === hash) route(); else location.hash = hash; };
 // Ctrl/Cmd+K opens the search from anywhere (not while a sheet is already open, nor in the kids' mode).
 document.addEventListener('keydown', (e) => { if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k' && !document.querySelector('dialog[open]') && !S.get().settings.simpleMode) { e.preventDefault(); openSearch(nav); } });
 
 async function route() {
-  cleanup(); cleanup = () => {};
+  cleanup(); cleanup = () => {}; const mine = ++routeSeq;
   const [, page, arg, arg2, arg3] = (location.hash.replace(/^#/, '') || '/').split('/');
   const view = page || 'home';
   // Simple (kids) mode: only routines and running them are open; everything else needs the grown-up gate.
@@ -58,6 +58,8 @@ async function route() {
     };
     // The route comes from the address bar: look it up as OWN data only ("#/constructor" or "#/__proto__" must fall back to home).
     const out = await (Object.hasOwn(views, view) ? views[view] : views.home)();
+    // two routes can overlap (a hash change plus a profile switch): only the newest keeps its clean-up, the older one is torn down at once
+    if (mine !== routeSeq) { if (typeof out === 'function') out(); return; }
     cleanup = typeof out === 'function' ? out : () => {};
   } catch (e) { console.error(e); setChildren(root, h('p', { class: 'empty' }, t('error'))); }
   drawNav(view);

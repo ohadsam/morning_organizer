@@ -69,7 +69,9 @@ export function renderHome(root, nav) {
         h('button', { class: 'btn', type: 'button', onclick: async () => { if (await confirmBox(t('restartConfirm'), t('restartRun'))) { const id = active.templateId; await discardActiveRun(); active = null; nav(`#/run/${id}`); } } }, '↺', t('restartRun')),
         h('button', { class: 'btn', type: 'button', onclick: async () => { if (await confirmBox(t('cancelConfirm'), t('cancelRun'), true)) { await discardActiveRun(); active = null; clearInterval(tick); toast(t('cancelledToast')); draw(); } } }, '✖', t('cancelRun'))));
   };
+  let alive = true;   // a draw that arrives after the person already left Home must not overwrite the page they are on
   const draw = () => {
+    if (!alive) return;
     const { templates, settings } = S.get();
     const done = finished(S.myRuns()), days = streak(done), starsN = totalStars(done);
     const awake = isAwakeWanted(), simple = settings.simpleMode, lv = levelInfo(starsN);
@@ -106,5 +108,5 @@ export function renderHome(root, nav) {
   draw();
   S.loadActive().then((r) => { if (r && isActive(r) && S.getTemplate(r.templateId)) { active = r; draw(); tick = setInterval(() => pw?.update(active), 1000); } });
   const off = S.subscribe(draw);
-  return () => { off(); clearInterval(tick); };
+  return () => { alive = false; off(); clearInterval(tick); };
 }

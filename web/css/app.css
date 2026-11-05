@@ -17,7 +17,14 @@ main { max-width: 760px; margin-inline: auto; padding: 16px 16px 24px; padding-b
 h1 { font-size: 1.6rem; margin: .2em 0 .4em; } h2 { font-size: 1.1rem; margin: 1.2em 0 .5em; }
 p { margin: .3em 0; } small, .muted, .note { color: var(--muted); } .note { font-size: .9rem; } .err { color: var(--bad); }
 a { color: var(--brand); } [hidden] { display: none !important; }
-.boot { position: fixed; inset: 0; display: grid; place-items: center; font-size: 4rem; background: var(--bg); z-index: 50; animation: pulse 1s infinite alternate; }
+.boot { position: fixed; inset: 0; display: grid; place-content: center; justify-items: center; gap: 22px; background: var(--bg); z-index: 50; }
+/* the SonRise logo while the app starts: it floats up gently like a sunrise, with a loading bar underneath */
+.boot-logo { width: 120px; height: 120px; border-radius: 27px; box-shadow: 0 10px 30px rgba(60, 40, 160, .3); animation: boot-rise 1.6s ease-in-out infinite alternate; }
+.boot-bar { position: relative; width: 120px; height: 5px; border-radius: 99px; background: color-mix(in srgb, var(--brand, #6c5ce7) 18%, transparent); overflow: hidden; }
+.boot-bar::after { content: ''; position: absolute; inset-block: 0; inset-inline-start: -40%; width: 40%; border-radius: 99px; background: linear-gradient(90deg, #ffd166, var(--brand, #6c5ce7)); animation: boot-load 1.2s ease-in-out infinite; }
+@keyframes boot-rise { from { transform: translateY(8px) scale(.96); opacity: .85; } to { transform: translateY(-6px) scale(1); opacity: 1; } }
+@keyframes boot-load { from { inset-inline-start: -40%; } to { inset-inline-start: 100%; } }
+@media (prefers-reduced-motion: reduce) { .boot-logo, .boot-bar::after { animation: none; } .boot-bar::after { inset-inline-start: 30%; } }
 @keyframes pulse { to { transform: scale(1.08); } }
 :focus-visible { outline: 3px solid var(--brand); outline-offset: 2px; border-radius: 8px; }
 
@@ -412,3 +419,4 @@ fieldset { min-width: 0; }
 .aprt-steps li.on { border-color: var(--brand); color: var(--brand); background: color-mix(in srgb, var(--brand) 12%, var(--surface)); } .aprt-steps li.done { background: var(--brand); border-color: var(--brand); color: #fff; }
 .big-num { font-weight: 800; font-size: 1.1rem; color: var(--brand); } .aprt textarea { width: 100%; }
 .goal-chip { display: inline-flex; align-items: center; gap: 4px; font-size: .78rem; color: var(--muted); max-width: 100%; overflow-wrap: anywhere; }
+.chip.solid { white-space: normal; overflow-wrap: anywhere; max-width: 100%; }

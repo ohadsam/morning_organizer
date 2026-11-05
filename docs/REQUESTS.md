@@ -11,7 +11,7 @@ Status: ✅ shipped (version) · 🟡 partly (what is missing) · ⛔ not possib
 | All buttons grouped in ONE toolbar of topic dropdowns, one row | `toolbar()` in `ui/common.js`, e2e checks a single row |
 | Same features in the PWA and the Android app | One `web/` folder; background features mirrored natively (alarms, pause, holiday dates) with JVM tests |
 | Hebrew first, English equal; a space between number and unit | i18n parity test; `fmtHuman` test |
-| Alarms on by default, quiet on holidays/vacations by default, one control to pause all | `wake.js`, `holidays.js`, `alarmPause.js` + tests |
+| Alarms on by default for a person's OWN new routines (the ready-made examples ship with the alarm OFF), quiet on holidays/vacations by default, one control to pause all | `wake.js`, `holidays.js`, `alarmPause.js` + tests |
 
 ## Requests
 | # | Request | Status |
@@ -58,3 +58,5 @@ Status: ✅ shipped (version) · 🟡 partly (what is missing) · ⛔ not possib
 | 32 | Calm corner: more body-scan abilities; the four-elements (earth, air, water, fire) imagery; more guided imagery (researched) | ✅ 1.19 (4 scans, 11 guided journeys) |
 | 33 | APRT / EIER (Event, Interpretation, Emotion, Response) from CBT, written and by voice, with later analysis, inside the journal and where relevant | ✅ 1.19 |
 | 34 | Goals shown inside routines; an automatic routine built from the goals and the problem world (ADHD, anxiety...) | ✅ 1.19 (goal chip, editor section, wizard goal step, "build a routine for this goal") |
+| 35 | Ready-made example routines must not ring: alarm OFF by default | ✅ 1.19.1 (and switched off once for existing installs) |
+| 36 | Start-up screen shows the new SonRise logo with a loading animation instead of the sun | ✅ 1.19.1 |

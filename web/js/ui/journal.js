@@ -106,7 +106,7 @@ function entryCard(e, redraw, pid) {
 }
 
 export async function renderJournal(root, nav) {
-  const pid = S.activeProfile().id; let filter = 'all', alive = true;
+  const pid = S.activeProfile().id; let filter = 'all', alive = true, lockOpen = false;
   const host = h('div', { class: 'stack' });
   const tools = toolbar([
     { id: 'note', icon: '📝', label: t('jNewNote'), run: () => openCapture({}) },
@@ -122,12 +122,13 @@ export async function renderJournal(root, nav) {
   async function draw() {
     const lock = await J.getLock(pid), open = await J.isUnlocked(pid), entries = await J.listEntries(pid);
     if (!alive) return;
-    const settings = h('details', { class: 'card lock-card' }, h('summary', {}, `🔒 ${t('lockTitle')}`),
+    const settings = h('details', { class: 'card lock-card', open: lockOpen }, h('summary', {}, `🔒 ${t('lockTitle')}`),
       h('div', { class: 'stack' }, h('p', { class: 'note' }, t(lock ? 'lockStatusOn' : 'lockStatusOff')),
         lock ? [h('div', { class: 'row-btns' }, open ? h('button', { class: 'btn', type: 'button', onclick: () => { J.lockNow(pid); refresh(); } }, `🔒 ${t('lockNow')}`) : null,
           h('button', { class: 'btn', type: 'button', onclick: () => openChangePassword(refresh) }, t('lockChange')), h('button', { class: 'btn', type: 'button', onclick: () => openDisable(refresh) }, t('lockOff')))]
           : h('button', { class: 'btn primary', type: 'button', onclick: () => openEnableLock(refresh) }, t('lockSetup')),
         h('p', { class: 'note' }, t('jBackupNote'))));
+    settings.addEventListener('toggle', () => { lockOpen = settings.open; });   // the section stays as the person left it when the page redraws
     if (lock && !open) {
       const pw = h('input', { type: 'password', autocomplete: 'current-password', 'aria-label': t('lockPassword') }), msg = h('p', { class: 'note err', role: 'alert' }, '');
       const go = async () => { const r = await J.unlock(pid, pw.value); if (r.ok) { refresh(); return; } pw.value = ''; msg.textContent = r.waitMs ? waitText(r.waitMs) : t('lockWrong'); pw.focus(); };

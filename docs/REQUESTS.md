@@ -59,4 +59,5 @@ Status: ✅ shipped (version) · 🟡 partly (what is missing) · ⛔ not possib
 | 33 | APRT / EIER (Event, Interpretation, Emotion, Response) from CBT, written and by voice, with later analysis, inside the journal and where relevant | ✅ 1.19 |
 | 34 | Goals shown inside routines; an automatic routine built from the goals and the problem world (ADHD, anxiety...) | ✅ 1.19 (goal chip, editor section, wizard goal step, "build a routine for this goal") |
 | 35 | Ready-made example routines must not ring: alarm OFF by default | ✅ 1.19.1 (and switched off once for existing installs) |
+| 37 | A routine in progress needs start over / cancel / delete (it was a dead end) | ✅ 1.19.2 |
 | 36 | Start-up screen shows the new SonRise logo with a loading animation instead of the sun | ✅ 1.19.1 |

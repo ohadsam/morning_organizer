@@ -420,3 +420,6 @@ fieldset { min-width: 0; }
 .big-num { font-weight: 800; font-size: 1.1rem; color: var(--brand); } .aprt textarea { width: 100%; }
 .goal-chip { display: inline-flex; align-items: center; gap: 4px; font-size: .78rem; color: var(--muted); max-width: 100%; overflow-wrap: anywhere; }
 .chip.solid { white-space: normal; overflow-wrap: anywhere; max-width: 100%; }
+/* v1.19.2 contrast: finished / skipped steps use the muted text colour instead of faded opacity; good/bad numbers are darkened enough to read */
+li.done .nm { opacity: 1; color: var(--muted); } li.skip { opacity: 1; } li.skip .nm { color: var(--muted); }
+.kv.good strong { color: color-mix(in srgb, var(--good) 55%, var(--text)); } .kv.bad strong { color: color-mix(in srgb, var(--bad) 70%, var(--text)); }

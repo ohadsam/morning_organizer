@@ -343,6 +343,12 @@ export async function setRunMood(id, mood) {
   const r = state.runs.find((x) => x.id === id); if (!r) return;
   r.mood = sanitizeMood(mood); await db.put('runs', r); emit();
 }
+/** Removes ONE finished run from the history; the returned function puts it back (undo). */
+export async function removeRunWithUndo(id) {
+  const r = state.runs.find((x) => x.id === id); if (!r) return async () => {};
+  state.runs = state.runs.filter((x) => x.id !== id); await db.del('runs', id); emit();
+  return async () => { if (!state.runs.some((x) => x.id === r.id)) { state.runs.push(r); await db.put('runs', r); emit(); } };
+}
 export async function clearRuns(templateId) {
   const gone = state.runs.filter((r) => !templateId || r.templateId === templateId);
   state.runs = state.runs.filter((r) => !gone.includes(r));

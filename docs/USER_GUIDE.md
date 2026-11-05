@@ -106,6 +106,9 @@ A way to understand hard moments, from CBT. Four short questions - Event (what h
 ## Goals inside routines and the wizard
 A goal can be linked to a routine (the routine card shows a 🎯 chip, the editor has a Goal section, and the run screen shows the plan). In the wizard, the Goal step lets you pick or create a goal, and the goal adds its strategies as the first steps of the new routine. In the review step you can rename steps, change their time, remove steps and add your own before creating. From any goal, "Build a routine for this goal" starts the wizard.
 
+## Start over, cancel or delete a run
+A routine in progress is never a dead end. On the run screen open More → Change the plan: Start over begins again from the first task, Cancel this run leaves without saving anything. The same two buttons are on the Home "continue" card. Nothing from a cancelled or restarted run goes into your history. A finished run can be deleted from its summary screen (Delete this run) and brought back with Undo.
+
 ## Updates and sharing the app
 The web app updates itself - when you open it, and every hour - and switches to the new version on its own when nothing is running; if you are in the middle of something it asks first. The Android app updates from the latest download. To share SonRise open Settings → App → Share (or search "share"): choose the Android app or the web app, and send it by WhatsApp, e-mail, the share sheet or a copied link.
 

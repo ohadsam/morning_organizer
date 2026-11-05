@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.19.2
+- **Start over / Cancel / Delete a run**: a routine in progress is no longer a dead end. **Start over** (from the beginning, nothing saved) and **Cancel this run** (nothing saved, back to Home) are in the run screen's "More → Change the plan" and on the Home "continue" card; **Delete this run** removes a finished run from the history, with Undo. Parents' live view and the Android progress widget are cleared too (`ui/runAdmin.js`, `store.removeRunWithUndo`).
+
 ## 1.19.1
 - **Example routines no longer ring**: the ready-made routines keep their alarm time and days but ship with the alarm **switched off** (a person's own new routines still start with it on). Examples that an earlier version had switched on are switched off once (`samplesAlarmsOff`); switch one on with the toggle on its card.
 - **Start-up screen**: the SonRise logo floats up like a sunrise with a loading bar (respects reduced motion) instead of the ☀️ emoji.

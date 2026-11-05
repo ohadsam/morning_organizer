@@ -1,22 +1,174 @@
 {
   "model": "gpt-4o-mini-tts",
-  "note": "Voice characters for the recorded packs. openaiVoice = one of the built-in OpenAI voices; instructions = how to speak (tone, pace, age, warmth). Edit freely, then regenerate that profile.",
+  "note": "Voice characters for the recorded packs. openaiVoice = one of the built-in OpenAI voices; instructions = how to speak (tone, pace, age, warmth). Edit freely, then regenerate that profile. 'google' = the same character for generate-google.mjs (WaveNet voice + pitch in semitones + speaking rate); voice names are my best knowledge - if Google rejects one, pick another from the console's voice list.",
   "profiles": [
-    { "id": "woman", "emoji": "👩", "openaiVoice": "coral",
-      "instructions": { "he": "Speak natural, native Israeli Hebrew like a warm, friendly adult woman. Calm, clear, human pace, gentle intonation, short natural pauses between phrases. Never robotic.", "en": "Speak natural English like a warm, friendly adult woman. Calm, clear, human pace, gentle intonation, short natural pauses. Never robotic." } },
-    { "id": "man", "emoji": "👨", "openaiVoice": "onyx",
-      "instructions": { "he": "Speak natural, native Israeli Hebrew like a warm, friendly adult man with a calm, reassuring voice. Human pace, gentle intonation, natural pauses. Never robotic.", "en": "Speak natural English like a warm, friendly adult man with a calm, reassuring voice. Human pace, natural pauses. Never robotic." } },
-    { "id": "girl", "emoji": "👧", "openaiVoice": "shimmer",
-      "instructions": { "he": "Speak natural Israeli Hebrew in the voice of a cheerful, playful girl of about 8 years old: bright, light, curious, a little giggly, clear and not too fast.", "en": "Speak in the voice of a cheerful, playful girl of about 8 years old: bright, light, curious, a little giggly, clear and not too fast." } },
-    { "id": "boy", "emoji": "👦", "openaiVoice": "ash",
-      "instructions": { "he": "Speak natural Israeli Hebrew in the voice of an energetic, friendly boy of about 9 years old: lively, bright, clear and not too fast.", "en": "Speak in the voice of an energetic, friendly boy of about 9 years old: lively, bright, clear and not too fast." } },
-    { "id": "calm", "emoji": "🧘", "openaiVoice": "sage",
-      "instructions": { "he": "Speak natural Israeli Hebrew as a soothing meditation guide: very slow, soft, warm, breathy and gentle, with long calm pauses between sentences. Peaceful and reassuring.", "en": "Speak as a soothing meditation guide: very slow, soft, warm and gentle, with long calm pauses between sentences. Peaceful and reassuring." } },
-    { "id": "coach", "emoji": "🏅", "openaiVoice": "echo",
-      "instructions": { "he": "Speak natural Israeli Hebrew as an upbeat, encouraging coach: energetic, positive, confident, clear and a bit faster, but never shouting.", "en": "Speak as an upbeat, encouraging coach: energetic, positive, confident, clear, never shouting." } },
-    { "id": "grandma", "emoji": "👵", "openaiVoice": "fable",
-      "instructions": { "he": "Speak natural Israeli Hebrew as a kind, loving grandmother: warm, slow, soft, caring, with a smile in the voice.", "en": "Speak as a kind, loving grandmother: warm, slow, soft, caring, with a smile in the voice." } },
-    { "id": "grandpa", "emoji": "👴", "openaiVoice": "ballad",
-      "instructions": { "he": "Speak natural Israeli Hebrew as a gentle, wise grandfather: deep, slow, warm and reassuring, like telling a story.", "en": "Speak as a gentle, wise grandfather: deep, slow, warm and reassuring, like telling a story." } }
+    {
+      "id": "woman",
+      "emoji": "👩",
+      "openaiVoice": "coral",
+      "instructions": {
+        "he": "Speak natural, native Israeli Hebrew like a warm, friendly adult woman. Calm, clear, human pace, gentle intonation, short natural pauses between phrases. Never robotic.",
+        "en": "Speak natural English like a warm, friendly adult woman. Calm, clear, human pace, gentle intonation, short natural pauses. Never robotic."
+      },
+      "google": {
+        "he": {
+          "voice": "he-IL-Wavenet-A",
+          "pitch": 0,
+          "rate": 0.95
+        },
+        "en": {
+          "voice": "en-US-Wavenet-F",
+          "pitch": 0,
+          "rate": 0.95
+        }
+      }
+    },
+    {
+      "id": "man",
+      "emoji": "👨",
+      "openaiVoice": "onyx",
+      "instructions": {
+        "he": "Speak natural, native Israeli Hebrew like a warm, friendly adult man with a calm, reassuring voice. Human pace, gentle intonation, natural pauses. Never robotic.",
+        "en": "Speak natural English like a warm, friendly adult man with a calm, reassuring voice. Human pace, natural pauses. Never robotic."
+      },
+      "google": {
+        "he": {
+          "voice": "he-IL-Wavenet-B",
+          "pitch": 0,
+          "rate": 0.95
+        },
+        "en": {
+          "voice": "en-US-Wavenet-D",
+          "pitch": 0,
+          "rate": 0.95
+        }
+      }
+    },
+    {
+      "id": "girl",
+      "emoji": "👧",
+      "openaiVoice": "shimmer",
+      "instructions": {
+        "he": "Speak natural Israeli Hebrew in the voice of a cheerful, playful girl of about 8 years old: bright, light, curious, a little giggly, clear and not too fast.",
+        "en": "Speak in the voice of a cheerful, playful girl of about 8 years old: bright, light, curious, a little giggly, clear and not too fast."
+      },
+      "google": {
+        "he": {
+          "voice": "he-IL-Wavenet-C",
+          "pitch": 5,
+          "rate": 1.05
+        },
+        "en": {
+          "voice": "en-US-Wavenet-C",
+          "pitch": 5,
+          "rate": 1.05
+        }
+      }
+    },
+    {
+      "id": "boy",
+      "emoji": "👦",
+      "openaiVoice": "ash",
+      "instructions": {
+        "he": "Speak natural Israeli Hebrew in the voice of an energetic, friendly boy of about 9 years old: lively, bright, clear and not too fast.",
+        "en": "Speak in the voice of an energetic, friendly boy of about 9 years old: lively, bright, clear and not too fast."
+      },
+      "google": {
+        "he": {
+          "voice": "he-IL-Wavenet-D",
+          "pitch": 5,
+          "rate": 1.05
+        },
+        "en": {
+          "voice": "en-US-Wavenet-A",
+          "pitch": 5,
+          "rate": 1.05
+        }
+      }
+    },
+    {
+      "id": "calm",
+      "emoji": "🧘",
+      "openaiVoice": "sage",
+      "instructions": {
+        "he": "Speak natural Israeli Hebrew as a soothing meditation guide: very slow, soft, warm, breathy and gentle, with long calm pauses between sentences. Peaceful and reassuring.",
+        "en": "Speak as a soothing meditation guide: very slow, soft, warm and gentle, with long calm pauses between sentences. Peaceful and reassuring."
+      },
+      "google": {
+        "he": {
+          "voice": "he-IL-Wavenet-A",
+          "pitch": -1,
+          "rate": 0.8
+        },
+        "en": {
+          "voice": "en-US-Wavenet-F",
+          "pitch": -1,
+          "rate": 0.8
+        }
+      }
+    },
+    {
+      "id": "coach",
+      "emoji": "🏅",
+      "openaiVoice": "echo",
+      "instructions": {
+        "he": "Speak natural Israeli Hebrew as an upbeat, encouraging coach: energetic, positive, confident, clear and a bit faster, but never shouting.",
+        "en": "Speak as an upbeat, encouraging coach: energetic, positive, confident, clear, never shouting."
+      },
+      "google": {
+        "he": {
+          "voice": "he-IL-Wavenet-B",
+          "pitch": 1,
+          "rate": 1.1
+        },
+        "en": {
+          "voice": "en-US-Wavenet-D",
+          "pitch": 1,
+          "rate": 1.1
+        }
+      }
+    },
+    {
+      "id": "grandma",
+      "emoji": "👵",
+      "openaiVoice": "fable",
+      "instructions": {
+        "he": "Speak natural Israeli Hebrew as a kind, loving grandmother: warm, slow, soft, caring, with a smile in the voice.",
+        "en": "Speak as a kind, loving grandmother: warm, slow, soft, caring, with a smile in the voice."
+      },
+      "google": {
+        "he": {
+          "voice": "he-IL-Wavenet-C",
+          "pitch": -3,
+          "rate": 0.85
+        },
+        "en": {
+          "voice": "en-US-Wavenet-C",
+          "pitch": -3,
+          "rate": 0.85
+        }
+      }
+    },
+    {
+      "id": "grandpa",
+      "emoji": "👴",
+      "openaiVoice": "ballad",
+      "instructions": {
+        "he": "Speak natural Israeli Hebrew as a gentle, wise grandfather: deep, slow, warm and reassuring, like telling a story.",
+        "en": "Speak as a gentle, wise grandfather: deep, slow, warm and reassuring, like telling a story."
+      },
+      "google": {
+        "he": {
+          "voice": "he-IL-Wavenet-D",
+          "pitch": -4,
+          "rate": 0.85
+        },
+        "en": {
+          "voice": "en-US-Wavenet-A",
+          "pitch": -4,
+          "rate": 0.85
+        }
+      }
+    }
   ]
 }

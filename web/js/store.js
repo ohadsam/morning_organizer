@@ -28,7 +28,7 @@ import { newProfile, normalizeProfile, runsOf, MAX_PROFILES } from './profiles.j
 export const DEFAULT_SETTINGS = Object.freeze({
   lang: 'he', theme: 'auto', mode: 'both', volume: 80, warnSec: 10, defTaskSec: 300, defEstSec: 0,
   autoAdvance: false, keepAwake: true, keepAwakeApp: false, personName: '', mascot: '🦊', feedback: true, speak: false, age: null, gender: 'other', profileDone: false,
-  textStyle: 'auto', timerStyle: 'auto', retroStyle: 'ask', alarmsMig: false, paceMode: 'normal', accent: '', simpleMode: false, announceTasks: false, fontScale: 100, colorSafe: false, contrast: 'normal', srAnnounce: false,
+  textStyle: 'auto', timerStyle: 'auto', retroStyle: 'ask', alarmsMig: false, samplesAlarmsOff: false, paceMode: 'normal', accent: '', simpleMode: false, announceTasks: false, fontScale: 100, colorSafe: false, contrast: 'normal', srAnnounce: false,
   coachButton: true, coachAuto: false, coachSpeak: false, voiceURI: '', voicePreset: 'natural', voiceFlavor: 'neutral', voiceEngine: '', alarmsPause: 0, weeklyOn: true, weeklyDay: 5, voiceRate: 100, seeded: false,
   avatar: defaultAvatar(), activeProfile: '', transcribe: false,
 });
@@ -242,20 +242,23 @@ export async function seedIfNeeded() {
   await addSamples();
   await updateSettings({ seeded: true });
 }
-/** One-time: the ready-made routines that never had an alarm get one switched on (so the feature is visible); the person's own routines are never touched. */
+/**
+ * The ready-made example routines come with their alarm time set but SWITCHED OFF: nobody should be woken by an alarm they never asked for.
+ * One-time: examples that an earlier version had switched on are switched off (a person's own routines are never touched).
+ */
 export async function migrateAlarms() {
-  if (state.settings.alarmsMig) return;
+  if (!state.settings.alarmsMig) await updateSettings({ alarmsMig: true });   // (the old migration that switched example alarms ON is gone)
+  if (state.settings.samplesAlarmsOff) return;
   for (const x of state.templates) {
-    const d = IDEA_ROUTINES.find((r) => r.id === x.id);
-    if (d && x.builtin && !x.alarm?.enabled) { const evening = /bedtime|evening/.test(x.id); await saveTemplate({ ...x, alarm: defaultAlarm(evening ? [0, 1, 2, 3, 4, 5, 6] : presetDays(getLang()).school, d.alarmTime || '07:00') }, { touch: false }); }
+    if (IDEA_ROUTINES.some((r) => r.id === x.id) && x.builtin && x.alarm?.enabled) await saveTemplate({ ...x, alarm: { ...x.alarm, enabled: false } }, { touch: false });
   }
-  await updateSettings({ alarmsMig: true });
+  await updateSettings({ samplesAlarmsOff: true });
 }
 export async function addSamples(all = false) {
   // Fixed ids: the same sample on the website and in the app is the SAME routine, so a manual-sync merge never duplicates it.
   const mk = (id, name, icon, color, items) => ({ ...newTemplate(name), id, icon, color, builtin: true,
     tasks: items.map(([k, min], i) => ({ id: `${id}-${i}`, name: t(k), icon: suggestIcon(t(k)), sec: Math.round(min * 60), est: 0 })) });
-  const alarmFor = (id) => { const d = IDEA_ROUTINES.find((x) => x.id === id), evening = /bedtime|evening/.test(id); return defaultAlarm(evening ? [0, 1, 2, 3, 4, 5, 6] : presetDays(getLang()).school, d?.alarmTime || '07:00'); };
+  const alarmFor = (id) => { const d = IDEA_ROUTINES.find((x) => x.id === id), evening = /bedtime|evening/.test(id); return defaultAlarm(evening ? [0, 1, 2, 3, 4, 5, 6] : presetDays(getLang()).school, d?.alarmTime || '07:00', false); };   // time ready, switched OFF
   const samples = ideaRoutines().filter((r) => all || IDEA_ROUTINES.find((d) => d.id === r.id)?.basic).map((r) => ({ ...mk(r.id, r.name, r.icon, r.color, IDEA_ROUTINES.find((d) => d.id === r.id).items), alarm: alarmFor(r.id) }));
   const base = Date.now(); // distinct timestamps keep the list order (kids first) after reloads (IndexedDB returns rows by id)
   for (const [i, x] of samples.entries()) if (!getTemplate(x.id)) await saveTemplate({ ...x, createdAt: base + i });

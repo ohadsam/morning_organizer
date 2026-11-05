@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.19.1
+- **Example routines no longer ring**: the ready-made routines keep their alarm time and days but ship with the alarm **switched off** (a person's own new routines still start with it on). Examples that an earlier version had switched on are switched off once (`samplesAlarmsOff`); switch one on with the toggle on its card.
+- **Start-up screen**: the SonRise logo floats up like a sunrise with a loading bar (respects reduced motion) instead of the ☀️ emoji.
+- Fix: the journal's password section no longer closes by itself when the page redraws (this was also the cause of an occasionally flaky e2e step).
+- Fix: long chips (e.g. "No alarm is on yet…") wrap instead of making the Alarms screen scroll sideways.
+
 ## 1.19.0
 - **Wizard: edit the steps before creating**: the review step lists every suggested step with its name and time (− / +), remove (✕) and "Add a step"; edits survive Back/Next and the calm-breaks switch only adds or removes the break steps.
 - **Wizard + goals**: a new "goal" step (an existing goal, a new one with ideas by the chosen help, or none). The goal's strategies become the routine's first steps (timer, pick the first small step, clear the desk, check the list...), a new goal is created and linked, and any goal can start the wizard with **"Build a routine for this goal"**.

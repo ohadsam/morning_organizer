@@ -38,6 +38,8 @@ async function newPage(opts = {}) {
 // the Home toolbar's dropdowns show one panel at a time: open the one that holds a button before clicking it
 const openMenuWith = async (page, text) => { if (await page.locator(`.tb-panel:not([hidden]) button:has-text("${text}")`).count()) return; const n = await page.locator('.tb-btn[aria-haspopup]').count(); for (let i = 0; i < n; i++) { await page.locator('.tb-btn[aria-haspopup]').nth(i).click(); if (await page.locator(`.tb-panel:not([hidden]) button:has-text("${text}")`).count()) return; } };
 const qk = async (page, text) => { await openMenuWith(page, text); await page.click(`.tb-panel button:has-text("${text}")`); };
+// the journal's password section now stays as the person left it when the page redraws: open it only when it is closed
+const openLockCard = async (page) => { await page.waitForSelector('details.lock-card'); if (!(await page.locator('details.lock-card[open]').count())) await page.click('details.lock-card summary'); await page.waitForSelector('details.lock-card[open]'); };
 const setStyle = (page, v) => page.evaluate(async (x) => { const S = await import('./js/store.js'); await S.updateSettings({ textStyle: x }); }, v);
 // Sets a task's duration through the time sheet (tap the time -> minutes/seconds -> OK).
 const setDur = async (page, task, m, sec) => { await task.locator('.tp-val').first().click(); await page.locator('dialog input[type=number]').nth(0).fill(String(m)); await page.locator('dialog input[type=number]').nth(1).fill(String(sec)); await page.click('dialog footer button:has-text("OK")'); await page.waitForSelector('dialog', { state: 'detached' }); };
@@ -483,7 +485,7 @@ await step('v1.10: calm corner page runs a breathing exercise and offers a mood 
 await step('v1.10: journal password (hash+salt), add while locked, wrong password, forgot via questions, encrypted at rest, erase', async () => {
   const { page, errors } = await newPage(); await page.goto(base + '#/journal'); await page.waitForSelector('.journal-page');
   await page.click('.tb-btn[data-tb=note]'); await page.fill('dialog textarea', 'plain secret one'); await page.click('dialog footer button:has-text("Save")'); await page.waitForSelector('.entry:has-text("plain secret one")');
-  await page.click('details.lock-card summary'); await page.click('button:has-text("Add a password")'); await page.waitForSelector('dialog .qa');
+  await openLockCard(page); await page.click('button:has-text("Add a password")'); await page.waitForSelector('dialog .qa');
   const pws = page.locator('dialog input[type=password]'); await pws.nth(0).fill('abcd'); await pws.nth(1).fill('abcd');
   const ans = page.locator('dialog .qa input[type=text]'); // [custom, answer] per question
   await ans.nth(1).fill('Zebraphant42'); await ans.nth(3).fill('Quixotic Lane 9'); await page.click('dialog footer button:has-text("Turn on")'); await page.waitForSelector('dialog', { state: 'detached' });
@@ -491,7 +493,7 @@ await step('v1.10: journal password (hash+salt), add while locked, wrong passwor
   const raw = await page.evaluate(() => new Promise((res) => { const r = indexedDB.open('morning-organizer'); r.onsuccess = () => { const tx = r.result.transaction(['journal', 'kv'], 'readonly'); const out = []; for (const n of ['journal', 'kv']) tx.objectStore(n).getAll().onsuccess = (e) => out.push(JSON.stringify(e.target.result)); tx.oncomplete = () => res(out.join('')); }; }));
   assert.ok(!raw.includes('plain secret one') && !raw.includes('abcd') && !raw.includes('Zebraphant42'), 'secrets must not be stored in the clear');
   // lock now, add a note while locked, reload: locked screen
-  await page.click('details.lock-card summary').catch(() => {}); await page.click('button:has-text("Lock now")'); await page.waitForSelector('.lock-screen');
+  await openLockCard(page); await page.click('button:has-text("Lock now")'); await page.waitForSelector('.lock-screen');
   await page.click('.tb-btn[data-tb=note]'); await page.fill('dialog textarea', 'added while locked'); await page.click('dialog footer button:has-text("Save")'); await page.waitForSelector('#toast:has-text("stays locked")'); // wait for the write before reloading
   await page.reload(); await page.waitForSelector('.lock-screen'); assert.equal(await page.locator('text=added while locked').count(), 0);
   await page.fill('.lock-screen input[type=password]', 'nope'); await page.click('.lock-screen button:has-text("Unlock")'); await page.waitForSelector('.lock-screen .err:not(:empty)');
@@ -502,8 +504,8 @@ await step('v1.10: journal password (hash+salt), add while locked, wrong passwor
   await page.reload(); await page.waitForSelector('.lock-screen'); await page.fill('.lock-screen input[type=password]', 'newpass1'); await page.click('.lock-screen button:has-text("Unlock")');
   await page.waitForSelector('.entry:has-text("plain secret one")'); assert.equal(await page.locator('.entry:has-text("added while locked")').count(), 1);
   // turn the password off again -> plain, then there is simply no lock
-  await page.click('details.lock-card summary'); await page.click('button:has-text("Turn off password")'); await page.fill('dialog input[type=password]', 'newpass1'); await page.click('dialog footer button:has-text("Turn off password")');
-  await page.click('details.lock-card summary'); await page.waitForSelector('button:has-text("Add a password")'); assert.deepEqual(errors, []);
+  await openLockCard(page); await page.click('button:has-text("Turn off password")'); await page.fill('dialog input[type=password]', 'newpass1'); await page.click('dialog footer button:has-text("Turn off password")');
+  await openLockCard(page); await page.waitForSelector('button:has-text("Add a password")'); assert.deepEqual(errors, []);
 });
 
 await step('v1.10: voice note recorded in a run (fake microphone), kept on the device, playable; dictation asks for consent first', async () => {
@@ -530,10 +532,10 @@ await step('v1.10: axe finds no violations on calm corner, journal (open + locke
     await page.click('.tb-btn[data-tb=reflect]'); await page.click('.tb-panel button >> nth=1'); await page.waitForSelector('dialog'); bad.push(...await audit(page, `${L}/thought`)); await closeDialogs(page);
     await page.click('.tb-btn[data-tb=reflect]'); await page.click('.tb-panel button >> nth=2'); await page.waitForSelector('dialog'); bad.push(...await audit(page, `${L}/gratitude`)); await closeDialogs(page);
     await page.click('.tb-btn[data-tb=reflect]'); await page.click('.tb-panel button >> nth=3'); await page.waitForSelector('dialog'); bad.push(...await audit(page, `${L}/park`)); await closeDialogs(page);
-    await page.click('details.lock-card summary'); await page.click('details.lock-card .btn.primary'); await page.waitForSelector('dialog .qa'); bad.push(...await audit(page, `${L}/lock-setup`));
+    await openLockCard(page); await page.click('details.lock-card .btn.primary'); await page.waitForSelector('dialog .qa'); bad.push(...await audit(page, `${L}/lock-setup`));
     const pws = page.locator('dialog input[type=password]'); await pws.nth(0).fill('abcd'); await pws.nth(1).fill('abcd'); const a = page.locator('dialog .qa input[type=text]'); await a.nth(1).fill('Zebraphant42'); await a.nth(3).fill('Quixotic Lane 9');
     await page.click('dialog footer .primary'); await page.waitForSelector('dialog', { state: 'detached' });
-    await page.click('details.lock-card summary').catch(() => {}); await page.click('details.lock-card .btn >> nth=0'); await page.waitForSelector('.lock-screen'); bad.push(...await audit(page, `${L}/journal-locked`));
+    await openLockCard(page); await page.click('details.lock-card .btn >> nth=0'); await page.waitForSelector('.lock-screen'); bad.push(...await audit(page, `${L}/journal-locked`));
     await page.click('.lock-screen .btn >> nth=1'); await page.waitForSelector('dialog'); bad.push(...await audit(page, `${L}/forgot`)); await closeDialogs(page);
     await page.goto(base + '#/'); await page.waitForSelector('.focus-card'); bad.push(...await audit(page, `${L}/home-focus-card`));
     await page.click('.focus-card button.primary'); await page.waitForSelector('dialog .area-grid'); bad.push(...await audit(page, `${L}/focus-picker`)); await page.check('dialog .area-pick >> nth=4 >> input'); await page.click('dialog footer .primary');
@@ -814,8 +816,8 @@ await step('v1.13: interactive HTML report - self-contained file with tabs, anim
 // ── v1.13: alarms on by default, version + what's new, smart times / steps, estimate accuracy ──
 await step('v1.13: alarms are ON by default (new routines + ready-made ones), version number and What\'s new are always reachable', async () => {
   const { page, errors } = await newPage(); await page.goto(base); await page.waitForSelector('.routine');
-  assert.ok(await page.locator('.routine .alarm-line').count() >= 2, 'the ready-made routines show their alarm'); assert.match(await page.textContent('.routine .alarm-line'), /\d\d:\d\d/);
-  await page.goto(base + '#/alarms'); await page.waitForSelector('.alarm-card'); assert.equal(await page.locator('.chip.solid').count(), 0); assert.ok(await page.locator('.alarm-card input[type=checkbox]:checked').count() >= 2);
+  assert.equal(await page.locator('.routine .alarm-line').count(), 0, 'the ready-made examples have their alarm OFF (nobody is woken by something they did not ask for)'); assert.ok(await page.locator('.routine .alarm-switch[aria-checked=false]').count() >= 2); assert.equal(await page.locator('.alarm-sticker').count(), 0);
+  await page.goto(base + '#/alarms'); await page.waitForSelector('.alarm-card'); assert.match(await page.textContent('.chip.solid'), /No alarm is on/); assert.equal(await page.locator('.alarm-card input[type=checkbox]:checked').count(), 0);
   await page.goto(base + '#/'); await page.click('.tb-btn[data-tb=new]'); await page.waitForSelector('.alarm'); assert.ok(await page.locator('.alarm .switch input').first().isChecked(), 'a new routine starts with its alarm on'); await page.waitForTimeout(500);
   await page.goto(base + '#/'); await page.waitForSelector('.version-line'); const ver = JSON.parse((await import('node:fs')).readFileSync('web/version.json', 'utf8')).version; assert.match(await page.textContent('.version-line'), new RegExp(`v${ver.replace(/\./g, '\\.')}`));
   await page.click('.version-line button'); await page.waitForSelector(`dialog:has-text("New in ${ver}")`); assert.ok(await page.locator('dialog details').count() === 1); await closeDialogs(page);
@@ -1038,10 +1040,11 @@ await step('v1.17: wizard - five calm questions build a routine for the person, 
 
 await step('v1.17: each routine card has an alarm switch (armed / off) separate from Start; it saves and survives reload', async () => {
   const { page } = await newPage({ foldsClosed: true }); await page.goto(base + '#/'); await page.waitForSelector('.routine .alarm-switch');
-  const sw = page.locator('.routine .alarm-switch').first(); assert.equal(await sw.getAttribute('aria-checked'), 'true', 'ready-made routines are armed'); assert.ok(await page.locator('.routine.armed').count() >= 1);
-  await sw.click(); await page.waitForFunction(() => document.querySelector('.routine .alarm-switch')?.getAttribute('aria-checked') === 'false');
-  assert.equal(await page.evaluate(async () => (await import('./js/store.js')).get().templates[0].alarm.enabled), false, 'saved');
-  await page.reload(); await page.waitForSelector('.routine .alarm-switch'); assert.equal(await page.locator('.routine .alarm-switch').first().getAttribute('aria-checked'), 'false');
+  const sw = page.locator('.routine .alarm-switch').first(); assert.equal(await sw.getAttribute('aria-checked'), 'false', 'ready-made examples start with the alarm OFF'); assert.equal(await page.locator('.routine.armed').count(), 0);
+  await sw.click(); await page.waitForFunction(() => document.querySelector('.routine .alarm-switch')?.getAttribute('aria-checked') === 'true'); assert.ok(await page.locator('.routine.armed').count() >= 1);
+  assert.equal(await page.evaluate(async () => (await import('./js/store.js')).get().templates[0].alarm.enabled), true, 'saved');
+  await page.reload(); await page.waitForSelector('.routine .alarm-switch'); assert.equal(await page.locator('.routine .alarm-switch').first().getAttribute('aria-checked'), 'true');
+  await page.locator('.routine .alarm-switch').first().click(); await page.waitForFunction(() => document.querySelector('.routine .alarm-switch')?.getAttribute('aria-checked') === 'false');
   await page.locator('.routine .alarm-switch').first().click(); await page.waitForFunction(() => document.querySelector('.routine .alarm-switch')?.getAttribute('aria-checked') === 'true');
   assert.match(await page.textContent('.routine .alarm-line'), /07:00/); assert.equal(await page.locator('.routine .start').first().isEnabled(), true, 'Start is separate');
 });
@@ -1085,7 +1088,7 @@ await step('v1.18: SonRise name + logo everywhere, durations have a space before
 
 await step('v1.18: ring type tiles (9 types, preview), quiet-on-holidays switch (on by default) with the next days off', async () => {
   const { page } = await newPage({ foldsClosed: true }); await page.goto(base + '#/edit/sample-kids'); await page.waitForSelector('.task'); await page.click('details.fold summary:has-text("Wake-up")').catch(() => page.click('details.fold >> nth=-1 >> summary'));
-  await page.waitForSelector('.sound-grid'); assert.equal(await page.locator('.sound-grid .sound-tile').count(), 8, 'eight tiles in a browser (the phone-sound tile is app-only)');
+  await page.locator('.alarm .switch input').first().check(); await page.waitForSelector('.sound-grid'); assert.equal(await page.locator('.sound-grid .sound-tile').count(), 8, 'eight tiles in a browser (the phone-sound tile is app-only)');
   await page.click('.sound-tile:has-text("Bell")'); await page.waitForFunction(async () => (await import('./js/store.js')).get().templates.find((x) => x.id === 'sample-kids').alarm.sound === 'bell');
   assert.equal(await page.locator('.sound-tile[aria-checked=true]').count() >= 1, true);
   const off = page.locator('input[aria-label="Quiet on holidays and vacations"]'); assert.equal(await off.isChecked(), true, 'on by default'); assert.match(await page.textContent('.alarm'), /Next days off/);
@@ -1094,6 +1097,7 @@ await step('v1.18: ring type tiles (9 types, preview), quiet-on-holidays switch 
 
 await step('v1.18: Hebrew date + holiday on Home, quiet alarm skips the holiday; pause all alarms from the toolbar, banner and resume; alarm sticker', async () => {
   const { page } = await newPage({ foldsClosed: true }); await page.clock.install({ time: new Date('2026-09-12T05:00:00') }); await page.goto(base + '#/'); await page.waitForSelector('.routine');
+  await page.evaluate(async () => { const S = await import('./js/store.js'), x = S.getTemplate('sample-kids'); await S.saveTemplate({ ...x, alarm: { ...x.alarm, enabled: true } }); });
   assert.match(await page.textContent('.hero'), /Tishri/); assert.match(await page.textContent('.hero'), /Rosh Hashana/);
   assert.ok(await page.locator('.routine .alarm-sticker').count() >= 1, 'alarm sticker on routines with an alarm');
   assert.match(await page.textContent('.hero .chip:has-text("Next")').catch(() => ''), /./);
@@ -1114,7 +1118,7 @@ await step('v1.18: axe + layout of the new toolbar, ring tiles, pause sheet, ban
     const rows = await page.evaluate(() => new Set([...document.querySelectorAll('.toolbar-main .tb-btn')].map((b) => Math.round(b.getBoundingClientRect().top))).size); assert.equal(rows, 1, `${lang}: one row`);
     const over = await page.evaluate(() => { const vw = document.documentElement.clientWidth; return [...document.querySelectorAll('.toolbar-main .tb-btn')].some((b) => b.getBoundingClientRect().right > vw + 1 || b.getBoundingClientRect().left < -1 || b.scrollWidth > b.clientWidth + 2); }); assert.equal(over, false, `${lang}: toolbar fits`);
     await page.click('.tb-btn[data-tb=plan]'); bad.push(...await audit(page, `${lang}/toolbar-open`)); await page.click('.tb-btn[data-tb=alarms]'); await page.waitForSelector('dialog'); bad.push(...await audit(page, `${lang}/pause-sheet`)); await page.click('dialog .btn:not(.icon-btn) >> nth=0'); await page.waitForSelector('.paused-banner'); bad.push(...await audit(page, `${lang}/pause-banner`));
-    await page.goto(base + '#/edit/sample-kids'); await page.waitForSelector('.task'); await page.click('details.fold >> nth=-1 >> summary'); await page.waitForSelector('.sound-grid'); bad.push(...await audit(page, `${lang}/ring-tiles`));
+    await page.goto(base + '#/edit/sample-kids'); await page.waitForSelector('.task'); await page.click('details.fold >> nth=-1 >> summary'); await page.locator('.alarm .switch input').first().check(); await page.waitForSelector('.sound-grid'); bad.push(...await audit(page, `${lang}/ring-tiles`));
   }
   if (bad.length) console.error([...new Set(bad)].join('\n'));
   assert.deepEqual(bad, []);
@@ -1194,6 +1198,22 @@ await step('v1.19: axe on guided imagery, the situation log steps + insights, go
   }
   if (bad.length) console.error([...new Set(bad)].join('\n'));
   assert.deepEqual(bad, []);
+});
+
+// ── v1.19.1: example routines ship with the alarm off; the start-up screen is the logo ──
+await step('v1.19.1: example routines have the alarm OFF (also for an old install), new routines stay ON; start-up screen shows the logo', async () => {
+  const { page } = await newPage({ foldsClosed: true }); await page.goto(base + '#/'); await page.waitForSelector('.routine');
+  const st = await page.evaluate(async () => { const S = await import('./js/store.js'); return S.get().templates.filter((x) => x.builtin).map((x) => ({ id: x.id, on: x.alarm.enabled, time: x.alarm.time })); });
+  assert.ok(st.length >= 2 && st.every((x) => !x.on && /^\d\d:\d\d$/.test(x.time)), 'examples: time ready, alarm off: ' + JSON.stringify(st));
+  // an install from before: an example with its alarm on and the one-time flag not yet set is switched off at the next start
+  await page.evaluate(async () => { const S = await import('./js/store.js'), x = S.getTemplate('sample-kids'); await S.saveTemplate({ ...x, alarm: { ...x.alarm, enabled: true } }); await S.updateSettings({ samplesAlarmsOff: false }); });
+  await page.reload(); await page.waitForSelector('.routine .alarm-switch'); await page.waitForFunction(async () => (await import('./js/store.js')).get().settings.samplesAlarmsOff === true);
+  assert.equal(await page.evaluate(async () => (await import('./js/store.js')).getTemplate('sample-kids').alarm.enabled), false, 'switched off once');
+  await page.click('.routine .alarm-switch'); await page.waitForFunction(() => document.querySelector('.routine .alarm-switch')?.getAttribute('aria-checked') === 'true'); await page.reload(); await page.waitForSelector('.routine .alarm-switch');
+  assert.equal(await page.evaluate(async () => (await import('./js/store.js')).getTemplate('sample-kids').alarm.enabled), true, 'a deliberate choice is kept (the migration runs once)');
+  await page.goto(base + '#/'); await page.click('.tb-btn[data-tb=new]'); await page.waitForSelector('.task'); await page.click('details.fold >> nth=-1 >> summary'); await page.waitForSelector('.alarm'); assert.ok(await page.locator('.alarm .switch input').first().isChecked(), 'a new routine of your own starts with the alarm on');
+  const html = await page.evaluate(async () => (await fetch('index.html')).text()); assert.match(html, /id="boot"[^>]*>\s*<img class="boot-logo" src="icon.svg"/); assert.ok(!/id="boot"[^>]*>\s*☀/.test(html), 'no sun emoji');
+  const css = await page.evaluate(async () => (await fetch('css/app.css')).text()); assert.match(css, /@keyframes boot-rise/); assert.match(css, /@keyframes boot-load/);
 });
 
 await browser.close(); server.close();

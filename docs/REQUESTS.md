@@ -52,3 +52,5 @@ Status: ✅ shipped (version) · 🟡 partly (what is missing) · ⛔ not possib
 | 27g | Selectable text in the PDF | ⛔ needs an embedded Hebrew font (size/licence); the interactive HTML report and Print give selectable text |
 | 27h | Cloud sync | ⛔ deliberately not built: needs an account/server; manual sync code/file exists |
 | 28 | Alarm ring "type" in the Android app = phone sounds | ✅ picker (verified by CI compile only) |
+| 29 | Automatic update of the PWA on refresh / entry | ✅ 1.18.1 (checks on focus + hourly; reloads itself only when safe) |
+| 30 | Share the app (Android + PWA) by WhatsApp and e-mail | ✅ 1.18.1 |

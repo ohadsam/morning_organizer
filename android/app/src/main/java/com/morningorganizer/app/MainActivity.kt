@@ -134,7 +134,7 @@ class MainActivity : ComponentActivity() {
             // Only our own origin may load here. Anything else (e.g. a link in a shared routine) goes to the real browser.
             override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
                 if (request.url.host == HOST) return false
-                if (request.url.scheme == "https") runCatching { startActivity(Intent(Intent.ACTION_VIEW, request.url)) }
+                if (request.url.scheme == "https" || request.url.scheme == "mailto") runCatching { startActivity(Intent(Intent.ACTION_VIEW, request.url)) }
                 return true
             }
 

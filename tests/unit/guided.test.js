@@ -57,3 +57,15 @@ test('suggestions: one at a time, respects answers, a day apart, off switch', ()
   assert.ok(SUGGESTIONS.every((x) => STR.en[`sg_${x.id}_t`] && STR.he[`sg_${x.id}_b`]));
   assert.equal(answer(s, 'bogus', 'never', now).hidden.includes('bogus'), false);
 });
+
+import { goalSteps, strategiesFor, needsFromStrategies, buildGoalTasks } from '../../web/js/guided.js';
+import { STRATEGIES } from '../../web/js/cogfun.js';
+test('goals feed the wizard: strategies become steps (no duplicates), needs <-> strategies, goal tasks come before the breaks', () => {
+  assert.deepEqual(goalSteps(['checklist', 'gear', 'timer', 'nope', '__proto__']).map((x) => x.key), ['sx_gear', 'gs_timer']);
+  assert.deepEqual(strategiesFor(['adhd', 'anxiety', 'bogus']), ['quiet', 'first']); assert.deepEqual(strategiesFor('x'), []);
+  const dom = (id) => STRATEGIES.find((s) => s.id === id)?.domain; assert.deepEqual(needsFromStrategies(['quiet'], dom), ['adhd']); assert.deepEqual(needsFromStrategies([], dom), ['simple']);
+  let n = 0; const base = { entry: { tasks: [{ name: 'Wake', icon: '⏰', sec: 120 }, { name: 'Dress', icon: '👕', sec: 300 }] }, age: 30, needs: ['adhd', 'anxiety'], tr: (k) => k, newId: () => `i${n++}` };
+  const g = buildGoalTasks({ ...base, strategies: ['timer', 'first'] }); assert.ok(g.tasks.some((k) => k.helperKey === 'gs_timer') && g.tasks.some((k) => k.helperKey === 'sx_pickone'));
+  assert.ok(g.tasks.length > buildGoalTasks({ ...base, strategies: [], withBreaks: false }).tasks.length); assert.equal(new Set(g.tasks.map((k) => k.id)).size, g.tasks.length);
+  assert.equal(buildGoalTasks({ ...base, strategies: [], withBreaks: false }).tasks.length, 2);
+});

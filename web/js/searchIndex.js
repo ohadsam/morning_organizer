@@ -15,6 +15,7 @@ export const ENTRIES = [
   ['retros', '🔄', 'sr_retros', { route: '#/retros' }, 'look back retrospective review reflect improve what worked', 'מסתכלים אחורה רטרוספקטיבה סיכום חשיבה שיפור מה עבד'],
   ['calm', '🌬️', 'sr_calm', { route: '#/calm' }, 'calm breathe breathing anxiety relax worry panic ground', 'רוגע נשימה חרדה הרגעה לחץ דאגה הארקה'],
   ['journal', '📓', 'sr_journal', { route: '#/journal' }, 'journal diary write notes password private', 'יומן כתיבה פתקים סיסמה פרטי'],
+  ['aprt', '🧭', 'sr_aprt', { action: 'aprt' }, 'situation log aprt abc cbt event interpretation emotion response thought feeling hard moment record', 'תיעוד מצב אפרת אפר״ת cbt אירוע פרשנות רגש תגובה מחשבה תחושה רגע קשה'],
   ['note', '🎙️', 'sr_note', { action: 'capture' }, 'note quick voice record dictate memo', 'הערה מהירה הקלטה הכתבה פתק'],
   ['rewards', '🎁', 'sr_rewards', { action: 'rewards' }, 'reward rewards prize menu stars', 'תגמול תגמולים פרס פרסים כוכבים'],
   ['stats', '📊', 'sr_stats', { route: '#/stats' }, 'statistics stats progress chart streak history difficulty', 'סטטיסטיקות התקדמות גרף רצף היסטוריה קושי'],

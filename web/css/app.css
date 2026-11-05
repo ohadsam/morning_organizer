@@ -400,3 +400,15 @@ fieldset { min-width: 0; }
 .routine .emoji { position: relative; } .alarm-sticker { position: absolute; inset-block-end: -4px; inset-inline-end: -4px; font-style: normal; font-size: .85rem; line-height: 1; background: var(--surface); border: 1px solid var(--line); border-radius: 99px; padding: 2px 3px; box-shadow: 0 1px 3px rgba(0,0,0,.2); }
 .paused-banner { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; border-inline-start: 6px solid var(--warn); }
 .trend-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; } .trend-list li { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; } .tr-n { flex: 1 1 120px; min-width: 0; overflow-wrap: anywhere; } .spark { color: var(--brand); flex: none; }
+.guide-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 8px; }
+.breath-circle[data-emoji]::after { content: attr(data-emoji); font-size: 2.2rem; display: grid; place-items: center; height: 100%; }
+
+/* v1.19: editable wizard review, situation log, goal chips */
+.wz-tasks { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; max-height: none; overflow: visible; }
+.wz-task { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 6px 8px; align-items: center; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 8px; }
+.wz-task .wz-name { min-width: 0; width: 100%; } .wz-steps { grid-column: 1 / -1; display: flex; align-items: center; gap: 6px; justify-content: flex-end; flex-wrap: wrap; } .wz-time { min-width: 4.5em; text-align: center; font-variant-numeric: tabular-nums; font-weight: 600; }
+.wz-ti { font-size: 1.4rem; }
+.aprt-steps { list-style: none; display: flex; gap: 8px; justify-content: center; margin: 0; padding: 0; } .aprt-steps li { width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center; border: 2px solid var(--line); font-weight: 700; color: var(--muted); }
+.aprt-steps li.on { border-color: var(--brand); color: var(--brand); background: color-mix(in srgb, var(--brand) 12%, var(--surface)); } .aprt-steps li.done { background: var(--brand); border-color: var(--brand); color: #fff; }
+.big-num { font-weight: 800; font-size: 1.1rem; color: var(--brand); } .aprt textarea { width: 100%; }
+.goal-chip { display: inline-flex; align-items: center; gap: 4px; font-size: .78rem; color: var(--muted); max-width: 100%; overflow-wrap: anywhere; }

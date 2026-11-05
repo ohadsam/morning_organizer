@@ -237,8 +237,9 @@ export const STR = {
 
 import { EN as WB_EN, HE as WB_HE } from './wellbeing.js';
 import { EN as S117_EN, HE as S117_HE } from './strings117.js';
+import { EN as S119_EN, HE as S119_HE } from './strings119.js';
 import { PLAYFUL } from './playful.js';
-Object.assign(STR.en, WB_EN, S117_EN); Object.assign(STR.he, WB_HE, S117_HE);
+Object.assign(STR.en, WB_EN, S117_EN, S119_EN); Object.assign(STR.he, WB_HE, S117_HE, S119_HE);
 
 let lang = 'en';
 export const getLang = () => lang;

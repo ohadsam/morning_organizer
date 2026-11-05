@@ -6,6 +6,7 @@ import { STRATEGIES, DOMAINS, MAX_STRATS, MAX_GOALS, progress, strategyStats } f
 import { MOODS } from '../mood.js';
 import { modal, toast, confirmBox } from './common.js';
 import { moodRow } from './capture.js';
+import { openWizard } from './wizard.js';
 
 const stratText = (id) => t(`strat_${id}`);
 /** Short readable plan: strategies + the person's own. */
@@ -43,7 +44,7 @@ export function openCheckin(goal, after) {
     [{ label: t('cancel') }, { label: t('save'), primary: true, fn: async () => { if (!rating) { toast(t('checkPick')); return false; } await S.addCheck(goal.id, { rating, note: note.value, used: [...used] }); toast(t('checkSaved')); after?.(); } }]);
 }
 
-export function goalCard(g, runs, redraw) {
+export function goalCard(g, runs, redraw, nav = null) {
   const p = progress(g, runs), tpl = g.templateId ? S.getTemplate(g.templateId) : null;
   return h('article', { class: `card goal-card ${g.done ? 'achieved' : ''}` }, h('strong', {}, `${g.done ? '🏆' : '🎯'} ${g.title}`), g.from ? h('small', { class: 'muted' }, t('goalFrom', { name: g.from })) : null,
     tpl ? h('small', {}, `${tpl.icon} ${tpl.name}`) : null, h('p', { class: 'note' }, `${t('goalMyPlan')}: ${planText(g) || '—'}`),
@@ -52,6 +53,7 @@ export function goalCard(g, runs, redraw) {
     strategyStats(g)[0] ? h('p', { class: 'note' }, `⭐ ${t('goalBestStrat', { s: stratText(strategyStats(g)[0].id), avg: Math.round(strategyStats(g)[0].avg * 10) / 10 })}`) : null,
     g.done ? null : h('div', { class: 'row-btns' }, h('button', { class: 'btn small primary', type: 'button', onclick: () => openCheckin(g, redraw) }, `✔ ${t('checkTitle')}`),
       h('button', { class: 'btn small', type: 'button', onclick: () => openGoalWizard(g, { onSave: async (x) => { await S.saveGoal(x); redraw(); } }) }, t('edit')),
+      nav ? h('button', { class: 'btn small', type: 'button', onclick: () => openWizard(nav, { goalId: g.id }) }, `🪄 ${t('goalBuild')}`) : null,
       h('button', { class: 'btn small', type: 'button', onclick: async () => { await S.saveGoal({ ...g, done: true, doneAt: Date.now() }); toast(t('goalCongrats')); redraw(); } }, `🎉 ${t('goalAchieved')}`)),
     h('div', { class: 'row-btns' }, h('button', { class: 'btn small danger', type: 'button', onclick: async () => { if (await confirmBox(t('confirmDelete', { name: g.title }), t('delete'), true)) { await S.removeGoal(g.id); redraw(); } } }, t('delete'))));
 }
@@ -62,7 +64,7 @@ export function renderGoals(root, nav) {
     setChildren(root, h('div', { class: 'row between' }, h('h1', {}, `🎯 ${t('goalsTitle')}`), h('button', { class: 'btn', type: 'button', onclick: () => nav('#/') }, t('back'))),
       h('div', { class: 'gpdc', 'aria-hidden': 'true' }, ['gpdc1', 'gpdc2', 'gpdc3', 'gpdc4'].map((k) => h('span', { class: 'chip' }, t(k)))), h('p', { class: 'note' }, t('goalsIntro')),
       h('button', { class: 'btn primary', type: 'button', disabled: all.length >= MAX_GOALS, onclick: () => openGoalWizard(null, { onSave: async (x) => { await S.saveGoal(x); draw(); } }) }, `+ ${t('goalNew')}`),
-      open.length ? h('div', { class: 'stack' }, open.map((g) => goalCard(g, runs, draw))) : h('p', { class: 'empty' }, t('goalsEmpty')),
+      open.length ? h('div', { class: 'stack' }, open.map((g) => goalCard(g, runs, draw, nav))) : h('p', { class: 'empty' }, t('goalsEmpty')),
       done.length ? h('details', {}, h('summary', {}, t('goalsDone', { n: done.length })), h('div', { class: 'stack' }, done.map((g) => goalCard(g, runs, draw)))) : null,
       h('p', { class: 'note' }, t('goalsDisclaimer')));
   };

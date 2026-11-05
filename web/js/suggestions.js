@@ -13,6 +13,7 @@ export const SUGGESTIONS = [
   { id: 'alarms', icon: '⏰', go: { route: '#/alarms' }, when: (c) => !c.alarmsOn && c.runs >= 1 },
   { id: 'calm', icon: '🌬️', go: { route: '#/calm' }, when: (c) => c.calmOn && c.runs >= 2 },
   { id: 'voice', icon: '🔊', go: { route: '#/settings/voice' }, when: (c) => c.ttsOk && !c.voiceChosen && c.runs >= 2 },
+  { id: 'aprt', icon: '🧭', go: { action: 'aprt' }, when: (c) => c.journalOn && c.runs >= 4 },
   { id: 'goals', icon: '🎯', go: { route: '#/goals' }, when: (c) => c.runs >= 3 && c.goals === 0 },
   { id: 'retro', icon: '🔄', go: { route: '#/retros' }, when: (c) => c.runs >= 3 && c.retros === 0 },
   { id: 'report', icon: '📄', go: { route: '#/report' }, when: (c) => c.runs >= 5 },

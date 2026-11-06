@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.21.0
+- **Who sees a routine**: on a shared device a routine can be visible to everyone (default) or only to chosen people - a parent or therapist can set routines up for the children. Alarms still ring on the device. Deleting a person never loses a routine.
+- **Special tasks**: pick the app's own tools as steps (journal, thought parking, gratitude, situation log, voice note, body scan, guided imagery, relaxation, movement...) by topic with search; on the run screen the task has one big button that opens the tool (the task's clock keeps running).
+- **Points and awards** (off by default): automatic or custom points per step, bonus for finishing early, a little less for finishing late (never below 0, never in the calm pace, can be switched off), awards (medal, coin, trophy, star, gem, crown) won by finishing early with double points, a podium with fireworks, a points chart and a running total in Statistics.
+- **Move routines**: Home → Plan → Share and move routines: copy to another person on the device, save/send a routines file, bring routines in from a file for a chosen person (alarms come in off; hostile files are refused).
+- Fix: Done/Pause stay on the first screen of the run (the voice row moved below); two overlapping route changes could leave a stale Home alive.
+
 ## 1.20.0
 - **What the app is for**: in Settings choose a way of working (CBT, Cog-Fun) and/or what is hard (attention, anxiety, organising, motivation) plus an age; the app shows only what fits (toolbar, search, navigation, run-screen helpers). "Show everything" and a different choice are always one tap away; nothing is deleted.
 - **People**: several profiles, each with its own settings (look, text, sound, voice, pace...) and its own view; a small switcher at the top of every screen; "Who is using the app?" at the start (can be turned off); manage everyone in Settings → People.

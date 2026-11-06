@@ -10,6 +10,7 @@ import { moodStats, MOODS } from '../mood.js';
 import { unplannedCard, patternCards } from './unplanned.js';
 import { taskDifficulty, difficultyTrends, hardSpots, hardAndSlow, summary as diffSummary, levelEmoji } from '../difficulty.js';
 import { exportCard } from './report.js';
+import { series as scoreSeries, totalPoints, awardCounts, AWARD_EMOJI } from '../points.js';
 import { estimateAccuracy } from '../awareness.js';
 import { overview as retroOverview } from '../retro.js';
 import { verdictChip } from './retro.js';
@@ -96,11 +97,11 @@ function insightText(i) {
 
 export function renderStats(root, templateId, nav) {
   const draw = () => {
-    const { templates } = S.get(), runs = S.myRuns();
+    const templates = S.myTemplates(), runs = S.myRuns();
     if (!templateId) {
       const items = templates.map((x) => ({ x, n: ST.finished(runs, x.id).length }));
       const hasRuns = items.some((i) => i.n);
-      setChildren(root, h('h1', {}, t('statsTitle')), hasRuns ? overview(runs) : null, hasRuns ? achievementsCard(runs) : null, hasRuns ? moodCard(runs) : null, hasRuns ? unplannedCard(runs) : null, hasRuns ? retroCard(runs) : null, hasRuns ? awarenessCard(runs) : null, hasRuns ? difficultyCard(runs) : null, hasRuns ? exportCard(nav) : null,
+      setChildren(root, h('h1', {}, t('statsTitle')), hasRuns ? overview(runs) : null, hasRuns ? pointsCard(runs) : null, hasRuns ? achievementsCard(runs) : null, hasRuns ? moodCard(runs) : null, hasRuns ? unplannedCard(runs) : null, hasRuns ? retroCard(runs) : null, hasRuns ? awarenessCard(runs) : null, hasRuns ? difficultyCard(runs) : null, hasRuns ? exportCard(nav) : null,
         hasRuns ? h('div', { class: 'stack' }, items.filter((i) => i.n).map(({ x, n }) =>
           h('a', { class: 'card link-card', href: `#/stats/${x.id}`, style: { '--accent': x.color } }, h('span', { class: 'emoji' }, x.icon), h('span', { class: 'routine-text' }, h('strong', {}, x.name), h('small', {}, t('runsCount', { n })))))) : h('p', { class: 'empty' }, t('noStats')));
       return;
@@ -138,6 +139,30 @@ export function renderStats(root, templateId, nav) {
   draw();
   return S.subscribe(draw);
 }
+/** Points over time: a bar per routine run (last 30), the running total as a line, and the awards collected. Only shown once some runs have points. */
+export function pointsCard(runs) {
+  const all = scoreSeries(runs); if (!all.length) return null;
+  const pts = all.slice(-30), cumulative = S.get().settings.scoreCumulative, W = 640, H = 240, m = { l: 44, r: 14, t: 16, b: 30 };
+  const maxBar = Math.max(10, ...pts.map((p) => p.total)), maxLine = Math.max(1, pts.at(-1).cumulative - (all.length > pts.length ? all[all.length - pts.length - 1].cumulative : 0));
+  const slot = (W - m.l - m.r) / pts.length, bw = Math.min(26, slot * 0.7), y = (v, mx) => H - m.b - (v / mx) * (H - m.t - m.b), x = (i) => m.l + slot * i + slot / 2;
+  const fmt = new Intl.DateTimeFormat(getLang(), { day: 'numeric', month: 'short' });
+  const base = pts.length ? (all.length > pts.length ? all[all.length - pts.length - 1].cumulative : 0) : 0;
+  const g = svg('svg', { viewBox: `0 0 ${W} ${H}`, class: 'chart pts-chart', role: 'img', 'aria-label': t('ptsChartLabel', { n: pts.length, total: totalPoints(runs) }), preserveAspectRatio: 'xMidYMid meet' });
+  for (let i = 0; i <= 4; i++) { const v = (maxBar * i) / 4, yy = y(v, maxBar); g.append(svg('line', { class: 'grid', x1: m.l, x2: W - m.r, y1: yy, y2: yy }), svg('text', { class: 'tick', x: m.l - 6, y: yy + 4, 'text-anchor': 'end' }, String(Math.round(v)))); }
+  pts.forEach((p, i) => g.append(svg('rect', { class: 'bar-pts', x: x(i) - bw / 2, y: y(p.total, maxBar), width: bw, height: Math.max(1, H - m.b - y(p.total, maxBar)), rx: 3 }, svg('title', {}, `${fmt.format(p.at)}: ${p.total}`))));
+  if (cumulative && pts.length > 1) g.append(svg('polyline', { class: 'ln cum', fill: 'none', points: pts.map((p, i) => `${x(i).toFixed(1)},${y(p.cumulative - base, maxLine).toFixed(1)}`).join(' ') }));
+  const step = Math.ceil(pts.length / 6); pts.forEach((p, i) => { if (i % step === 0 || i === pts.length - 1) g.append(svg('text', { class: 'tick', x: x(i), y: H - 8, 'text-anchor': 'middle' }, fmt.format(p.at))); });
+  const aw = awardCounts(runs), awEntries = Object.entries(aw);
+  return h('section', { class: 'card', 'aria-label': t('ptsStatsTitle') },
+    h('h2', {}, `⭐ ${t('ptsStatsTitle')}`),
+    h('div', { class: 'tiles' }, tile(t('ptsTotal'), String(totalPoints(runs))), tile(t('ptsBest'), String(Math.max(...all.map((p) => p.total)))), tile(t('ptsAvg'), String(Math.round(all.reduce((s, p) => s + p.total, 0) / all.length)))),
+    g, h('div', { class: 'legend' }, h('span', { class: 'k actual' }, t('ptsLegendRun')), cumulative ? h('span', { class: 'k planned' }, t('ptsLegendCum')) : null),
+    awEntries.length ? h('p', { class: 'awards', 'aria-label': t('podAwards') }, awEntries.map(([a, n]) => h('span', { class: 'award', title: t(`award_${a}`) }, `${AWARD_EMOJI[a]} × ${n}  `))) : null,
+    h('details', { class: 'fold' }, h('summary', {}, h('span', { class: 'fold-t' }, t('ptsTable'))),
+      h('table', { class: 'tbl' }, h('thead', {}, h('tr', {}, h('th', {}, t('colDate')), h('th', {}, t('colTask')), h('th', {}, t('ptsUnit')))),
+        h('tbody', {}, [...pts].reverse().map((p) => h('tr', {}, h('td', {}, fmt.format(p.at)), h('td', {}, p.name || '—'), h('td', {}, String(p.total))))))));
+}
+
 /** This week + 5-week heat-map + CSV export. */
 function overview(runs) {
   const now = Date.now(), w = weeklyReport(runs, now), u = units(), cells = heatmap(runs, now, 5), st = S.get().settings;

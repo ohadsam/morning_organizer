@@ -4,7 +4,7 @@ import { t, getLang } from '../i18n.js';
 import * as S from '../store.js';
 import { LEVELS } from '../difficulty.js';
 import { pickThought, pickExercise } from '../thoughts.js';
-import { openCapture } from './capture.js';
+import { openCapture, openPark, openGratitude } from './capture.js';
 import { speakWithSettings } from './coach.js';
 import { openAprt } from './aprt.js';
 
@@ -34,7 +34,10 @@ export function taskHelpCard(api, routineName) {
     const { task, index } = api.current(); if (!task) { el.hidden = true; return; } el.hidden = false;
     setChildren(rated, h('span', { class: 'lbl' }, t('diffAsk')), LEVELS.map((l) => h('button', { class: `diff ${task.difficulty === l.v ? 'on' : ''}`, type: 'button', 'aria-pressed': String(task.difficulty === l.v), 'aria-label': t(`diff${l.v}`), title: t(`diff${l.v}`), onclick: () => { api.rate(index, l.v); update(); } }, l.emoji)));
     const hard = task.difficulty >= 4;
-    const HELPER = { calm: () => api.openCalm(), move: () => showRelax(['shake', 'stretch', 'wall', 'squeeze']), thought: showThought };
+    // the tool a (special) task opens; they run inside the task, so its clock keeps running
+    const ctx = { routine: routineName, task: task.name, onSaved: () => api.helped(index, 'note') };
+    const HELPER = { calm: () => api.openCalm({ kind: 'breath' }, true), scan: () => api.openCalm({ kind: 'scan' }, true), imagery: () => api.openCalm({ kind: 'guide' }, true), relax: () => showRelax(),
+      move: () => showRelax(['shake', 'stretch', 'wall', 'squeeze']), thought: showThought, journal: () => openCapture(ctx), voice: () => openCapture(ctx), gratitude: () => openGratitude(ctx), park: () => openPark(ctx), aprt: () => openAprt(ctx) };
     setChildren(helperSlot, task.helper && Object.hasOwn(HELPER, task.helper) ? h('button', { class: 'btn primary', type: 'button', onclick: HELPER[task.helper] }, `▶ ${t(`helper_${task.helper}`)}`) : null);
     setChildren(sum, h('span', { class: 'fold-t' }, `${LEVELS.find((l) => l.v === task.difficulty)?.emoji || '🙂'} ${t('runHow')}`));
     setChildren(btns,

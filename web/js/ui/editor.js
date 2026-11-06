@@ -16,7 +16,9 @@ import { openSmartTimes, openSmartSteps, timeHint, audiences, reasonText } from 
 import { suggestTime } from '../smart.js';
 import { openGoalWizard } from './goals.js';
 import { MAX_GOALS } from '../cogfun.js';
-import { openTaskPicker, saveRoutineAsTemplate, saveTaskAsTemplate } from './library.js';
+import { avatarNode } from './avatar.js';
+import { AWARDS, AWARD_EMOJI, MAX_PTS, autoBase } from '../points.js';
+import { openSpecialPicker, openTaskPicker, saveRoutineAsTemplate, saveTaskAsTemplate } from './library.js';
 
 /** Task picture if it has a photo, else its emoji. */
 export const iconNode = (task) => (task.photo ? h('img', { src: task.photo, alt: '' }) : (task.icon || suggestIcon(task.name)));
@@ -38,10 +40,14 @@ export function renderEditor(root, id, nav) {
         h('div', { class: 'task-top' }, h('button', { class: 'task-icon', type: 'button', 'aria-label': `${t('taskIcon')}: ${task.icon || suggestIcon(task.name)}`, title: t('pickIcon'), onclick: (e) => pickIcon(task, e.currentTarget) }, iconNode(task)),
         h('input', { class: 'task-name', type: 'text', maxLength: 80, value: task.name, placeholder: t('taskName'), 'aria-label': t('taskName'), oninput: (e) => change(() => { task.name = e.target.value; if (!task.icon && !task.photo) row.querySelector('.task-icon').textContent = suggestIcon(task.name); }), onchange: () => { const slot = row.querySelector('.smart-slot'), key = `${task.name}|${task.sec}`; if (slot.dataset.key === key) return;   // a blur right after typing must not rebuild (and swallow) a hint that is being clicked
           slot.dataset.key = key; setChildren(slot, timeHint(task, (sec) => { change(() => { task.sec = sec; }, true); }) ?? ''); } })),
+        task.helper ? h('small', { class: 'chip solid sp-chip' }, `✨ ${t('sptOpens', { tool: t(`helper_${task.helper}`) })}`) : null,
         h('div', { class: 'smart-slot' }, timeHint(task, (sec) => { change(() => { task.sec = sec; }, true); }) ?? ''),
         h('div', { class: 'task-times' }, timeField(t('duration'), task.sec, (v) => change(() => { task.sec = Math.max(1, v); }))),
         h('details', { class: 'task-more' }, h('summary', {}, t('taskMoreTime')),
-          timeField(t('estimate'), task.est, (v) => change(() => { task.est = v; }), { allowEmpty: true, emptyLabel: t('tpSame') }))),
+          timeField(t('estimate'), task.est, (v) => change(() => { task.est = v; }), { allowEmpty: true, emptyLabel: t('tpSame') }),
+          S.get().settings.scoring === 'off' ? null : h('div', { class: 'stack task-score' },
+            S.get().settings.scoring === 'custom' ? h('label', { class: 'field' }, h('span', { class: 'lbl' }, t('ptsTaskPoints')), h('input', { type: 'number', min: 0, max: MAX_PTS, inputMode: 'numeric', value: task.pts || '', placeholder: t('ptsAutoN', { n: autoBase(task.sec) }), 'aria-label': t('ptsTaskPoints'), oninput: (e) => change(() => { task.pts = Math.max(0, Math.min(MAX_PTS, Math.round(Number(e.target.value)) || 0)); }) }), h('small', { class: 'hint' }, t('ptsTaskHint'))) : null,
+            h('label', { class: 'field' }, h('span', { class: 'lbl' }, t('ptsAward')), h('select', { 'aria-label': t('ptsAward'), onchange: (e) => change(() => { task.award = e.target.value; }) }, h('option', { value: '' }, t('ptsNoAward')), AWARDS.map((a) => h('option', { value: a, selected: task.award === a }, `${AWARD_EMOJI[a]} ${t(`award_${a}`)}`))), h('small', { class: 'hint' }, t('ptsAwardHint')))))),
       h('button', { class: 'btn icon-btn task-menu-btn', type: 'button', 'aria-haspopup': 'dialog', 'aria-label': `${t('taskMenu')}: ${task.name || t('newTask')}`, title: t('taskMenu'), onclick: () => openTaskMenu(i) }, icon('menu', 22)));
     row.querySelector('.handle').addEventListener('pointerdown', (e) => startDrag(e, row));
     row.querySelector('.handle').addEventListener('keydown', (e) => {
@@ -106,7 +112,22 @@ export function renderEditor(root, id, nav) {
 
   const dayChips = (days, onChange) => h('fieldset', { class: 'days' }, h('legend', {}, t('alarmDays')),
     [0, 1, 2, 3, 4, 5, 6].map((d) => h('label', { class: 'day' }, h('input', { type: 'checkbox', checked: days.includes(d), onchange: (e) => { onChange(e.target.checked ? normDays([...days, d]) : days.filter((x) => x !== d)); } }), h('span', {}, t(`day${d}`)))));
-  const scheduleBox = h('section', { class: 'card stack' }), gearBox = h('section', { class: 'card stack' });
+  const scheduleBox = h('section', { class: 'card stack' }), gearBox = h('section', { class: 'card stack' }), whoBox = h('section', { class: 'card stack' });
+  /** Who sees this routine: everyone (the default), or only the chosen people - one device, a parent or therapist setting up for the children. */
+  const whoSummary = () => { const o = tpl.owners || []; return o.length ? S.profiles().filter((p) => o.includes(p.id)).map((p) => p.name || t('untitledProfile')).join(', ') : t('whoEveryone'); };
+  function drawWho() {
+    tpl.owners = tpl.owners || []; const all = !tpl.owners.length;
+    const opt = (on, role, label, sub, fn, av) => h('button', { type: 'button', class: `wz-opt needs-opt ${on ? 'on' : ''}`, role, 'aria-checked': String(!!on), onclick: fn }, av || h('span', { class: 'wz-e', 'aria-hidden': 'true' }, '🌐'), h('span', {}, h('strong', {}, label), sub ? h('small', { class: 'hint' }, sub) : null));
+    setChildren(whoBox, h('p', { class: 'note' }, t('whoHint')),
+      h('div', { class: 'wz-list', role: 'radiogroup', 'aria-label': t('whoTitle') },
+        opt(all, 'radio', t('whoEveryone'), t('whoEveryoneSub'), () => { tpl.owners = []; save(); drawWho(); updWho(); }),
+        opt(!all, 'radio', t('whoSome'), t('whoSomeSub'), () => { if (all) { tpl.owners = [S.activeProfile().id]; save(); drawWho(); updWho(); } }, h('span', { class: 'wz-e', 'aria-hidden': 'true' }, '👥'))),
+      all ? null : h('div', { class: 'wz-list', role: 'group', 'aria-label': t('whoSome') }, S.profiles().map((p) => opt(tpl.owners.includes(p.id), 'checkbox', p.name || t('untitledProfile'), '', () => {
+        const has = tpl.owners.includes(p.id); const next = has ? tpl.owners.filter((x) => x !== p.id) : [...tpl.owners, p.id]; if (!next.length) { toast(t('whoNeedOne')); return; }
+        tpl.owners = next; save(); drawWho(); updWho(); }, avatarNode(p.avatar, { size: 32 })))));
+  }
+  const updWho = () => { const sm = whoFold?.querySelector('.fold-s'); if (sm) sm.textContent = whoSummary(); };
+  let whoFold = null;
   function drawSchedule() {
     const pre = presetDays(getLang()), set = (d) => { tpl.days = d; save(); drawSchedule(); };
     setChildren(scheduleBox, h('p', { class: 'note' }, t('scheduleHint')), dayChips(tpl.days || [], set),
@@ -163,11 +184,13 @@ export function renderEditor(root, id, nav) {
     list,
     h('button', { class: 'btn add', type: 'button', onclick: () => { const nt = S.newTask(); nt.name = ''; change(() => tpl.tasks.push(nt), true); list.lastElementChild?.querySelector('.task-name')?.focus(); } }, icon('plus', 18), t('addTask')),
     h('div', { class: 'toolbar wrap' }, h('button', { class: 'btn', type: 'button', onclick: () => openTaskPicker((task) => { const nt = { ...S.newTask(), ...task, id: uid() }; change(() => tpl.tasks.push(nt), true); }) }, `📚 ${t('libAddFrom')}`),
+      h('button', { class: 'btn', type: 'button', onclick: () => openSpecialPicker((task) => { const nt = { ...S.newTask(), ...task, id: uid() }; change(() => tpl.tasks.push(nt), true); }) }, `✨ ${t('sptBtn')}`),
       h('button', { class: 'btn', type: 'button', onclick: () => openSmartTimes(tpl, (m) => change(() => { for (const [i, sec] of m) if (tpl.tasks[i]) tpl.tasks[i].sec = sec; }, true)) }, `✨ ${t('smTimesBtn')}`)),
     fold(t('moreTools'), t('moreToolsSub'), h('div', { class: 'stack' },
       h('button', { class: 'btn', type: 'button', onclick: () => openSmartSteps(tpl, (tasks) => change(() => { tpl.tasks = tasks; }, true)) }, `🧩 ${t('smStepsBtn')}`),
       h('button', { class: 'btn', type: 'button', onclick: () => { save.flush(); saveRoutineAsTemplate(tpl); } }, `💾 ${t('libSaveRoutine')}`),
       h('p', { class: 'note' }, t('dragHint')), h('p', { class: 'note' }, t('estimateHint')))).el,
+    S.profiles().length > 1 ? (whoFold = fold(`👥 ${t('whoTitle')}`, whoSummary(), whoBox).el) : null,
     fold(t('schedule'), foldSched, scheduleBox).el,
     fold(t('gear'), foldGear, gearBox).el,
     fold(t('edGoal'), foldGoal, goalBox).el,
@@ -182,6 +205,6 @@ export function renderEditor(root, id, nav) {
     h('div', { class: 'sticky-actions' },
       h('button', { class: 'btn', type: 'button', onclick: () => { save.flush(); nav('#/'); } }, t('save')),
       h('button', { class: 'btn primary', type: 'button', disabled: !tpl.tasks.length, onclick: () => { save.flush(); nav(`#/run/${tpl.id}`); } }, icon('play', 18), t('start'))));
-  draw(); drawAlarm(); drawSchedule(); drawGear(); drawPlans(); drawGoals();
+  draw(); drawWho(); drawAlarm(); drawSchedule(); drawGear(); drawPlans(); drawGoals();
   return () => save.flush();
 }

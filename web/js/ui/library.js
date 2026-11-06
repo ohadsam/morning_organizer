@@ -7,6 +7,7 @@ import { suggestIcon, PICKER_ICONS } from '../taskIcons.js';
 import { modal, toast, confirmBox, icon } from './common.js';
 import { timeField } from './timePicker.js';
 import { openShare } from './share.js';
+import { GROUPS as SP_GROUPS, pickable, toTask, nameKey, groupKey } from '../specialTasks.js';
 
 const dur = (sec) => fmtHuman(sec, units());
 const norm = (s) => String(s || '').toLowerCase();
@@ -34,6 +35,20 @@ export function openTaskPicker(onAdd) {
   }
   draw();
   return modal(`📚 ${t('libTaskTitle')}`, h('div', { class: 'stack' }, h('p', { class: 'note' }, t('libTaskHint')), search, chips, grid, status), [{ label: t('libDone'), primary: true }]);
+}
+
+/** Pick the app's own "special tasks" (journal, thought parking, body scan, guided imagery...) by topic, with search; each one opens its tool on the run screen. */
+export function openSpecialPicker(onAdd) {
+  let group = 'all', q = '', added = 0;
+  const search = h('input', { type: 'search', placeholder: t('sptSearch'), 'aria-label': t('sptSearch'), oninput: (e) => { q = e.target.value; draw(); } });
+  const chips = h('div', {}), grid = h('div', { class: 'tiles-grid' }), status = h('p', { class: 'note', role: 'status', 'aria-live': 'polite' }, '');
+  function draw() {
+    setChildren(chips, chipRow(t('sptGroup'), [['all', t('libAll')], ...SP_GROUPS.map((g) => [g, t(groupKey(g))])], () => group, (v) => { group = v; draw(); }));
+    const list = pickable({ has: (f) => S.shows(f), q, group, t, norm });
+    setChildren(grid, list.length ? list.map((x) => tile(x.icon, t(nameKey(x.id)), dur(x.sec), () => { onAdd(toTask(x.id, t)); added++; status.textContent = t('libAdded', { name: t(nameKey(x.id)), n: added }); })) : h('p', { class: 'empty' }, t('libNone')));
+  }
+  draw();
+  return modal(`✨ ${t('sptTitle')}`, h('div', { class: 'stack' }, h('p', { class: 'note' }, t('sptHint')), search, chips, grid, status), [{ label: t('libDone'), primary: true }]);
 }
 
 /** Start a new routine from a template (mine or ready-made). */

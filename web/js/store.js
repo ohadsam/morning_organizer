@@ -25,13 +25,15 @@ import { sanitizeLibrary, mergeLibrary, upsert, fromTemplate, fromTask, MAX_ROUT
 import { eraseJournal } from './journal.js';
 import { newProfile, normalizeProfile, runsOf, MAX_PROFILES, PREF_KEYS, sanitizePrefs } from './profiles.js';
 import { SKINS } from './skins.js';
+import { isHelper } from './specialTasks.js';
+import { MODES as SCORE_MODES, isAward, MAX_PTS, sanitizeScore } from './points.js';
 import { visibleSet, shows as needShows, sanitizeView, areasFor, isFull } from './needs.js';
 
 export const DEFAULT_SETTINGS = Object.freeze({
   lang: 'he', theme: 'auto', mode: 'both', volume: 80, warnSec: 10, defTaskSec: 300, defEstSec: 0,
   autoAdvance: false, keepAwake: true, keepAwakeApp: false, personName: '', mascot: '🦊', feedback: true, speak: false, age: null, gender: 'other', profileDone: false,
   textStyle: 'auto', timerStyle: 'auto', retroStyle: 'ask', alarmsMig: false, samplesAlarmsOff: false, paceMode: 'normal', accent: '', simpleMode: false, announceTasks: false, fontScale: 100, colorSafe: false, contrast: 'normal', srAnnounce: false,
-  coachButton: true, coachAuto: false, coachSpeak: false, voiceURI: '', voicePreset: 'natural', voiceFlavor: 'neutral', skin: 'default', easyRead: false, askProfile: true, voiceCmdAuto: false, voiceEngine: '', alarmsPause: 0, weeklyOn: true, weeklyDay: 5, voiceRate: 100, seeded: false,
+  coachButton: true, coachAuto: false, coachSpeak: false, voiceURI: '', voicePreset: 'natural', voiceFlavor: 'neutral', skin: 'default', easyRead: false, askProfile: true, voiceCmdAuto: false, scoring: 'off', scorePenalty: true, scoreCumulative: true, voiceEngine: '', alarmsPause: 0, weeklyOn: true, weeklyDay: 5, voiceRate: 100, seeded: false,
   avatar: defaultAvatar(), activeProfile: '', transcribe: false,
 });
 /** The settings keys that mirror the ACTIVE profile (so the rest of the app can keep reading settings.personName etc.). */
@@ -58,6 +60,15 @@ export function newTemplate(name = '') {
 }
 export const totalSec = (tpl) => tpl.tasks.reduce((s, x) => s + x.sec, 0);
 
+/** Who may see a routine: a list of profile ids; [] = everyone (the default, so older routines stay visible to all). */
+const cleanOwners = (o) => [...new Set((Array.isArray(o) ? o : []).filter((x) => typeof x === 'string' && x && x.length <= 64))].slice(0, MAX_PROFILES);
+/** `known` = ids of the people that exist: a routine whose owners are all unknown (e.g. restored from another device's backup) stays visible, never lost. */
+export const canSee = (tpl, profileId, known = null) => !tpl.owners?.length || tpl.owners.includes(profileId) || (!!known && !tpl.owners.some((o) => known.has(o)));
+/** The routines this person sees (their own plus the ones shared with everyone). Alarms still ring for all routines on the device. */
+export const myTemplates = (profileId = activeProfile().id) => { const known = new Set(state.profiles.map((p) => p.id)); return state.templates.filter((x) => canSee(x, profileId, known)); };
+/** Share a routine: [] = everyone, or the people who may see it. */
+export const setOwners = async (id, owners) => { const x = getTemplate(id); return x && saveTemplate({ ...x, owners }, { touch: false }); };
+
 /** Clamp + clean a template before it is stored. Defence in depth: the editor, import and restore all pass through. */
 export function normalizeTemplate(tpl) {
   const a = tpl.alarm ?? defaultAlarm();
@@ -66,14 +77,14 @@ export function normalizeTemplate(tpl) {
   return {
     id: typeof tpl.id === 'string' && tpl.id ? tpl.id.slice(0, 64) : uid(),
     name: cleanText(tpl.name, LIMITS.maxName), icon: cleanText(tpl.icon, 8) || '⏰',
-    color: /^#[0-9a-fA-F]{6}$/.test(tpl.color) ? tpl.color : COLORS[0], favorite: !!tpl.favorite, builtin: !!tpl.builtin,
+    color: /^#[0-9a-fA-F]{6}$/.test(tpl.color) ? tpl.color : COLORS[0], favorite: !!tpl.favorite, builtin: !!tpl.builtin, owners: cleanOwners(tpl.owners),
     createdAt: num(tpl.createdAt, Date.now()), updatedAt: num(tpl.updatedAt, Date.now()), leaveBy: validLeaveBy(tpl.leaveBy), from: cleanText(tpl.from, 30), days: normDays(tpl.days),
     plans: (Array.isArray(tpl.plans) ? tpl.plans : []).filter((x) => x && typeof x === 'object' && cleanText(x.when, 80) && cleanText(x.then, 80)).slice(0, 5).map((x) => ({ id: typeof x.id === 'string' && x.id ? x.id.slice(0, 64) : uid(), when: cleanText(x.when, 80), then: cleanText(x.then, 80) })),
     gear: (Array.isArray(tpl.gear) ? tpl.gear : []).filter((g) => g && typeof g === 'object' && cleanText(g.name, 40)).slice(0, 20).map((g) => ({ id: typeof g.id === 'string' && g.id ? g.id.slice(0, 64) : uid(), name: cleanText(g.name, 40), icon: cleanText(g.icon, 8), days: normDays(g.days) })),
     tasks: (Array.isArray(tpl.tasks) ? tpl.tasks : []).slice(0, LIMITS.maxTasks).map((x) => ({
       id: typeof x?.id === 'string' && x.id ? x.id.slice(0, 64) : uid(), name: cleanText(x?.name, LIMITS.maxName), icon: cleanText(x?.icon, 8), photo: isSafePhoto(x?.photo) ? x.photo : '',
       sec: clamp(Math.round(Number(x?.sec)) || 1, 1, LIMITS.maxTaskSec), est: clamp(Math.round(Number(x?.est)) || 0, 0, LIMITS.maxTaskSec),
-      helper: ['calm', 'move', 'thought'].includes(x?.helper) ? x.helper : '', helperKey: typeof x?.helperKey === 'string' && /^sx_[a-z]+$/.test(x.helperKey) ? x.helperKey : '' })),
+      helper: isHelper(x?.helper) ? x.helper : '', pts: clamp(Math.round(Number(x?.pts)) || 0, 0, MAX_PTS), award: isAward(x?.award) ? x.award : '', helperKey: typeof x?.helperKey === 'string' && /^sx_[a-z]+$/.test(x.helperKey) ? x.helperKey : '' })),
     alarm: normalizeAlarm(a),
   };
 }
@@ -85,7 +96,7 @@ export function sanitizeRun(r) {
     id: String(r.id).slice(0, 64), profileId: typeof r.profileId === 'string' ? r.profileId.slice(0, 64) : '', templateId: String(r.templateId ?? '').slice(0, 64), templateName: cleanText(r.templateName, LIMITS.maxName),
     icon: cleanText(r.icon, 8), color: /^#[0-9a-fA-F]{6}$/.test(r.color) ? r.color : COLORS[0],
     startedAt: n(r.startedAt), endedAt: n(r.endedAt), status: r.status === 'done' ? 'done' : 'stopped', mood: sanitizeMood(r.mood), unplanned: sanitizeUnplanned(r.unplanned), current: 0, pausedMs: n(r.pausedMs),
-    plannedTotal: n(r.plannedTotal, 1e7), estTotal: n(r.estTotal, 1e7), actualTotal: n(r.actualTotal, 1e7),
+    score: sanitizeScore(r.score), plannedTotal: n(r.plannedTotal, 1e7), estTotal: n(r.estTotal, 1e7), actualTotal: n(r.actualTotal, 1e7),
     tasks: r.tasks.slice(0, LIMITS.maxTasks).map((x) => ({ id: String(x?.id ?? '').slice(0, 64), name: cleanText(x?.name, LIMITS.maxName), icon: cleanText(x?.icon, 8),
       plannedSec: n(x?.plannedSec, LIMITS.maxTaskSec), estSec: n(x?.estSec, LIMITS.maxTaskSec), extraSec: n(x?.extraSec, LIMITS.maxTaskSec), actualSec: n(x?.actualSec, LIMITS.maxTaskSec),
       done: !!x?.done, skipped: !!x?.skipped, guess: x?.guess === true, difficulty: clamp(Math.round(Number(x?.difficulty)) || 0, 0, 5),
@@ -249,6 +260,7 @@ export async function deleteProfile(id) {
   state.profiles = state.profiles.filter((p) => p.id !== id); await persistProfiles(); await eraseJournal(id);
   if (state.retros.some((x) => x.profileId === id)) { state.retros = state.retros.filter((x) => x.profileId !== id); await persistRetros(); }
   if (wasActive) { state.settings = { ...state.settings, activeProfile: state.profiles[0].id }; }
+  for (const x of state.templates.filter((k) => k.owners?.includes(id))) await saveTemplate({ ...x, owners: x.owners.filter((o) => o !== id) }, { touch: false });   // a routine only that person saw becomes shared with everyone, never lost
   mirrorActiveProfile(); await db.put('kv', state.settings, 'settings'); emit(); return true;
 }
 
@@ -386,7 +398,7 @@ export function exportAll() {
 export function sanitizeSettings(raw) {
   const out = {};
   if (!raw || typeof raw !== 'object') return out;
-  const ENUM = { skin: SKINS, lang: ['auto', 'he', 'en'], theme: ['auto', 'light', 'dark'], mode: ['both', 'beep', 'vibrate', 'silent'], paceMode: ['normal', 'quick', 'calm'], contrast: ['normal', 'high'], textStyle: ['auto', 'playful', 'plain'], timerStyle: ['auto', 'ring', 'pie', 'bar', 'sand'], voiceFlavor: ['neutral', 'casual', 'warm', 'formal'], retroStyle: ['ask', 'guided', 'free'], fontScale: [100, 115, 130, 150] };
+  const ENUM = { skin: SKINS, scoring: SCORE_MODES, lang: ['auto', 'he', 'en'], theme: ['auto', 'light', 'dark'], mode: ['both', 'beep', 'vibrate', 'silent'], paceMode: ['normal', 'quick', 'calm'], contrast: ['normal', 'high'], textStyle: ['auto', 'playful', 'plain'], timerStyle: ['auto', 'ring', 'pie', 'bar', 'sand'], voiceFlavor: ['neutral', 'casual', 'warm', 'formal'], retroStyle: ['ask', 'guided', 'free'], fontScale: [100, 115, 130, 150] };
   for (const [k, def] of Object.entries(DEFAULT_SETTINGS)) {
     if (k === 'seeded' || !(k in raw)) continue;
     const v = raw[k];

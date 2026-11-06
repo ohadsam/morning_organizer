@@ -16,8 +16,8 @@ const reduced = () => globalThis.matchMedia?.('(prefers-reduced-motion: reduce)'
 const MIN_OPTIONS = [1, 2, 3], LONG_OPTIONS = [2, 3, 5];   // a guided journey or a full scan needs a few minutes
 
 /** Renders the calm corner into `host`. opts.onDone() when the exercise ends. Returns a cleanup function. */
-export function calmPanel(host, { onClose, compact = false } = {}) {
-  let kind = 'breath', pattern = 'slow', minutes = 1, scanKind = 'quick', guideId = 'elements', raf = null, started = 0, last = '', over = false;
+export function calmPanel(host, { onClose, compact = false, initial = {} } = {}) {
+  let kind = ['breath', 'ground', 'scan', 'guide'].includes(initial.kind) ? initial.kind : 'breath', pattern = 'slow', minutes = 1, scanKind = 'quick', guideId = 'elements', raf = null, started = 0, last = '', over = false;
   const s = S.get().settings;
   const cue = (label) => { if (label === last) return; last = label; if (s.mode !== 'silent' && s.mode !== 'beep') native.vibrate([0, label === 'in' ? 120 : 60]) ; };
   function stop() { cancelAnimationFrame(raf); raf = null; }

@@ -11,7 +11,7 @@ const NEED_ID = { goals: 'goals', retros: 'retros', aprt: 'aprt', stats: 'stats'
 function hasFeature(id) { if (NEED_ID[id] && !S.shows(NEED_ID[id])) return false; const f = S.features(); return id === 'calm' ? f.calmCorner !== false : id === 'journal' || id === 'note' ? f.journal !== false : id === 'rewards' ? f.rewardMenu !== false && S.shows('rewards') : true; }
 
 export function openSearch(nav) {
-  let m; const routines = () => S.get().templates.map((x) => ({ id: x.id, name: x.name, icon: x.icon }));
+  let m; const routines = () => S.myTemplates().map((x) => ({ id: x.id, name: x.name, icon: x.icon }));
   const list = h('ul', { class: 'search-results', 'aria-label': t('searchTitle') }), live = h('p', { class: 'sr-only', 'aria-live': 'polite' });
   const input = h('input', { type: 'search', class: 'search-input', placeholder: t('searchPh'), 'aria-label': t('searchTitle'), autocomplete: 'off', enterkeyhint: 'go', maxLength: 60 });
   const sub = h('h3', { class: 'search-sub' }, t('searchTry'));

@@ -9,6 +9,7 @@ import { openWhatsNew } from './whatsnew.js';
 import { openWizard } from './wizard.js';
 import { openShareApp } from './shareApp.js';
 import { openAprt } from './aprt.js';
+import { openRoutineIO } from './routineIO.js';
 
 const ACTIONS = {
   newRoutine: async (nav) => { try { const x = S.newTemplate(t('untitled')); await S.saveTemplate(x); nav(`#/edit/${x.id}`); } catch { toast(t('error')); } },
@@ -19,6 +20,7 @@ const ACTIONS = {
   whatsnew: (nav) => openWhatsNew(nav),
   shareApp: () => openShareApp(),
   aprt: () => openAprt({}),
+  routineio: () => openRoutineIO(),
 };
 /** Runs a named action; unknown names do nothing (the name may come from stored data). */
 export function runAction(name, nav) { return Object.hasOwn(ACTIONS, name) ? ACTIONS[name](nav) : undefined; }

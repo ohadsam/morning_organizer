@@ -355,7 +355,7 @@ await step('v1.7: weekly overview + 5-week heat-map + CSV export (accessible), u
   const fs = await import('node:fs'); const csv = fs.readFileSync(await dl.path(), 'utf8'); assert.match(csv, /^\ufeffdate,start,end,routine,status/); assert.match(csv, /,done,1860,1860,/, "the finished run is in the CSV (sample names stay in the language they were created in)");
   await page.goto(base + '#/'); await page.waitForSelector('.routine'); assert.equal(await page.locator('.routine').count(), 2);
   await page.locator('.routine').first().locator('button[aria-label="Delete"]').click(); await page.click('dialog footer button >> nth=1');
-  await page.waitForFunction(() => document.querySelectorAll('.routine').length === 1); await page.click('dialog[open] [role=status] button:has-text("Undo")');
+  await page.waitForFunction(() => document.querySelectorAll('.routine').length === 1); await page.click('#toast button:has-text("Undo")');
   await page.waitForFunction(() => document.querySelectorAll('.routine').length === 2);
   await page.goto(base + '#/settings'); await page.click('text=Add more example routines'); await page.waitForTimeout(300);
   await page.goto(base + '#/'); await page.waitForFunction(() => document.querySelectorAll('.routine').length === 6); assert.deepEqual(errors, []);

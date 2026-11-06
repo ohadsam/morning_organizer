@@ -10,7 +10,8 @@
     "e2e": "node tests/e2e/smoke.mjs",
     "serve": "node scripts/serve.mjs",
     "bump": "node scripts/bump-version.mjs",
-    "layout": "node tests/e2e/layout.mjs"
+    "layout": "node tests/e2e/layout.mjs",
+    "textfit": "node tests/e2e/textfit.mjs"
   },
   "devDependencies": {
     "axe-core": "^4.10.2",

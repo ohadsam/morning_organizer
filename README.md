@@ -32,6 +32,7 @@ Build morning routines (for kids or anyone), time every task, and watch yourself
 - **Voice commands** - during a routine say done / add time / pause / skip / journal / calm corner / remind me the step / stop (asks first); a ? lists them.
 - **Sharing, special tasks, points** - choose who sees a routine; add the app's own tools as steps (journal, body scan, guided imagery...); optional points with bonus for finishing early, awards (medal, coin, trophy), a podium with fireworks and a points chart; copy / export / import routines between people and devices.
 - **NLP tools** - six short guided exercises (clear outcome, reframing, calming anchor, precise words, points of view, mental rehearsal) as a method next to CBT and Cog-Fun, also as special tasks; offered as gentle self-help with an honest note that the evidence for NLP is limited. A *Calm animations* switch turns movement off.
+- **Avatar studio** - build your own avatar from an original layered kit (hair, eyes, clothes, hats, glasses, a little friend...), recolour it, watch it wave, dance and show feelings; save it in *My avatars* and share it with a short code.
 - **Android widget** - favourite routines, one tap to start.
 - Light/dark, offline, backup/restore, keyboard accessible.
 

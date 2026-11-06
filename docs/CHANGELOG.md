@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.23.0
+- **Avatar studio**: build your own avatar from an original layered kit (283 parts): face shape, cheeks, nose, hair (19 styles, curls, braids, afro puffs, twists), beard, eyes, brows, mouth, 14 outfits, accessories (including hearing aid and cochlear implant), glasses, hats and head coverings (headscarf, kippah, turban), a little friend, 10 backgrounds - and recolour skin, hair, clothes, accessories and eyes from palettes. Options unlock with the person's level ("none" is always available). A live preview moves: rest, wave, cheer, dance, sleep, surprised, think and eight feelings (happy, calm, sad, worried, annoyed, tired, excited, proud). A "Surprise me" button picks a random avatar.
+- **My avatars**: save, rename, duplicate, delete (with undo), use as your avatar, and **share**: a short code (SRAV1...) through the share sheet (WhatsApp, e-mail) or the clipboard, and **Add from a code** with a preview. The library is on the device (any person here can pick from it) and is part of the backup file. The picker and Settings → About you link to it.
+- Kit avatars move in the app (the buddy bubbles, the summary) with the same animations as the built-in characters; the pack is cached for offline use. Safety: every part is checked against a strict SVG allow-list, a saved avatar is only ids and colours, codes are bounded.
+- Fix: toasts hid behind open sheets - the studio and My avatars show their messages (and Undo) inside the sheet.
+
 ## 1.22.0
 - **NLP as a method**, next to CBT and Cog-Fun: choose it in Settings → What the app is for and the app shows its tools. Six short guided exercises (**a clear outcome, another way to see it, a calming anchor, precise words, points of view, mental rehearsal**) on a new NLP tools page (Home → Calm), each with an optional note to the journal. They are also **special tasks** (new NLP group in the picker) that open their exercise on the run screen. NLP is shown honestly: research evidence for it is limited and mixed, so it is offered as gentle self-reflection, not therapy, with no claims about results.
 - **Calm animations**: a switch in Settings → Accessibility that turns off movement (fireworks, confetti, bouncing, transitions) for people who find it distracting or unsettling; kept per person and applied before first paint.

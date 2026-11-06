@@ -29,6 +29,7 @@ import { renderGoals } from './ui/goals.js';
 import { maybeShowWhatsNew, setVersion, getVersion } from './ui/whatsnew.js';
 import { renderLibrary } from './ui/library.js';
 import { renderCalm } from './ui/calm.js';
+import { renderNlp } from './ui/nlp.js';
 import { openSearch } from './ui/search.js';
 import { drawTopbar, maybeAskWho } from './ui/people.js';
 import { createUpdater, canAutoUpdate } from './update.js';
@@ -54,7 +55,7 @@ async function route() {
     const views = {
       home: () => renderHome(root, nav), edit: () => renderEditor(root, arg, nav), run: () => renderRunner(root, arg, nav),
       stats: () => renderStats(root, arg, nav), family: () => renderFamily(root), settings: () => renderSettings(root, version, arg || ''), guide: () => renderGuide(root),
-      calm: () => renderCalm(root, nav), library: () => renderLibrary(root, nav), alarms: () => renderAlarms(root, nav), report: () => renderReport(root, nav, arg, decodeURIComponent(arg2 || '')), retro: () => renderRetro(root, nav, decodeURIComponent(arg || ''), arg2, arg3), retros: () => renderRetros(root, nav), goals: () => renderGoals(root, nav), journal: () => renderJournal(root, nav),
+      calm: () => renderCalm(root, nav), nlp: () => renderNlp(root, nav), library: () => renderLibrary(root, nav), alarms: () => renderAlarms(root, nav), report: () => renderReport(root, nav, arg, decodeURIComponent(arg2 || '')), retro: () => renderRetro(root, nav, decodeURIComponent(arg || ''), arg2, arg3), retros: () => renderRetros(root, nav), goals: () => renderGoals(root, nav), journal: () => renderJournal(root, nav),
     };
     // The route comes from the address bar: look it up as OWN data only ("#/constructor" or "#/__proto__" must fall back to home).
     const out = await (Object.hasOwn(views, view) ? views[view] : views.home)();
@@ -97,7 +98,7 @@ async function boot() {
   S.subscribe(() => { const { textStyle, age } = S.get().settings, on = shouldBePlayful(textStyle, age); if (on !== isPlayful()) { setPlayful(on); route(); } });
   // each profile has its own look / language / sizes: when the person (or the settings) change, re-apply them and redraw
   let lookKey = '';
-  const look = () => { const x = S.get().settings; return [x.activeProfile, x.lang, x.theme, x.skin, x.easyRead, x.fontScale, x.colorSafe, x.contrast, x.accent, x.simpleMode].join('|'); };
+  const look = () => { const x = S.get().settings; return [x.activeProfile, x.lang, x.theme, x.skin, x.easyRead, x.fontScale, x.colorSafe, x.contrast, x.accent, x.simpleMode, x.reduceMotion].join('|'); };
   lookKey = look();
   S.subscribe(() => { const k = look(); if (k === lookKey) return; const was = lookKey.split('|'), x = S.get().settings; lookKey = k;
     setLang(x.lang); applyTheme(x.theme); applyA11y(x); document.title = t('appName'); try { localStorage.setItem('mo.theme', x.theme); localStorage.setItem('mo.lang', x.lang); } catch { /* blocked */ }

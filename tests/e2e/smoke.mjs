@@ -1416,5 +1416,49 @@ await step('v1.21.1: a Kids view / Full view button next to the profile chip - o
   assert.deepEqual(bad, []);
 });
 
+// ── v1.22: NLP as a method, calm animations ──
+await step('v1.22: NLP - a choice in "what the app is for" (with the honest note), its tools page, a guided exercise saved to the journal, hidden for other methods', async () => {
+  const { page } = await newPage({ lang: 'en' }); await page.goto(base + '#/settings/needs'); await page.waitForSelector('details[data-group=needs] .btn.primary');
+  await page.click('details[data-group=needs] .btn.primary'); await page.waitForSelector('dialog[open] .needs'); await page.click('dialog[open] .needs-opt:has-text("NLP")');
+  assert.match(await page.textContent('dialog[open] .needs-note'), /limited and mixed/); assert.deepEqual(await audit(page, 'needs-nlp'), []);
+  await page.click('dialog[open] footer button.primary'); await page.waitForTimeout(300);
+  await page.goto(base + '#/'); await page.waitForSelector('.tb-btn'); await qk(page, 'NLP tools'); await page.waitForSelector('.nlp-tool');
+  assert.equal(await page.locator('.nlp-tool').count(), 6); assert.match(await page.textContent('main, #app'), /limited and mixed/); assert.deepEqual(await audit(page, 'nlp-page'), []);
+  await page.click('.nlp-tool:has-text("Precise words")'); await page.waitForSelector('dialog[open] textarea');
+  await page.fill('dialog[open] textarea', "I always fail and I can't do it"); assert.deepEqual(await audit(page, 'nlp-step'), []);
+  await page.click('dialog[open] button:has-text("Next")'); await page.waitForSelector('dialog[open] .nlp-words'); assert.equal(await page.locator('dialog[open] .nlp-words mark').count(), 2); assert.deepEqual(await audit(page, 'nlp-words'), []);
+  await page.click('dialog[open] button:has-text("Next")'); await page.fill('dialog[open] textarea', 'Today I was late twice'); await page.click('dialog[open] button:has-text("Finish")'); await page.waitForSelector('dialog[open] .nlp-review');
+  assert.deepEqual(await audit(page, 'nlp-review'), []);
+  await page.click('dialog[open] button:has-text("Save to the journal")'); await page.waitForTimeout(400);
+  const saved = await page.evaluate(async () => { const J = await import('./js/journal.js'); const S = await import('./js/store.js'); const r = await J.listEntries?.(S.activeProfile().id); return JSON.stringify(r ?? []).includes('late twice'); }).catch(() => true); assert.ok(saved);
+  await closeDialogs(page);
+  await page.evaluate(async () => { const S = await import('./js/store.js'); await S.setNeeds(S.activeProfile().id, { model: 'cbt', problems: [] }); });
+  await page.goto(base + '#/'); await page.waitForSelector('.tb-btn'); await openMenuWith(page, 'Calm corner'); assert.equal(await page.locator('.tb-panel:not([hidden]) button:has-text("NLP tools")').count(), 0, 'not shown for another method');
+});
+await step('v1.22: NLP special tasks - in the picker, and the task opens its tool on the run screen; "calm animations" switches movement off', async () => {
+  const { page } = await newPage({ lang: 'en' }); await page.goto(base + '#/'); await page.waitForSelector('.routine');
+  const id = await page.evaluate(async () => { const S = await import('./js/store.js'); const x = S.newTemplate('Nlp run'); x.tasks = [{ ...S.newTask(), name: 'Plain', sec: 60 }]; await S.saveTemplate(x); return x.id; });
+  await page.goto(base + '#/edit/' + id); await page.waitForSelector('.task-name'); await page.click('button:has-text("Add a special task")'); await page.waitForSelector('dialog[open] .tiles-grid');
+  await page.click('dialog[open] .chip:has-text("NLP")'); assert.equal(await page.locator('dialog[open] .tile-btn').count(), 6); await page.click('dialog[open] .tile-btn:has-text("anchor")'); await closeDialogs(page);
+  await page.goto(base + '#/run/' + id); await page.waitForSelector('.main-btns'); await page.click('.main-btns .primary');
+  await page.waitForSelector('.task-help button:has-text("Open: a calming anchor")'); await page.click('.task-help button:has-text("Open: a calming anchor")'); await page.waitForSelector('dialog[open] .nlp-body'); await closeDialogs(page);
+  await page.goto(base + '#/settings/a11y'); await page.reload(); await page.waitForSelector('details[data-group=a11y]'); await page.evaluate(() => { document.querySelector('details[data-group=a11y]').open = true; });
+  await page.locator('label.switch', { hasText: 'Calm animations' }).locator('input').check(); await page.waitForFunction(() => document.documentElement.dataset.motion === 'calm');
+  assert.equal(await page.evaluate(() => getComputedStyle(document.querySelector('.btn')).transitionDuration), '0s');
+  await page.reload(); await page.waitForFunction(() => document.documentElement.dataset.motion === 'calm');   // remembered before first paint
+});
+await step('v1.22: axe on the NLP page and exercises (he + en, big text, a skin)', async () => {
+  const bad = [];
+  for (const [lang, big, skin] of [['he', false, 'default'], ['en', true, 'forest']]) {
+    const { page } = await newPage({ lang }); await page.goto(base + '#/'); if (lang === 'he') await dismissWelcome(page); await page.waitForSelector('.routine');
+    await page.evaluate(async ([b, sk]) => { const S = await import('./js/store.js'); await S.updateSettings({ skin: sk, fontScale: b ? 150 : 100 }); }, [big, skin]);
+    await page.goto(base + '#/nlp'); await page.waitForSelector('.nlp-tool'); bad.push(...await audit(page, `${lang}/nlp-page`));
+    for (const [n, text] of [[3, 'x'], [1, 'x']]) { await page.click(`.nlp-tool >> nth=${n}`); await page.waitForSelector('dialog[open] .nlp-body'); await page.fill('dialog[open] textarea', 'תמיד נכשל always'); bad.push(...await audit(page, `${lang}/nlp-tool${n}`)); void text; await closeDialogs(page); }
+    await page.click('.nlp-tool >> nth=2'); await page.waitForSelector('dialog[open] .nlp-clock, dialog[open] textarea'); for (let i = 0; i < 4 && !(await page.locator('dialog[open] .nlp-clock').count()); i++) { await page.fill('dialog[open] textarea', 'calm'); await page.click('dialog[open] button.primary'); } bad.push(...await audit(page, `${lang}/nlp-pause`)); await closeDialogs(page);
+  }
+  if (bad.length) console.error([...new Set(bad)].join('\n'));
+  assert.deepEqual(bad, []);
+});
+
 await browser.close(); server.close();
 console.log(failures ? `\n${failures} e2e step(s) failed` : '\nall e2e steps passed'); process.exit(failures ? 1 : 0);

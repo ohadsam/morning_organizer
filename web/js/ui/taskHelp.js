@@ -7,6 +7,8 @@ import { pickThought, pickExercise } from '../thoughts.js';
 import { openCapture, openPark, openGratitude } from './capture.js';
 import { speakWithSettings } from './coach.js';
 import { openAprt } from './aprt.js';
+import { openNlpTool } from './nlp.js';
+import { TOOL_IDS as NLP_TOOLS } from '../nlpTools.js';
 
 /**
  * api: { current(): {task, index}, rate(i, v), helped(i, kind), openCalm() }. -> { el, update() }.
@@ -37,7 +39,7 @@ export function taskHelpCard(api, routineName) {
     // the tool a (special) task opens; they run inside the task, so its clock keeps running
     const ctx = { routine: routineName, task: task.name, onSaved: () => api.helped(index, 'note') };
     const HELPER = { calm: () => api.openCalm({ kind: 'breath' }, true), scan: () => api.openCalm({ kind: 'scan' }, true), imagery: () => api.openCalm({ kind: 'guide' }, true), relax: () => showRelax(),
-      move: () => showRelax(['shake', 'stretch', 'wall', 'squeeze']), thought: showThought, journal: () => openCapture(ctx), voice: () => openCapture(ctx), gratitude: () => openGratitude(ctx), park: () => openPark(ctx), aprt: () => openAprt(ctx) };
+      move: () => showRelax(['shake', 'stretch', 'wall', 'squeeze']), thought: showThought, journal: () => openCapture(ctx), voice: () => openCapture(ctx), gratitude: () => openGratitude(ctx), park: () => openPark(ctx), aprt: () => openAprt(ctx), ...Object.fromEntries(NLP_TOOLS.map((id) => [id, () => openNlpTool(id, ctx)])) };
     setChildren(helperSlot, task.helper && Object.hasOwn(HELPER, task.helper) ? h('button', { class: 'btn primary', type: 'button', onclick: HELPER[task.helper] }, `▶ ${t(`helper_${task.helper}`)}`) : null);
     setChildren(sum, h('span', { class: 'fold-t' }, `${LEVELS.find((l) => l.v === task.difficulty)?.emoji || '🙂'} ${t('runHow')}`));
     setChildren(btns,

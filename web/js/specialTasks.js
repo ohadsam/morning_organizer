@@ -8,9 +8,10 @@ export const SPECIAL = [
   ['journal', 'write', '📓', 180, 'journal', 'journal'], ['voice', 'write', '🎙️', 60, 'voice', 'journal'], ['gratitude', 'write', '🙏', 90, 'gratitude', 'journal'], ['aprt', 'write', '🧭', 180, 'aprt', 'aprt'], ['park', 'write', '🅿️', 60, 'park', 'journal'],
   ['thought', 'mind', '💭', 60, 'thought', ''], ['pickone', 'mind', '🎯', 60, '', ''], ['say', 'mind', '🗣️', 60, '', ''],
   ['move', 'body', '🤸', 120, 'move', ''], ['water', 'body', '💧', 60, '', ''],
+  ['outcome', 'nlp', '🎯', 300, 'outcome', 'nlp'], ['reframe', 'nlp', '🖼️', 240, 'reframe', 'nlp'], ['anchor', 'nlp', '⚓', 180, 'anchor', 'nlp'], ['clarify', 'nlp', '🔎', 180, 'clarify', 'nlp'], ['perspectives', 'nlp', '👀', 300, 'perspectives', 'nlp'], ['rehearse', 'nlp', '🎬', 240, 'rehearse', 'nlp'],
   ['music', 'boost', '🎧', 120, '', ''], ['reward', 'boost', '🎉', 60, '', ''],
 ].map(([id, group, icon, sec, helper, feat]) => ({ id, group, icon, sec, helper, feat }));
-export const GROUPS = ['calm', 'write', 'mind', 'body', 'boost'];
+export const GROUPS = ['calm', 'write', 'mind', 'nlp', 'body', 'boost'];
 /** Every tool a task may open (what normalizeTemplate accepts). */
 export const HELPER_IDS = [...new Set(SPECIAL.map((x) => x.helper).filter(Boolean))];
 /** The i18n key of a special task's name and of its group. */

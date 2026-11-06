@@ -240,8 +240,9 @@ import { EN as S117_EN, HE as S117_HE } from './strings117.js';
 import { EN as S119_EN, HE as S119_HE } from './strings119.js';
 import { EN as S120_EN, HE as S120_HE } from './strings120.js';
 import { EN as S121_EN, HE as S121_HE } from './strings121.js';
+import { EN as S122_EN, HE as S122_HE } from './strings122.js';
 import { PLAYFUL } from './playful.js';
-Object.assign(STR.en, WB_EN, S117_EN, S119_EN, S120_EN, S121_EN); Object.assign(STR.he, WB_HE, S117_HE, S119_HE, S120_HE, S121_HE);
+Object.assign(STR.en, WB_EN, S117_EN, S119_EN, S120_EN, S121_EN, S122_EN); Object.assign(STR.he, WB_HE, S117_HE, S119_HE, S120_HE, S121_HE, S122_HE);
 
 let lang = 'en';
 export const getLang = () => lang;

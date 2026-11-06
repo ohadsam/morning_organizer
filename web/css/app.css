@@ -502,3 +502,11 @@ details.settings-group { scroll-margin-top: 170px; }
 .sp-chip { justify-self: start; }
 .task-score { padding-top: .25rem; }
 .rio-list { max-height: 40vh; overflow: auto; } .rio-row, .rio-all { display: flex; align-items: center; gap: .5rem; min-height: 44px; } .rio-row input, .rio-all input { width: 1.4rem; height: 1.4rem; }
+
+/* NLP tools, calm animations */
+html[data-motion="calm"] *, html[data-motion="calm"] *::before, html[data-motion="calm"] *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+.nlp-tool { display: flex; align-items: center; gap: .75rem; width: 100%; text-align: start; cursor: pointer; min-height: 64px; }
+.nlp-i { font-size: 1.8rem; } .nlp-t { flex: 1; display: grid; gap: .15rem; } .nlp-note { white-space: normal; border-radius: 1rem; padding: .6rem 1rem; text-align: start; font-weight: 400; display: block; }
+.nlp-q { font-size: 1.1rem; display: block; } .nlp-clock { font-size: 2rem; font-weight: 700; text-align: center; font-variant-numeric: tabular-nums; }
+.nlp-words { list-style: none; margin: 0; padding: 0; display: grid; gap: .6rem; } .nlp-words mark { background: color-mix(in srgb, var(--brand) 18%, transparent); color: var(--text); padding: .05rem .4rem; border-radius: .4rem; font-weight: 700; }
+.nlp-nav { justify-content: space-between; } .nlp-review p { margin: .3rem 0; } .needs-note { white-space: normal; }

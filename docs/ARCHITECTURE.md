@@ -77,6 +77,10 @@ A look-back record now carries `mode` (guided|free), `scope` (run | the routine'
 - `ui/people.js`: needs sheet, People manager, top-bar profile menu, start-up picker. Settings has a search/jump bar (`settingsBar`).
 - Voice commands: `voiceCommands.js` (pure: strict short-phrase matching, longest phrase wins, he + en, dedupe) + `ui/voiceControl.js` (restarting `dictation.js` session, ignores results while `speakingNow()`), wired in `ui/runner.js` (`onVoice`); risky commands only open the usual confirmation and a spoken yes / no answers it.
 
+## NLP and calm animations (1.22)
+- `nlpTools.js` (pure): the six tools as step lists (`text` / `pause` / `words`), `flagWords` (whole-word detection of absolute / must / can't words, he + en) and `composeNote`; `ui/nlp.js`: the wizard sheet (opens from the NLP page, a special task's run-screen button) and the page. NLP is a `needs.js` model (`nlp` feature id) and a special-task group; the notes go to the journal as ordinary `note` entries (no schema change). The app states that evidence for NLP is limited; no result claims anywhere.
+- `reduceMotion` pref -> `data-motion="calm"` on `<html>` (set by `a11y.js`, mirrored for `theme-boot.js`); one CSS rule disables animation/transition, `fx.reducedMotion()` and the calm corner honour it.
+
 ## Kids / full view switch (1.21.1)
 `ui/people.js#viewToggle` sits in the top bar next to the profile chip and flips the per-person `simpleMode` pref (`S.updateSettings`); leaving the kids' view goes through `requestGate()`. The top bar is always drawn (in the kids' view it holds only the switch).
 

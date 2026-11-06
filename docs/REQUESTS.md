@@ -70,5 +70,7 @@ Status: ✅ shipped (version) · 🟡 partly (what is missing) · ⛔ not possib
 | 44 | Share routines between profiles; a routine available to all or only some (a parent/therapist sets up for children on one device) | ✅ 1.21 ("Who sees this routine", `owners`) |
 | 45 | Points per task (automatic or user-set), bonus early / penalty late, podium with fireworks, points statistics and cumulative total, special awards (medals, coins, trophies) | ✅ 1.21 (off by default; calm pace never loses points) |
 | 46 | Choose built-in special tasks (journal, thought parking, relaxation, guided imagery...) from a grouped, searchable picker, not only as suggestions | ✅ 1.21 |
+| 49 | NLP as a method like CBT / Cog-Fun: choose tasks, guidance and adaptation by it | ✅ 1.22 (needs model, six guided tools, special-task group; honest evidence note) |
+| 50 | Suggest and add more UI/UX improvements | ✅ 1.22 (calm animations switch, method notes in the chooser, light vibration tick) |
 | 48 | A button next to the profile chooser to switch from the kids' view to the full view | ✅ 1.21.1 (top-bar Kids view / Full view; the way back asks the grown-up question) |
 | 47 | Export / import routines between profiles and between devices | ✅ 1.21 (Share and move routines; file + copy to a person) |

@@ -8,7 +8,8 @@ export function applyA11y(s) {
   if (/^#[0-9a-f]{6}$/i.test(s.accent || '')) { r.dataset.accent = '1'; r.style.setProperty('--user-accent', s.accent); } else { delete r.dataset.accent; r.style.removeProperty('--user-accent'); }
   const skin = sanitizeSkin(s.skin); if (skin === 'default') delete r.dataset.skin; else r.dataset.skin = skin;
   if (s.easyRead) r.dataset.easy = '1'; else delete r.dataset.easy;
-  try { localStorage.setItem('mo.a11y', JSON.stringify([s.fontScale, !!s.colorSafe, s.contrast, s.accent || '', skin, !!s.easyRead])); } catch { /* blocked */ }
+  if (s.reduceMotion) r.dataset.motion = 'calm'; else delete r.dataset.motion;
+  try { localStorage.setItem('mo.a11y', JSON.stringify([s.fontScale, !!s.colorSafe, s.contrast, s.accent || '', skin, !!s.easyRead, !!s.reduceMotion])); } catch { /* blocked */ }
 }
 let flip = false;
 /** Politely announce `text` to screen readers (TalkBack/VoiceOver) through the hidden live region. */

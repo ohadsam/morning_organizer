@@ -5,13 +5,14 @@
 // Features that can be hidden (ids used by the toolbar, search, run screen and suggestions). Routines, running them, alarms, templates, the wizard,
 // settings, the guide and search are core and never hidden.
 
-export const MODELS = ['full', 'cbt', 'cogfun'];
+export const MODELS = ['full', 'cbt', 'cogfun', 'nlp'];
 export const PROBLEMS = ['adhd', 'anxiety', 'organize', 'motivation'];
-export const FEATURES = ['goals', 'retros', 'calm', 'journal', 'aprt', 'rewards', 'stats', 'reports', 'smart', 'family'];
+export const FEATURES = ['goals', 'retros', 'calm', 'journal', 'aprt', 'rewards', 'stats', 'reports', 'smart', 'family', 'nlp'];
 export const CORE = ['alarms', 'library', 'wizard'];
 
 const MODEL_SET = {
   cbt: ['calm', 'journal', 'aprt', 'goals', 'retros', 'stats'],              // thoughts, feelings, behaviour: calm corner, situation log, thought records, goals
+  nlp: ['nlp', 'goals', 'calm', 'journal', 'retros', 'stats'],              // clear outcomes, reframing, an anchor, precise words, other points of view, mental rehearsal
   cogfun: ['goals', 'retros', 'stats', 'reports', 'smart'],                  // goal - plan - do - check, looking back, smart times and steps
 };
 const PROBLEM_SET = {
@@ -22,7 +23,7 @@ const PROBLEM_SET = {
 };
 /** The help areas (see focus.js) that each choice turns on, so the run screen's helpers follow as well. */
 const AREAS = { adhd: ['focus', 'time'], anxiety: ['calm'], organize: ['time', 'memory'], motivation: ['motivation', 'habits'] };
-const MODEL_AREAS = { cbt: ['calm'], cogfun: ['time', 'memory'] };
+const MODEL_AREAS = { cbt: ['calm'], cogfun: ['time', 'memory'], nlp: ['calm', 'motivation'] };
 
 /** Whatever is stored or received: only known values. */
 export function sanitizeView(v) {

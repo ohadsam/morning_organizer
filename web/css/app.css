@@ -318,7 +318,8 @@ dialog header { display: flex; align-items: center; justify-content: space-betwe
 
 /* ── voice characters ── */
 .voice-group { border: 0; padding: 0; margin: 0; } .voice-group legend { font-weight: 700; margin-block-end: 6px; }
-.persona-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 8px; }
+.persona-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(112px, 100%), 1fr)); gap: 8px; }
+.persona { min-width: 0; } .persona span:not(.pe) { max-width: 100%; overflow-wrap: anywhere; hyphens: auto; line-height: 1.2; }
 .persona { display: grid; justify-items: center; gap: 2px; min-height: 76px; padding: 8px 4px; border-radius: 14px; border: 2px solid var(--line); background: var(--surface); color: var(--text); font: inherit; cursor: pointer; text-align: center; }
 .persona .pe { font-size: 1.8rem; line-height: 1; } .persona.on, .persona[aria-checked="true"] { border-color: var(--brand); background: color-mix(in srgb, var(--brand) 20%, var(--surface)); font-weight: 700; }
 

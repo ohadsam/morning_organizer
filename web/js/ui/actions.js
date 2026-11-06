@@ -10,6 +10,8 @@ import { openWizard } from './wizard.js';
 import { openShareApp } from './shareApp.js';
 import { openAprt } from './aprt.js';
 import { openRoutineIO } from './routineIO.js';
+import { openMyAvatars } from './avatarLibrary.js';
+import { avatarLevel } from './avatar.js';
 
 const ACTIONS = {
   newRoutine: async (nav) => { try { const x = S.newTemplate(t('untitled')); await S.saveTemplate(x); nav(`#/edit/${x.id}`); } catch { toast(t('error')); } },
@@ -21,6 +23,7 @@ const ACTIONS = {
   shareApp: () => openShareApp(),
   aprt: () => openAprt({}),
   routineio: () => openRoutineIO(),
+  avatars: () => openMyAvatars({ lvl: avatarLevel(), onUse: (a) => S.patchProfile(S.activeProfile().id, { avatar: a }) }),
 };
 /** Runs a named action; unknown names do nothing (the name may come from stored data). */
 export function runAction(name, nav) { return Object.hasOwn(ACTIONS, name) ? ACTIONS[name](nav) : undefined; }

@@ -17,7 +17,8 @@ import { openShareApp } from './shareApp.js';
 import { suggestionsOn, setSuggestionsOn } from './suggest.js';
 import { applyA11y, FONT_SCALES } from '../a11y.js';
 import { requestGate } from './gate.js';
-import { avatarNode, openAvatarPicker, openProfiles, openProfileEditor } from './avatar.js';
+import { avatarNode, openAvatarPicker, openProfiles, openProfileEditor, avatarLevel } from './avatar.js';
+import { openMyAvatars } from './avatarLibrary.js';
 import { saveBackupFile, copySyncCode, sendSyncCode, openBackupImport } from './backup.js';
 import { getLang } from '../i18n.js';
 import { APK_URL } from '../config.js';
@@ -142,6 +143,7 @@ export function renderSettings(root, version, focusKey = '') {
             avatarNode(p.avatar, { size: 52 }), h('strong', {}, p.name || t('untitledProfile')))),
             S.profiles().length < 12 ? h('button', { type: 'button', class: 'profile-card add', onclick: () => openProfileEditor(null, { onDone: async (np) => { if (np) await S.switchProfile(np.id); draw(); } }) }, h('span', { class: 'plus' }, '+'), h('strong', {}, t('addProfile'))) : null)),
         h('div', { class: 'toolbar wrap' }, h('button', { class: 'btn', type: 'button', onclick: () => openAvatarPicker(S.get().settings.avatar, async (a) => { await set({ avatar: a }, true); }) }, avatarNode(st.avatar, { size: 28 }), t('avatar')),
+          h('button', { class: 'btn', type: 'button', onclick: () => openMyAvatars({ lvl: avatarLevel(), onUse: async (a) => { await set({ avatar: a }, true); } }) }, `🧑‍🎨 ${t('avkLibrary')}`),
           h('button', { class: 'btn', type: 'button', onclick: () => openProfileEditor(S.activeProfile(), { onDone: () => draw() }) }, t('editProfile'))),
         h('label', { class: 'field' }, h('span', { class: 'lbl' }, t('personName')), h('input', { type: 'text', maxLength: 30, value: st.personName, autocomplete: 'off', 'aria-describedby': 'pn-hint', onchange: (e) => set({ personName: e.target.value }) }), h('small', { class: 'hint', id: 'pn-hint' }, t('personNameHint'))),
         h('div', { class: 'two' },

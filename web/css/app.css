@@ -514,3 +514,31 @@ html[data-motion="calm"] *, html[data-motion="calm"] *::before, html[data-motion
 
 /* chips can hold a sentence: a rounded box with room for the text, never a pill that clips it */
 .chip { border-radius: 1rem; padding: 6px 14px; text-align: start; line-height: 1.35; }
+
+/* avatar kit: colours through variables, two-frame animations, the figure's movement */
+.avatar-kit { color: var(--text); } .avatar-kit .c-skin { fill: var(--c-skin); } .avatar-kit .c-hair { fill: var(--c-hair); } .avatar-kit .c-cloth { fill: var(--c-cloth); } .avatar-kit .c-cloth2 { fill: var(--c-cloth2); } .avatar-kit .c-accent { fill: var(--c-accent); } .avatar-kit .c-eye { fill: var(--c-eye); }
+.avatar-kit .fb { visibility: hidden; }
+.avatar-kit .kit-move { transform-box: fill-box; transform-origin: 50% 100%; } .avatar-kit .k-comp, .avatar-kit .k-fx { transform-box: fill-box; }
+.avatar-kit:not([data-anim="none"]) [data-flip="fast"].fa { animation: kit-hide-half .7s steps(1) infinite; } .avatar-kit:not([data-anim="none"]) [data-flip="fast"].fb { animation: kit-show-half .7s steps(1) infinite; }
+.avatar-kit:not([data-anim="none"]) [data-flip="slow"].fa { animation: kit-hide-half 1.6s steps(1) infinite; } .avatar-kit:not([data-anim="none"]) [data-flip="slow"].fb { animation: kit-show-half 1.6s steps(1) infinite; }
+.avatar-kit:not([data-anim="none"]) [data-flip="blink"].fa { animation: kit-blink-a 4.2s steps(1) infinite; } .avatar-kit:not([data-anim="none"]) [data-flip="blink"].fb { animation: kit-blink-b 4.2s steps(1) infinite; }
+@keyframes kit-hide-half { 0% { visibility: visible; } 50% { visibility: hidden; } } @keyframes kit-show-half { 0% { visibility: hidden; } 50% { visibility: visible; } }
+@keyframes kit-blink-a { 0% { visibility: visible; } 95% { visibility: hidden; } 98% { visibility: visible; } } @keyframes kit-blink-b { 0% { visibility: hidden; } 95% { visibility: visible; } 98% { visibility: hidden; } }
+.avatar-kit[data-anim="idle"] .kit-move, .avatar-kit[data-anim="calm"] .kit-move, .avatar-kit[data-anim="proud"] .kit-move { animation: av-bob 3.2s ease-in-out infinite alternate; }
+.avatar-kit[data-anim="sleep"] .kit-move, .avatar-kit[data-anim="tired"] .kit-move { animation: av-bob 5s ease-in-out infinite alternate; }
+.avatar-kit[data-anim="cheer"] .kit-move, .avatar-kit[data-anim="excited"] .kit-move { animation: av-jump .55s ease-in-out infinite; }
+.avatar-kit[data-anim="dance"] .kit-move, .avatar-kit[data-anim="happy"] .kit-move { animation: av-dance .5s ease-in-out infinite alternate; }
+.avatar-kit[data-anim="alert"] .kit-move, .avatar-kit[data-anim="angry"] .kit-move, .avatar-kit[data-anim="worried"] .kit-move { animation: av-shake .25s linear infinite; }
+.avatar-kit[data-anim="think"] .kit-move, .avatar-kit[data-anim="sad"] .kit-move { animation: av-tilt 1.6s ease-in-out infinite alternate; }
+.avatar-kit[data-anim="angry"] .kit-move, .avatar-kit[data-anim="worried"] .kit-move { animation-duration: .6s; }
+/* studio and My avatars */
+.studio-head { position: sticky; inset-block-start: -1px; z-index: 3; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 10px; align-items: center; background: var(--surface); padding-block: 6px; border-block-end: 1px solid var(--line); }
+.studio-preview { display: grid; place-items: center; } .studio-ctl { display: grid; gap: 6px; min-width: 0; }
+.anim-strip { display: flex; flex-wrap: nowrap; gap: 4px; overflow-x: auto; scrollbar-width: thin; padding-block-end: 2px; } .anim-strip .chip { flex: none; margin: 0; padding: 2px 9px; min-height: 36px; }
+.studio-tabs { display: flex; gap: 6px; overflow-x: auto; padding-block-end: 4px; scrollbar-width: thin; } .studio-tabs .chip { flex: none; margin: 0; }
+.opt-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(76px, 1fr)); gap: 8px; }
+.opt-tile { position: relative; display: grid; justify-items: center; gap: 2px; min-height: 92px; padding: 6px 4px; border-radius: 14px; border: 2px solid var(--line); background: var(--surface); color: var(--text); font: inherit; cursor: pointer; text-align: center; min-width: 0; }
+.opt-tile small { color: var(--text); overflow-wrap: anywhere; line-height: 1.15; font-size: .78rem; } .opt-tile.on { border-color: var(--brand); background: color-mix(in srgb, var(--brand) 18%, var(--surface)); font-weight: 700; } .opt-tile.locked { opacity: .55; cursor: not-allowed; }
+.opt-lock { position: absolute; inset-block-start: 4px; inset-inline-end: 4px; font-size: .72rem; background: var(--surface); border-radius: 99px; padding: 0 5px; }
+.av-card { display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 8px 12px; } .av-card .row-btns, .av-card .av-more { grid-column: 1 / -1; } .av-card-t { min-width: 0; overflow-wrap: anywhere; }
+.av-more summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; } .avk-import-preview { display: grid; justify-items: center; gap: 8px; }

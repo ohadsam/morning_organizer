@@ -30,6 +30,7 @@ import { maybeShowWhatsNew, setVersion, getVersion } from './ui/whatsnew.js';
 import { renderLibrary } from './ui/library.js';
 import { renderCalm } from './ui/calm.js';
 import { renderNlp } from './ui/nlp.js';
+import { loadPack as loadAvatarPack } from './ui/avatarKit.js';
 import { openSearch } from './ui/search.js';
 import { drawTopbar, maybeAskWho } from './ui/people.js';
 import { createUpdater, canAutoUpdate } from './update.js';
@@ -132,6 +133,7 @@ async function boot() {
   // the top bar (who is using the app) follows the people and what they need
   const peopleKey = () => JSON.stringify([S.get().settings.simpleMode, S.get().settings.activeProfile, S.profiles().map((p) => [p.id, p.name, p.avatar, p.view])]);
   let pk = peopleKey(); drawTopbar(nav); S.subscribe(() => { const k = peopleKey(); if (k !== pk) { pk = k; drawTopbar(nav); drawNav(document.body.dataset.view); } });
+  if (S.profiles().some((p) => p.avatar?.k === 'kit')) loadAvatarPack();   // the avatar parts, so the first screen already shows the avatar
   await route();
   maybeAskWho(nav);
   document.getElementById('boot')?.remove();

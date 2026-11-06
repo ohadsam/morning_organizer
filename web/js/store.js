@@ -26,6 +26,7 @@ import { eraseJournal } from './journal.js';
 import { newProfile, normalizeProfile, runsOf, MAX_PROFILES, PREF_KEYS, sanitizePrefs } from './profiles.js';
 import { SKINS } from './skins.js';
 import { isHelper } from './specialTasks.js';
+import { sanitizeLib, libUpsert, libRemove, libDuplicate } from './avatarKit.js';
 import { MODES as SCORE_MODES, isAward, MAX_PTS, sanitizeScore } from './points.js';
 import { visibleSet, shows as needShows, sanitizeView, areasFor, isFull } from './needs.js';
 
@@ -43,7 +44,7 @@ export const COLORS = ['#6c5ce7', '#0984e3', '#00b894', '#e17055', '#e84393', '#
 export const MASCOTS = ['🦊', '🐼', '🦄', '🐯', '🐸', '🤖', '🐶', '🐱'];
 export const ICONS = ['🌅', '☀️', '🎒', '🪥', '👕', '🥣', '🏃', '📚', '🧘', '🐶', '🚌', '⏰'];
 
-const state = { templates: [], runs: [], watch: [], retros: [], library: { routines: [], tasks: [] }, profiles: [], settings: { ...DEFAULT_SETTINGS }, ready: false };
+const state = { avatarLib: [], templates: [], runs: [], watch: [], retros: [], library: { routines: [], tasks: [] }, profiles: [], settings: { ...DEFAULT_SETTINGS }, ready: false };
 const subs = new Set();
 export const subscribe = (fn) => { subs.add(fn); return () => subs.delete(fn); };
 const emit = () => subs.forEach((f) => f(state));
@@ -125,6 +126,7 @@ export async function init() {
   mirrorActiveProfile();
   state.watch = sanitizeWatch(await db.get('kv', 'watch'));
   state.retros = sanitizeRetros(await db.get('kv', 'retros'));
+  state.avatarLib = sanitizeLib(await db.get('kv', 'avatarLib'));
   state.library = sanitizeLibrary(await db.get('kv', 'library'));
   state.ready = true;
   emit();
@@ -134,6 +136,14 @@ export async function init() {
 export const retros = (profileId = activeProfile().id) => state.retros.filter((r) => r.profileId === profileId);
 export const retrosForRun = (runId) => state.retros.filter((r) => r.runId === runId).sort((a, b) => a.at - b.at);
 export const retroById = (id) => state.retros.find((r) => r.id === id) ?? null;
+// "My avatars": the avatar designs saved on this device (any person here can use them)
+export const avatarLib = () => state.avatarLib;
+const persistAvatars = async () => { await db.put('kv', state.avatarLib, 'avatarLib'); emit(); };
+/** Save or replace a design (by id). false when the list is full. */
+export async function saveAvatarDesign(item) { const next = libUpsert(state.avatarLib, item); if (!next) return false; state.avatarLib = next; await persistAvatars(); return true; }
+export async function duplicateAvatarDesign(id, copyWord = '') { const next = libDuplicate(state.avatarLib, id, copyWord); if (!next) return false; state.avatarLib = next; await persistAvatars(); return true; }
+/** Delete with an undo handle. */
+export async function deleteAvatarDesign(id) { const snap = state.avatarLib.find((x) => x.id === id); if (!snap) return () => {}; state.avatarLib = libRemove(state.avatarLib, id); await persistAvatars(); return () => saveAvatarDesign(snap); }
 const persistRetros = async () => { await db.put('kv', state.retros, 'retros'); emit(); };
 /** Create (no id) or update (id) a retrospective. A run can have several - e.g. a quick one now and another part later. */
 export async function saveRetro(r) {
@@ -392,7 +402,7 @@ export const saveActive = (run) => db.put('kv', run ? structuredClone(run) : nul
 export const loadActive = () => db.get('kv', 'activeRun');
 
 export function exportAll() {
-  return JSON.stringify({ app: 'morning-organizer', v: 1, templates: state.templates, runs: state.runs, profiles: state.profiles, library: state.library, retros: state.retros, settings: state.settings });
+  return JSON.stringify({ app: 'morning-organizer', v: 1, templates: state.templates, runs: state.runs, profiles: state.profiles, library: state.library, retros: state.retros, avatarLib: state.avatarLib, settings: state.settings });
 }
 /** Keep only known settings with the right type and sane ranges (a backup is untrusted input). */
 export function sanitizeSettings(raw) {
@@ -447,6 +457,10 @@ export async function importBackup(text, { mode = 'merge', settings = true } = {
   if (Array.isArray(d.retros)) { // retrospectives: union by id; "replace" mirrors the backup
     const incoming = sanitizeRetros(d.retros).map((x) => ({ ...x, profileId: x.profileId || activeProfile().id })), known = new Set(mode === 'replace' ? [] : state.retros.map((x) => x.id));
     state.retros = (mode === 'replace' ? [] : state.retros).concat(incoming.filter((x) => !known.has(x.id))).slice(-MAX_RETROS); await persistRetros();
+  }
+  if (Array.isArray(d.avatarLib)) { // saved avatar designs: union by id; "replace" mirrors the backup
+    let lib = mode === 'replace' ? [] : state.avatarLib; for (const x of sanitizeLib(d.avatarLib)) if (!lib.some((k) => k.id === x.id)) lib = libUpsert(lib, x) || lib;
+    state.avatarLib = lib; await persistAvatars();
   }
   if (d.library && typeof d.library === 'object') { // the template library: merge by id; "replace" makes the backup's library the whole library
     const incoming = sanitizeLibrary(d.library), before = state.library.routines.length + state.library.tasks.length;

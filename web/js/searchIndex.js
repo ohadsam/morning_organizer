@@ -26,6 +26,7 @@ export const ENTRIES = [
   ['shareapp', '📣', 'sr_shareapp', { action: 'shareApp' }, 'share app whatsapp email mail send friend invite install link apk', 'שיתוף אפליקציה וואטסאפ מייל שליחה חבר הזמנה התקנה קישור'],
   ['settings', '⚙️', 'sr_settings', { route: '#/settings' }, 'settings options preferences', 'הגדרות אפשרויות העדפות'],
   ['nlp', '🗣️', 'sr_nlp', { route: '#/nlp' }, 'nlp neuro linguistic reframe reframing anchor anchoring outcome goal rehearse rehearsal perspectives precise words visualization coaching', 'אן אל פי תכנות נוירו לשוני מסגור מחדש עוגן מטרה חזרה מנטלית נקודות מבט מילים מדויקות דמיון אימון'],
+  ['avatars', '🧑‍🎨', 'sr_avatars', { action: 'avatars' }, 'avatar avatars build create design customize character face hair clothes colours share my avatars studio', 'אווטר אווטרים דמות בניית הרכבה עיצוב התאמה פנים שיער בגדים צבעים שיתוף האווטרים שלי סטודיו'],
   ['routineio', '🔁', 'sr_routineio', { action: 'routineio' }, 'share routines export import copy move send file profile person device whatsapp backup', 'שיתוף שגרות ייצוא ייבוא העתקה העברה שליחה קובץ פרופיל אדם מכשיר ווטסאפ'],
   ['set_needs', '🎯', 'sr_set_needs', { route: '#/settings/needs' }, 'needs what for model cbt cogfun cog-fun adhd attention anxiety organize organise age show only everything הצרכים למה האפליקציה מודל קשב חרדה התארגנות גיל להציג הכול'],
   ['set_people', '👥', 'sr_set_people', { route: '#/settings/people' }, 'people profiles profile switch person user manage add אנשים פרופילים פרופיל החלפה משתמש ניהול הוספה'],

@@ -1,5 +1,6 @@
 // Avatars (pure): built-in ANIMATED characters (inline SVG drawn by ui/avatar.js - original art, no external GIFs, works offline),
 // emoji, your own photo (tiny JPEG) or your own animated GIF. Validation lives here because avatars arrive from backups and links.
+import { sanitizeKit } from './avatarKit.js';
 export const AVATAR_COLORS = ['#f59e0b', '#ef4444', '#ec4899', '#8b5cf6', '#3b82f6', '#14b8a6', '#22c55e', '#64748b'];
 /** `unlock` = level needed (see levels.js); `fixed` = colour can't be changed (panda, robot). */
 export const CHARACTERS = {
@@ -20,6 +21,7 @@ export const defaultAvatar = () => ({ k: 'char', id: 'fox', color: CHARACTERS.fo
 export function sanitizeAvatar(a) {
   if (!a || typeof a !== 'object') return defaultAvatar();
   if (a.k === 'char' && isChar(a.id)) return { k: 'char', id: a.id, color: HEX.test(a.color) ? a.color : CHARACTERS[a.id].base };
+  if (a.k === 'kit') return sanitizeKit(a);
   if (a.k === 'emoji' && typeof a.e === 'string') { const e = a.e.replace(/[\u0000-\u001f<>&"']/g, '').slice(0, 8); if (e) return { k: 'emoji', e }; }
   if (a.k === 'photo' && isPhoto(a.url)) return { k: 'photo', url: a.url };
   if (a.k === 'gif' && isSafeGif(a.url)) return { k: 'gif', url: a.url };

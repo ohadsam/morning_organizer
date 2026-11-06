@@ -124,6 +124,9 @@ In Settings → What the app is for you can choose NLP as a way of working, next
 ## Avatar studio and My avatars
 Open the avatar picker (Settings → About you → Avatar, or when editing a person) and tap "Build my own", or open "My avatars". In the studio a live preview at the top shows your avatar; try its animations (rest, wave, cheer, dance, sleep, surprised, think) and feelings (happy, calm, sad, worried, annoyed, tired, excited, proud). Choose a tab: face, hair, eyes and mouth, clothes, extras, a friend and background, or colours. Options with a lock unlock at higher levels. "Surprise me" picks a random avatar. Give it a name and tap Save, or "Use as my avatar". My avatars lists your saved designs: use, edit, duplicate, share or delete (undo is right there). Share sends a short code through WhatsApp, e-mail or the clipboard; "Add from a code" shows the avatar before adding it. Saved avatars are part of the backup file.
 
+## Calm and bold looks
+Settings → Appearance now also offers Calm (one muted colour family, low stimulation, for people who are overwhelmed by colour) and Bold (strong contrast, a thicker focus ring and borders, for attention difficulties and low vision), in light and dark.
+
 ## Updates and sharing the app
 The web app updates itself - when you open it, and every hour - and switches to the new version on its own when nothing is running; if you are in the middle of something it asks first. The Android app updates from the latest download. To share SonRise open Settings → App → Share (or search "share"): choose the Android app or the web app, and send it by WhatsApp, e-mail, the share sheet or a copied link.
 

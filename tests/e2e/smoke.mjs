@@ -313,7 +313,7 @@ await step('UX: axe-core finds NO accessibility violations - every screen and di
 });
 
 await step('UX: settings are collapsible groups (all closed by default - calm), state is remembered; accent color applies', async () => {
-  const { page } = await newPage({ collapsed: true }); await page.evaluate(() => localStorage.setItem('mo.sg', '{}')); await page.goto(base + '#/settings'); await page.reload(); await page.waitForSelector('details.settings-group');
+  const { page } = await newPage({ collapsed: true }); await page.waitForTimeout(500); await page.evaluate(() => localStorage.setItem('mo.sg', '{}')); await page.goto(base + '#/settings'); await page.reload(); await page.waitForSelector('details.settings-group');
   assert.equal(await page.locator('details.settings-group[open]').count(), 0); assert.ok(await page.locator('details.settings-group').count() >= 9);
   await page.click('details.settings-group summary >> nth=0'); assert.equal(await page.locator('details.settings-group[open]').count(), 1);
   await page.waitForFunction(() => Object.values(JSON.parse(localStorage.getItem('mo.sg') || '{}')).filter(Boolean).length >= 1);
@@ -1506,6 +1506,20 @@ await step('v1.23: axe on the studio, My avatars and the code import (he + en, b
     await page.click('dialog[open] .av-card button >> nth=1'); await page.waitForSelector('.studio .opt-tile'); bad.push(...await audit(page, `${lang}/studio-face`));
     for (const n of [1, 2, 3, 6]) { await page.locator('.studio-tabs button').nth(n).click(); bad.push(...await audit(page, `${lang}/studio-tab${n}`)); }
     await closeDialogs(page);
+  }
+  if (bad.length) console.error([...new Set(bad)].join('\n'));
+  assert.deepEqual(bad, []);
+});
+
+await step('v1.23.1: the calm and bold looks - zero axe violations in light and dark on Home, Settings, the studio and a run (he + en, big text)', async () => {
+  const bad = [];
+  for (const [lang, scheme, skin, big] of [['en', 'light', 'calm', false], ['he', 'dark', 'calm', true], ['en', 'dark', 'bold', false], ['he', 'light', 'bold', true]]) {
+    const { page } = await newPage({ lang, ctx: { colorScheme: scheme } }); await page.goto(base + '#/'); if (lang === 'he') await dismissWelcome(page); await page.waitForSelector('.routine');
+    await page.evaluate(async ([sk, b]) => { const S = await import('./js/store.js'); await S.updateSettings({ skin: sk, fontScale: b ? 150 : 100 }); }, [skin, big]);
+    assert.equal(await page.evaluate(() => document.documentElement.dataset.skin), skin);
+    bad.push(...await audit(page, `${lang}/${skin}/${scheme}/home`));
+    await page.goto(base + '#/settings'); await page.waitForSelector('details.settings-group'); bad.push(...await audit(page, `${lang}/${skin}/${scheme}/settings`));
+    await page.goto(base + '#/run/sample-kids'); await page.waitForSelector('.main-btns'); bad.push(...await audit(page, `${lang}/${skin}/${scheme}/run`));
   }
   if (bad.length) console.error([...new Set(bad)].join('\n'));
   assert.deepEqual(bad, []);

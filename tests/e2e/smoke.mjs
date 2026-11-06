@@ -31,7 +31,7 @@ async function newPage(opts = {}) {
     await page.goto(base + '#/settings'); await dismissWelcome(page); await page.waitForSelector('select');
     // most steps assert the plain English wording even when they enter a child's age; the playful steps switch it back to automatic
     await page.selectOption('select:has(option[value="plain"])', 'plain'); await page.waitForTimeout(200);
-    await page.selectOption('select >> nth=0', 'en'); await page.waitForFunction(() => document.documentElement.lang === 'en'); await page.waitForTimeout(150);
+    await page.selectOption('select >> nth=0', 'en'); await page.waitForFunction(() => document.documentElement.lang === 'en'); await page.waitForLoadState('load'); await page.waitForTimeout(300); await page.waitForTimeout(150);
   }
   return { page, errors, ctx };
 }
@@ -514,7 +514,7 @@ await step('v1.10: voice note recorded in a run (fake microphone), kept on the d
   const ctx = await mic.newContext({ viewport: { width: 390, height: 800 }, locale: 'en-US', serviceWorkers: 'block', permissions: ['microphone'] });
   await ctx.addInitScript(() => { try { localStorage.setItem('mo.sg', JSON.stringify({ look: true, voice: true })); } catch { /* blocked */ } const open = () => document.querySelectorAll('details.fold, details.help-fold, details.task-more, details.menu-group').forEach((d) => { if (!d.dataset.seen) { d.dataset.seen = '1'; d.open = true; } }); new MutationObserver(open).observe(document, { childList: true, subtree: true }); });
   const page = await ctx.newPage(); const errors = []; page.on('pageerror', (e) => errors.push(e.message));
-  await page.goto(base + '#/settings'); await dismissWelcome(page); await page.waitForSelector('select'); await page.selectOption('select >> nth=0', 'en'); await page.waitForFunction(() => document.documentElement.lang === 'en');
+  await page.goto(base + '#/settings'); await dismissWelcome(page); await page.waitForSelector('select'); await page.selectOption('select >> nth=0', 'en'); await page.waitForFunction(() => document.documentElement.lang === 'en'); await page.waitForLoadState('load'); await page.waitForTimeout(300);
   await page.goto(base); await page.waitForSelector('.routine'); await page.locator('.routine .start').first().click(); await page.waitForSelector('.ring');
   await page.click('.row-btns button:has-text("Quick note")'); await page.click('dialog button:has-text("Record voice")'); await page.waitForSelector('dialog button:has-text("Stop recording")'); await page.waitForTimeout(1500);
   await page.click('dialog button:has-text("Stop recording")'); await page.waitForSelector('dialog :text("Recorded")'); await page.click('dialog footer button:has-text("Save")'); await page.waitForSelector('dialog', { state: 'detached' });

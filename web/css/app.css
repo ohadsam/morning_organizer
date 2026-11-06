@@ -510,3 +510,6 @@ html[data-motion="calm"] *, html[data-motion="calm"] *::before, html[data-motion
 .nlp-q { font-size: 1.1rem; display: block; } .nlp-clock { font-size: 2rem; font-weight: 700; text-align: center; font-variant-numeric: tabular-nums; }
 .nlp-words { list-style: none; margin: 0; padding: 0; display: grid; gap: .6rem; } .nlp-words mark { background: color-mix(in srgb, var(--brand) 18%, transparent); color: var(--text); padding: .05rem .4rem; border-radius: .4rem; font-weight: 700; }
 .nlp-nav { justify-content: space-between; } .nlp-review p { margin: .3rem 0; } .needs-note { white-space: normal; }
+
+/* chips can hold a sentence: a rounded box with room for the text, never a pill that clips it */
+.chip { border-radius: 1rem; padding: 6px 14px; text-align: start; line-height: 1.35; }

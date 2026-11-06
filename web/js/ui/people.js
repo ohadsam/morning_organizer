@@ -8,7 +8,7 @@ import { requestGate } from './gate.js';
 import { avatarNode, openProfileEditor, openProfiles } from './avatar.js';
 import { MODELS, PROBLEMS, FEATURES, isFull, sanitizeView, visibleSet, labelKeys } from '../needs.js';
 
-const MODEL_EMOJI = { full: '🌐', cbt: '🧠', cogfun: '🎯' }, PROBLEM_EMOJI = { adhd: '🎯', anxiety: '🌬️', organize: '🕒', motivation: '🚀' };
+const MODEL_EMOJI = { full: '🌐', cbt: '🧠', cogfun: '🎯', nlp: '🗣️' }, PROBLEM_EMOJI = { adhd: '🎯', anxiety: '🌬️', organize: '🕒', motivation: '🚀' };
 /** "Showing: Goals, Calm corner ..." for a view. */
 export const shownList = (view) => { const set = visibleSet(view); return set ? FEATURES.filter((f) => set.has(f)).map((f) => t(`feat_${f}`)).join(', ') : ''; };
 /** One readable line: "CBT · Anxiety and worry" or "Everything". */
@@ -23,6 +23,7 @@ export function openNeeds(profile, onDone = () => {}) {
   const draw = () => setChildren(body,
     h('p', { class: 'note' }, t('needsIntro')),
     h('h3', {}, t('needsModel')), h('div', { class: 'wz-list', role: 'radiogroup', 'aria-label': t('needsModel') }, MODELS.map((m) => tile(t(`need_${m}`), t(`needDesc_${m}`), MODEL_EMOJI[m], st.model === m, () => { st.model = m; draw(); }, 'radio'))),
+    st.model === 'nlp' ? h('p', { class: 'chip solid needs-note' }, t('needNote_nlp')) : null,
     h('h3', {}, t('needsProblem')), h('div', { class: 'wz-list', role: 'group', 'aria-label': t('needsProblem') }, PROBLEMS.map((p) => tile(t(`need_${p}`), '', PROBLEM_EMOJI[p], st.problems.includes(p), () => { st.problems = st.problems.includes(p) ? st.problems.filter((x) => x !== p) : [...st.problems, p]; draw(); }, 'checkbox'))),
     h('label', { class: 'field' }, h('span', { class: 'lbl' }, t('needsAge')), h('input', { type: 'number', min: 3, max: 120, inputMode: 'numeric', value: age ?? '', 'aria-label': t('needsAge'), oninput: (e) => { age = e.target.value; } }), h('small', { class: 'hint' }, t('needsAgeHint'))),
     h('p', { class: 'chip solid' }, isFull(st) ? `🌐 ${t('needEverything')}` : `👁 ${t('needShowing', { list: shownList(st) })}`), h('small', { class: 'hint' }, t('needHiddenNote')));

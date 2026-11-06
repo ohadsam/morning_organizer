@@ -177,6 +177,7 @@ export async function renderRunner(root, id, nav) {
   const doComplete = () => {
     const cur = run.tasks[run.current], now = Date.now();
     const ev = taskEvent(E.elapsedMs(run, run.current, now) / 1000, cur.plannedSec + cur.extraSec);
+    if (st().mode === 'both' || st().mode === 'vibrate') native.vibrate([0, 25]);   // a light tick: that counted
     const doneIdx = run.current; run = E.completeCurrent(run, now);
     { const s = st(); if (s.scoring !== 'off') pendingGain = scoreTask(run.tasks[doneIdx], { mode: s.scoring, penalty: s.scorePenalty, calm: calm(run) }).total; }
     if (E.isActive(run)) { say(ev); showTransition(t('nextUp', { task: run.tasks[run.current]?.name || '' })); }

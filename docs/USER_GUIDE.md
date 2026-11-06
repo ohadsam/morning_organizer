@@ -118,6 +118,9 @@ Who sees a routine: with several people on the device, a routine's "Who sees thi
 ## Kids view and full view
 Next to the "who is using the app" chip at the top there is a button: Kids view switches to the kids' view (only routines and a big Start) in one tap. In the kids' view the top bar shows only Full view, which asks a quick grown-up question before it brings everything back. The choice is kept per person.
 
+## NLP tools and calm animations
+In Settings → What the app is for you can choose NLP as a way of working, next to CBT and Cog-Fun. Home → Calm → NLP tools lists six short guided exercises: a clear outcome, another way to see it (reframing), a calming anchor, precise words (finding big words like "always" and "can't"), points of view, and mental rehearsal. Each asks a few questions, one at a time, and can save your answers to the journal. They are also special tasks you can add to a routine; on the run screen the task opens its exercise. NLP is a popular set of coaching techniques, but the research evidence for it is limited and mixed: these are gentle self-reflection exercises, not therapy and not a promise of results. Settings → Accessibility → Calm animations turns off movement such as fireworks, confetti and bouncing.
+
 ## Updates and sharing the app
 The web app updates itself - when you open it, and every hour - and switches to the new version on its own when nothing is running; if you are in the middle of something it asks first. The Android app updates from the latest download. To share SonRise open Settings → App → Share (or search "share"): choose the Android app or the web app, and send it by WhatsApp, e-mail, the share sheet or a copied link.
 

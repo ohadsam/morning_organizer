@@ -31,6 +31,7 @@ Build morning routines (for kids or anyone), time every task, and watch yourself
 - **What the app is for, people, skins** - a Kids view / Full view switch next to the profile chip; choose a model (CBT, Cog-Fun) and/or what is hard and the app shows only what fits; several people with their own settings and view; a settings search and jump bar; skins, easy-read text, custom colour.
 - **Voice commands** - during a routine say done / add time / pause / skip / journal / calm corner / remind me the step / stop (asks first); a ? lists them.
 - **Sharing, special tasks, points** - choose who sees a routine; add the app's own tools as steps (journal, body scan, guided imagery...); optional points with bonus for finishing early, awards (medal, coin, trophy), a podium with fireworks and a points chart; copy / export / import routines between people and devices.
+- **NLP tools** - six short guided exercises (clear outcome, reframing, calming anchor, precise words, points of view, mental rehearsal) as a method next to CBT and Cog-Fun, also as special tasks; offered as gentle self-help with an honest note that the evidence for NLP is limited. A *Calm animations* switch turns movement off.
 - **Android widget** - favourite routines, one tap to start.
 - Light/dark, offline, backup/restore, keyboard accessible.
 

@@ -33,6 +33,8 @@ jobs:
         run: npm run e2e
       - name: Layout sweep (sizes x languages x big text)
         run: QUICK=1 node tests/e2e/layout.mjs
+      - name: Text fit (no text spills out of its box - he/en, 320 px and big text)
+        run: node tests/e2e/textfit.mjs
       - name: Dependency audit (dev tooling only - the shipped app has no dependencies)
         run: npm audit --audit-level=high
 

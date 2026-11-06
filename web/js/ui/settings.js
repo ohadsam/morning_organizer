@@ -133,6 +133,7 @@ export function renderSettings(root, version, focusKey = '') {
         h('div', { class: 'field' }, h('span', { class: 'lbl' }, t('skinTitle')), h('div', { class: 'skin-grid', role: 'radiogroup', 'aria-label': t('skinTitle') }, SKINS.map((k) => h('button', { type: 'button', class: `skin-tile ${(st.skin || 'default') === k ? 'on' : ''}`, role: 'radio', 'aria-checked': String((st.skin || 'default') === k), onclick: () => set({ skin: k }, true) },
           h('span', { class: 'skin-sw', style: { background: `linear-gradient(135deg, ${SKIN_SWATCH[k][0]} 50%, ${SKIN_SWATCH[k][1]} 50%)` }, 'aria-hidden': 'true' }), h('span', {}, t(`skin_${k}`)))))),
         toggle(t('easyRead'), t('easyReadHint'), st.easyRead, (v) => set({ easyRead: v })),
+        toggle(t('reduceMotion'), t('reduceMotionHint'), st.reduceMotion, (v) => set({ reduceMotion: v })),
         h('label', { class: 'field' }, h('span', { class: 'lbl' }, t('customColor')), h('input', { type: 'color', class: 'color-in', value: /^#[0-9a-f]{6}$/i.test(st.accent || '') ? st.accent : '#6c5ce7', 'aria-label': t('customColor'), onchange: (e) => set({ accent: e.target.value }, true) })),
         toggle(t('simpleMode'), t('simpleHint'), st.simpleMode, async (v) => { if (v && !(await requestGate())) { draw(); return; } await set({ simpleMode: v }); location.hash = '#/'; location.reload(); })),
       group('profile', t('profile'), false,

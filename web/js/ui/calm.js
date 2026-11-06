@@ -12,7 +12,7 @@ import { moodRow } from './capture.js';
 import { toast } from './common.js';
 import { openAprt } from './aprt.js';
 
-const reduced = () => globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+const reduced = () => globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches || globalThis.document?.documentElement?.dataset.motion === 'calm';
 const MIN_OPTIONS = [1, 2, 3], LONG_OPTIONS = [2, 3, 5];   // a guided journey or a full scan needs a few minutes
 
 /** Renders the calm corner into `host`. opts.onDone() when the exercise ends. Returns a cleanup function. */

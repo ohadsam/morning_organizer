@@ -2,7 +2,7 @@
 import { h } from '../util.js';
 
 const BITS = ['🎉', '⭐', '✨', '🎈', '🌟', '💛', '🟣', '🟡', '🟢', '🔵'];
-export const reducedMotion = () => globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+export const reducedMotion = () => globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches || globalThis.document?.documentElement?.dataset.motion === 'calm';
 
 export function confetti(parent, count = 34) {
   if (reducedMotion()) return;

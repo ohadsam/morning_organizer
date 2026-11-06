@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.22.0
+- **NLP as a method**, next to CBT and Cog-Fun: choose it in Settings → What the app is for and the app shows its tools. Six short guided exercises (**a clear outcome, another way to see it, a calming anchor, precise words, points of view, mental rehearsal**) on a new NLP tools page (Home → Calm), each with an optional note to the journal. They are also **special tasks** (new NLP group in the picker) that open their exercise on the run screen. NLP is shown honestly: research evidence for it is limited and mixed, so it is offered as gentle self-reflection, not therapy, with no claims about results.
+- **Calm animations**: a switch in Settings → Accessibility that turns off movement (fireworks, confetti, bouncing, transitions) for people who find it distracting or unsettling; kept per person and applied before first paint.
+- A light vibration tick when a step is done (vibrate / both sound modes, Android).
+
 ## 1.21.1
 - **Kids view / Full view button** in the top bar, next to the "who is using the app" chip: one tap switches to the kids' view (only routines and the big Start); in the kids' view the bar shows only the way back, which asks the grown-up question first. The choice is per person.
 

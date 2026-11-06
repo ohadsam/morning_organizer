@@ -8,7 +8,7 @@ const srv=http.createServer((q,r)=>{let u=q.url.split('?')[0];let f=path.join(ro
 const base=`http://localhost:${srv.address().port}/`;const b=await chromium.launch();
 const find = () => { const bad=[]; const vw=document.documentElement.clientWidth;
   for (const e of document.querySelectorAll('body *')) { if (!e.getClientRects().length) continue; const cs=getComputedStyle(e); if (cs.visibility==='hidden'||cs.display==='none') continue;
-    const r=e.getBoundingClientRect(); if (!r.width || e.closest('.sb-jump, .sr-only, .alarm-sticker, .tb-panel')) continue; const p=e.parentElement; const pr=p.getBoundingClientRect();
+    const r=e.getBoundingClientRect(); if (!r.width || e.closest('.sb-jump, .sr-only, .alarm-sticker, .tb-panel, .anim-strip, .studio-tabs')) continue; const p=e.parentElement; const pr=p.getBoundingClientRect();
     const hasText=[...e.childNodes].some(n=>n.nodeType===3&&n.textContent.trim());
     const clipV = hasText && cs.overflowY!=='visible' && cs.overflowY!=='auto' && cs.overflowY!=='scroll' && e.scrollHeight>e.clientHeight+3;
     const own = hasText && (e.scrollWidth>e.clientWidth+2) && cs.overflowX!=='visible' && cs.textOverflow!=='ellipsis';

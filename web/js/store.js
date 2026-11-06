@@ -62,9 +62,10 @@ export const totalSec = (tpl) => tpl.tasks.reduce((s, x) => s + x.sec, 0);
 
 /** Who may see a routine: a list of profile ids; [] = everyone (the default, so older routines stay visible to all). */
 const cleanOwners = (o) => [...new Set((Array.isArray(o) ? o : []).filter((x) => typeof x === 'string' && x && x.length <= 64))].slice(0, MAX_PROFILES);
-export const canSee = (tpl, profileId) => !tpl.owners?.length || tpl.owners.includes(profileId);
+/** `known` = ids of the people that exist: a routine whose owners are all unknown (e.g. restored from another device's backup) stays visible, never lost. */
+export const canSee = (tpl, profileId, known = null) => !tpl.owners?.length || tpl.owners.includes(profileId) || (!!known && !tpl.owners.some((o) => known.has(o)));
 /** The routines this person sees (their own plus the ones shared with everyone). Alarms still ring for all routines on the device. */
-export const myTemplates = (profileId = activeProfile().id) => state.templates.filter((x) => canSee(x, profileId));
+export const myTemplates = (profileId = activeProfile().id) => { const known = new Set(state.profiles.map((p) => p.id)); return state.templates.filter((x) => canSee(x, profileId, known)); };
 /** Share a routine: [] = everyone, or the people who may see it. */
 export const setOwners = async (id, owners) => { const x = getTemplate(id); return x && saveTemplate({ ...x, owners }, { touch: false }); };
 

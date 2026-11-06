@@ -67,3 +67,7 @@ Status: ✅ shipped (version) · 🟡 partly (what is missing) · ⛔ not possib
 | 41 | Floating settings toolbar to jump to every group, with search inside settings | ✅ 1.20 (sticky search + jump bar) |
 | 42 | More convenience: skins to choose from, custom options | ✅ 1.20 (6 skins, easy-read text, custom accent colour) |
 | 43 | Voice commands during a routine (done, add time, journal, calm, stop, pause, remind me the step...), keeps listening; commands listed in Settings and a ? next to the toggle | ✅ 1.20 (run-screen Listen button + ?, Settings → Voice commands; real-device recognition unverified) |
+| 44 | Share routines between profiles; a routine available to all or only some (a parent/therapist sets up for children on one device) | ✅ 1.21 ("Who sees this routine", `owners`) |
+| 45 | Points per task (automatic or user-set), bonus early / penalty late, podium with fireworks, points statistics and cumulative total, special awards (medals, coins, trophies) | ✅ 1.21 (off by default; calm pace never loses points) |
+| 46 | Choose built-in special tasks (journal, thought parking, relaxation, guided imagery...) from a grouped, searchable picker, not only as suggestions | ✅ 1.21 |
+| 47 | Export / import routines between profiles and between devices | ✅ 1.21 (Share and move routines; file + copy to a person) |

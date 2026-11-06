@@ -26,4 +26,6 @@ test('who sees a routine: empty = everyone; a list = only those people; owners a
   const all = normalizeTemplate(mk('A')); assert.deepEqual(all.owners, []); assert.ok(canSee(all, 'p1') && canSee(all, 'p2'));
   const some = normalizeTemplate(mk('B', { owners: ['p1', 'p1', 5, '', null, 'p3'] })); assert.deepEqual(some.owners, ['p1', 'p3']); assert.ok(canSee(some, 'p1')); assert.ok(!canSee(some, 'p2'));
   assert.deepEqual(normalizeTemplate(mk('C', { owners: 'p1' })).owners, []);
+  const orphan = normalizeTemplate(mk('D', { owners: ['gone'] })); assert.ok(!canSee(orphan, 'p1')); assert.ok(canSee(orphan, 'p1', new Set(['p1', 'p2'])), 'owners that no longer exist: the routine stays visible');
+  assert.ok(!canSee(some, 'p2', new Set(['p1', 'p2', 'p3'])));
 });

@@ -1322,5 +1322,85 @@ await step('v1.20: axe on settings (needs, people, voice commands), the top menu
   assert.deepEqual(bad, []);
 });
 
+// ── v1.21: special tasks, who sees a routine, move routines, points and the podium ──
+await step('v1.21: special tasks - pick by topic with search, the task opens its tool on the run screen', async () => {
+  const { page } = await newPage({ lang: 'en' }); await page.goto(base + '#/'); await page.waitForSelector('.routine');
+  const id = await page.evaluate(async () => { const S = await import('./js/store.js'); const x = S.newTemplate('Special'); x.tasks = [{ ...S.newTask(), name: 'Plain', sec: 60 }]; await S.saveTemplate(x); return x.id; });
+  await page.goto(base + '#/edit/' + id); await page.waitForSelector('.task-name');
+  await page.click('button:has-text("Add a special task")'); await page.waitForSelector('dialog[open] .tiles-grid');
+  assert.deepEqual(await audit(page, 'special-picker'), []);
+  await page.fill('dialog[open] input[type=search]', 'scan'); assert.equal(await page.locator('dialog[open] .tile-btn').count(), 1);
+  await page.click('dialog[open] .tile-btn'); await page.fill('dialog[open] input[type=search]', ''); await page.click('dialog[open] .chip:has-text("Write")'); assert.ok(await page.locator('dialog[open] .tile-btn:has-text("journal")').count());
+  await closeDialogs(page);
+  assert.ok(await page.locator('.sp-chip').count(), 'the task shows which tool it opens');
+  await page.goto(base + '#/run/' + id); await page.waitForSelector('.main-btns'); await page.click('.main-btns .primary');
+  await page.waitForSelector('.task-help button:has-text("Start the body scan")'); await page.click('.task-help button:has-text("Start the body scan")'); await page.waitForSelector('dialog[open] .calm-menu');
+  assert.ok(await page.locator('dialog[open] .seg-group .btn.primary:has-text("scan")').count() || await page.locator('dialog[open] .calm-menu').count());
+});
+await step('v1.21: a routine can be seen by everyone or only some people (one device, a parent sets up for the children)', async () => {
+  const { page } = await newPage({ lang: 'en' }); await page.goto(base + '#/'); await page.waitForSelector('.routine');
+  const info = await page.evaluate(async () => { const S = await import('./js/store.js'); const me = S.activeProfile().id; const kid = await S.saveProfile({ name: 'Dana' }); const x = S.newTemplate('Only Dana'); x.tasks = [{ ...S.newTask(), name: 'A', sec: 60 }]; await S.saveTemplate(x); return { me, kid: kid.id, id: x.id }; });
+  await page.goto(base + '#/edit/' + info.id); await page.waitForSelector('.task-name');
+  await page.click('button:has-text("Only some people")'); await page.waitForSelector('[role=group] [role=checkbox]');
+  await page.click('[role=checkbox]:has-text("Dana")'); await page.click('[role=checkbox]:not(:has-text("Dana"))');
+  assert.deepEqual(await audit(page, 'who-sees'), []);
+  await page.waitForTimeout(700); await page.goto(base + '#/');
+  assert.equal(await page.locator('.routine:has-text("Only Dana")').count(), 0, 'the first person does not see it');
+  await page.evaluate(async (id) => { const S = await import('./js/store.js'); await S.switchProfile(id); }, info.kid); await page.goto(base + '#/'); await page.waitForSelector('.routine');
+  assert.ok(await page.locator('.routine:has-text("Only Dana")').count(), 'Dana sees it');
+  await page.evaluate(async (id) => { const S = await import('./js/store.js'); await S.setOwners(id, []); await S.switchProfile(S.profiles()[0].id); }, info.id); await page.goto(base + '#/'); await page.waitForSelector('.routine');
+  assert.ok(await page.locator('.routine:has-text("Only Dana")').count(), 'shared with everyone again');
+});
+await step('v1.21: export routines to a file, bring them in for a chosen person (alarm off), copy to another person', async () => {
+  const { page } = await newPage({ lang: 'en' }); await page.goto(base + '#/'); await page.waitForSelector('.routine');
+  await page.evaluate(async () => { const S = await import('./js/store.js'); await S.saveProfile({ name: 'Dana' }); });
+  await qk(page, 'Share and move routines'); await page.waitForSelector('dialog[open] .rio-list');
+  assert.deepEqual(await audit(page, 'rio'), []);
+  await page.click('dialog[open] .rio-all input'); assert.ok(await page.locator('dialog[open] .rio-row input:checked').count() > 1);
+  const [dl] = await Promise.all([page.waitForEvent('download'), page.click('dialog[open] button:has-text("Save a file")')]);
+  const text = await (await import('node:fs/promises')).readFile(await dl.path(), 'utf8'); assert.equal(JSON.parse(text).app, 'sonrise-routines'); assert.ok(JSON.parse(text).routines.length >= 2);
+  await page.locator('dialog[open] .rio-row input').first().uncheck(); await page.click('dialog[open] button:has-text("Copy")'); await page.waitForSelector('dialog[open] [role=status]:has-text("Copied")');
+  await page.setInputFiles('dialog[open] input[type=file]', { name: 'r.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify({ app: 'sonrise-routines', v: 1, routines: [{ name: 'From a friend', icon: '🌞', tasks: [{ name: 'Stretch', sec: 120, helper: 'move' }], alarm: { enabled: true, time: '07:00', days: [0, 1, 2, 3, 4, 5, 6] } }] })) });
+  await page.waitForSelector('dialog[open] button:has-text("Add the chosen routines")'); assert.deepEqual(await audit(page, 'rio-import'), []);
+  await page.selectOption('dialog[open] select[aria-label="Who sees them"]', { label: 'Only Dana' }); await page.click('dialog[open] button:has-text("Add the chosen routines")'); await page.waitForSelector('dialog[open] .chip:has-text("Added 1")');
+  const got = await page.evaluate(async () => { const S = await import('./js/store.js'); const x = S.get().templates.find((k) => k.name === 'From a friend'); return { owners: x.owners.length, alarm: x.alarm.enabled, helper: x.tasks[0].helper, copies: S.get().templates.filter((k) => k.owners.length).length }; });
+  assert.equal(got.owners, 1); assert.equal(got.alarm, false); assert.equal(got.helper, 'move'); assert.ok(got.copies >= 2);
+  await page.setInputFiles('dialog[open] input[type=file]', { name: 'bad.json', mimeType: 'application/json', buffer: Buffer.from('{"nope":1}') }).catch(() => {});
+});
+await step('v1.21: points - off by default; on: points per step, bonus for finishing early, podium with fireworks, totals, the chart in the statistics', async () => {
+  const { page } = await newPage({ lang: 'en' }); await page.goto(base + '#/run/sample-kids'); await page.waitForSelector('.main-btns');
+  assert.equal(await page.locator('.pts-chip:not([hidden])').count(), 0, 'no points unless turned on');
+  await page.goto(base + '#/settings/points'); await page.reload(); await page.waitForSelector('details[data-group=points]'); await page.evaluate(() => { document.querySelector('details[data-group=points]').open = true; });
+  await page.selectOption('details[data-group=points] select', 'custom'); assert.ok(await page.locator('details[data-group=points] .toggle, details[data-group=points] [role=switch], details[data-group=points] input[type=checkbox]').count() >= 2);
+  assert.deepEqual(await audit(page, 'points-settings'), []);
+  const runOnce = async () => { await page.goto(base + '#/'); await page.waitForSelector('.routine'); await page.goto(base + '#/run/sample-kids'); await page.waitForSelector('.main-btns'); for (let i = 0; i < 12 && !(await page.locator('.summary').count()); i++) { await page.click('.main-btns .primary', { timeout: 3000 }).catch(() => {}); if (i === 0) assert.ok(await page.locator('.pts-chip:not([hidden])').count(), 'points chip shows'); } await page.waitForSelector('.podium-card'); };
+  await runOnce(); assert.ok(await page.locator('.podium .pod-1').count()); assert.match(await page.textContent('.podium-card'), /Your first score|First place/);
+  assert.deepEqual(await audit(page, 'podium'), []);
+  await runOnce(); assert.ok((await page.locator('.podium li').count()) >= 2, 'two runs, two places');
+  await page.goto(base + '#/stats'); await page.waitForSelector('.pts-chart'); assert.deepEqual(await audit(page, 'points-stats'), []);
+  const tot = await page.evaluate(async () => { const P = await import('./js/points.js'); const S = await import('./js/store.js'); return P.totalPoints(S.myRuns()); }); assert.ok(tot > 0);
+  // an award on a task shows in the editor and is won by finishing early
+  await page.evaluate(async () => { const S = await import('./js/store.js'); const x = S.getTemplate('sample-kids'); await S.saveTemplate({ ...x, tasks: x.tasks.map((k, i) => (i === 0 ? { ...k, award: 'trophy', pts: 40 } : k)) }); });
+  await page.goto(base + '#/edit/sample-kids'); await page.waitForSelector('.task-score select'); assert.equal(await page.inputValue('.task-score select >> nth=0'), 'trophy');
+});
+
+await step('v1.21: axe on the special-task picker, who-sees box, share/move sheet, points settings, podium and points chart (he + en, big text, a skin)', async () => {
+  const bad = [];
+  for (const [lang, big, skin] of [['he', false, 'default'], ['en', true, 'sunset']]) {
+    const { page } = await newPage({ lang }); await page.goto(base + '#/'); if (lang === 'he') await dismissWelcome(page); await page.waitForSelector('.routine');
+    const id = await page.evaluate(async ([b, sk]) => { const S = await import('./js/store.js'); await S.saveProfile({ name: 'Dana' }); await S.updateSettings({ skin: sk, fontScale: b ? 150 : 100, scoring: 'custom' }); const x = S.newTemplate('Axe'); x.tasks = [{ ...S.newTask(), name: 'A', sec: 60, award: 'medal', pts: 20 }, { ...S.newTask(), name: 'B', sec: 60 }]; await S.saveTemplate(x); return x.id; }, [big, skin]);
+    await page.goto(base + '#/edit/' + id); await page.waitForSelector('.task-name'); await page.click('button.btn:has-text("✨")'); await page.waitForSelector('dialog[open] .tiles-grid'); bad.push(...await audit(page, `${lang}/special-picker`)); await closeDialogs(page);
+    bad.push(...await audit(page, `${lang}/editor-who-points`));
+    await page.goto(base + '#/'); await page.waitForSelector('.routine'); await page.evaluate(() => document.querySelector('.tb-btn[data-tb="plan"]')?.click()); await page.waitForSelector('.tb-panel:not([hidden])');
+    await page.click('.tb-panel button:has-text("🔁")'); await page.waitForSelector('dialog[open] .rio-list'); bad.push(...await audit(page, `${lang}/rio`)); await closeDialogs(page);
+    await page.goto(base + '#/run/' + id); await page.waitForSelector('.main-btns'); bad.push(...await audit(page, `${lang}/run-points`));
+    for (let i = 0; i < 6 && !(await page.locator('.summary').count()); i++) await page.click('.main-btns .primary', { timeout: 3000 }).catch(() => {});
+    await page.waitForSelector('.podium-card'); await page.waitForTimeout(600); bad.push(...await audit(page, `${lang}/podium`));
+    await page.goto(base + '#/stats'); await page.waitForSelector('.pts-chart'); bad.push(...await audit(page, `${lang}/points-chart`));
+  }
+  if (bad.length) console.error([...new Set(bad)].join('\n'));
+  assert.deepEqual(bad, []);
+});
+
 await browser.close(); server.close();
 console.log(failures ? `\n${failures} e2e step(s) failed` : '\nall e2e steps passed'); process.exit(failures ? 1 : 0);

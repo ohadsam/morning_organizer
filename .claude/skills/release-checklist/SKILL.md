@@ -64,7 +64,7 @@ No Android SDK in the sandbox (`dl.google.com` blocked), so Kotlin is only compi
 Commit on the working branch, push, wait for **web** + **android** green. On `main` the *release* job publishes `morning-organizer.apk` as the latest release and `pages.yml` deploys the PWA - verify both (release exists with the APK asset; Pages URL serves the new `version.json`). Don't claim "done" before that.
 
 ## Known limitations (don't re-report as new)
-- Profiles share routines (templates); history, stars, badges, streak, level and parent links are per profile. Child alerts reach the parent only over a live link (WebRTC / Bluetooth) while the parent app is open - there is no server to hold them.
+- A routine is visible to everyone unless its `owners` list names people (the UI lists only the active person's routines; alarms still ring on the device for all); history, stars, badges, streak, level and parent links are per profile. Child alerts reach the parent only over a live link (WebRTC / Bluetooth) while the parent app is open - there is no server to hold them.
 - Built-in animated characters replace third-party GIFs on purpose (licensing, offline, size); users can add their own GIF (≤160 KB, never shared).
 - Family links: WebRTC needs both phones on the same network (no STUN/TURN by design); the Bluetooth socket needs the Android app and phones paired in system settings; NFC = tag write/read, plus phone-to-phone hand-over via card emulation in the APK only (needs HCE hardware; never verified on a real device here). Without a live link messages are codes passed on manually. A reinstall loses the link keys (re-pair).
 - The committed APK signing key is public by design (see RELEASING.md).

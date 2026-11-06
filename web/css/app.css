@@ -483,7 +483,7 @@ details.settings-group { scroll-margin-top: 170px; }
 @keyframes pts-pop { 0% { transform: translateY(6px) scale(.8); opacity: 0; } 25% { transform: none; opacity: 1; } 100% { opacity: 1; } }
 .podium-card { position: relative; overflow: hidden; text-align: center; }
 .pod-total { font-size: 1.1rem; margin: .2rem 0; } .pod-total strong { font-size: 2rem; }
-.podium { list-style: none; margin: .5rem auto; padding: 0; display: flex; justify-content: center; align-items: flex-end; gap: .5rem; max-width: 22rem; }
+.podium { direction: ltr; list-style: none; margin: .5rem auto; padding: 0; display: flex; justify-content: center; align-items: flex-end; gap: .5rem; max-width: 22rem; }
 .pod-step { flex: 1; display: grid; justify-items: center; gap: .1rem; padding: .5rem .25rem; border-radius: .75rem .75rem 0 0; background: color-mix(in srgb, var(--brand) 10%, var(--surface)); border: 2px solid var(--line); border-bottom: 0; }
 .pod-1 { min-height: 8.5rem; } .pod-2 { min-height: 6.5rem; } .pod-3 { min-height: 5rem; }
 .pod-step.me { border-color: var(--brand); background: color-mix(in srgb, var(--brand) 22%, var(--surface)); }

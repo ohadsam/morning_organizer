@@ -313,7 +313,7 @@ await step('UX: axe-core finds NO accessibility violations - every screen and di
 });
 
 await step('UX: settings are collapsible groups (all closed by default - calm), state is remembered; accent color applies', async () => {
-  const { page } = await newPage({ collapsed: true }); await page.evaluate(() => localStorage.setItem('mo.sg', '{}')); await page.goto(base + '#/settings'); await page.reload(); await page.waitForSelector('details.settings-group');
+  const { page } = await newPage({ collapsed: true }); await page.waitForTimeout(500); await page.evaluate(() => localStorage.setItem('mo.sg', '{}')); await page.goto(base + '#/settings'); await page.reload(); await page.waitForSelector('details.settings-group');
   assert.equal(await page.locator('details.settings-group[open]').count(), 0); assert.ok(await page.locator('details.settings-group').count() >= 9);
   await page.click('details.settings-group summary >> nth=0'); assert.equal(await page.locator('details.settings-group[open]').count(), 1);
   await page.waitForFunction(() => Object.values(JSON.parse(localStorage.getItem('mo.sg') || '{}')).filter(Boolean).length >= 1);

@@ -77,7 +77,7 @@ function voiceControls(st, set) {
 /** A collapsible settings group; its open/closed state is remembered per group. */
 let focusGroup = '', query = '';
 const GROUP_META = [['needs', '🎯', 'needsTitle'], ['people', '👥', 'peopleTitle'], ['look', '🎨', 'appearance'], ['profile', '🙂', 'profile'], ['buddy', '🦊', 'buddySection'], ['helpers', '🧩', 'helpersTitle'], ['pace', '🐢', 'paceMode'], ['a11y', '♿', 'a11y'], ['coach', '🧘', 'coach'],
-  ['voice', '🔊', 'voiceSection'], ['voicecmd', '🎤', 'vcTitle'], ['alerts', '🔔', 'alertsSection'], ['defaults', '🛠️', 'defaultsSection'], ['sync', '💾', 'syncTitle'], ['app', 'ℹ️', 'app']];
+  ['voice', '🔊', 'voiceSection'], ['points', '⭐', 'ptsTitle'], ['voicecmd', '🎤', 'vcTitle'], ['alerts', '🔔', 'alertsSection'], ['defaults', '🛠️', 'defaultsSection'], ['sync', '💾', 'syncTitle'], ['app', 'ℹ️', 'app']];
 /** Show only the settings that match what was typed (group titles and the text of each row); matching groups open. Empty = everything as it was. */
 function applyFilter(root, q) {
   const needle = normQuery(q), groups = [...root.querySelectorAll('details.settings-group')]; let any = false;
@@ -174,6 +174,12 @@ export function renderSettings(root, version, focusKey = '') {
         h('small', { class: 'hint' }, t('coachDisclaimer'))),
       ttsSupported() ? group('voice', `🔊 ${t('voiceSection')}`, false, h('small', { class: 'hint' }, t('voiceHint')),
         toggle(t('speakOn'), '', st.speak, (v) => set({ speak: v })), toggle(t('coachSpeak'), '', st.coachSpeak, (v) => set({ coachSpeak: v })), voiceControls(st, set)) : null,
+      group('points', `⭐ ${t('ptsTitle')}`, false, h('p', { class: 'note' }, t('ptsIntro')),
+        select(t('ptsMode'), st.scoring, [['off', t('ptsOff')], ['auto', t('ptsAuto')], ['custom', t('ptsCustom')]], (v) => set({ scoring: v }, true)),
+        h('small', { class: 'hint' }, t(`ptsModeHint_${st.scoring}`)),
+        st.scoring === 'off' ? null : toggle(t('ptsPenalty'), t('ptsPenaltyHint'), st.scorePenalty, (v) => set({ scorePenalty: v })),
+        st.scoring === 'off' ? null : toggle(t('ptsCumulative'), t('ptsCumulativeHint'), st.scoreCumulative, (v) => set({ scoreCumulative: v })),
+        st.scoring === 'off' ? null : h('small', { class: 'hint' }, t('ptsRules'))),
       group('voicecmd', `🎤 ${t('vcTitle')}`, false, h('p', { class: 'note' }, t('vcSettingsIntro')),
         dictationSupported() ? h('div', { class: 'vc-toggle-row' }, toggle(t('vcAuto'), t('vcAutoHint'), !!st.voiceCmdAuto, (v) => set({ voiceCmdAuto: v })), helpButton()) : h('p', { class: 'note' }, t('vcUnavailable')),
         commandList()),

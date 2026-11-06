@@ -95,7 +95,7 @@ async function makePdf(m) { return elementToPdf(reportElement(m), `${m.title || 
 async function download(blob, name) { const a = h('a', { href: URL.createObjectURL(blob), download: name }); document.body.append(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 4000); }
 /** The interactive HTML report: one self-contained file (tabs for 7/30/90 days/all for a period, a single page for one run). */
 export async function exportHtml(scope) {
-  const css = await reportCss(), p = S.activeProfile(), profile = { name: p.name, age: p.age }, base = { runs: S.myRuns(), templates: S.get().templates, goals: S.goals(), retros: S.retros(), profile, now: Date.now() };
+  const css = await reportCss(), p = S.activeProfile(), profile = { name: p.name, age: p.age }, base = { runs: S.myRuns(), templates: S.myTemplates(), goals: S.goals(), retros: S.retros(), profile, now: Date.now() };
   const periods = scope.kind === 'run' ? [{ label: '', m: buildReport({ ...base, scope }) }] : [7, 30, 90, 0].map((d) => ({ label: d ? t('rpDays', { n: d }) : t('rpAll'), m: buildReport({ ...base, scope: { ...scope, days: d } }) }));
   const first = periods[0].m, title = `${t('rpTitle')}: ${first.title || t('rpAllRoutines')}`;
   const doc = buildHtmlDocument(periods.map((x) => ({ label: x.label, html: serializeNode(reportElement(x.m)) })), { title, lang: getLang(), dir: isRtl() ? 'rtl' : 'ltr', css, printLabel: t('rpPrint') });
@@ -118,7 +118,7 @@ export function renderReport(root, nav, kind, arg) {
   const profile = () => { const p = S.activeProfile(); return { name: p.name, age: p.age }; };
   let scope = kind === 'run' ? { kind: 'run', runId: arg } : (() => { const a = String(arg || '30-all'), i = a.indexOf('-'), d = i < 0 ? a : a.slice(0, i), id = i < 0 ? '' : a.slice(i + 1); return { kind: 'period', days: Math.max(0, Math.min(3650, Number(d) || 0)), templateId: id && id !== 'all' ? id : null }; })();
   const draw = () => {
-    const m = buildReport({ runs: S.myRuns(), templates: S.get().templates, goals: S.goals(), retros: S.retros(), profile: profile(), scope }), page = reportElement(m);
+    const m = buildReport({ runs: S.myRuns(), templates: S.myTemplates(), goals: S.goals(), retros: S.retros(), profile: profile(), scope }), page = reportElement(m);
     const btn = (label, fn, cls = '') => h('button', { class: `btn ${cls}`, type: 'button', onclick: async (e) => { const b = e.currentTarget; b.disabled = true; try { await fn(); } catch (err) { console.error(err); toast(t('rpFailed')); } b.disabled = false; } }, label);
     setChildren(root, h('div', { class: 'row between rpt-toolbar' }, h('h1', {}, `📄 ${t('rpTitle')}`), h('button', { class: 'btn', type: 'button', onclick: () => history.length > 1 ? history.back() : nav('#/stats') }, t('back'))),
       scope.kind === 'period' ? h('div', { class: 'toolbar rpt-toolbar' }, [7, 30, 90, 0].map((d) => h('button', { class: `chip btn-chip ${scope.days === d ? 'on' : ''}`, type: 'button', 'aria-pressed': String(scope.days === d), onclick: () => { scope = { ...scope, days: d }; draw(); } }, d ? t('rpDays', { n: d }) : t('rpAll')))) : null,

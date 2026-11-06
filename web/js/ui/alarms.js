@@ -23,7 +23,7 @@ export function openAlarmSheet(tplId, onClose) {
 
 export function renderAlarms(root, nav) {
   const draw = () => {
-    const { templates } = S.get(), any = templates.some((x) => x.alarm?.enabled);
+    const templates = S.myTemplates(), any = templates.some((x) => x.alarm?.enabled);
     setChildren(root, h('div', { class: 'row between' }, h('h1', {}, `⏰ ${t('alarmsTitle')}`), h('button', { class: 'btn', type: 'button', onclick: () => nav('#/') }, t('back'))),
       h('p', { class: 'note' }, t('alarmsIntro')), any ? null : h('p', { class: 'chip solid' }, t('alarmsNone')),
       h('div', { class: 'stack' }, templates.map((x) => h('article', { class: 'card alarm-card', style: { '--accent': x.color } },

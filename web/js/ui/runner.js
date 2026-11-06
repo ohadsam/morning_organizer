@@ -30,6 +30,8 @@ import { planText } from './goals.js';
 import { taskHelpCard } from './taskHelp.js';
 import { discardActiveRun } from './runAdmin.js';
 import { createVoiceControl } from './voiceControl.js';
+import { podiumCard } from './podium.js';
+import { scoreRun, scoreTask } from '../points.js';
 import { dictationSupported } from '../dictation.js';
 import { openUnplannedSheet, patternCards, reasonName } from './unplanned.js';
 
@@ -86,6 +88,14 @@ export async function renderRunner(root, id, nav) {
   const ti = h('div', { class: 'ti', 'aria-hidden': 'true' });
   const time = h('div', { class: 'big-time' }), sub = h('div', { class: 'sub' });
   const pausedBadge = h('div', { class: 'paused-badge', hidden: true }, `⏸ ${t('pausedBig')}`);
+  const ptsEl = h('div', { class: 'pts-chip', role: 'status', 'aria-live': 'polite', hidden: true });
+  let pendingGain = 0;
+  /** Points so far (only when points are on); the points a task just earned pop up for a moment. */
+  function paintPts() {
+    const s = st(); if (s.scoring === 'off') { ptsEl.hidden = true; return; }
+    const sc = scoreRun(run, { mode: s.scoring, penalty: s.scorePenalty }), gain = pendingGain; pendingGain = 0;
+    ptsEl.hidden = false; setChildren(ptsEl, `⭐ ${sc.total} ${t('ptsUnit')}`, gain > 0 ? h('span', { class: 'pts-pop' }, ` +${gain}`) : null);
+  }
   const taskName = h('h2', { class: 'now' }), head = h('div', { class: 'run-meta' });
   const list = h('ul', { class: 'checklist' }), controls = h('div', { class: 'run-controls' }), pace = h('p', { class: 'pace' });
   // sand clock: an hourglass whose top empties while the bottom fills (only shown with the "sand" timer look)
@@ -140,7 +150,7 @@ export async function renderRunner(root, id, nav) {
     current: () => ({ task: E.isActive(run) ? run.tasks[run.current] : null, index: run.current }),
     rate: (i, v) => { run = E.setDifficulty(run, i, v); persist(); },
     helped: (i, kind) => { run = E.noteHelp(run, i, kind); persist(); },
-    openCalm: () => openCalm(),
+    openCalm: (initial, keep) => openCalm(initial, keep),
   }, run.templateName) : null;
   const goalBox = h('details', { class: 'card plan-card', hidden: !myGoals.length });
   if (myGoals.length) { setChildren(goalBox, h('summary', {}, `🎯 ${t('goalMyPlanToday')}`), h('ul', { class: 'plan-list' }, myGoals.map((g) => h('li', {}, h('strong', {}, g.title), planText(g) ? ` — ${planText(g)}` : '')))); goalBox.open = fresh; }
@@ -150,11 +160,11 @@ export async function renderRunner(root, id, nav) {
     if (st().srAnnounce) announce(`${msg}, ${fmtHuman(cur.plannedSec + cur.extraSec, units())}`);
   }
   /** The calm corner over the run: the clock pauses while you breathe (nothing is "lost"), and resumes when you come back. */
-  function openCalm() {
-    const wasRunning = run.status === 'running'; if (wasRunning) { run = E.pause(run, Date.now()); persist(); paintStatic(); paintLive(); }
+  function openCalm(initial = {}, keepRunning = false) {
+    const wasRunning = !keepRunning && run.status === 'running'; if (wasRunning) { run = E.pause(run, Date.now()); persist(); paintStatic(); paintLive(); }
     const host = h('div', {}); let stop = () => {}; let m;
     m = modal(`🌬️ ${t('calmTitle')}`, host, []);
-    stop = calmPanel(host, { compact: true, onClose: () => m.close() });
+    stop = calmPanel(host, { compact: true, initial, onClose: () => m.close() });
     m.el.addEventListener('close', () => { stop(); if (wasRunning && run.status === 'paused') { run = E.resume(run, Date.now()); persist(); paintStatic(); paintLive(); } });
   }
   function startUnplanned() {
@@ -167,7 +177,8 @@ export async function renderRunner(root, id, nav) {
   const doComplete = () => {
     const cur = run.tasks[run.current], now = Date.now();
     const ev = taskEvent(E.elapsedMs(run, run.current, now) / 1000, cur.plannedSec + cur.extraSec);
-    run = E.completeCurrent(run, now);
+    const doneIdx = run.current; run = E.completeCurrent(run, now);
+    { const s = st(); if (s.scoring !== 'off') pendingGain = scoreTask(run.tasks[doneIdx], { mode: s.scoring, penalty: s.scorePenalty, calm: calm(run) }).total; }
     if (E.isActive(run)) { say(ev); showTransition(t('nextUp', { task: run.tasks[run.current]?.name || '' })); }
     afterChange();
   };
@@ -220,7 +231,7 @@ export async function renderRunner(root, id, nav) {
         h('span', { class: 'cb' }, icon('check', 16)), h('span', { class: 'ti-s', 'aria-hidden': 'true' }, taskIcon(tk)), h('span', { class: 'nm' }, tk.name || '—'),
         h('span', { class: 'du' }, tk.done || tk.skipped ? fmtDur(tk.actualSec || 0) : fmtDur(tk.plannedSec))),
       st().coachButton && !tk.done && !tk.skipped ? h('button', { class: 'tip-btn', type: 'button', 'aria-label': t('tipFor', { name: tk.name || '' }), title: t('tipBtn'), onclick: () => coach.show('any', tk.name) }, '💡') : null)));
-    pushWidget(); helpCard?.update(); if (cur && run.current !== lastHelpIdx) { lastHelpIdx = run.current; helpCard?.clear(); }
+    paintPts(); pushWidget(); helpCard?.update(); if (cur && run.current !== lastHelpIdx) { lastHelpIdx = run.current; helpCard?.clear(); }
     list.toggleAttribute('inert', !!run.interrupt);
     if (run.interrupt) {
       setChildren(controls, h('div', { class: 'main-btns' }, h('button', { class: 'btn primary xl', type: 'button', onclick: endUnplanned }, icon('play', 22), t('unpBack'))));
@@ -299,9 +310,11 @@ export async function renderRunner(root, id, nav) {
 
   async function afterChange() {
     if (E.isActive(run)) { persist(); paintStatic(); paintLive(); pushActive(); return; }
-    vc?.stop(); await S.saveActive(null); await S.saveRun(run); setAwake('run', false); pushWidget();
+    vc?.stop(); { const s = st(); if (s.scoring !== 'off') run.score = scoreRun(run, { mode: s.scoring, penalty: s.scorePenalty }); }
+    await S.saveActive(null); await S.saveRun(run); setAwake('run', false); pushWidget();
     renderSummary();
     { const tpl = S.getTemplate(run.templateId), slot = root.querySelector('.pattern-slot'); if (tpl && slot) { const c = patternCards(tpl, nav, () => {}); if (c) setChildren(slot, c); } }
+    { const slot = root.querySelector('.podium-slot'), card = slot && run.score ? podiumCard(run, S.myRuns(), { cumulative: st().scoreCumulative }) : null; if (card) setChildren(slot, card); }
     celebrationFor(run).then((card) => { const slot = root.querySelector('.celebrate-slot'); if (card && slot) setChildren(slot, card); }).catch(() => {});
     afterRun(run.profileId).then(celebrateGoals).catch(() => {});
   }
@@ -314,7 +327,7 @@ export async function renderRunner(root, id, nav) {
     const starRow = h('div', { class: 'stars', role: 'img', 'aria-label': `${t('starsEarned')}: ${n}/3` }, [0, 1, 2].map((i) => h('span', { class: `star ${i < n ? 'on' : ''}`, style: { '--i': String(i) } }, '⭐')));
     setChildren(root, h('div', { class: 'summary' },
       h('div', { class: 'big-emoji' }, avatarNode(st().avatar, { size: 110, anim: done ? 'dance' : 'think' })), h('h1', {}, done ? t('allDone') : t('stopped')), starRow,
-      h('p', { class: 'muted' }, run.templateName), h('div', { class: 'celebrate-slot' }), bubble,
+      h('p', { class: 'muted' }, run.templateName), h('div', { class: 'celebrate-slot' }), h('div', { class: 'podium-slot' }), bubble,
       feat.moodCheck ? h('div', { class: 'card center' }, h('strong', {}, t('moodAsk')), moodRow(async (v) => { run.mood = v; await S.setRunMood(run.id, v); }, run.mood || null)) : null,
       myGoals.length && done ? h('div', { class: 'card center' }, h('strong', {}, `🎯 ${myGoals[0].title}`), h('p', {}, t('checkAsk')), moodRow(async (v) => { await S.addCheck(myGoals[0].id, { rating: v }); toast(t('checkSaved')); })) : null,
       feat.journal ? h('button', { class: 'btn', type: 'button', onclick: () => openCapture({ routine: run.templateName }) }, `📝 ${t('jAfter')}`) : null,
@@ -339,7 +352,7 @@ export async function renderRunner(root, id, nav) {
 
   setChildren(root, h('div', { class: 'run' },
     h('div', { class: 'run-top', style: { '--accent': run.color || '#6c5ce7' } }, h('span', { class: 'emoji' }, run.icon), h('h1', { class: 'run-title' }, run.templateName)),
-    bubble, coachHost, transEl, sitEl, intrEl, goalBox, planBox, gearBox, pw.el, head, leaveEl, h('div', { class: 'ring-wrap' }, ring, pausedBadge), sprintEl, taskName, pace, controls, vc?.el, helpCard?.el, list));
+    bubble, coachHost, transEl, sitEl, intrEl, goalBox, planBox, gearBox, pw.el, head, leaveEl, h('div', { class: 'ring-wrap' }, ring, pausedBadge), sprintEl, taskName, ptsEl, pace, controls, vc?.el, helpCard?.el, list));
   paintStatic(); paintLive(); paintGear();
   if (vc && st().voiceCmdAuto && st().transcribe) vc.start();
   if (fresh) { say('start'); pushActive(true); }   // the parent sees "doing now" from the very first task

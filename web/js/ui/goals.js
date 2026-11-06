@@ -16,7 +16,7 @@ export const planText = (g) => [...g.strategies.map(stratText), g.custom].filter
 export function openGoalWizard(goal, { parent = false, onSave } = {}) {
   const g = goal ? { ...goal, strategies: [...goal.strategies] } : { title: '', templateId: '', strategies: [], custom: '' };
   const title = h('input', { type: 'text', maxLength: 80, value: g.title, placeholder: t('goalPh'), 'aria-label': t('goalWhat') }), custom = h('input', { type: 'text', maxLength: 120, value: g.custom, placeholder: t('goalCustomPh'), 'aria-label': t('goalCustom') });
-  const sel = h('select', { 'aria-label': t('goalRoutine') }, [h('option', { value: '' }, t('goalNoRoutine')), ...S.get().templates.map((x) => h('option', { value: x.id, selected: x.id === g.templateId }, `${x.icon} ${x.name}`))]);
+  const sel = h('select', { 'aria-label': t('goalRoutine') }, [h('option', { value: '' }, t('goalNoRoutine')), ...S.myTemplates().map((x) => h('option', { value: x.id, selected: x.id === g.templateId }, `${x.icon} ${x.name}`))]);
   const examples = h('div', { class: 'chips' }, ['goalEx1', 'goalEx2', 'goalEx3', 'goalEx4'].map((k) => h('button', { class: 'chip btn-chip', type: 'button', onclick: () => { title.value = t(k); } }, t(k))));
   const msg = h('p', { class: 'note', role: 'status' }, ''), boxes = new Map();
   const count = () => g.strategies.length;

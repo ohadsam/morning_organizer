@@ -150,10 +150,12 @@ export function planSpeech(text, { persona = PRESETS.natural, lang = 'en', rate 
   return chunks;
 }
 
-let token = 0, timer = null;
+let token = 0, timer = null, speakingUntil = 0;
+/** True while the app itself is talking (plus a short tail), so voice commands never 'hear' the app's own voice. */
+export const speakingNow = () => Date.now() < speakingUntil;
 const nativeWaiters = new Map();   // phrase id -> "it finished" callback
 globalThis.addEventListener?.('morning-native', (e) => { const d = e.detail; if (d?.type === 'tts' && d.status === 'ready') nativeVoices = []; if (d?.type === 'tts' && (d.status === 'done' || d.status === 'error')) nativeWaiters.get(d.id)?.(); });
-export function stopSpeaking() { token++; clearTimeout(timer); nativeWaiters.clear(); try { if (useNative()) native.ttsStop(); if (webTts()) speechSynthesis.cancel(); } catch { /* no TTS */ } }
+export function stopSpeaking() { speakingUntil = 0; token++; clearTimeout(timer); nativeWaiters.clear(); try { if (useNative()) native.ttsStop(); if (webTts()) speechSynthesis.cancel(); } catch { /* no TTS */ } }
 
 /** Speak `text`. opts: { lang, voiceURI, preset (character id), flavor, rate (pace multiplier, 1 = normal), kind }. Returns false when speech is unavailable. */
 export function speakText(text, { lang = 'en', voiceURI = '', preset = 'natural', flavor = 'neutral', rate = 1, kind = 'msg' } = {}) {
@@ -161,6 +163,7 @@ export function speakText(text, { lang = 'en', voiceURI = '', preset = 'natural'
   try {
     stopSpeaking(); const my = token, persona = personaOf(preset), plan = planSpeech(text, { persona, lang, rate, flavor, kind });
     if (!plan.length) return false;
+    speakingUntil = Date.now() + plan.reduce((a, c) => a + Math.max(800, (c.text.length * 95) / c.rate) + (c.pauseMs || 0), 0) + 600;
     const voice = pickVoice(allVoices(), lang, persona, voiceURI), viaPhone = useNative();
     const go = (i) => {
       if (my !== token || i >= plan.length) return;

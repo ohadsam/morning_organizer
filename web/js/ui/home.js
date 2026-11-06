@@ -69,7 +69,9 @@ export function renderHome(root, nav) {
         h('button', { class: 'btn', type: 'button', onclick: async () => { if (await confirmBox(t('restartConfirm'), t('restartRun'))) { const id = active.templateId; await discardActiveRun(); active = null; nav(`#/run/${id}`); } } }, '↺', t('restartRun')),
         h('button', { class: 'btn', type: 'button', onclick: async () => { if (await confirmBox(t('cancelConfirm'), t('cancelRun'), true)) { await discardActiveRun(); active = null; clearInterval(tick); toast(t('cancelledToast')); draw(); } } }, '✖', t('cancelRun'))));
   };
+  let alive = true;   // a draw that arrives after the person already left Home must not overwrite the page they are on
   const draw = () => {
+    if (!alive) return;
     const { templates, settings } = S.get();
     const done = finished(S.myRuns()), days = streak(done), starsN = totalStars(done);
     const awake = isAwakeWanted(), simple = settings.simpleMode, lv = levelInfo(starsN);
@@ -91,9 +93,9 @@ export function renderHome(root, nav) {
       simple ? null : (() => { const f = S.features(), b = (emoji, label, fn) => h('button', { class: 'btn', type: 'button', onclick: fn }, h('span', { 'aria-hidden': 'true' }, emoji), label), paused = isPaused(settings.alarmsPause); return toolbar([
         { id: 'new', icon: '➕', label: t('tbNew'), run: () => runAction('newRoutine', nav) },
         { id: 'wizard', icon: '🪄', label: t('tbWizard'), run: () => runAction('wizard', nav) },
-        { id: 'plan', icon: '🗓️', label: t('tbPlan'), items: [b('⏰', t('alarmsTitle'), () => nav('#/alarms')), b('🎯', t('goalsTitle'), () => nav('#/goals')), b('📚', t('libFromTemplate'), () => openRoutinePicker(nav)), b('⚙️', t('libManage'), () => nav('#/library')), b('📥', t('import'), () => openImport())] },
+        { id: 'plan', icon: '🗓️', label: t('tbPlan'), items: [b('⏰', t('alarmsTitle'), () => nav('#/alarms')), S.shows('goals') ? b('🎯', t('goalsTitle'), () => nav('#/goals')) : null, b('📚', t('libFromTemplate'), () => openRoutinePicker(nav)), b('⚙️', t('libManage'), () => nav('#/library')), b('📥', t('import'), () => openImport())].filter(Boolean) },
         { id: 'calm', icon: '🌬️', label: t('tbCalm'), items: [f.calmCorner ? b('🌬️', t('calmTitle'), () => nav('#/calm')) : null, f.journal ? b('📓', t('journal'), () => nav('#/journal')) : null, f.journal ? b('🎙️', t('jQuick'), () => openCapture({})) : null].filter(Boolean) },
-        { id: 'track', icon: '📈', label: t('tbTrack'), items: [b('📊', t('stats'), () => nav('#/stats')), b('🔄', t('rcvTitle'), () => nav('#/retros')), f.rewardMenu ? b('🎁', t('menuTitle'), () => openMenu()) : null] },
+        { id: 'track', icon: '📈', label: t('tbTrack'), items: [S.shows('stats') ? b('📊', t('stats'), () => nav('#/stats')) : null, S.shows('retros') ? b('🔄', t('rcvTitle'), () => nav('#/retros')) : null, f.rewardMenu && S.shows('rewards') ? b('🎁', t('menuTitle'), () => openMenu()) : null].filter(Boolean) },
         { id: 'alarms', icon: paused ? '🔕' : '🔔', label: paused ? t('pauseResume') : t('tbAlarms'), pressed: paused, run: () => openPauseSheet(draw) }], t('quickTitle')); })(),
       simple ? null : pausedBanner(draw),
       simple ? null : suggestionBelow,
@@ -106,5 +108,5 @@ export function renderHome(root, nav) {
   draw();
   S.loadActive().then((r) => { if (r && isActive(r) && S.getTemplate(r.templateId)) { active = r; draw(); tick = setInterval(() => pw?.update(active), 1000); } });
   const off = S.subscribe(draw);
-  return () => { off(); clearInterval(tick); };
+  return () => { alive = false; off(); clearInterval(tick); };
 }

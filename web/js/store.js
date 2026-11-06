@@ -23,13 +23,15 @@ import { sanitizeGoal, MAX_GOALS } from './cogfun.js';
 import { sanitizeRetro, sanitizeRetros, applyActions, undoActions, MAX_RETROS } from './retro.js';
 import { sanitizeLibrary, mergeLibrary, upsert, fromTemplate, fromTask, MAX_ROUTINES as LIB_R, MAX_TASKS as LIB_T, IDEA_ROUTINES } from './library.js';
 import { eraseJournal } from './journal.js';
-import { newProfile, normalizeProfile, runsOf, MAX_PROFILES } from './profiles.js';
+import { newProfile, normalizeProfile, runsOf, MAX_PROFILES, PREF_KEYS, sanitizePrefs } from './profiles.js';
+import { SKINS } from './skins.js';
+import { visibleSet, shows as needShows, sanitizeView, areasFor, isFull } from './needs.js';
 
 export const DEFAULT_SETTINGS = Object.freeze({
   lang: 'he', theme: 'auto', mode: 'both', volume: 80, warnSec: 10, defTaskSec: 300, defEstSec: 0,
   autoAdvance: false, keepAwake: true, keepAwakeApp: false, personName: '', mascot: '🦊', feedback: true, speak: false, age: null, gender: 'other', profileDone: false,
   textStyle: 'auto', timerStyle: 'auto', retroStyle: 'ask', alarmsMig: false, samplesAlarmsOff: false, paceMode: 'normal', accent: '', simpleMode: false, announceTasks: false, fontScale: 100, colorSafe: false, contrast: 'normal', srAnnounce: false,
-  coachButton: true, coachAuto: false, coachSpeak: false, voiceURI: '', voicePreset: 'natural', voiceFlavor: 'neutral', voiceEngine: '', alarmsPause: 0, weeklyOn: true, weeklyDay: 5, voiceRate: 100, seeded: false,
+  coachButton: true, coachAuto: false, coachSpeak: false, voiceURI: '', voicePreset: 'natural', voiceFlavor: 'neutral', skin: 'default', easyRead: false, askProfile: true, voiceCmdAuto: false, voiceEngine: '', alarmsPause: 0, weeklyOn: true, weeklyDay: 5, voiceRate: 100, seeded: false,
   avatar: defaultAvatar(), activeProfile: '', transcribe: false,
 });
 /** The settings keys that mirror the ACTIVE profile (so the rest of the app can keep reading settings.personName etc.). */
@@ -107,6 +109,8 @@ export async function init() {
     await db.put('kv', state.profiles, 'profiles');
   }
   if (!state.profiles.some((p) => p.id === state.settings.activeProfile)) state.settings.activeProfile = state.profiles[0].id;
+  { // an install from before per-person settings: every existing person starts with the settings that were on the device
+    let changed = false; state.profiles = state.profiles.map((p) => { if (p.prefs) return p; changed = true; return { ...p, prefs: pickPrefs(state.settings) }; }); if (changed) await persistProfiles(); }
   mirrorActiveProfile();
   state.watch = sanitizeWatch(await db.get('kv', 'watch'));
   state.retros = sanitizeRetros(await db.get('kv', 'retros'));
@@ -204,12 +208,15 @@ export const myRuns = () => runsOf(state.runs, activeProfile().id, firstId());
 export const runsForProfile = (id) => runsOf(state.runs, id, firstId());
 function mirrorActiveProfile() {
   const p = activeProfile(); if (!p) return;
-  state.settings = { ...state.settings, activeProfile: p.id, personName: p.name, age: p.age, gender: p.gender, avatar: p.avatar, mascot: avatarEmoji(p.avatar) };
+  // each person has their OWN look / text / sound / voice settings (prefs); a profile that has none yet (null) keeps what is on the device
+  const over = {}; if (p.prefs) for (const k of PREF_KEYS) over[k] = Object.hasOwn(p.prefs, k) ? p.prefs[k] : DEFAULT_SETTINGS[k];
+  state.settings = { ...state.settings, ...over, activeProfile: p.id, personName: p.name, age: p.age, gender: p.gender, avatar: p.avatar, mascot: avatarEmoji(p.avatar) };
 }
+const pickPrefs = (settings) => sanitizePrefs(Object.fromEntries(PREF_KEYS.filter((k) => k in settings).map((k) => [k, settings[k]])));
 const persistProfiles = () => db.put('kv', state.profiles, 'profiles');
 export async function saveProfile(p) {
   const clean = normalizeProfile(p), i = state.profiles.findIndex((x) => x.id === clean.id);
-  if (i < 0) { if (state.profiles.length >= MAX_PROFILES) throw new Error('limit'); state.profiles.push(clean); } else state.profiles[i] = { ...state.profiles[i], ...clean };
+  if (i < 0) { if (state.profiles.length >= MAX_PROFILES) throw new Error('limit'); if (!clean.prefs) clean.prefs = sanitizePrefs({ lang: state.settings.lang }); state.profiles.push(clean); } else state.profiles[i] = { ...state.profiles[i], ...clean };
   await persistProfiles();
   if (clean.id === state.settings.activeProfile) { mirrorActiveProfile(); await db.put('kv', state.settings, 'settings'); }
   emit(); return clean;
@@ -218,8 +225,17 @@ export async function saveProfile(p) {
 export const features = (p = activeProfile()) => {
   const f = toolsFor(p?.focus, p?.tools);
   if (p?.menu?.length && !Object.hasOwn(p.tools || {}, 'rewardMenu')) f.rewardMenu = true;   // a menu someone set up is obviously meant to be used
+  const set = visibleSet(p?.view);   // "what do you need the app for": hide what does not fit (null = everything)
+  if (set) { f.calmCorner = f.calmCorner && set.has('calm'); f.journal = f.journal && set.has('journal'); f.rewardMenu = f.rewardMenu && set.has('rewards'); }
   return f;
 };
+/** Is this part of the app shown for this person? ('goals', 'retros', 'calm', 'journal', 'aprt', 'rewards', 'stats', 'reports', 'smart', 'family'; core ids always are) */
+export const shows = (id, p = activeProfile()) => needShows(p?.view, id);
+/** Sets what a profile needs the app for; the help areas follow (full = nothing is hidden and the person's own help areas stay as they were). */
+export async function setNeeds(id, view) {
+  const v = sanitizeView(view), p = state.profiles.find((x) => x.id === id); if (!p) return null;
+  return saveProfile({ ...p, view: v, ...(isFull(v) ? {} : { focus: areasFor(v), focusSet: true }) });
+}
 export const patchProfile = async (id, patch) => { const p = state.profiles.find((x) => x.id === id); return p ? saveProfile({ ...p, ...patch }) : null; };
 export async function switchProfile(id) {
   if (!state.profiles.some((p) => p.id === id)) return;
@@ -312,10 +328,13 @@ export async function updateSettings(patch) {
   if ('avatar' in patch) patch = { ...patch, avatar: sanitizeAvatar(patch.avatar) };
   delete patch.activeProfile; // switching goes through switchProfile()
   if ('voiceEngine' in patch) patch = { ...patch, voiceEngine: /^[\w.]{1,100}$/.test(String(patch.voiceEngine || '')) ? String(patch.voiceEngine) : '' };
+  if ('skin' in patch && !SKINS.includes(patch.skin)) delete patch.skin;
   if ('weeklyDay' in patch) { const n = Math.round(Number(patch.weeklyDay)); patch = { ...patch, weeklyDay: n >= 0 && n <= 6 ? n : 5 }; }
   if ('alarmsPause' in patch) patch = { ...patch, alarmsPause: cleanPause(patch.alarmsPause) };
   state.settings = { ...state.settings, ...patch };
   applyAlarmRules();
+  const prefKeys = PREF_KEYS.filter((k) => k in patch);
+  if (prefKeys.length && state.profiles.length) { const p = activeProfile(), i = state.profiles.indexOf(p); state.profiles[i] = { ...p, prefs: sanitizePrefs({ ...(p.prefs || pickPrefs(state.settings)), ...pickPrefs(state.settings) }) }; await persistProfiles(); }
   const touched = PROFILE_KEYS.filter((k) => k in patch);
   if (touched.length && state.profiles.length) { // editing name/age/gender/avatar edits the ACTIVE profile
     const p = activeProfile(), upd = { ...p };
@@ -367,7 +386,7 @@ export function exportAll() {
 export function sanitizeSettings(raw) {
   const out = {};
   if (!raw || typeof raw !== 'object') return out;
-  const ENUM = { lang: ['auto', 'he', 'en'], theme: ['auto', 'light', 'dark'], mode: ['both', 'beep', 'vibrate', 'silent'], paceMode: ['normal', 'quick', 'calm'], contrast: ['normal', 'high'], textStyle: ['auto', 'playful', 'plain'], timerStyle: ['auto', 'ring', 'pie', 'bar', 'sand'], voiceFlavor: ['neutral', 'casual', 'warm', 'formal'], retroStyle: ['ask', 'guided', 'free'], fontScale: [100, 115, 130, 150] };
+  const ENUM = { skin: SKINS, lang: ['auto', 'he', 'en'], theme: ['auto', 'light', 'dark'], mode: ['both', 'beep', 'vibrate', 'silent'], paceMode: ['normal', 'quick', 'calm'], contrast: ['normal', 'high'], textStyle: ['auto', 'playful', 'plain'], timerStyle: ['auto', 'ring', 'pie', 'bar', 'sand'], voiceFlavor: ['neutral', 'casual', 'warm', 'formal'], retroStyle: ['ask', 'guided', 'free'], fontScale: [100, 115, 130, 150] };
   for (const [k, def] of Object.entries(DEFAULT_SETTINGS)) {
     if (k === 'seeded' || !(k in raw)) continue;
     const v = raw[k];

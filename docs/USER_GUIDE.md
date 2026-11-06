@@ -109,6 +109,9 @@ A goal can be linked to a routine (the routine card shows a 🎯 chip, the edito
 ## Start over, cancel or delete a run
 A routine in progress is never a dead end. On the run screen open More → Change the plan: Start over begins again from the first task, Cancel this run leaves without saving anything. The same two buttons are on the Home "continue" card. Nothing from a cancelled or restarted run goes into your history. A finished run can be deleted from its summary screen (Delete this run) and brought back with Undo.
 
+## What the app is for, people and voice commands
+In Settings → What the app is for choose a way of working (CBT, Cog-Fun) and/or what is hard (attention, anxiety, getting organised, motivation) and an age; the app then shows only what fits, and "Show everything" brings it all back. Each person has their own settings, look and view: switch from the little menu at the top, or manage everyone in Settings → People (with several people the app can ask who is using it at the start). At the top of Settings are a search box and a jump bar; under Look choose a skin, easy-read text or your own colour; the welcome screens can be opened again from Settings. During a routine, tap Listen for commands and say a short phrase (done, add time, pause, resume, skip, journal, calm corner, remind me the step, how much time is left, stop - which always asks first). It keeps listening through all steps; the ? button and Settings → Voice commands list every command.
+
 ## Updates and sharing the app
 The web app updates itself - when you open it, and every hour - and switches to the new version on its own when nothing is running; if you are in the middle of something it asks first. The Android app updates from the latest download. To share SonRise open Settings → App → Share (or search "share"): choose the Android app or the web app, and send it by WhatsApp, e-mail, the share sheet or a copied link.
 

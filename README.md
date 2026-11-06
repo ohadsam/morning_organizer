@@ -28,7 +28,7 @@ Build morning routines (for kids or anyone), time every task, and watch yourself
 - **Leave-by time, Quick/Calm pace, accessibility** (text size, color-blind palette, screen-reader announcements), task photos and stickers.
 - **Avatars & people** - animated characters (or your own photo/GIF), several people per phone, levels, badges, routines by day with gear checklists, QR/NFC/Bluetooth/Wi-Fi linking, parent alerts and weekly goals.
 - **Weekly summary, heat-map, CSV export, undo, more example routines.**
-- **What the app is for, people, skins** - choose a model (CBT, Cog-Fun) and/or what is hard and the app shows only what fits; several people with their own settings and view; a settings search and jump bar; skins, easy-read text, custom colour.
+- **What the app is for, people, skins** - a Kids view / Full view switch next to the profile chip; choose a model (CBT, Cog-Fun) and/or what is hard and the app shows only what fits; several people with their own settings and view; a settings search and jump bar; skins, easy-read text, custom colour.
 - **Voice commands** - during a routine say done / add time / pause / skip / journal / calm corner / remind me the step / stop (asks first); a ? lists them.
 - **Sharing, special tasks, points** - choose who sees a routine; add the app's own tools as steps (journal, body scan, guided imagery...); optional points with bonus for finishing early, awards (medal, coin, trophy), a podium with fireworks and a points chart; copy / export / import routines between people and devices.
 - **Android widget** - favourite routines, one tap to start.

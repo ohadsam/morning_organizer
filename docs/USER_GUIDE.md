@@ -115,6 +115,9 @@ In Settings → What the app is for choose a way of working (CBT, Cog-Fun) and/o
 ## Sharing between people, special tasks, points and moving routines
 Who sees a routine: with several people on the device, a routine's "Who sees this routine" section lets you choose everyone or only some people. Special tasks: in the editor tap "Add a special task" and pick by topic or search (journal, thought parking, body scan, guided imagery, relaxation, voice note...); on the run screen the task shows one button that opens the tool. Points: Settings → Points and awards (off by default): automatic or your own points per step, a bonus for finishing early, a little less for finishing late (never below 0, never in the calm pace, can be switched off), awards (medal, coin, trophy...) won by finishing before the time, a podium with fireworks at the end and a points chart plus running total in Statistics. Moving routines: Home → Plan → Share and move routines: copy to another person on the device, save or send as a file, bring in from a file (imported alarms come in switched off).
 
+## Kids view and full view
+Next to the "who is using the app" chip at the top there is a button: Kids view switches to the kids' view (only routines and a big Start) in one tap. In the kids' view the top bar shows only Full view, which asks a quick grown-up question before it brings everything back. The choice is kept per person.
+
 ## Updates and sharing the app
 The web app updates itself - when you open it, and every hour - and switches to the new version on its own when nothing is running; if you are in the middle of something it asks first. The Android app updates from the latest download. To share SonRise open Settings → App → Share (or search "share"): choose the Android app or the web app, and send it by WhatsApp, e-mail, the share sheet or a copied link.
 

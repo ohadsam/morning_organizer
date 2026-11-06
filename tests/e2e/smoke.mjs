@@ -1402,5 +1402,19 @@ await step('v1.21: axe on the special-task picker, who-sees box, share/move shee
   assert.deepEqual(bad, []);
 });
 
+await step('v1.21.1: a Kids view / Full view button next to the profile chip - one tap in, the grown-up question to come back', async () => {
+  const { page } = await newPage({ lang: 'en' }); await page.goto(base + '#/'); await page.waitForSelector('.routine'); await page.waitForSelector('#topbar .pm-btn');
+  assert.ok(await page.locator('#topbar .tb-mode:has-text("Kids view")').count(), 'the switch sits next to the profile chip'); assert.deepEqual(await audit(page, 'topbar'), []);
+  await page.click('#topbar .tb-mode'); await page.waitForSelector('#topbar .tb-mode:has-text("Full view")');
+  assert.equal(await page.locator('#topbar .pm-btn').count(), 0, 'in the kids view only the way back is offered'); assert.equal(await page.locator('#nav a').count(), 2); assert.deepEqual(await audit(page, 'topbar-kids'), []);
+  await page.click('#topbar .tb-mode'); await page.waitForSelector('.gate-q'); await page.click('dialog footer button >> nth=0'); await page.waitForTimeout(200);
+  assert.ok(await page.locator('#topbar .tb-mode:has-text("Full view")').count(), 'cancel keeps the kids view');
+  await page.click('#topbar .tb-mode'); await page.waitForSelector('.gate-q'); const [a, b] = (await page.textContent('.gate-q')).match(/\d+/g).map(Number);
+  await page.fill('dialog input[type=number]', String(a * b)); await page.click('dialog footer button >> nth=1'); await page.waitForSelector('#topbar .pm-btn'); assert.ok(await page.locator('#topbar .tb-mode:has-text("Kids view")').count());
+  assert.ok((await page.locator('#nav a').count()) > 2, 'the full navigation is back');
+  const bad = []; for (const [lang, big] of [['he', false], ['en', true]]) { const { page: p2 } = await newPage({ lang }); await p2.goto(base); if (lang === 'he') await dismissWelcome(p2); if (big) await p2.evaluate(async () => { const S = await import('./js/store.js'); await S.updateSettings({ fontScale: 150 }); }); await p2.goto(base + '#/'); await p2.waitForSelector('#topbar .tb-mode'); bad.push(...await audit(p2, `${lang}/topbar`)); }
+  assert.deepEqual(bad, []);
+});
+
 await browser.close(); server.close();
 console.log(failures ? `\n${failures} e2e step(s) failed` : '\nall e2e steps passed'); process.exit(failures ? 1 : 0);

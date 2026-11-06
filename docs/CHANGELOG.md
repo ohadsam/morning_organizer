@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.21.1
+- **Kids view / Full view button** in the top bar, next to the "who is using the app" chip: one tap switches to the kids' view (only routines and the big Start); in the kids' view the bar shows only the way back, which asks the grown-up question first. The choice is per person.
+
 ## 1.21.0
 - **Who sees a routine**: on a shared device a routine can be visible to everyone (default) or only to chosen people - a parent or therapist can set routines up for the children. Alarms still ring on the device. Deleting a person never loses a routine.
 - **Special tasks**: pick the app's own tools as steps (journal, thought parking, gratitude, situation log, voice note, body scan, guided imagery, relaxation, movement...) by topic with search; on the run screen the task has one big button that opens the tool (the task's clock keeps running).

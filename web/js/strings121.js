@@ -1,5 +1,6 @@
 // Strings for 1.21: special tasks, sharing routines between people, points and the podium, export / import of routines.
 export const EN = {
+  tbKids: 'Kids view', tbFull: 'Full view', tbKidsHint: 'Switch to the kids’ view (only routines, big Start)', tbFullHint: 'Back to the full view (grown-ups only)', tbKidsOn: 'Kids view is on', tbFullOn: 'Full view is on',
   // points
   ptsTitle: 'Points and awards', ptsIntro: 'A playful way to see effort: points for each step, a bonus for finishing early, a little less for finishing late, and a podium with fireworks at the end. Off unless you turn it on.',
   ptsMode: 'Points', ptsOff: 'Off', ptsAuto: 'Automatic', ptsCustom: 'I set the points',
@@ -28,6 +29,7 @@ export const EN = {
   helper_scan: 'Start the body scan', helper_imagery: 'Start the guided imagery', helper_relax: 'Get a relaxation exercise', helper_journal: 'Write in the journal', helper_voice: 'Record a voice note', helper_gratitude: 'Write three good things', helper_park: 'Park a thought', helper_aprt: 'Log the moment',
 };
 export const HE = {
+  tbKids: 'תצוגת ילדים', tbFull: 'תצוגה מלאה', tbKidsHint: 'מעבר לתצוגת ילדים (רק שגרות וכפתור התחלה גדול)', tbFullHint: 'חזרה לתצוגה המלאה (למבוגרים בלבד)', tbKidsOn: 'תצוגת ילדים פעילה', tbFullOn: 'התצוגה המלאה פעילה',
   ptsTitle: 'ניקוד ופרסים', ptsIntro: 'דרך שובבה לראות מאמץ: נקודות על כל שלב, בונוס על סיום מוקדם, קצת פחות על איחור, ופודיום עם זיקוקים בסוף. כבוי עד שמדליקים.',
   ptsMode: 'ניקוד', ptsOff: 'כבוי', ptsAuto: 'אוטומטי', ptsCustom: 'אני קובע את הניקוד',
   ptsModeHint_off: 'בלי ניקוד בשום מקום.', ptsModeHint_auto: 'כל שלב שווה נקודות לפי הזמן המתוכנן שלו.', ptsModeHint_custom: 'בוחרים את הניקוד של כל שלב בעורך השגרה (ריק = אוטומטי).',

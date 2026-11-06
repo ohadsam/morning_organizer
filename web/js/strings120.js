@@ -13,7 +13,7 @@ export const EN = {
   tbProfile: 'Who is using the app', tbManage: 'Manage people', askProfile: 'Ask who is using the app', askProfileHint: 'When there are several people, ask at the start of each visit.',
   // settings
   setSearchPh: 'Search settings', setJump: 'Jump to a group', setNone: 'No setting matches. Try another word.', setWelcome: 'Open the welcome and setup', setWelcomeHint: 'The first-time setup screens, whenever you want them.',
-  skinTitle: 'Look', skin_default: 'Classic', skin_ocean: 'Ocean', skin_forest: 'Forest', skin_sunset: 'Sunset', skin_candy: 'Candy', skin_slate: 'Slate',
+  skinTitle: 'Look', skin_default: 'Classic', skin_ocean: 'Ocean', skin_forest: 'Forest', skin_sunset: 'Sunset', skin_candy: 'Candy', skin_slate: 'Slate', skin_calm: 'Calm (low stimulation)', skin_bold: 'Bold (clear and strong)',
   easyRead: 'Easy-read text', easyReadHint: 'Larger letters and more space between lines and words.', customColor: 'Your own accent colour',
   sr_set_needs: 'Settings: what the app is for', sr_set_people: 'Settings: people and profiles', sr_set_voicecmd: 'Settings: spoken commands',
   // voice commands
@@ -36,7 +36,7 @@ export const HE = {
   peopleTitle: 'אנשים', peopleHint: 'לכל אדם יש הגדרות, מראה ותצוגה משלו.', peopleActive: 'בשימוש עכשיו', peopleUse: 'לעבור', peopleNeeds: 'למה', peopleEdit: 'עריכה', peopleAdd: 'הוספת אדם',
   tbProfile: 'מי משתמש באפליקציה', tbManage: 'ניהול אנשים', askProfile: 'לשאול מי משתמש באפליקציה', askProfileHint: 'כשיש כמה אנשים, לשאול בתחילת כל ביקור.',
   setSearchPh: 'חיפוש בהגדרות', setJump: 'קפיצה לקבוצה', setNone: 'אין הגדרה שמתאימה. נסו מילה אחרת.', setWelcome: 'פתיחת מסך הפתיחה וההגדרה', setWelcomeHint: 'מסכי ההגדרה של הכניסה הראשונה, מתי שרוצים.',
-  skinTitle: 'מראה', skin_default: 'קלאסי', skin_ocean: 'אוקיינוס', skin_forest: 'יער', skin_sunset: 'שקיעה', skin_candy: 'סוכריה', skin_slate: 'צפחה',
+  skinTitle: 'מראה', skin_default: 'קלאסי', skin_ocean: 'אוקיינוס', skin_forest: 'יער', skin_sunset: 'שקיעה', skin_candy: 'סוכריה', skin_slate: 'צפחה', skin_calm: 'שקט (גירוי נמוך)', skin_bold: 'בולט (ברור וחזק)',
   easyRead: 'טקסט קל לקריאה', easyReadHint: 'אותיות גדולות יותר ויותר רווח בין שורות ומילים.', customColor: 'צבע הדגשה משלכם',
   sr_set_needs: 'הגדרות: למה האפליקציה משמשת', sr_set_people: 'הגדרות: אנשים ופרופילים', sr_set_voicecmd: 'הגדרות: פקודות בדיבור',
   vcTitle: 'פקודות קוליות', vcListen: 'האזנה לפקודות', vcListening: 'מאזין', vcHelp: 'אילו פקודות קוליות יש?', vcHelpTitle: 'פקודות קוליות',

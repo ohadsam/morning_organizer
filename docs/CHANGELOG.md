@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.23.1
+- **Two new looks** from the visual kit's tokens: *Calm* (one muted hue family, low stimulation, for people overwhelmed by colour) and *Bold* (strong contrast, thicker focus ring and borders, for attention difficulties and low vision), in light and dark, axe-checked in Hebrew and English with big text.
+
 ## 1.23.0
 - **Avatar studio**: build your own avatar from an original layered kit (283 parts): face shape, cheeks, nose, hair (19 styles, curls, braids, afro puffs, twists), beard, eyes, brows, mouth, 14 outfits, accessories (including hearing aid and cochlear implant), glasses, hats and head coverings (headscarf, kippah, turban), a little friend, 10 backgrounds - and recolour skin, hair, clothes, accessories and eyes from palettes. Options unlock with the person's level ("none" is always available). A live preview moves: rest, wave, cheer, dance, sleep, surprised, think and eight feelings (happy, calm, sad, worried, annoyed, tired, excited, proud). A "Surprise me" button picks a random avatar.
 - **My avatars**: save, rename, duplicate, delete (with undo), use as your avatar, and **share**: a short code (SRAV1...) through the share sheet (WhatsApp, e-mail) or the clipboard, and **Add from a code** with a preview. The library is on the device (any person here can pick from it) and is part of the backup file. The picker and Settings → About you link to it.

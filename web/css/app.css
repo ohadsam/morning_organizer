@@ -542,3 +542,12 @@ html[data-motion="calm"] *, html[data-motion="calm"] *::before, html[data-motion
 .opt-lock { position: absolute; inset-block-start: 4px; inset-inline-end: 4px; font-size: .72rem; background: var(--surface); border-radius: 99px; padding: 0 5px; }
 .av-card { display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 8px 12px; } .av-card .row-btns, .av-card .av-more { grid-column: 1 / -1; } .av-card-t { min-width: 0; overflow-wrap: anywhere; }
 .av-more summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; } .avk-import-preview { display: grid; justify-items: center; gap: 8px; }
+
+/* v1.23 skins from the visual-kit tokens: calm = one muted hue family (low stimulation); bold = strong contrast and thicker focus */
+:root[data-skin="calm"] { --bg:#f1f4f5;--surface:#ffffff;--surface-2:#e3e9ec;--line:#c3cfd5;--brand:#4f6370;--brand-ink:#ffffff;--text:#1f2a33;--muted:#4e5f6c; }
+@media (prefers-color-scheme: dark) { :root[data-skin="calm"]:not([data-theme="light"]) { --bg:#19242b;--surface:#25343c;--surface-2:#2d383f;--line:#44575f;--text:#f1f5f8;--muted:#b5c5d2;--brand:#a9b6bd;--brand-ink:#10181d; } }
+:root[data-skin="calm"][data-theme="dark"] { --bg:#19242b;--surface:#25343c;--surface-2:#2d383f;--line:#44575f;--text:#f1f5f8;--muted:#b5c5d2;--brand:#a9b6bd;--brand-ink:#10181d; }
+:root[data-skin="bold"] { --bg:#f8f9fc;--surface:#ffffff;--surface-2:#e4e9f5;--line:#7a8aa3;--brand:#1747a5;--brand-ink:#ffffff;--text:#0d1320;--muted:#3b475a; }
+@media (prefers-color-scheme: dark) { :root[data-skin="bold"]:not([data-theme="light"]) { --bg:#101923;--surface:#1b2936;--surface-2:#243546;--line:#8ea3be;--text:#f8fafc;--muted:#c3d0de;--brand:#8eade3;--brand-ink:#0b1530; } }
+:root[data-skin="bold"][data-theme="dark"] { --bg:#101923;--surface:#1b2936;--surface-2:#243546;--line:#8ea3be;--text:#f8fafc;--muted:#c3d0de;--brand:#8eade3;--brand-ink:#0b1530; }
+:root[data-skin="bold"] :focus-visible { outline-width: 4px; } :root[data-skin="bold"] .btn, :root[data-skin="bold"] .card { border-width: 2px; }

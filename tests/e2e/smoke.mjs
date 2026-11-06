@@ -1511,5 +1511,19 @@ await step('v1.23: axe on the studio, My avatars and the code import (he + en, b
   assert.deepEqual(bad, []);
 });
 
+await step('v1.23.1: the calm and bold looks - zero axe violations in light and dark on Home, Settings, the studio and a run (he + en, big text)', async () => {
+  const bad = [];
+  for (const [lang, scheme, skin, big] of [['en', 'light', 'calm', false], ['he', 'dark', 'calm', true], ['en', 'dark', 'bold', false], ['he', 'light', 'bold', true]]) {
+    const { page } = await newPage({ lang, ctx: { colorScheme: scheme } }); await page.goto(base + '#/'); if (lang === 'he') await dismissWelcome(page); await page.waitForSelector('.routine');
+    await page.evaluate(async ([sk, b]) => { const S = await import('./js/store.js'); await S.updateSettings({ skin: sk, fontScale: b ? 150 : 100 }); }, [skin, big]);
+    assert.equal(await page.evaluate(() => document.documentElement.dataset.skin), skin);
+    bad.push(...await audit(page, `${lang}/${skin}/${scheme}/home`));
+    await page.goto(base + '#/settings'); await page.waitForSelector('details.settings-group'); bad.push(...await audit(page, `${lang}/${skin}/${scheme}/settings`));
+    await page.goto(base + '#/run/sample-kids'); await page.waitForSelector('.main-btns'); bad.push(...await audit(page, `${lang}/${skin}/${scheme}/run`));
+  }
+  if (bad.length) console.error([...new Set(bad)].join('\n'));
+  assert.deepEqual(bad, []);
+});
+
 await browser.close(); server.close();
 console.log(failures ? `\n${failures} e2e step(s) failed` : '\nall e2e steps passed'); process.exit(failures ? 1 : 0);

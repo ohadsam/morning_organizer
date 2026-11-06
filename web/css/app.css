@@ -446,7 +446,8 @@ li.done .nm { opacity: 1; color: var(--muted); } li.skip { opacity: 1; } li.skip
 /* v1.20: top bar with the person switcher, people list, needs picker */
 .topbar { position: sticky; top: 0; z-index: 30; background: color-mix(in srgb, var(--bg) 92%, transparent); backdrop-filter: blur(8px); border-block-end: 1px solid var(--line); padding-block-start: env(safe-area-inset-top); }
 .topbar[hidden] { display: none; } body[data-view="run"] .topbar { display: none; }
-.topbar-in { max-width: 760px; margin-inline: auto; padding: 6px 12px; display: flex; align-items: center; }
+.topbar-in { max-width: 760px; margin-inline: auto; padding: 6px 12px; display: flex; align-items: center; gap: .5rem; }
+.topbar-in .tb-mode { margin-inline-start: auto; white-space: nowrap; min-height: 44px; }
 .topbar + main { padding-block-start: 12px; }
 .pm { position: relative; } .pm-btn { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 4px 12px 4px 6px; border: 1px solid var(--line); border-radius: 99px; background: var(--surface); color: var(--text); font: inherit; cursor: pointer; max-width: 70vw; }
 .pm-btn:focus-visible, .pm-item:focus-visible { outline: 3px solid var(--brand); outline-offset: 2px; } .pm-name { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } .pm-caret { color: var(--muted); font-size: .8em; }

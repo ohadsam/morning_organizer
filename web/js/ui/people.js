@@ -4,6 +4,7 @@ import { h, setChildren } from '../util.js';
 import { t } from '../i18n.js';
 import * as S from '../store.js';
 import { modal, toast } from './common.js';
+import { requestGate } from './gate.js';
 import { avatarNode, openProfileEditor, openProfiles } from './avatar.js';
 import { MODELS, PROBLEMS, FEATURES, isFull, sanitizeView, visibleSet, labelKeys } from '../needs.js';
 
@@ -66,11 +67,25 @@ export function profileMenu(nav) {
   return wrap;
 }
 
-/** Draws the top bar (hidden in the kids' mode and during a run). */
+/**
+ * Next to the "who" chip: switch between the kids' view and the full view. Going to the kids' view is one tap; coming back to the full view
+ * asks the grown-up question first (so a small child cannot leave the kids' view by accident).
+ */
+export function viewToggle(nav) {
+  const kids = S.get().settings.simpleMode;
+  return h('button', { type: 'button', class: `btn small tb-mode ${kids ? 'is-kids' : ''}`, 'aria-label': t(kids ? 'tbFullHint' : 'tbKidsHint'), title: t(kids ? 'tbFullHint' : 'tbKidsHint'),
+    onclick: async () => {
+      if (kids) { if (!(await requestGate())) return; await S.updateSettings({ simpleMode: false }); toast(t('tbFullOn')); }
+      else { await S.updateSettings({ simpleMode: true }); toast(t('tbKidsOn')); }
+      nav?.('#/');
+    } }, h('span', { 'aria-hidden': 'true' }, kids ? '🔓' : '🧒'), ' ', t(kids ? 'tbFull' : 'tbKids'));
+}
+
+/** Draws the top bar: who is using the app + the view switch (in the kids' view only the way back to the full view; hidden during a run). */
 export function drawTopbar(nav) {
   const el = document.getElementById('topbar'); if (!el) return;
-  if (S.get().settings.simpleMode) { el.replaceChildren(); el.hidden = true; return; }
-  el.hidden = false; setChildren(el, h('div', { class: 'topbar-in' }, profileMenu(nav)));
+  const kids = S.get().settings.simpleMode;
+  el.hidden = false; setChildren(el, h('div', { class: `topbar-in ${kids ? 'kids' : ''}` }, kids ? null : profileMenu(nav), viewToggle(nav)));
 }
 
 /** At app start, with several people: "Who is using the app?" (once per visit; the choice is remembered). */

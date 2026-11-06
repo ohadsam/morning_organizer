@@ -1460,5 +1460,56 @@ await step('v1.22: axe on the NLP page and exercises (he + en, big text, a skin)
   assert.deepEqual(bad, []);
 });
 
+// ── v1.23: avatar studio, My avatars, sharing ──
+await step('v1.23: build an avatar (locked options stay locked), animate it, save, use it, edit, duplicate, share by code, import the code, delete with undo', async () => {
+  const { page } = await newPage({ lang: 'en', ctx: { permissions: ['clipboard-read', 'clipboard-write'] } }); await page.goto(base + '#/settings/profile'); await page.waitForSelector('details[data-group=profile]');
+  await page.click('button:has-text("My avatars")'); await page.waitForSelector('dialog[open] .empty'); assert.deepEqual(await audit(page, 'avatars-empty'), []);
+  await page.click('dialog[open] button:has-text("New avatar")'); await page.waitForSelector('.studio .opt-tile'); await page.waitForSelector('.studio-preview svg.avatar-kit .kit-move');
+  assert.ok(await page.locator('.opt-tile:disabled').count() > 0, 'options above the person\'s level are locked'); assert.match(await page.getAttribute('.opt-tile:disabled >> nth=0', 'aria-label'), /unlocks at level/);
+  await page.click('.studio-tabs button:has-text("Hair")'); await page.locator('.opt-tile:not(:disabled) >> nth=3').click(); const hair = await page.evaluate(() => document.querySelector('.opt-tile.on')?.textContent);
+  await page.click('.studio-tabs button:has-text("Colours")'); await page.locator('.swatches >> nth=0').locator('.swatch >> nth=5').evaluate((e) => e.click());
+  await page.click('.anim-strip button[aria-label="Wave"]'); assert.equal(await page.getAttribute('.studio-preview svg', 'data-anim'), 'wave'); assert.ok(await page.locator('.studio-preview [data-flip="fast"].fa').count() >= 1 && await page.locator('.studio-preview [data-flip="fast"].fb').count() >= 1, 'two frames alternate');
+  await page.click('.anim-strip button[aria-label="Sad"]'); assert.equal(await page.getAttribute('.studio-preview svg', 'data-anim'), 'sad');
+  assert.deepEqual(await audit(page, 'studio'), []);
+  await page.fill('.studio input[type=text]', 'Robin'); await page.click('dialog[open] footer button:has-text("Save")'); await page.waitForSelector('.studio [role=status]:has-text("Saved")');
+  await page.click('dialog[open] footer button:has-text("Use as my avatar")'); await page.waitForTimeout(600);
+  assert.equal(await page.locator('dialog[open]').count(), 0, 'using it closes the sheets');
+  assert.equal(await page.evaluate(async () => { const S = await import('./js/store.js'); return S.get().settings.avatar.k; }), 'kit', 'the profile avatar is the kit avatar');
+  await page.click('button:has-text("My avatars")'); await page.waitForSelector('dialog[open] .av-card'); assert.ok(await page.locator('dialog[open] .av-card:has-text("Robin")').count(), 'saved in My avatars'); await page.click('dialog[open] .av-card button:has-text("Edit")'); await page.waitForSelector('.studio'); await page.fill('.studio input[type=text]', 'Robin 2'); await page.click('dialog[open] footer button:has-text("Save")'); await page.waitForTimeout(300); await page.locator('dialog[open]').last().locator('footer button:has-text("Close")').click();
+  assert.ok(await page.locator('dialog[open] .av-card:has-text("Robin 2")').count() === 1, 'renamed, not duplicated');
+  await page.click('dialog[open] .av-more summary'); await page.click('dialog[open] button:has-text("Duplicate")'); await page.waitForTimeout(300); assert.equal(await page.locator('dialog[open] .av-card').count(), 2);
+  await page.locator('dialog[open] .av-more summary').first().click(); await page.locator('dialog[open] button:has-text("Share")').first().click(); await page.waitForTimeout(400);
+  const code = await page.evaluate(() => navigator.clipboard.readText()); assert.match(code, /SRAV1\.[A-Za-z0-9_-]+/);
+  await page.click('dialog[open] button:has-text("Add from a code")'); await page.waitForSelector('dialog[open] textarea.code'); await page.fill('dialog[open] textarea.code', 'nonsense'); await page.waitForSelector('dialog[open] .err'); assert.deepEqual(await audit(page, 'import-bad'), []);
+  await page.fill('dialog[open] textarea.code', code); await page.waitForSelector('dialog[open] .avk-import-preview svg.avatar-kit'); assert.deepEqual(await audit(page, 'import'), []);
+  await page.click('dialog[open] footer button:has-text("Add to my avatars")'); await page.waitForTimeout(400); assert.equal(await page.locator('dialog[open] .av-card').count(), 3);
+  await page.locator('dialog[open] .av-more summary').first().click(); await page.locator('dialog[open] button:has-text("Delete")').first().click(); await page.waitForSelector('dialog[open] footer button.danger'); await page.click('dialog[open] footer button.danger'); await page.waitForTimeout(400); assert.equal(await page.locator('dialog[open] .av-card').count(), 2);
+  await page.click('dialog[open] [role=status] button:has-text("Undo")'); await page.waitForTimeout(400); assert.equal(await page.locator('dialog[open] .av-card').count(), 3, 'undo brings it back');
+  const back = await page.evaluate(async () => { const S = await import('./js/store.js'); const json = S.exportAll(); const n = JSON.parse(json).avatarLib.length; await S.importBackup(json, 'merge'); return [n, S.avatarLib().length]; }); assert.deepEqual(back, [3, 3], 'in the backup, merged by id');
+  await closeDialogs(page); await page.goto(base + '#/'); await page.waitForSelector('.hero .avatar-kit'); assert.ok(hair);
+});
+await step('v1.23: the picker offers "Build my own" and an avatar picked there is used at once; a kit avatar survives sanitising and other profiles keep theirs', async () => {
+  const { page } = await newPage({ lang: 'en' }); await page.goto(base + '#/settings/profile'); await page.waitForSelector('details[data-group=profile]');
+  await page.click('details[data-group=profile] button:has-text("Avatar")'); await page.waitForSelector('dialog[open] .avatar-picker'); assert.deepEqual(await audit(page, 'picker'), []);
+  await page.click('dialog[open] button:has-text("Build my own")'); await page.waitForSelector('.studio'); await page.click('dialog[open] footer button:has-text("Use as my avatar")'); await page.waitForTimeout(700);
+  assert.equal(await page.evaluate(async () => { const S = await import('./js/store.js'); return S.get().settings.avatar.k; }), 'kit');
+  const other = await page.evaluate(async () => { const S = await import('./js/store.js'); const me = S.activeProfile().id; const p = await S.saveProfile({ name: 'Dana' }); await S.switchProfile(p.id); const dana = S.get().settings.avatar.k; await S.switchProfile(me); return [dana, S.get().settings.avatar.k]; });
+  assert.notEqual(other[0], 'kit', 'a new person starts with the default character'); assert.equal(other[1], 'kit');
+});
+await step('v1.23: axe on the studio, My avatars and the code import (he + en, big text, a skin)', async () => {
+  const bad = [];
+  for (const [lang, big, skin] of [['he', false, 'default'], ['en', true, 'candy']]) {
+    const { page } = await newPage({ lang }); await page.goto(base + '#/'); if (lang === 'he') await dismissWelcome(page); await page.waitForSelector('.routine');
+    await page.evaluate(async ([b, sk]) => { const S = await import('./js/store.js'); await S.updateSettings({ skin: sk, fontScale: b ? 150 : 100 }); await S.saveAvatarDesign({ id: 'a1', name: 'Demo', avatar: { k: 'kit', p: { hair: 'afro' } } }); }, [big, skin]);
+    await page.goto(base + '#/settings/profile'); await page.reload(); await page.waitForSelector('details[data-group=profile]'); await page.evaluate(() => { document.querySelector('details[data-group=profile]').open = true; });
+    await page.click('details[data-group=profile] .toolbar button >> nth=1'); await page.waitForSelector('dialog[open] .av-card'); bad.push(...await audit(page, `${lang}/library`));
+    await page.click('dialog[open] .av-card button >> nth=1'); await page.waitForSelector('.studio .opt-tile'); bad.push(...await audit(page, `${lang}/studio-face`));
+    for (const n of [1, 2, 3, 6]) { await page.locator('.studio-tabs button').nth(n).click(); bad.push(...await audit(page, `${lang}/studio-tab${n}`)); }
+    await closeDialogs(page);
+  }
+  if (bad.length) console.error([...new Set(bad)].join('\n'));
+  assert.deepEqual(bad, []);
+});
+
 await browser.close(); server.close();
 console.log(failures ? `\n${failures} e2e step(s) failed` : '\nall e2e steps passed'); process.exit(failures ? 1 : 0);

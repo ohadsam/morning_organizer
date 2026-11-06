@@ -72,5 +72,7 @@ Status: ✅ shipped (version) · 🟡 partly (what is missing) · ⛔ not possib
 | 46 | Choose built-in special tasks (journal, thought parking, relaxation, guided imagery...) from a grouped, searchable picker, not only as suggestions | ✅ 1.21 |
 | 49 | NLP as a method like CBT / Cog-Fun: choose tasks, guidance and adaptation by it | ✅ 1.22 (needs model, six guided tools, special-task group; honest evidence note) |
 | 50 | Suggest and add more UI/UX improvements | ✅ 1.22 (calm animations switch, method notes in the chooser, light vibration tick) |
+| 51 | Build-your-own avatars with animations: a prompt for ChatGPT to make the kit, then create / save / edit / manage / share avatars in the app | ✅ 1.23 (283-part kit, studio, My avatars, share by code, backup) |
+| 52 | A second ChatGPT prompt for all icons, animations, logo and switchable style packs (also by method and difficulty) | ✅ prompt written (`docs/ICON_PACK_PROMPT.md`); the kit itself is waiting for the generated file |
 | 48 | A button next to the profile chooser to switch from the kids' view to the full view | ✅ 1.21.1 (top-bar Kids view / Full view; the way back asks the grown-up question) |
 | 47 | Export / import routines between profiles and between devices | ✅ 1.21 (Share and move routines; file + copy to a person) |

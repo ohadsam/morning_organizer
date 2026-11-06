@@ -7,6 +7,9 @@ import { levelInfo } from '../levels.js';
 import { totalStars, finished } from '../stats.js';
 import { resizeToDataUrl } from '../photo.js';
 import { modal, toast, confirmBox, icon } from './common.js';
+import { kitNode } from './avatarKit.js';
+import { openAvatarStudio } from './avatarStudio.js';
+import { openMyAvatars } from './avatarLibrary.js';
 
 const NS = 'http://www.w3.org/2000/svg';
 function svgNode(spec) {
@@ -27,7 +30,7 @@ export function avatarNode(avatar, { size = 56, anim = 'idle', label = '' } = {}
     const body = document.createElementNS(NS, 'g'); body.setAttribute('class', 'av-body'); sh.body.forEach((s) => body.append(svgNode(s)));
     const z = document.createElementNS(NS, 'text'); z.setAttribute('class', 'av-z'); z.setAttribute('x', '72'); z.setAttribute('y', '20'); z.setAttribute('font-size', '22'); z.textContent = 'z';
     el.append(body, svgNode(sh.hand), z);
-  } else if (a.k === 'emoji') { el = h('span', { class: 'avatar avatar-emoji' }, a.e); el.style.fontSize = `${Math.round(size * 0.82)}px`; }
+  } else if (a.k === 'kit') { el = kitNode(a, { size, anim }); } else if (a.k === 'emoji') { el = h('span', { class: 'avatar avatar-emoji' }, a.e); el.style.fontSize = `${Math.round(size * 0.82)}px`; }
   else el = h('img', { class: 'avatar avatar-img', src: a.url, alt: '' });
   el.dataset.anim = anim; el.style.setProperty('--av', `${size}px`);
   if (label) { el.setAttribute('role', 'img'); el.setAttribute('aria-label', label); } else el.setAttribute('aria-hidden', 'true');
@@ -36,13 +39,15 @@ export function avatarNode(avatar, { size = 56, anim = 'idle', label = '' } = {}
 /** Plays an animation for `ms`, then settles back to idle. */
 export function animate(node, anim, ms = 1800) {
   if (!node?.isConnected && !node) return;
-  node.dataset.anim = anim; clearTimeout(node._animTimer);
-  if (anim !== 'idle') node._animTimer = setTimeout(() => { node.dataset.anim = 'idle'; }, ms);
+  const put = (a) => { node.dataset.anim = a; node._kitSet?.(a); };   // a kit avatar also swaps its parts (arms, eyes, mouth)
+  put(anim); clearTimeout(node._animTimer);
+  if (anim !== 'idle') node._animTimer = setTimeout(() => put('idle'), ms);
 }
 export const currentAvatar = () => S.get().settings.avatar;
 
 // ── picker ──
 const level = () => levelInfo(totalStars(finished(S.myRuns()))).level;
+export const avatarLevel = level;
 
 /** onPick(avatar) is called when the person presses Done. `startLevel` lets the profile editor show the right unlocks. */
 export function openAvatarPicker(initial, onPick, { lvl = level() } = {}) {
@@ -74,10 +79,15 @@ export function openAvatarPicker(initial, onPick, { lvl = level() } = {}) {
   } });
   const emojis = h('div', { class: 'swatches', role: 'group', 'aria-label': t('avatarEmoji') });
   draw();
-  return modal(t('avatar'), h('div', { class: 'stack avatar-picker' }, preview, anims, h('h3', {}, t('avatarCharacters')), grid, colors, h('h3', {}, t('avatarOwn')),
+  const m = modal(t('avatar'), h('div', { class: 'stack avatar-picker' }, preview, anims,
+    h('h3', {}, t('avkOwn')), h('div', { class: 'toolbar wrap' },
+      h('button', { class: 'btn primary', type: 'button', onclick: () => openAvatarStudio({ avatar: cur, lvl, onUse: (k) => { onPick(k); m.close(); } }) }, `🎨 ${t('avkBuild')}`),
+      h('button', { class: 'btn', type: 'button', onclick: () => openMyAvatars({ lvl, onUse: (k) => { onPick(k); m.close(); } }) }, `🧑‍🎨 ${t('avkLibrary')}`)),
+    h('h3', {}, t('avatarCharacters')), grid, colors, h('h3', {}, t('avatarOwn')),
     h('div', { class: 'toolbar wrap' }, h('button', { class: 'btn', type: 'button', onclick: () => camIn.click() }, '📷 ', t('avatarCamera')), h('button', { class: 'btn', type: 'button', onclick: () => photoIn.click() }, '🖼️ ', t('avatarPhoto')),
       h('button', { class: 'btn', type: 'button', onclick: () => gifIn.click() }, '🎞️ ', t('avatarGif'))), photoIn, camIn, gifIn, msg, h('h3', {}, t('avatarEmoji')), emojis),
   [{ label: t('cancel') }, { label: t('ok'), primary: true, fn: () => { onPick(cur); } }]);
+  return m;
 }
 
 // ── profile editor + switcher ──

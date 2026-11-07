@@ -1315,7 +1315,7 @@ await step('v1.20: axe on settings (needs, people, voice commands), the top menu
     const { page } = await newPage({ lang, foldsClosed: true }); await page.addInitScript(FAKE_SPEECH); await page.goto(base); if (lang === 'he') await dismissWelcome(page);
     await page.evaluate(async ([b, sk]) => { const S = await import('./js/store.js'); await S.updateSettings({ skin: sk, fontScale: b ? 150 : 100, easyRead: !!b }); }, [big, skin]);
     await page.goto(base + '#/settings/needs'); await page.reload(); await page.waitForSelector('.settings-bar'); bad.push(...await audit(page, `${lang}/settings-bar`));
-    await page.click('details[data-group="needs"] .btn.primary'); await page.waitForSelector('dialog[open] .needs'); bad.push(...await audit(page, `${lang}/needs-sheet`)); await closeDialogs(page);
+    await closeDialogs(page); await page.click('details[data-group="needs"] .btn.primary'); await page.waitForSelector('dialog[open] .needs'); bad.push(...await audit(page, `${lang}/needs-sheet`)); await closeDialogs(page);
     await page.click('#topbar .pm-btn'); bad.push(...await audit(page, `${lang}/profile-menu`)); await page.keyboard.press('Escape');
     await page.goto(base + '#/settings/voicecmd'); await page.reload(); await page.waitForSelector('.vc-help'); bad.push(...await audit(page, `${lang}/voicecmd`));
     await page.click('.vc-help'); await page.waitForSelector('dialog[open] .vc-list'); bad.push(...await audit(page, `${lang}/voice-help`)); await closeDialogs(page);

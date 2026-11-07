@@ -1551,5 +1551,28 @@ await step('v1.24: the welcome sheet shows its scene; the web app uses the new i
   assert.match(await page.getAttribute('link[rel=apple-touch-icon]', 'href'), /apple-touch-icon\.png/);
 });
 
+await step('v1.25: icons of the kit in the bar, tabs and menus - each look draws its own variant, "Icon style" overrides it, zero axe violations in all 8 looks (light and dark)', async () => {
+  const bad = [], seen = {};
+  const looks = ['default', 'ocean', 'forest', 'sunset', 'candy', 'slate', 'calm', 'bold'];
+  for (const [i, skin] of looks.entries()) {
+    const scheme = i % 2 ? 'dark' : 'light';
+    const { page } = await newPage({ lang: i % 3 === 0 ? 'he' : 'en', ctx: { colorScheme: scheme } }); await page.goto(base + '#/'); if (i % 3 === 0) await dismissWelcome(page); await page.waitForSelector('.tb-btn');
+    await page.evaluate(async (sk) => { const S = await import('./js/store.js'); await S.updateSettings({ skin: sk, fontScale: sk === 'bold' ? 150 : 100 }); }, skin);
+    await page.waitForSelector('#nav a .vki svg'); await page.waitForSelector('.tb-btn .vki svg');
+    assert.equal(await page.locator('#nav a .vki svg').count(), await page.locator('#nav a').count(), 'every tab has an icon'); assert.equal(await page.locator('.tb-btn .vki svg').count(), await page.locator('.tb-btn').count(), 'every toolbar button has an icon');
+    seen[skin] = await page.evaluate(() => document.querySelector('.tb-btn .vki svg').innerHTML.length);
+    bad.push(...await audit(page, `${skin}/${scheme}/home`));
+    await page.locator('.tb-btn[data-tb="plan"]').click(); await page.waitForSelector('.tb-panel:not([hidden]) .vki svg'); bad.push(...await audit(page, `${skin}/${scheme}/menu`));
+  }
+  assert.notEqual(seen.candy, seen.slate, 'filled (candy) and thin lines (slate) are different drawings');
+  const { page } = await newPage({ lang: 'en' }); await page.goto(base + '#/'); await page.waitForSelector('.tb-btn .vki svg');
+  const body = () => page.evaluate(() => document.querySelector('#nav a .vki svg').innerHTML);
+  const auto = await body(); await page.evaluate(async () => { const S = await import('./js/store.js'); await S.updateSettings({ iconStyle: 'filled' }); }); await page.waitForTimeout(300); const filled = await body();
+  assert.notEqual(auto, filled, 'the setting redraws the icons at once'); await page.evaluate(async () => { const S = await import('./js/store.js'); await S.updateSettings({ iconStyle: 'auto' }); }); await page.waitForTimeout(300); assert.equal(await body(), auto, 'auto follows the look again');
+  await page.goto(base + '#/settings/look'); await page.waitForSelector('details[data-group=look]'); await page.evaluate(() => { document.querySelector('details[data-group=look]').open = true; }); assert.ok(await page.locator('details[data-group=look] select:has(option[value=duotone])').count(), 'the Icon style select exists');
+  if (bad.length) console.error([...new Set(bad)].join('\n'));
+  assert.deepEqual(bad, []);
+});
+
 await browser.close(); server.close();
 console.log(failures ? `\n${failures} e2e step(s) failed` : '\nall e2e steps passed'); process.exit(failures ? 1 : 0);

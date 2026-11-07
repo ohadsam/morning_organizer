@@ -1,18 +1,20 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import { parseVisualKit, SKIN_PACK, MOOD_FACES } from '../../web/js/visualKit.js';
+import { parseVisualKit, SKIN_PACK, MOOD_FACES, SKIN_ICON, ICON_VARIANTS, iconVariantFor } from '../../web/js/visualKit.js';
 import { checkIconSvg, checkSvg } from '../../web/js/avatarKit.js';
 import { SKINS } from '../../web/js/skins.js';
 
 const raw = JSON.parse(fs.readFileSync(new URL('../../web/data/visual-kit.json', import.meta.url), 'utf8'));
 const kit = parseVisualKit(raw), css = fs.readFileSync(new URL('../../web/css/app.css', import.meta.url), 'utf8');
 test('the shipped visual kit passes the strict check: nothing dropped, illustrations and feelings present, a colour set per look', () => {
-  assert.ok(kit); assert.equal(kit.dropped, 0); assert.equal(Object.keys(kit.art).length, 21); assert.equal(Object.keys(kit.feelings).length, 32); assert.equal(kit.packs.length, 8);
+  assert.ok(kit); assert.equal(kit.dropped, 0); assert.equal(Object.keys(kit.art).length, 21); assert.equal(Object.keys(kit.feelings).length, 32); assert.equal(kit.packs.length, 8); assert.equal(Object.keys(kit.ui).length, 40); assert.equal(Object.keys(kit.features).length, 55);
+  for (const id of ['new-routine', 'wizard', 'plan', 'calm-corner', 'track', 'alarms', 'alarm-pause', 'goals', 'library', 'import', 'share-routines', 'journal', 'quick-note', 'looking-back', 'rewards-menu', 'routines', 'family', 'guide']) assert.ok(kit.features[id], id);
+  for (const id of ['settings', 'search']) assert.ok(kit.ui[id], id);
   for (const id of Object.values(MOOD_FACES)) assert.ok(kit.feelings[id], id);
   for (const id of ['empty-routines', 'empty-history', 'empty-goals', 'empty-journal', 'empty-alarms', 'welcome-1']) assert.ok(kit.art[id], id);
   assert.deepEqual(Object.keys(SKIN_PACK).sort(), [...SKINS].sort(), 'every look has a colour set'); for (const p of Object.values(SKIN_PACK)) assert.ok(kit.packs.some((x) => x.id === p), p);
-  assert.ok(JSON.stringify(raw).length < 150_000);
+  assert.ok(JSON.stringify(raw).length < 300_000);
 });
 test('the CSS colours of every look are exactly the pack colours (so the artwork follows the skin, in light and dark)', () => {
   for (const [skin, pid] of Object.entries(SKIN_PACK)) {
@@ -29,4 +31,11 @@ test('icon SVG check: allows fill-rule and pathLength, still refuses scripts, st
   for (const bad of ['<svg><script/></svg>', '<svg><style/></svg>', '<svg><image href="x"/></svg>', '<svg><path fill="url(http://x)"/></svg>', '<svg onload="x"/>', '<svg><text>a</text></svg>']) assert.equal(checkIconSvg(bad), false, bad);
   const evil = structuredClone(raw); evil.art['empty-routines'].svg = '<svg><script/></svg>'; evil.feelings['x y'] = { svg: '<svg/>' }; const p = parseVisualKit(evil); assert.equal(p.dropped, 2); assert.ok(!p.art['empty-routines']);
   assert.equal(parseVisualKit(null), null); assert.equal(parseVisualKit({ format: 'x' }), null); assert.equal(parseVisualKit({ format: 'sonrise-visual-kit', version: 1 }), null);
+});
+
+test('icon style: every icon has three variants; each look has its variant (the same as its pack); a person\'s own choice wins; junk falls back', () => {
+  for (const sec of ['ui', 'features']) for (const [id, v] of Object.entries(kit[sec])) assert.deepEqual(Object.keys(v.variants), ICON_VARIANTS, id);
+  for (const [skin, pid] of Object.entries(SKIN_PACK)) assert.equal(SKIN_ICON[skin], raw.packs.find((p) => p.id === pid).iconVariant, skin);
+  assert.equal(iconVariantFor('auto', 'candy'), 'filled'); assert.equal(iconVariantFor('line', 'candy'), 'line'); assert.equal(iconVariantFor('x', 'slate'), 'line'); assert.equal(iconVariantFor(undefined, '__proto__'), 'duotone'); assert.equal(iconVariantFor('auto', 'nope'), 'duotone');
+  const evil = structuredClone(raw); evil.features.wizard.variants.filled = '<svg><script/></svg>'; const p = parseVisualKit(evil); assert.ok(!p.features.wizard && p.dropped >= 1);
 });

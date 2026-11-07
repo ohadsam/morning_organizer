@@ -1,5 +1,7 @@
 // "What's new" content shown inside the app (newest first). Keep in step with docs/CHANGELOG.md; a unit test checks the current version is listed and both languages match.
 export const CHANGES = [
+  { v: '1.25.0', en: ['🎨 New drawn icons in the bar, its menus and the bottom tabs - thin, soft two-tone or solid, matching your look.', '⚙️ Settings → Appearance → Icon style: choose the style yourself.'],
+    he: ['🎨 אייקונים מצוירים חדשים בסרגל, בתפריטים ובלשוניות התחתונות - דקים, דו-גוניים רכים או מלאים, בהתאם למראה שלכם.', '⚙️ הגדרות ← מראה ← סגנון אייקונים: בוחרים בעצמכם את הסגנון.'] },
   { v: '1.24.1', en: ['📱 The Android icon now follows your launcher’s shape (round, square...) and can be tinted by the theme; notifications carry a small sunrise.'],
     he: ['📱 האייקון באנדרואיד מתאים עכשיו לצורת המשגר שלכם (עגול, מרובע...) ואפשר לצבוע אותו לפי ערכת הנושא; בהתראות יש שמש קטנה.'] },
   { v: '1.24.0', en: ['🌅 A redrawn SonRise icon on the home screen, in the app and while it starts.', '🖼️ Friendly illustrations where there was nothing yet (routines, statistics, goals, journal, alarms, welcome) - coloured by your look.', '🙂 New feeling faces for “how did it go?” after a routine.'],

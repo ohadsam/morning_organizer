@@ -1,5 +1,6 @@
 // Strings for 1.23: the avatar studio, My avatars, sharing an avatar.
 export const EN = {
+  iconStyle: 'Icon style', iconStyleHint: 'How the icons in the bar and menus are drawn. “Follow the look” picks what suits the look you chose.', iconAuto: 'Follow the look', iconLine: 'Thin lines', iconDuotone: 'Soft two-tone', iconFilled: 'Solid shapes',
   avkTitle: 'Avatar studio', avkOwn: 'Your own avatar', avkBuild: 'Build my own', avkLibrary: 'My avatars', avkLibraryHint: 'The avatars you made on this device. Anyone using the app here can pick one.', avkNew: 'New avatar',
   avkImport: 'Add from a code', avkImportHint: 'Paste the code someone sent you (it starts with SRAV1). You will see the avatar before adding it.', avkPasteHere: 'Paste the avatar code here', avkAdd: 'Add to my avatars', avkAdded: 'Added to My avatars', avkBadCode: 'This is not an avatar code.', avkFull: 'My avatars is full. Delete one first.', avkNoPack: 'The avatar parts could not be loaded. Check the connection and try again.',
   avkSave: 'Save', avkSaved: 'Saved to My avatars', avkUse: 'Use as my avatar', avkUseShort: 'Use', avkEdit: 'Edit', avkMore: 'More', avkDuplicate: 'Duplicate', avkCopyWord: '(copy)', avkShare: 'Share', avkShareText: 'My SonRise avatar “{name}”. In SonRise open My avatars → Add from a code, and paste:', avkCopied: 'Copied. Paste it in a message.',
@@ -11,6 +12,7 @@ export const EN = {
   sr_avatars: 'My avatars: build, save and share your avatar',
 };
 export const HE = {
+  iconStyle: 'סגנון אייקונים', iconStyleHint: 'איך מצוירים האייקונים בסרגל ובתפריטים. “לפי המראה” בוחר את מה שמתאים למראה שבחרתם.', iconAuto: 'לפי המראה', iconLine: 'קווים דקים', iconDuotone: 'דו-גוני רך', iconFilled: 'צורות מלאות',
   avkTitle: 'סטודיו אווטרים', avkOwn: 'אווטר משלכם', avkBuild: 'בונים אווטר משלי', avkLibrary: 'האווטרים שלי', avkLibraryHint: 'האווטרים שיצרתם במכשיר הזה. כל מי שמשתמש באפליקציה כאן יכול לבחור אחד.', avkNew: 'אווטר חדש',
   avkImport: 'הוספה מקוד', avkImportHint: 'מדביקים את הקוד ששלחו לכם (הוא מתחיל ב-SRAV1). לפני ההוספה רואים את האווטר.', avkPasteHere: 'מדביקים כאן את קוד האווטר', avkAdd: 'הוספה לאווטרים שלי', avkAdded: 'נוסף לאווטרים שלי', avkBadCode: 'זה לא קוד של אווטר.', avkFull: 'האווטרים שלי מלא. קודם מוחקים אחד.', avkNoPack: 'לא הצלחנו לטעון את חלקי האווטר. בדקו את החיבור ונסו שוב.',
   avkSave: 'שמירה', avkSaved: 'נשמר באווטרים שלי', avkUse: 'להשתמש כאווטר שלי', avkUseShort: 'שימוש', avkEdit: 'עריכה', avkMore: 'עוד', avkDuplicate: 'שכפול', avkCopyWord: '(עותק)', avkShare: 'שיתוף', avkShareText: 'האווטר שלי ב-SonRise “{name}”. ב-SonRise פותחים האווטרים שלי ← הוספה מקוד, ומדביקים:', avkCopied: 'הועתק. מדביקים בהודעה.',

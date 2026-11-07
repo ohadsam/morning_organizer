@@ -42,7 +42,7 @@ const AT_ICON = new Set([...AT, 'pathLength', 'fill-rule', 'clip-rule']);
 function checkSvgWith(svg, AT, max = MAX_PART) {
   if (typeof svg !== 'string' || svg.length > max || !svg.startsWith('<svg') || /<!|<\?|&(?!amp;|lt;|gt;|quot;|apos;|#\d+;)/.test(svg)) return false;
   const stack = [], ids = new Set(), refs = new Set(); let i = 0;
-  const tag = /<(\/?)([A-Za-z][A-Za-z0-9]*)((?:\s+[A-Za-z:-]+="[^"<]*")*)\s*(\/?)>/y;
+  const tag = /<(\/?)([A-Za-z][A-Za-z0-9]*)((?:\s+[A-Za-z][A-Za-z0-9:-]*="[^"<]*")*)\s*(\/?)>/y;
   while (i < svg.length) {
     const lt = svg.indexOf('<', i); if (lt < 0) { if (svg.slice(i).trim()) return false; break; }
     if (svg.slice(i, lt).trim()) return false;                                   // no text between the tags
@@ -50,7 +50,7 @@ function checkSvgWith(svg, AT, max = MAX_PART) {
     const [all, close, name, attrs, self] = m; i = lt + all.length;
     if (!EL.has(name)) return false;
     if (close) { if (stack.pop() !== name) return false; continue; }
-    for (const [, an, av] of attrs.matchAll(/([A-Za-z:-]+)="([^"]*)"/g)) {
+    for (const [, an, av] of attrs.matchAll(/([A-Za-z][A-Za-z0-9:-]*)="([^"]*)"/g)) {
       if (!AT.has(an)) return false;
       if (an === 'id') ids.add(av);
       for (const u of av.matchAll(/url\(([^)]*)\)/g)) { if (!/^#[A-Za-z0-9_-]+$/.test(u[1])) return false; refs.add(u[1].slice(1)); }

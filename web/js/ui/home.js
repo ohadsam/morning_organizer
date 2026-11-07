@@ -11,7 +11,7 @@ import { rewardProgress } from '../rewards.js';
 import { avatarNode, openProfiles } from './avatar.js';
 import { levelInfo } from '../levels.js';
 import { openRoutineIO } from './routineIO.js';
-import { emptyState } from './visualKit.js';
+import { emptyState, iconNode } from './visualKit.js';
 import { splitForToday } from '../schedule.js';
 import { icon, iconBtn, toast, confirmBox, toolbar } from './common.js';
 import { openPauseSheet, pausedBanner } from './pause.js';
@@ -92,13 +92,13 @@ export function renderHome(root, nav) {
       simple ? null : followUpCard(nav, draw) ?? dueCard(nav, draw),
       simple ? null : (() => { const g = S.goals().find((x) => needsCheck(x)); return g ? h('section', { class: 'card focus-card' }, h('strong', {}, `🎯 ${t('checkDue')}`), h('p', {}, g.title), h('button', { class: 'btn primary', type: 'button', onclick: () => openCheckin(g, draw) }, `✔ ${t('checkTitle')}`)) : null; })(),
       simple ? null : h('button', { class: 'home-search', type: 'button', 'aria-haspopup': 'dialog', onclick: () => openSearch(nav) }, h('span', { 'aria-hidden': 'true' }, '🔍'), h('span', {}, t('homeSearch'))),
-      simple ? null : (() => { const f = S.features(), b = (emoji, label, fn) => h('button', { class: 'btn', type: 'button', onclick: fn }, h('span', { 'aria-hidden': 'true' }, emoji), label), paused = isPaused(settings.alarmsPause); return toolbar([
-        { id: 'new', icon: '➕', label: t('tbNew'), run: () => runAction('newRoutine', nav) },
-        { id: 'wizard', icon: '🪄', label: t('tbWizard'), run: () => runAction('wizard', nav) },
-        { id: 'plan', icon: '🗓️', label: t('tbPlan'), items: [b('⏰', t('alarmsTitle'), () => nav('#/alarms')), S.shows('goals') ? b('🎯', t('goalsTitle'), () => nav('#/goals')) : null, b('📚', t('libFromTemplate'), () => openRoutinePicker(nav)), b('⚙️', t('libManage'), () => nav('#/library')), b('📥', t('import'), () => openImport()), b('🔁', t('rioTitle'), () => openRoutineIO())].filter(Boolean) },
-        { id: 'calm', icon: '🌬️', label: t('tbCalm'), items: [f.calmCorner ? b('🌬️', t('calmTitle'), () => nav('#/calm')) : null, f.journal ? b('📓', t('journal'), () => nav('#/journal')) : null, f.journal ? b('🎙️', t('jQuick'), () => openCapture({})) : null, S.shows('nlp') ? b('🗣️', t('tbNlp'), () => nav('#/nlp')) : null].filter(Boolean) },
-        { id: 'track', icon: '📈', label: t('tbTrack'), items: [S.shows('stats') ? b('📊', t('stats'), () => nav('#/stats')) : null, S.shows('retros') ? b('🔄', t('rcvTitle'), () => nav('#/retros')) : null, f.rewardMenu && S.shows('rewards') ? b('🎁', t('menuTitle'), () => openMenu()) : null].filter(Boolean) },
-        { id: 'alarms', icon: paused ? '🔕' : '🔔', label: paused ? t('pauseResume') : t('tbAlarms'), pressed: paused, run: () => openPauseSheet(draw) }], t('quickTitle')); })(),
+      simple ? null : (() => { const f = S.features(), b = (emoji, label, fn, id = '') => h('button', { class: 'btn', type: 'button', onclick: fn }, id ? iconNode(id, { size: 20, fallback: emoji }) : h('span', { 'aria-hidden': 'true' }, emoji), label), paused = isPaused(settings.alarmsPause); return toolbar([
+        { id: 'new', icon: '➕', iconId: 'new-routine', label: t('tbNew'), run: () => runAction('newRoutine', nav) },
+        { id: 'wizard', icon: '🪄', iconId: 'wizard', label: t('tbWizard'), run: () => runAction('wizard', nav) },
+        { id: 'plan', icon: '🗓️', iconId: 'plan', label: t('tbPlan'), items: [b('⏰', t('alarmsTitle'), () => nav('#/alarms'), 'alarms'), S.shows('goals') ? b('🎯', t('goalsTitle'), () => nav('#/goals'), 'goals') : null, b('📚', t('libFromTemplate'), () => openRoutinePicker(nav), 'library'), b('⚙️', t('libManage'), () => nav('#/library')), b('📥', t('import'), () => openImport(), 'import'), b('🔁', t('rioTitle'), () => openRoutineIO(), 'share-routines')].filter(Boolean) },
+        { id: 'calm', icon: '🌬️', iconId: 'calm-corner', label: t('tbCalm'), items: [f.calmCorner ? b('🌬️', t('calmTitle'), () => nav('#/calm'), 'calm-corner') : null, f.journal ? b('📓', t('journal'), () => nav('#/journal'), 'journal') : null, f.journal ? b('🎙️', t('jQuick'), () => openCapture({}), 'quick-note') : null, S.shows('nlp') ? b('🗣️', t('tbNlp'), () => nav('#/nlp')) : null].filter(Boolean) },
+        { id: 'track', icon: '📈', iconId: 'track', label: t('tbTrack'), items: [S.shows('stats') ? b('📊', t('stats'), () => nav('#/stats'), 'track') : null, S.shows('retros') ? b('🔄', t('rcvTitle'), () => nav('#/retros'), 'looking-back') : null, f.rewardMenu && S.shows('rewards') ? b('🎁', t('menuTitle'), () => openMenu(), 'rewards-menu') : null].filter(Boolean) },
+        { id: 'alarms', icon: paused ? '🔕' : '🔔', iconId: paused ? 'alarm-pause' : 'alarms', label: paused ? t('pauseResume') : t('tbAlarms'), pressed: paused, run: () => openPauseSheet(draw) }], t('quickTitle')); })(),
       simple ? null : pausedBanner(draw),
       simple ? null : suggestionBelow,
       favs.length ? h('section', {}, h('h2', {}, t('favorites')), h('div', { class: 'stack' }, favs.map((x) => card(x, nav)))) : null,

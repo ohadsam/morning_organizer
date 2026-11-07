@@ -77,6 +77,9 @@ A look-back record now carries `mode` (guided|free), `scope` (run | the routine'
 - `ui/people.js`: needs sheet, People manager, top-bar profile menu, start-up picker. Settings has a search/jump bar (`settingsBar`).
 - Voice commands: `voiceCommands.js` (pure: strict short-phrase matching, longest phrase wins, he + en, dedupe) + `ui/voiceControl.js` (restarting `dictation.js` session, ignores results while `speakingNow()`), wired in `ui/runner.js` (`onVoice`); risky commands only open the usual confirmation and a spoken yes / no answers it.
 
+## Icon styles (1.25)
+`data/visual-kit.json` now also holds the 40 `ui` and 55 `features` icons, each in `line` / `duotone` / `filled` (parsed by `parseVisualKit`). `ui/visualKit.js#iconNode(id)` draws one in `currentColor` (the cut-outs `.i-bg` take `--surface`) in the variant `iconVariantFor(settings.iconStyle, settings.skin)` (`SKIN_ICON`: Classic/Ocean/Forest duotone, Sunset/Candy/Bold filled, Slate/Calm line); `refreshIcons()` redraws every `.vki` when the look or the style changes (called from the look subscription in app.js). Used by the Home toolbar (`iconId`), its menu buttons, and the nav tabs; the emoji stays as the fallback until the kit is loaded. The SVG check reads attribute names with digits.
+
 ## Android icon (1.24.1)
 `res/mipmap-anydpi-v26/ic_launcher.xml` (adaptive: `drawable-nodpi/ic_launcher_background|foreground|monochrome.png`), the old density PNGs stay for lookups; `drawable-xxxhdpi/ic_stat_sonrise.png` is the notification small icon (alarm and family notifications).
 

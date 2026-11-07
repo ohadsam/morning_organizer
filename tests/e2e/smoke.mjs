@@ -36,8 +36,11 @@ async function newPage(opts = {}) {
   return { page, errors, ctx };
 }
 // the Home toolbar's dropdowns show one panel at a time: open the one that holds a button before clicking it
-const openMenuWith = async (page, text) => { if (await page.locator(`.tb-panel:not([hidden]) button:has-text("${text}")`).count()) return; const n = await page.locator('.tb-btn[aria-haspopup]').count(); for (let i = 0; i < n; i++) { await page.locator('.tb-btn[aria-haspopup]').nth(i).click(); if (await page.locator(`.tb-panel:not([hidden]) button:has-text("${text}")`).count()) return; } };
-const qk = async (page, text) => { await openMenuWith(page, text); await page.click(`.tb-panel button:has-text("${text}")`); };
+// the menu buttons now carry a drawn icon (data-icon) instead of an emoji: find them by either
+const ICON_OF = { '🎁': 'rewards-menu', '📚': 'library', '🔁': 'share-routines', '⏰': 'alarms', '🎯': 'goals', '📥': 'import', '🌬️': 'calm-corner', '📓': 'journal', '🎙️': 'quick-note', '📊': 'track', '🔄': 'looking-back' };
+const menuSel = (text) => (ICON_OF[text] ? `.tb-panel button:has(.vki[data-icon="${ICON_OF[text]}"]), .tb-panel button:has-text("${text}")` : `.tb-panel button:has-text("${text}")`);
+const openMenuWith = async (page, text) => { if (await page.locator(menuSel(text).replace(/\.tb-panel button/g, '.tb-panel:not([hidden]) button')).count()) return; const n = await page.locator('.tb-btn[aria-haspopup]').count(); for (let i = 0; i < n; i++) { await page.locator('.tb-btn[aria-haspopup]').nth(i).click(); if (await page.locator(menuSel(text).replace(/\.tb-panel button/g, '.tb-panel:not([hidden]) button')).count()) return; } };
+const qk = async (page, text) => { await openMenuWith(page, text); await page.locator(menuSel(text)).first().click(); };
 // the journal's password section now stays as the person left it when the page redraws: open it only when it is closed
 const openLockCard = async (page) => { await page.waitForSelector('details.lock-card'); if (!(await page.locator('details.lock-card[open]').count())) await page.click('details.lock-card summary'); await page.waitForSelector('details.lock-card[open]'); };
 const setStyle = (page, v) => page.evaluate(async (x) => { const S = await import('./js/store.js'); await S.updateSettings({ textStyle: x }); }, v);
@@ -1394,7 +1397,7 @@ await step('v1.21: axe on the special-task picker, who-sees box, share/move shee
     await page.goto(base + '#/edit/' + id); await page.waitForSelector('.task-name'); await page.click('button.btn:has-text("✨")'); await page.waitForSelector('dialog[open] .tiles-grid'); bad.push(...await audit(page, `${lang}/special-picker`)); await closeDialogs(page);
     bad.push(...await audit(page, `${lang}/editor-who-points`));
     await page.goto(base + '#/'); await page.waitForSelector('.routine'); await page.evaluate(() => document.querySelector('.tb-btn[data-tb="plan"]')?.click()); await page.waitForSelector('.tb-panel:not([hidden])');
-    await page.click('.tb-panel button:has-text("🔁")'); await page.waitForSelector('dialog[open] .rio-list'); bad.push(...await audit(page, `${lang}/rio`)); await closeDialogs(page);
+    await qk(page, '🔁'); await page.waitForSelector('dialog[open] .rio-list'); bad.push(...await audit(page, `${lang}/rio`)); await closeDialogs(page);
     await page.goto(base + '#/run/' + id); await page.waitForSelector('.main-btns'); bad.push(...await audit(page, `${lang}/run-points`));
     for (let i = 0; i < 6 && !(await page.locator('.summary').count()); i++) await page.click('.main-btns .primary', { timeout: 3000 }).catch(() => {});
     await page.waitForSelector('.podium-card'); await page.waitForTimeout(600); bad.push(...await audit(page, `${lang}/podium`));

@@ -66,9 +66,10 @@ export async function openAvatarStudio({ avatar, id = null, name = '', lvl = 1, 
     if (!wiz) {
       if (tab === 'start' || tab === 'finish') tab = 'face';
       paintChips(); paintTabs(); paintPanel();
-      setChildren(body, h('div', { class: 'studio-head' }, preview, h('div', { class: 'studio-ctl' }, animRow, feelRow,
+      setChildren(body, h('div', { class: 'studio-head' }, preview, h('div', { class: 'studio-ctl' },
         h('div', { class: 'btn-pair' }, h('button', { class: 'btn small', type: 'button', onclick: () => { kit = randomKit(pack, lvl); paintPreview(); paintPanel(); } }, `🎲 ${t('avkRandom')}`),
           h('button', { class: 'btn small', type: 'button', onclick: () => shareAvatar(kit, nm.trim(), say) }, `📤 ${t('avkShare')}`)), modeBtn())),
+        h('details', { class: 'fold anim-fold' }, h('summary', {}, `🎭 ${t('avatarAnim')} / ${t('avkFeelings')}`), h('div', { class: 'stack' }, animRow, feelRow)),
         tabsEl, panel, nameField(), status);
       paintPreview(); return;
     }

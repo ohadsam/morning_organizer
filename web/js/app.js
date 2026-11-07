@@ -31,6 +31,7 @@ import { renderLibrary } from './ui/library.js';
 import { renderCalm } from './ui/calm.js';
 import { renderNlp } from './ui/nlp.js';
 import { loadPack as loadAvatarPack } from './ui/avatarKit.js';
+import { iconNode, refreshIcons } from './ui/visualKit.js';
 import { openSearch } from './ui/search.js';
 import { drawTopbar, maybeAskWho } from './ui/people.js';
 import { createUpdater, canAutoUpdate } from './update.js';
@@ -69,10 +70,11 @@ async function route() {
 
 function drawNav(view) {
   const simple = S.get().settings.simpleMode;
-  const tabs = simple ? [['home', 'home', '#/'], ['settings', 'gear', '#/settings']] : [['home', 'home', '#/'], S.shows('stats') ? ['stats', 'chart', '#/stats'] : null, S.shows('family') ? ['family', 'users', '#/family'] : null, ['guide', 'book', '#/guide'], ['settings', 'gear', '#/settings']].filter(Boolean);
+  const FB = { home: '🏠', stats: '📈', family: '👪', guide: '📖', settings: '⚙️' };   // emoji shown until the icon kit is loaded
+  const tabs = simple ? [['home', 'routines', '#/'], ['settings', 'settings', '#/settings']] : [['home', 'routines', '#/'], S.shows('stats') ? ['stats', 'track', '#/stats'] : null, S.shows('family') ? ['family', 'family', '#/family'] : null, ['guide', 'guide', '#/guide'], ['settings', 'settings', '#/settings']].filter(Boolean);
   const parentTab = { edit: 'home', run: 'home', library: 'home', alarms: 'home', goals: 'home', report: 'stats', retro: 'stats', retros: 'stats' }, active = Object.hasOwn(parentTab, view) ? parentTab[view] : view;
-  setChildren(document.getElementById('nav'), ...tabs.map(([key, ic, href]) => h('a', { href, class: key === active ? 'on' : '', 'aria-current': key === active ? 'page' : null }, icon(ic, 24), h('span', {}, t(key === 'family' ? 'tabFamily' : key)))),
-    simple || view === 'run' ? null : h('button', { class: 'nav-search', type: 'button', 'aria-haspopup': 'dialog', 'aria-label': t('searchOpen'), title: t('searchOpen'), onclick: () => openSearch(nav) }, icon('search', 24), h('span', {}, t('searchOpen'))));
+  setChildren(document.getElementById('nav'), ...tabs.map(([key, ic, href]) => h('a', { href, class: key === active ? 'on' : '', 'aria-current': key === active ? 'page' : null }, iconNode(ic, { size: 24, fallback: FB[key] }), h('span', {}, t(key === 'family' ? 'tabFamily' : key)))),
+    simple || view === 'run' ? null : h('button', { class: 'nav-search', type: 'button', 'aria-haspopup': 'dialog', 'aria-label': t('searchOpen'), title: t('searchOpen'), onclick: () => openSearch(nav) }, iconNode('search', { size: 24, fallback: '🔍' }), h('span', {}, t('searchOpen'))));
 }
 
 async function boot() {
@@ -99,10 +101,10 @@ async function boot() {
   S.subscribe(() => { const { textStyle, age } = S.get().settings, on = shouldBePlayful(textStyle, age); if (on !== isPlayful()) { setPlayful(on); route(); } });
   // each profile has its own look / language / sizes: when the person (or the settings) change, re-apply them and redraw
   let lookKey = '';
-  const look = () => { const x = S.get().settings; return [x.activeProfile, x.lang, x.theme, x.skin, x.easyRead, x.fontScale, x.colorSafe, x.contrast, x.accent, x.simpleMode, x.reduceMotion].join('|'); };
+  const look = () => { const x = S.get().settings; return [x.activeProfile, x.lang, x.theme, x.skin, x.easyRead, x.fontScale, x.colorSafe, x.contrast, x.accent, x.simpleMode, x.reduceMotion, x.iconStyle].join('|'); };
   lookKey = look();
   S.subscribe(() => { const k = look(); if (k === lookKey) return; const was = lookKey.split('|'), x = S.get().settings; lookKey = k;
-    setLang(x.lang); applyTheme(x.theme); applyA11y(x); document.title = t('appName'); try { localStorage.setItem('mo.theme', x.theme); localStorage.setItem('mo.lang', x.lang); } catch { /* blocked */ }
+    setLang(x.lang); applyTheme(x.theme); applyA11y(x); refreshIcons(); document.title = t('appName'); try { localStorage.setItem('mo.theme', x.theme); localStorage.setItem('mo.lang', x.lang); } catch { /* blocked */ }
     if (was[0] !== x.activeProfile || was[1] !== x.lang || was[9] !== String(x.simpleMode)) { drawNav(document.body.dataset.view); route(); } });
   // progress widget (Android): a tiny snapshot whenever something changes
   const { finished: finishedRuns, streak: streakOf, totalStars: starsOf } = await import('./stats.js'), { weeklyReport } = await import('./weekly.js');

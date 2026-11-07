@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.25.0
+- **Icon styles**: the bar on Home, its menus and the bottom tabs now use drawn icons (40 interface + 55 feature icons from the visual kit) instead of emoji. Each look draws them its own way - thin lines (Slate, Calm), soft two-tone (Classic, Ocean, Forest) or solid shapes (Sunset, Candy, Bold) - always in the text colour, so they follow light, dark and every look.
+- **Icon style setting** (Settings → Appearance): follow the look (default), thin lines, soft two-tone or solid shapes - changes at once, kept per person.
+- Safer loader: the strict SVG check now also reads attributes with digits (x1, y1...) that the icons use; the avatar parts keep their narrower list. The art set was refreshed with the corrected "playful" and "hyper-focus" faces.
+
 ## 1.24.1
 - **Android adaptive icon**: the launcher icon is now an adaptive icon (sky gradient behind, the sun and rays in front inside the safe zone) with a one-colour version for themed icons (Android 13+); notifications (alarms, family messages) use a SonRise sunrise silhouette instead of a generic system icon. The web app's maskable icon is now a true full-bleed one.
 - Tests: the schedule/gear step is pinned to a weekday (it failed on weekends), and the app icon keeps its accessible name.

@@ -584,3 +584,8 @@ html[data-motion="calm"] *, html[data-motion="calm"] *::before, html[data-motion
 .mood .vk { --vk: 40px; margin: auto; }
 .mood { display: grid; place-items: center; padding: 0; }
 .vk-center { display: grid; justify-items: center; }
+
+/* icon kit: drawn in the current text colour; the cut-outs of the filled variant take the surface colour */
+.vki { display: inline-grid; place-items: center; width: var(--vki, 22px); height: var(--vki, 22px); flex: none; line-height: 1; vertical-align: middle; font-size: calc(var(--vki, 22px) * .85); }
+.vki svg { width: 100%; height: 100%; display: block; } .vki .i-bg { fill: var(--surface); stroke: var(--surface); }
+#nav a .vki { color: inherit; } .tb-i .vki { font-size: 1.1rem; }

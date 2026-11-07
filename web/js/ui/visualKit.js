@@ -1,7 +1,8 @@
 // Draws the visual kit's artwork: illustrations and feeling faces. The pack is fetched once (cached by the service worker); a node shows its picture
 // as soon as it is there. Colours come from the CSS variables --k1..--k8 that the active look sets, so every look recolours the same drawings.
 import { h, setChildren } from '../util.js';
-import { parseVisualKit } from '../visualKit.js';
+import { parseVisualKit, iconVariantFor } from '../visualKit.js';
+import * as S from '../store.js';
 import { inner } from './avatarKit.js';
 
 const NS = 'http://www.w3.org/2000/svg';
@@ -31,3 +32,22 @@ export const artNode = (id, opts) => node('art', id, opts);
 export const feelingNode = (id, opts) => node('feelings', id, opts);
 /** A calm "nothing here yet" block: a picture and a sentence. */
 export const emptyState = (artId, text) => h('div', { class: 'empty-state' }, artNode(artId, { size: 140 }), h('p', { class: 'empty' }, text));
+
+/**
+ * An icon of the kit (ui or feature icons): drawn in the current text colour, in the variant of the look (or the person's own "icon style").
+ * `fallback` (an emoji) shows until the kit is loaded. refreshIcons() redraws them all when the look or the style changes.
+ */
+export function iconNode(id, { size = 22, fallback = '' } = {}) {
+  const box = h('span', { class: 'vki', 'aria-hidden': 'true', 'data-icon': id }, fallback);
+  box.style.setProperty('--vki', `${size}px`);
+  if (kit) fillIcon(box); else loadVisualKit().then(() => fillIcon(box));
+  return box;
+}
+function fillIcon(box) {
+  const id = box.dataset.icon, it = kit?.ui[id] || kit?.features[id]; if (!it) return;
+  const st = S.get().settings, svgText = it.variants[iconVariantFor(st.iconStyle, st.skin)];
+  const svg = document.createElementNS(NS, 'svg'); svg.setAttribute('viewBox', '0 0 24 24'); svg.setAttribute('focusable', 'false');
+  for (const n of inner(svgText)) svg.append(n);
+  setChildren(box, svg);
+}
+export function refreshIcons(root = document) { if (kit) for (const b of root.querySelectorAll('.vki[data-icon]')) fillIcon(b); }

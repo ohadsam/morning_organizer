@@ -130,6 +130,9 @@ Settings → Appearance now also offers Calm (one muted colour family, low stimu
 ## Illustrations, feeling faces and the new icon
 Where there is nothing yet (no routines, statistics, goals, journal entries or alarms) the app shows a small friendly illustration, and the welcome sheet shows a scene; they take their colours from the look you chose in Settings → Appearance. After a routine, "How did it go?" uses five feeling faces. The SonRise icon was redrawn for the home screen, the app and the start-up screen.
 
+## Icon styles
+The bar on Home, its menus and the bottom tabs use drawn icons. Each look draws them its own way (thin lines, soft two-tone or solid shapes). Settings → Appearance → Icon style lets you choose: follow the look, thin lines, soft two-tone or solid shapes.
+
 ## Updates and sharing the app
 The web app updates itself - when you open it, and every hour - and switches to the new version on its own when nothing is running; if you are in the middle of something it asks first. The Android app updates from the latest download. To share SonRise open Settings → App → Share (or search "share"): choose the Android app or the web app, and send it by WhatsApp, e-mail, the share sheet or a copied link.
 

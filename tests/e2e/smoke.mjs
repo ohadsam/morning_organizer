@@ -1577,5 +1577,21 @@ await step('v1.25: icons of the kit in the bar, tabs and menus - each look draws
   assert.deepEqual(bad, []);
 });
 
+await step('v1.25.1: looking back is easy to find - a clear card on the run summary, a hint on Home, a dot on Track, a button in the routine statistics, found by plain words', async () => {
+  const { page } = await newPage({ lang: 'en' }); await page.goto(base + '#/'); await page.waitForSelector('.routine');
+  const finish = async () => { await page.goto(base + '#/'); await page.waitForSelector('.routine'); await page.locator('.routine .start').first().click(); await page.waitForSelector('.ring'); for (let i = 0; i < 12 && !(await page.locator('.summary').count()); i++) await page.click('.main-btns .primary', { timeout: 3000 }).catch(() => {}); await page.waitForSelector('.summary'); };
+  await finish(); assert.ok(await page.locator('.summary .retro-sum button.primary').count(), 'the summary invites to look back'); assert.deepEqual(await audit(page, 'summary-retro'), []);
+  await finish();
+  await page.goto(base + '#/'); await page.waitForSelector('.tb-btn'); assert.ok(await page.locator('.tb-btn[data-tb="track"] .tb-dot').count(), 'Track carries a dot while a look-back is due');
+  assert.ok(await page.locator('.retro-card').count(), 'a card on Home');
+  try { await page.evaluate(() => { const r = JSON.parse('null'); void r; }); } catch { /* none */ }
+  await page.evaluate(async () => { const S = await import('./js/store.js'); const due = S.myRuns().filter((r) => r.endedAt).sort((a, b) => b.endedAt - a.endedAt)[0]; localStorage.setItem('mo.retroSkip', due.id); });
+  await page.goto(base + '#/'); await page.waitForSelector('.routine'); await page.reload(); await page.waitForSelector('.routine');
+  await page.waitForSelector('.retro-hint'); assert.deepEqual(await audit(page, 'retro-hint'), []);
+  await page.click('.retro-hint button:has-text("Not now")'); await page.waitForTimeout(300); assert.equal(await page.locator('.retro-hint').count(), 0, 'dismissed for a week');
+  await page.goto(base + '#/stats'); await page.waitForSelector('a.link-card'); await page.locator('a.link-card').first().click(); await page.waitForSelector('button:has-text("Look back at this routine")'); await page.click('button:has-text("Look back at this routine")'); await page.waitForSelector('main, #app'); assert.match(await page.evaluate(() => location.hash), /#\/retro\//);
+  await page.goto(base + '#/'); await page.keyboard.press('Control+k'); await page.waitForSelector('.search-input'); await page.fill('.search-input', 'what happened'); await page.waitForSelector('.search-results li'); assert.match(await page.textContent('.search-results'), /Looking back|Look back/i);
+});
+
 await browser.close(); server.close();
 console.log(failures ? `\n${failures} e2e step(s) failed` : '\nall e2e steps passed'); process.exit(failures ? 1 : 0);

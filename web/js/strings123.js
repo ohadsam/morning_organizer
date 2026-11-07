@@ -1,5 +1,6 @@
 // Strings for 1.23: the avatar studio, My avatars, sharing an avatar.
 export const EN = {
+  rcHintTitle: 'Looking back makes mornings easier', rcHintBody: 'Two quiet minutes: where did it get stuck, and what could help next time?', rcHintGo: 'Look back', rcHintLater: 'Not now', rcSumTitle: 'Look back at this run', rcSumBody: 'Two quiet minutes: where did it get stuck, and what could help next time? You can change the routine from here.', rcSumGo: 'Look back (2 minutes)', rcStatsGo: 'Look back at this routine',
   iconStyle: 'Icon style', iconStyleHint: 'How the icons in the bar and menus are drawn. “Follow the look” picks what suits the look you chose.', iconAuto: 'Follow the look', iconLine: 'Thin lines', iconDuotone: 'Soft two-tone', iconFilled: 'Solid shapes',
   avkTitle: 'Avatar studio', avkOwn: 'Your own avatar', avkBuild: 'Build my own', avkLibrary: 'My avatars', avkLibraryHint: 'The avatars you made on this device. Anyone using the app here can pick one.', avkNew: 'New avatar',
   avkImport: 'Add from a code', avkImportHint: 'Paste the code someone sent you (it starts with SRAV1). You will see the avatar before adding it.', avkPasteHere: 'Paste the avatar code here', avkAdd: 'Add to my avatars', avkAdded: 'Added to My avatars', avkBadCode: 'This is not an avatar code.', avkFull: 'My avatars is full. Delete one first.', avkNoPack: 'The avatar parts could not be loaded. Check the connection and try again.',
@@ -12,6 +13,7 @@ export const EN = {
   sr_avatars: 'My avatars: build, save and share your avatar',
 };
 export const HE = {
+  rcHintTitle: 'מבט לאחור מקל על הבקרים', rcHintBody: 'שתי דקות רגועות: איפה נתקענו, ומה יכול לעזור בפעם הבאה?', rcHintGo: 'מסתכלים אחורה', rcHintLater: 'לא עכשיו', rcSumTitle: 'מסתכלים אחורה על ההרצה הזאת', rcSumBody: 'שתי דקות רגועות: איפה נתקענו, ומה יכול לעזור בפעם הבאה? אפשר גם לשנות את השגרה מכאן.', rcSumGo: 'מסתכלים אחורה (2 דקות)', rcStatsGo: 'מסתכלים אחורה על השגרה',
   iconStyle: 'סגנון אייקונים', iconStyleHint: 'איך מצוירים האייקונים בסרגל ובתפריטים. “לפי המראה” בוחר את מה שמתאים למראה שבחרתם.', iconAuto: 'לפי המראה', iconLine: 'קווים דקים', iconDuotone: 'דו-גוני רך', iconFilled: 'צורות מלאות',
   avkTitle: 'סטודיו אווטרים', avkOwn: 'אווטר משלכם', avkBuild: 'בונים אווטר משלי', avkLibrary: 'האווטרים שלי', avkLibraryHint: 'האווטרים שיצרתם במכשיר הזה. כל מי שמשתמש באפליקציה כאן יכול לבחור אחד.', avkNew: 'אווטר חדש',
   avkImport: 'הוספה מקוד', avkImportHint: 'מדביקים את הקוד ששלחו לכם (הוא מתחיל ב-SRAV1). לפני ההוספה רואים את האווטר.', avkPasteHere: 'מדביקים כאן את קוד האווטר', avkAdd: 'הוספה לאווטרים שלי', avkAdded: 'נוסף לאווטרים שלי', avkBadCode: 'זה לא קוד של אווטר.', avkFull: 'האווטרים שלי מלא. קודם מוחקים אחד.', avkNoPack: 'לא הצלחנו לטעון את חלקי האווטר. בדקו את החיבור ונסו שוב.',

@@ -34,7 +34,10 @@ for (const lang of ['he','en']) for (const [w,fs_] of [[320,100],[390,150]]) {
     let bad=await p.evaluate(find); if (bad.length) results.push(`${lang} ${w}/${fs_} dialog my-avatars: ${bad.join(' | ')}`);
     await p.click('dialog[open] .av-card button >> nth=1').catch(()=>{}); await p.waitForSelector('.studio .opt-tile',{timeout:3000}).catch(()=>{}); await p.waitForTimeout(500);
     for (const n of [0,1,2,3,4,5,6]) { await p.locator('.studio-tabs button').nth(n).click().catch(()=>{}); await p.waitForTimeout(200); bad=await p.evaluate(find); if (bad.length) results.push(`${lang} ${w}/${fs_} studio tab ${n}: ${bad.join(' | ')}`); }
-    await p.keyboard.press('Escape'); await p.keyboard.press('Escape'); }
+    await p.keyboard.press('Escape'); await p.keyboard.press('Escape'); 
+    await p.evaluate(async()=>{const m=await import('./js/ui/avatarStudio.js'); m.openAvatarStudio({lvl:3});}); await p.waitForSelector('.studio .wiz-start',{timeout:3000}).catch(()=>{}); await p.waitForTimeout(400);
+    for (let n=0;n<10;n++) { bad=await p.evaluate(find); if (bad.length) results.push(`${lang} ${w}/${fs_} avatar wizard step ${n}: ${bad.join(' | ')}`); if (n===0) await p.click('.wiz-start button >> nth=0').catch(()=>{}); else await p.locator('.studio .btn.primary:not(footer .btn)').first().click({timeout:800}).catch(()=>{}); await p.waitForTimeout(200); }
+    await p.keyboard.press('Escape'); }
   await p.goto(base+'#/'); await p.waitForTimeout(300); await p.evaluate(()=>document.querySelector('.tb-btn[data-tb="plan"]').click()); await p.click('.tb-panel button:has-text("🔁")').catch(()=>{}); await p.waitForTimeout(300); { const bad=await p.evaluate(find); if (bad.length) results.push(`${lang} ${w}/${fs_} dialog rio: ${bad.join(' | ')}`); } await p.keyboard.press('Escape');
   await p.goto(base+'#/run/'+id); await p.waitForSelector('.main-btns'); for(let i=0;i<4&&!(await p.locator('.summary').count());i++) await p.click('.main-btns .primary',{timeout:2000}).catch(()=>{}); await p.waitForTimeout(500); { const bad=await p.evaluate(find); if (bad.length) results.push(`${lang} ${w}/${fs_} summary: ${bad.join(' | ')}`); }
   await ctx.close();

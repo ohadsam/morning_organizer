@@ -27,7 +27,7 @@ export function openMyAvatars({ lvl = 1, onUse } = {}) {
   loadPack(); draw();
   const off = S.subscribe(draw);
   const m = modal(`🧑‍🎨 ${t('avkLibrary')}`, h('div', { class: 'stack' }, h('p', { class: 'note' }, t('avkLibraryHint')),
-    h('div', { class: 'row-btns' }, h('button', { class: 'btn primary', type: 'button', onclick: () => openAvatarStudio({ avatar: defaultKit(), lvl, onSaved: draw, onUse: (k) => { onUse?.(k); m.close(); } }) }, `➕ ${t('avkNew')}`),
+    h('div', { class: 'row-btns' }, h('button', { class: 'btn primary', type: 'button', onclick: () => openAvatarStudio({ avatar: defaultKit(), wizard: true, lvl, onSaved: draw, onUse: (k) => { onUse?.(k); m.close(); } }) }, `➕ ${t('avkNew')}`),
       h('button', { class: 'btn', type: 'button', onclick: () => openImportAvatar(draw, say) }, `📥 ${t('avkImport')}`)), status, list), [{ label: t('close'), primary: true }]);
   m.el.addEventListener('close', off);
   return m;

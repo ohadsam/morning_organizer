@@ -1469,7 +1469,7 @@ await step('v1.22: axe on the NLP page and exercises (he + en, big text, a skin)
 await step('v1.23: build an avatar (locked options stay locked), animate it, save, use it, edit, duplicate, share by code, import the code, delete with undo', async () => {
   const { page } = await newPage({ lang: 'en', ctx: { permissions: ['clipboard-read', 'clipboard-write'] } }); await page.goto(base + '#/settings/profile'); await page.waitForSelector('details[data-group=profile]');
   await page.click('button:has-text("My avatars")'); await page.waitForSelector('dialog[open] .empty'); assert.deepEqual(await audit(page, 'avatars-empty'), []);
-  await page.click('dialog[open] button:has-text("New avatar")'); await page.waitForSelector('.studio .opt-tile'); await page.waitForSelector('.studio-preview svg.avatar-kit .kit-move');
+  await page.click('dialog[open] button:has-text("New avatar")'); await page.waitForSelector('.studio .wiz-start'); await page.click('.studio button:has-text("Edit freely")'); await page.waitForSelector('.studio .opt-tile'); await page.waitForSelector('.studio-preview svg.avatar-kit .kit-move');
   assert.ok(await page.locator('.opt-tile:disabled').count() > 0, 'options above the person\'s level are locked'); assert.match(await page.getAttribute('.opt-tile:disabled >> nth=0', 'aria-label'), /unlocks at level/);
   await page.click('.studio-tabs button:has-text("Hair")'); await page.locator('.opt-tile:not(:disabled) >> nth=3').click(); const hair = await page.evaluate(() => document.querySelector('.opt-tile.on')?.textContent);
   await page.click('.studio-tabs button:has-text("Colours")'); await page.locator('.swatches >> nth=0').locator('.swatch >> nth=5').evaluate((e) => e.click());
@@ -1493,6 +1493,28 @@ await step('v1.23: build an avatar (locked options stay locked), animate it, sav
   const back = await page.evaluate(async () => { const S = await import('./js/store.js'); const json = S.exportAll(); const n = JSON.parse(json).avatarLib.length; await S.importBackup(json, 'merge'); return [n, S.avatarLib().length]; }); assert.deepEqual(back, [3, 3], 'in the backup, merged by id');
   await closeDialogs(page); await page.goto(base + '#/'); await page.waitForSelector('.hero .avatar-kit'); assert.ok(hair);
 });
+await step('v1.25.2: the avatar wizard goes step by step (boy / girl / neutral first), footer buttons never break their words, icons are colourful unless black & white is chosen', async () => {
+  const { page } = await newPage({ lang: 'en' }); await dismissWelcome(page);
+  await page.evaluate(async () => { const m = await import('./js/ui/avatarStudio.js'); m.openAvatarStudio({ lvl: 3 }); });
+  await page.waitForSelector('.studio .wiz-start'); assert.equal(await page.locator('.wiz-start .opt-tile').count(), 3);
+  await page.click('.wiz-start .opt-tile:has-text("Girl")'); await page.waitForSelector('.wiz-top'); assert.match(await page.textContent('#wizStep'), /Step 2 of 9/);
+  const hair = await page.evaluate(() => document.querySelector('.studio-preview svg')._kit.p.hair); assert.equal(hair, 'long-wavy', 'the Girl preset starts the avatar');
+  for (let i = 0; i < 7; i++) await page.click('.studio button:has-text("Next")'); await page.waitForSelector('.studio input[type=text]'); assert.match(await page.textContent('#wizStep'), /Step 9 of 9/);
+  await page.click('.studio button:has-text("Back")'); assert.match(await page.textContent('#wizStep'), /Step 8 of 9/);
+  const w = await page.evaluate(() => [...document.querySelectorAll('dialog footer .btn')].map((b) => [b.scrollWidth > b.clientWidth + 1, b.getBoundingClientRect().height < 70]));
+  assert.ok(w.every(([over, ok]) => !over && ok), 'footer buttons keep their words on one line');
+  await page.click('.studio button:has-text("Edit freely")'); await page.waitForSelector('.studio-tabs');
+  await closeDialogs(page);
+  // icons: coloured by default, text colour when black & white is on
+  const colour = () => page.evaluate(() => { const i = document.querySelector('.tb-i .vki, .vki'); return i ? getComputedStyle(i).color : ''; });
+  await page.waitForSelector('.vki svg'); const c1 = await colour(), text = await page.evaluate(() => getComputedStyle(document.body).color);
+  const set = (v) => page.evaluate(async (v2) => { const S = await import('./js/store.js'); await S.updateSettings({ iconMono: v2 }); }, v);
+  await set(true); await page.waitForTimeout(200); assert.equal(await page.evaluate(() => document.documentElement.dataset.iconmono), '1');
+  const c2 = await colour(); assert.notEqual(c1, c2, 'coloured by default, different when black & white is on'); void text;
+  await set(false); assert.equal(await page.evaluate(() => document.documentElement.dataset.iconmono || ''), '');
+  await page.context().close();
+});
+
 await step('v1.23: the picker offers "Build my own" and an avatar picked there is used at once; a kit avatar survives sanitising and other profiles keep theirs', async () => {
   const { page } = await newPage({ lang: 'en' }); await page.goto(base + '#/settings/profile'); await page.waitForSelector('details[data-group=profile]');
   await page.click('details[data-group=profile] button:has-text("Avatar")'); await page.waitForSelector('dialog[open] .avatar-picker'); assert.deepEqual(await audit(page, 'picker'), []);

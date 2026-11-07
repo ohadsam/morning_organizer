@@ -9,13 +9,19 @@ import { kitNode, loadPack } from './avatarKit.js';
 import { shareAvatar } from './avatarShare.js';
 
 const ANIM_EMOJI = { idle: '🙂', wave: '👋', cheer: '🎉', dance: '💃', sleep: '😴', alert: '😮', think: '🤔', happy: '😊', calm: '😌', sad: '😢', worried: '😟', angry: '😠', tired: '🥱', excited: '🤩', proud: '🏅' };
+const PRESETS = {
+  boy: { head: 'round', hair: 'short-straight', eyes: 'round', brows: 'straight', cheeks: 'none', outfit: 't-shirt' },
+  girl: { head: 'oval', hair: 'long-wavy', eyes: 'big-shiny', brows: 'soft', cheeks: 'blush', outfit: 'dress' },
+  neutral: { head: 'round', hair: 'short-curly', eyes: 'dot', brows: 'soft', cheeks: 'blush', outfit: 'hoodie' },
+};
+const presetKit = (k) => { const d = defaultKit(); return sanitizeKit({ ...d, p: { ...d.p, ...PRESETS[k] } }); };
 const TAB_EMOJI = { face: '🙂', hair: '💇', eyes: '👀', clothes: '👕', extras: '🕶️', buddy: '🐾', colors: '🎨' };
 
 /**
  * opts: { avatar (the design to start from), id (a saved design being edited), name, lvl (the person's level: what is unlocked),
  * onUse(kit) (called by "Use as my avatar"), onSaved(item) }. Resolves to the sheet, or null when the parts could not be loaded.
  */
-export async function openAvatarStudio({ avatar, id = null, name = '', lvl = 1, onUse, onSaved } = {}) {
+export async function openAvatarStudio({ avatar, id = null, name = '', lvl = 1, onUse, onSaved, wizard } = {}) {
   const pack = await loadPack(); if (!pack) { toast(t('avkNoPack')); return null; }
   let kit = isKit(avatar) ? sanitizeKit(avatar) : defaultKit(), tab = 'face', anim = 'idle', savedId = id, nm = name;
   const lang = () => (getLang() === 'he' ? 'he' : 'en');
@@ -49,12 +55,41 @@ export async function openAvatarStudio({ avatar, id = null, name = '', lvl = 1, 
     if (!(await S.saveAvatarDesign(item))) { say(t('avkFull')); return null; }
     savedId = item.id; onSaved?.(item); return item;
   };
-  paintPreview(); paintChips(); paintTabs(); paintPanel();
-  return modal(`🎨 ${t('avkTitle')}`, h('div', { class: 'stack studio' },
-    h('div', { class: 'studio-head' }, preview, h('div', { class: 'studio-ctl' }, animRow, feelRow,
-      h('div', { class: 'row-btns' }, h('button', { class: 'btn small', type: 'button', onclick: () => { kit = randomKit(pack, lvl); paintPreview(); paintPanel(); } }, `🎲 ${t('avkRandom')}`),
-        h('button', { class: 'btn small', type: 'button', onclick: () => shareAvatar(kit, nm.trim(), say) }, `📤 ${t('avkShare')}`)))),
-    tabsEl, panel, h('label', { class: 'field' }, h('span', { class: 'lbl' }, t('avkName')), nameIn), status), [
+  const STEPS = ['start', ...TABS.map(([id]) => id), 'colors', 'finish'];
+  let wiz = wizard ?? (!isKit(avatar) && !id), step = 0;
+  const body = h('div', { class: 'stack' });
+  const goto = (n) => { step = Math.max(0, Math.min(STEPS.length - 1, n)); paintBody(); };
+  const modeBtn = () => h('button', { class: 'btn small link', type: 'button', onclick: () => { wiz = !wiz; if (wiz) step = 1; else tab = tab === 'start' || tab === 'finish' ? 'face' : tab; paintBody(); } }, wiz ? `✏️ ${t('avkModeFree')}` : `🧭 ${t('avkModeWiz')}`);
+  const nameField = () => h('label', { class: 'field' }, h('span', { class: 'lbl' }, t('avkName')), nameIn);
+  function paintBody() {
+    big = null;
+    if (!wiz) {
+      if (tab === 'start' || tab === 'finish') tab = 'face';
+      paintChips(); paintTabs(); paintPanel();
+      setChildren(body, h('div', { class: 'studio-head' }, preview, h('div', { class: 'studio-ctl' }, animRow, feelRow,
+        h('div', { class: 'btn-pair' }, h('button', { class: 'btn small', type: 'button', onclick: () => { kit = randomKit(pack, lvl); paintPreview(); paintPanel(); } }, `🎲 ${t('avkRandom')}`),
+          h('button', { class: 'btn small', type: 'button', onclick: () => shareAvatar(kit, nm.trim(), say) }, `📤 ${t('avkShare')}`)), modeBtn())),
+        tabsEl, panel, nameField(), status);
+      paintPreview(); return;
+    }
+    const id2 = STEPS[step]; tab = id2;
+    const title = id2 === 'start' ? t('avkWizStart') : id2 === 'finish' ? t('avkWizFinish') : id2 === 'colors' ? t('avkTab_colors') : t(`avkTab_${id2}`);
+    const nav = h('div', { class: 'btn-pair' }, h('button', { class: 'btn', type: 'button', disabled: step === 0, onclick: () => goto(step - 1) }, `${getLang() === 'he' ? '→' : '←'} ${t('avkBack')}`),
+      step < STEPS.length - 1 ? h('button', { class: 'btn primary', type: 'button', onclick: () => goto(step + 1) }, `${t('avkNext')} ${getLang() === 'he' ? '←' : '→'}`) : h('span'));
+    let content;
+    if (id2 === 'start') {
+      content = h('div', { class: 'opt-grid wiz-start', role: 'group', 'aria-label': t('avkWizStart') }, ['girl', 'boy', 'neutral'].map((k) => h('button', { type: 'button', class: 'opt-tile big', onclick: () => { kit = presetKit(k); goto(1); } },
+        kitNode(presetKit(k), { size: 84, anim: 'none' }), h('small', {}, t(`avkWiz_${k}`)))));
+    } else if (id2 === 'finish') {
+      paintChips(); content = h('div', { class: 'stack' }, h('p', { class: 'note' }, t('avkWizDone')), animRow, feelRow, nameField(),
+        h('div', { class: 'btn-pair' }, h('button', { class: 'btn small', type: 'button', onclick: () => { kit = randomKit(pack, lvl); paintPreview(); } }, `🎲 ${t('avkRandom')}`), h('button', { class: 'btn small', type: 'button', onclick: () => shareAvatar(kit, nm.trim(), say) }, `📤 ${t('avkShare')}`)));
+    } else { paintPanel(); content = panel; }
+    setChildren(body, h('div', { class: 'wiz-top' }, preview, h('div', { class: 'stack wiz-info' }, h('p', { class: 'note', id: 'wizStep' }, t('avkStepOf', { n: step + 1, m: STEPS.length }) + (id2 === 'start' || id2 === 'finish' ? '' : ' · ' + title)), h('progress', { max: STEPS.length, value: step + 1, 'aria-label': t('avkStepOf', { n: step + 1, m: STEPS.length }) }), modeBtn())),
+      (id2 === 'start' || id2 === 'finish') ? h('h3', { class: 'wiz-title' }, title) : null, content, nav, status);
+    paintPreview();
+  }
+  paintBody();
+  return modal(`🎨 ${t('avkTitle')}`, h('div', { class: 'stack studio' }, body), [
     { label: t('close') },
     { label: t('avkSave'), fn: async () => { if (await save()) say(t('avkSaved')); return false; } },
     { label: t('avkUse'), primary: true, fn: async () => { if (!(await save())) return false; onUse?.(kit); } }]);

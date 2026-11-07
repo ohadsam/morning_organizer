@@ -46,6 +46,7 @@ export function iconNode(id, { size = 22, fallback = '' } = {}) {
 function fillIcon(box) {
   const id = box.dataset.icon, it = kit?.ui[id] || kit?.features[id]; if (!it) return;
   const st = S.get().settings, svgText = it.variants[iconVariantFor(st.iconStyle, st.skin)];
+  box.dataset.ic = String([...id].reduce((a, c) => (a * 31 + c.charCodeAt(0)) % 997, 7) % 8);
   const svg = document.createElementNS(NS, 'svg'); svg.setAttribute('viewBox', '0 0 24 24'); svg.setAttribute('focusable', 'false');
   for (const n of inner(svgText)) svg.append(n);
   setChildren(box, svg);

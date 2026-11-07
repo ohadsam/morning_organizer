@@ -72,6 +72,8 @@ Status: ✅ shipped (version) · 🟡 partly (what is missing) · ⛔ not possib
 | 46 | Choose built-in special tasks (journal, thought parking, relaxation, guided imagery...) from a grouped, searchable picker, not only as suggestions | ✅ 1.21 |
 | 49 | NLP as a method like CBT / Cog-Fun: choose tasks, guidance and adaptation by it | ✅ 1.22 (needs model, six guided tools, special-task group; honest evidence note) |
 | 50 | Suggest and add more UI/UX improvements | ✅ 1.22 (calm animations switch, method notes in the chooser, light vibration tick) |
+| 59 | Android widget assets: icons, backgrounds, frames and animation frames for every widget | ✅ prompt written (`docs/WIDGET_KIT_PROMPT.md`); waiting for the generated kit |
+| 58 | Review the scenery kit and write a corrected prompt | ✅ reviewed: mascot, splash and store art are good and will be adopted; backgrounds, patterns, accents, frames, dividers need a redo; contrast numbers were measured on flat colour - corrected prompt in `docs/SCENERY_KIT_PROMPT_2.md` |
 | 57 | Switchable style packs for icons (per look and by choice) | ✅ 1.25 (toolbar, menus and tabs; per-look variant + the Icon style setting); task icons / awards / animations still to come |
 | 56 | Round-4 visual kit: fix adaptive icon layers, outline logo, stars, tired / playful / hyper-focus faces, filled feature icons | ✅ checked; adopted the adaptive icon (1.24.1), notification icon and maskable icon; faces/filled icons wait for the style-pack switch |
 | 55 | Use the corrected visual kit in the app | ✅ 1.24 (strict loader, per-look artwork colours, empty-state and welcome illustrations, mood faces, new app icon); tasks / features / awards / animations / style-pack switch wait for the final kit (round 4) |

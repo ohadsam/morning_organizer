@@ -31,6 +31,7 @@ import { taskHelpCard } from './taskHelp.js';
 import { discardActiveRun } from './runAdmin.js';
 import { createVoiceControl } from './voiceControl.js';
 import { podiumCard } from './podium.js';
+import { lookBackSummaryCard } from './retro.js';
 import { scoreRun, scoreTask } from '../points.js';
 import { dictationSupported } from '../dictation.js';
 import { openUnplannedSheet, patternCards, reasonName } from './unplanned.js';
@@ -328,7 +329,7 @@ export async function renderRunner(root, id, nav) {
     const starRow = h('div', { class: 'stars', role: 'img', 'aria-label': `${t('starsEarned')}: ${n}/3` }, [0, 1, 2].map((i) => h('span', { class: `star ${i < n ? 'on' : ''}`, style: { '--i': String(i) } }, '⭐')));
     setChildren(root, h('div', { class: 'summary' },
       h('div', { class: 'big-emoji' }, avatarNode(st().avatar, { size: 110, anim: done ? 'dance' : 'think' })), h('h1', {}, done ? t('allDone') : t('stopped')), starRow,
-      h('p', { class: 'muted' }, run.templateName), h('div', { class: 'celebrate-slot' }), h('div', { class: 'podium-slot' }), bubble,
+      h('p', { class: 'muted' }, run.templateName), h('div', { class: 'celebrate-slot' }), h('div', { class: 'podium-slot' }), bubble, lookBackSummaryCard(nav, run.id),
       feat.moodCheck ? h('div', { class: 'card center' }, h('strong', {}, t('moodAsk')), moodRow(async (v) => { run.mood = v; await S.setRunMood(run.id, v); }, run.mood || null)) : null,
       myGoals.length && done ? h('div', { class: 'card center' }, h('strong', {}, `🎯 ${myGoals[0].title}`), h('p', {}, t('checkAsk')), moodRow(async (v) => { await S.addCheck(myGoals[0].id, { rating: v }); toast(t('checkSaved')); })) : null,
       feat.journal ? h('button', { class: 'btn', type: 'button', onclick: () => openCapture({ routine: run.templateName }) }, `📝 ${t('jAfter')}`) : null,
@@ -345,7 +346,6 @@ export async function renderRunner(root, id, nav) {
         h('button', { class: 'btn primary', type: 'button', onclick: () => nav('#/') }, t('again')),
         h('button', { class: 'btn', type: 'button', onclick: () => nav(`#/stats/${run.templateId}`) }, icon('chart', 18), t('viewStats')),
         h('button', { class: 'btn', type: 'button', onclick: () => nav(`#/report/run/${run.id}`) }, `📄 ${t('rpRunReport')}`),
-        h('button', { class: 'btn', type: 'button', onclick: () => nav(`#/retro/${run.id}`) }, `🔄 ${t('rcLookBack')}`),
         h('button', { class: 'btn danger', type: 'button', onclick: async () => { if (await confirmBox(t('runDeleteConfirm'), t('runDelete'), true)) { const undo = await S.removeRunWithUndo(run.id); toast(t('runDeleted'), { label: t('undo'), fn: undo }); nav('#/'); } } }, `🗑 ${t('runDelete')}`))));
     if (done) confetti(root, 44);
     say(done ? 'runDone' : 'runStopped');

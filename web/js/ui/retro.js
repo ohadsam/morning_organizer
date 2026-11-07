@@ -202,6 +202,26 @@ export function dueCard(nav, redraw) {
     h('div', { class: 'row-btns' }, h('button', { class: 'btn primary', type: 'button', onclick: () => nav(hubHash(run.id)) }, t('rcDoIt')), h('button', { class: 'btn', type: 'button', onclick: () => { try { localStorage.setItem('mo.retroSkip', run.id); } catch { /* blocked */ } redraw(); } }, t('focusLater'))));
 }
 
+/**
+ * Home: a calm, dismissable reminder that looking back exists (for people who have finished a few routines and have not been nudged for a week).
+ * Never shown together with the "due" or "your change was judged" cards.
+ */
+export function lookBackHint(nav, redraw) {
+  const runs = S.myRuns().filter((r) => r.endedAt && r.tasks?.some((k) => k.done)); if (runs.length < 2 || !S.shows('retros')) return null;
+  let until = 0; try { until = Number(localStorage.getItem('mo.retroHint') || 0); } catch { /* blocked */ }
+  if (Date.now() < until) return null;
+  const latest = [...runs].sort((a, b) => b.endedAt - a.endedAt)[0];
+  return h('section', { class: 'card retro-card retro-hint' }, h('strong', {}, `🔄 ${t('rcHintTitle')}`), h('p', {}, t('rcHintBody')),
+    h('div', { class: 'row-btns' }, h('button', { class: 'btn primary', type: 'button', onclick: () => nav(hubHash(latest.id)) }, t('rcHintGo')),
+      h('button', { class: 'btn', type: 'button', onclick: () => { try { localStorage.setItem('mo.retroHint', String(Date.now() + 7 * 86_400_000)); } catch { /* blocked */ } redraw(); } }, t('rcHintLater'))));
+}
+/** The run summary: a clear invitation to look back at the run that just ended (instead of one small button at the bottom). */
+export function lookBackSummaryCard(nav, runId) {
+  if (!S.shows('retros')) return null;
+  return h('section', { class: 'card retro-card retro-sum' }, h('strong', {}, `🔄 ${t('rcSumTitle')}`), h('p', {}, t('rcSumBody')),
+    h('button', { class: 'btn primary', type: 'button', onclick: () => nav(hubHash(runId)) }, t('rcSumGo')));
+}
+
 /** Home: "your change has been judged" - shown once per look-back, after enough runs followed an applied change. */
 export function followUpCard(nav, redraw) {
   let seen = []; try { seen = JSON.parse(localStorage.getItem('mo.retroSeen') || '[]'); } catch { /* blocked */ }

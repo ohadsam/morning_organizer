@@ -133,6 +133,9 @@ Where there is nothing yet (no routines, statistics, goals, journal entries or a
 ## Icon styles
 The bar on Home, its menus and the bottom tabs use drawn icons. Each look draws them its own way (thin lines, soft two-tone or solid shapes). Settings → Appearance → Icon style lets you choose: follow the look, thin lines, soft two-tone or solid shapes.
 
+## Finding the look-back
+Looking back (where did it get stuck, what could help) is offered in several places: a card on the run summary, a calm card on Home after two finished routines ("Not now" hides it for a week), a dot on the Track button while one is due, a button in each routine's statistics, and in search (try "what happened" or "stuck").
+
 ## Updates and sharing the app
 The web app updates itself - when you open it, and every hour - and switches to the new version on its own when nothing is running; if you are in the middle of something it asks first. The Android app updates from the latest download. To share SonRise open Settings → App → Share (or search "share"): choose the Android app or the web app, and send it by WhatsApp, e-mail, the share sheet or a copied link.
 

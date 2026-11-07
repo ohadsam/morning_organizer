@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.25.1
+- **Looking back is easier to find and to remember** (owner request): the run summary now shows a clear "Look back at this run" card (two quiet minutes) instead of one small button; Home shows a calm, dismissable "Looking back makes mornings easier" card once you have finished two routines (not together with the other look-back cards; "Not now" hides it for a week); the **Track** button on the bar carries a dot while a look-back is due; each routine's statistics has a "Look back at this routine" button; and search finds it by plain words ("what happened", "stuck", "lessons", "debrief"...).
+
 ## 1.25.0
 - **Icon styles**: the bar on Home, its menus and the bottom tabs now use drawn icons (40 interface + 55 feature icons from the visual kit) instead of emoji. Each look draws them its own way - thin lines (Slate, Calm), soft two-tone (Classic, Ocean, Forest) or solid shapes (Sunset, Candy, Bold) - always in the text colour, so they follow light, dark and every look.
 - **Icon style setting** (Settings → Appearance): follow the look (default), thin lines, soft two-tone or solid shapes - changes at once, kept per person.

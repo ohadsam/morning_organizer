@@ -121,7 +121,7 @@ export function renderStats(root, templateId, nav) {
         rs.length >= 2 ? h('div', { class: 'card' }, lineChart(ST.series(rs)),
           h('div', { class: 'legend' }, h('span', { class: 'k actual' }, t('legendActual')), h('span', { class: 'k planned' }, t('legendPlanned')), h('span', { class: 'k est' }, t('legendEstimate')))) : h('p', { class: 'note' }, t('chartEmpty')),
         patternCards(tpl, nav, draw), unplannedCard(rs), awarenessCard(runs, templateId), difficultyCard(runs, templateId),
-        h('div', { class: 'toolbar' }, h('button', { class: 'btn', type: 'button', onclick: () => nav(`#/report/period/30-${templateId}`) }, `📄 ${t('rpRoutineReport')}`)),
+        h('div', { class: 'toolbar wrap' }, S.shows('retros') && rs.length ? h('button', { class: 'btn primary', type: 'button', onclick: () => nav(`#/retro/${encodeURIComponent(rs.at(-1).id)}`) }, `🔄 ${t('rcStatsGo')}`) : null, h('button', { class: 'btn', type: 'button', onclick: () => nav(`#/report/period/30-${templateId}`) }, `📄 ${t('rpRoutineReport')}`)),
         h('h2', {}, t('insights')),
         h('ul', { class: 'insights' }, ins.map((i) => h('li', {}, h('span', {}, insightText(i)),
           (i.type === 'shorten' || i.type === 'extend') ? h('button', { class: 'btn small', type: 'button', onclick: async (e) => {

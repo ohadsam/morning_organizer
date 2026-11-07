@@ -46,7 +46,7 @@ class NativeBridge(private val activity: MainActivity) {
         val nm = ctx.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         if (nm.getNotificationChannel(FAMILY_CHANNEL) == null) nm.createNotificationChannel(NotificationChannel(FAMILY_CHANNEL, ctx.getString(R.string.family_channel), NotificationManager.IMPORTANCE_DEFAULT))
         val open = PendingIntent.getActivity(ctx, 300, MainActivity.startIntent(ctx, null), PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
-        val n = NotificationCompat.Builder(ctx, FAMILY_CHANNEL).setSmallIcon(android.R.drawable.ic_dialog_info).setContentTitle(title.take(80)).setContentText(text.take(200))
+        val n = NotificationCompat.Builder(ctx, FAMILY_CHANNEL).setSmallIcon(R.drawable.ic_stat_sonrise).setContentTitle(title.take(80)).setContentText(text.take(200))
             .setStyle(NotificationCompat.BigTextStyle().bigText(text.take(200))).setContentIntent(open).setAutoCancel(true).build()
         try { NotificationManagerCompat.from(ctx).notify(FAMILY_NOTIF_ID, n) } catch (_: SecurityException) { }
     }

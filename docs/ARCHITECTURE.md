@@ -77,6 +77,9 @@ A look-back record now carries `mode` (guided|free), `scope` (run | the routine'
 - `ui/people.js`: needs sheet, People manager, top-bar profile menu, start-up picker. Settings has a search/jump bar (`settingsBar`).
 - Voice commands: `voiceCommands.js` (pure: strict short-phrase matching, longest phrase wins, he + en, dedupe) + `ui/voiceControl.js` (restarting `dictation.js` session, ignores results while `speakingNow()`), wired in `ui/runner.js` (`onVoice`); risky commands only open the usual confirmation and a spoken yes / no answers it.
 
+## Android icon (1.24.1)
+`res/mipmap-anydpi-v26/ic_launcher.xml` (adaptive: `drawable-nodpi/ic_launcher_background|foreground|monochrome.png`), the old density PNGs stay for lookups; `drawable-xxxhdpi/ic_stat_sonrise.png` is the notification small icon (alarm and family notifications).
+
 ## Visual kit (1.24)
 - `data/visual-kit.json` (illustrations `art`, feeling faces `feelings`, per-pack colours `packs`; trimmed from the ChatGPT kit) is parsed by `visualKit.js#parseVisualKit` through `checkIconSvg` (the avatar allow-list plus pathLength / fill-rule / clip-rule; invalid items are dropped). `ui/visualKit.js` draws them (`artNode`, `feelingNode`, `emptyState`) with createElementNS; the pictures use the classes `k1..k8` that css/app.css maps to `--k1..--k8`, set per look (`SKIN_PACK`: default=sunrise, ocean, forest, sunset, candy, slate, calm=calm-mono, bold=bold-focus) in light and dark - a unit test checks that the CSS colours equal the pack colours.
 - Not adopted yet (kit round 4): task icons (the app stores emoji), feature icons, awards, animations, the style-pack switch, adaptive-icon layers.

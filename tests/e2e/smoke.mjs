@@ -26,7 +26,7 @@ async function newPage(opts = {}) {
   const page = await ctx.newPage(); const errors = [];
   page.on('pageerror', (e) => errors.push(e.message)); page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); });
   if (process.env.SLOW) await (await ctx.newCDPSession(page)).send('Emulation.setCPUThrottlingRate', { rate: +process.env.SLOW }); // SLOW=6 emulates a slow CI machine
-  if (opts.clock) await page.clock.install();
+  if (opts.clock) await page.clock.install(opts.clockAt ? { time: opts.clockAt } : undefined);   // clockAt pins the date (a weekday) for steps that depend on the day of the week
   if (opts.lang !== 'he') {
     await page.goto(base + '#/settings'); await dismissWelcome(page); await page.waitForSelector('select');
     // most steps assert the plain English wording even when they enter a child's age; the playful steps switch it back to automatic
@@ -401,14 +401,16 @@ await step('v1.8: avatars (animated characters, photo, GIF), several people on o
 });
 
 await step('v1.9: schedule (today / other days), gear checklist, badges + celebration, achievements gallery, QR code for invitations', async () => {
-  const { page, errors } = await newPage(); await page.goto(base + '#/'); await page.waitForSelector('.routine');
+  const { page, errors } = await newPage({ clock: true, clockAt: new Date('2026-11-04T09:00:00') }); await page.goto(base + '#/'); await page.waitForSelector('.routine');
   await page.locator('.routine-main').first().click(); await page.waitForSelector('.task');
   await page.click('button:has-text("School days")'); await page.click('button:has-text("Add an item")'); await page.fill('.gear-row input[type=text]', 'PE kit'); await page.waitForTimeout(500);
   const dow = await page.evaluate(() => new Date().getDay()), school = dow >= 1 && dow <= 5;
   await page.goto(base + '#/'); await page.waitForSelector('.routine');
   const inSec = (h) => page.locator(`section:has(> h2:has-text("${h}")) .routine`).count();
   if (school) { assert.equal(await inSec('Today'), 2); assert.equal(await inSec('Other days'), 0); } else { assert.equal(await inSec('Today'), 1); assert.equal(await inSec('Other days'), 1); } // 'school days' routine + one unscheduled routine
-  await page.locator('.routine .start').first().click(); await page.waitForSelector('.ring'); assert.match(await page.textContent('.gear-card'), /PE kit/);
+  const gearId = await page.evaluate(async () => { const S = await import('./js/store.js'); return S.get().templates.find((x) => (x.gear || []).length)?.id; });   // the routine that has the gear item (on a weekend it is not the first one)
+  await page.goto(base + '#/run/' + gearId); await page.waitForSelector('.ring');
+  if (school) assert.match(await page.textContent('.gear-card'), /PE kit/); else assert.equal(await page.locator('.gear-card').count(), 0, 'school-day gear stays out of the weekend');
   await page.check('.gear-card input[type=checkbox]'); await page.waitForFunction(() => document.querySelector('.gear-card summary').textContent.includes('1/1'));
   for (let i = 0; i < 6; i++) await page.click('text=Done ✓'); await page.waitForSelector('.summary'); assert.match(await page.textContent('.summary'), /Gear to remember\s*1\/1/);
   await page.waitForSelector('.celebrate-slot .celebrate', { timeout: 10000 }); assert.match(await page.textContent('.celebrate-slot'), /New badge/); assert.match(await page.textContent('.celebrate-slot'), /First routine/);

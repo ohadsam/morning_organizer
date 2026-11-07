@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.24.1
+- **Android adaptive icon**: the launcher icon is now an adaptive icon (sky gradient behind, the sun and rays in front inside the safe zone) with a one-colour version for themed icons (Android 13+); notifications (alarms, family messages) use a SonRise sunrise silhouette instead of a generic system icon. The web app's maskable icon is now a true full-bleed one.
+- Tests: the schedule/gear step is pinned to a weekday (it failed on weekends), and the app icon keeps its accessible name.
+
 ## 1.24.0
 - **New app icon**: the sunrise icon is redrawn (smoother sky, nine fine rays, a soft highlight on the sun, layered hills, a two-tone "SonRise" wordmark) for the web app (192 / 512 / maskable / Apple touch), the boot screen and the Android launcher.
 - **Illustrations** from the corrected visual kit in the places that used to say "nothing here yet": no routines, no statistics, no goals, an empty journal, no alarms, and a scene in the welcome sheet. They are recoloured by the chosen look (all 8 looks, light and dark), so the artwork always matches the app.

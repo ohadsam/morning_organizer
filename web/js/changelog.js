@@ -1,5 +1,7 @@
 // "What's new" content shown inside the app (newest first). Keep in step with docs/CHANGELOG.md; a unit test checks the current version is listed and both languages match.
 export const CHANGES = [
+  { v: '1.25.2', en: ['🎨 Icons are colourful now (turn on “Black & white icons” in Settings for the old look). 🧭 The avatar studio has a step-by-step guide: boy / girl / neutral first, then face, hair, eyes, clothes, extras, buddy, colours and a name. Buttons keep their words on one line.'],
+    he: ['🎨 האייקונים צבעוניים עכשיו (אפשר להפעיל “אייקונים בשחור־לבן” בהגדרות). 🧭 באולפן האווטרים יש מדריך שלב אחרי שלב: קודם ילד / ילדה / ניטרלי, ואז פנים, שיער, עיניים, בגדים, תוספות, חבר, צבעים ושם. כפתורים כבר לא שוברים מילים באמצע.'] },
   { v: '1.25.1', en: ['🔄 Looking back is easier to find: a clear card after every routine, a calm reminder on Home, a dot on the Track button when one is due, and a button in each routine’s statistics.'],
     he: ['🔄 קל יותר למצוא את המבט לאחור: כרטיס ברור אחרי כל שגרה, תזכורת רגועה בבית, נקודה על כפתור המעקב כשיש מבט לאחור שממתין, וכפתור בסטטיסטיקה של כל שגרה.'] },
   { v: '1.25.0', en: ['🎨 New drawn icons in the bar, its menus and the bottom tabs - thin, soft two-tone or solid, matching your look.', '⚙️ Settings → Appearance → Icon style: choose the style yourself.'],

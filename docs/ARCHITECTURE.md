@@ -78,6 +78,9 @@ A look-back record now carries `mode` (guided|free), `scope` (run | the routine'
 - Voice commands: `voiceCommands.js` (pure: strict short-phrase matching, longest phrase wins, he + en, dedupe) + `ui/voiceControl.js` (restarting `dictation.js` session, ignores results while `speakingNow()`), wired in `ui/runner.js` (`onVoice`); risky commands only open the usual confirmation and a spoken yes / no answers it.
 
 ## Icon styles (1.25)
+
+Colour (1.25.2): each `.vki` gets `data-ic` (0-7, a hash of the icon id) and CSS paints it with `--ic0..--ic7` (light/dark sets); `<html data-iconmono>` (setting `iconMono`, mirrored in `mo.a11y[7]` for the boot script) turns it off.
+
 `data/visual-kit.json` now also holds the 40 `ui` and 55 `features` icons, each in `line` / `duotone` / `filled` (parsed by `parseVisualKit`). `ui/visualKit.js#iconNode(id)` draws one in `currentColor` (the cut-outs `.i-bg` take `--surface`) in the variant `iconVariantFor(settings.iconStyle, settings.skin)` (`SKIN_ICON`: Classic/Ocean/Forest duotone, Sunset/Candy/Bold filled, Slate/Calm line); `refreshIcons()` redraws every `.vki` when the look or the style changes (called from the look subscription in app.js). Used by the Home toolbar (`iconId`), its menu buttons, and the nav tabs; the emoji stays as the fallback until the kit is loaded. The SVG check reads attribute names with digits.
 
 ## Android icon (1.24.1)

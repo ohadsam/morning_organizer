@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.25.2
+- **Colourful icons by default** (owner request): every kit icon keeps one hue from an accessible palette (3:1 on light and dark surfaces); Settings → Appearance → "Black & white icons" draws them in the text colour only. Kept per person; icons on primary / danger buttons and the active tab stay in the button's own colour.
+- **Avatar studio wizard**: a new avatar starts step by step (Boy / Girl / Neutral starting point, then face, hair, eyes and mouth, clothes, extras, buddy, colours, name and save) with Back / Next and a progress bar; "Edit freely" switches to the old tabs and back. Existing avatars still open in free editing.
+- **Button text no longer splits across lines**: dialog footers wrap whole buttons (the main action on its own row), the studio's action buttons are equal-width and the tab chips wrap instead of scrolling out of sight.
+
 ## 1.25.1
 - **Looking back is easier to find and to remember** (owner request): the run summary now shows a clear "Look back at this run" card (two quiet minutes) instead of one small button; Home shows a calm, dismissable "Looking back makes mornings easier" card once you have finished two routines (not together with the other look-back cards; "Not now" hides it for a week); the **Track** button on the bar carries a dot while a look-back is due; each routine's statistics has a "Look back at this routine" button; and search finds it by plain words ("what happened", "stuck", "lessons", "debrief"...).
 

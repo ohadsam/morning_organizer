@@ -81,3 +81,14 @@ Status: ✅ shipped (version) · 🟡 partly (what is missing) · ⛔ not possib
 | 52 | A second ChatGPT prompt for all icons, animations, logo and switchable style packs (also by method and difficulty) | ✅ prompt written (`docs/ICON_PACK_PROMPT.md`); the kit itself is waiting for the generated file |
 | 48 | A button next to the profile chooser to switch from the kids' view to the full view | ✅ 1.21.1 (top-bar Kids view / Full view; the way back asks the grown-up question) |
 | 47 | Export / import routines between profiles and between devices | ✅ 1.21 (Share and move routines; file + copy to a person) |
+
+## Open items (agreed, not built yet)
+| # | Item | Notes |
+|---|---|---|
+| O1 | **Make the retrospective (looking back) easier to find and reach, and make people aware it exists** (owner request, 2026-11-07) | Today it lives in Home → Track → Looking back and after a run on the summary. Ideas: a clear "Look back" card on Home after a few runs, a button right on the run summary and in each routine's statistics, a gentle reminder (e.g. weekly), a search entry with plain words, a mention in the welcome / needs choice, and a What's New pointer. Keep it calm (one card, dismissable). |
+| O2 | "How do I feel today" screen, tuned to each method (CBT, Cog-Fun, NLP, ADHD, anxiety), with the new feeling faces; statistics over time; a summary to share with a therapist (notes off by default) | Faces are in the visual kit already (`feelings`). |
+| O3 | Leave-by time: special indication in the timers, an automatic smart suggestion where to shorten steps when the leave time will be missed (using the person's own history), record the shortening in the statistics, sounds / indications by method | `leave.js` has the status and events; needs `shorten.js` (pure), runner UI, stats. |
+| O4 | Widgets: Journal (explicit request), Mood, Next routine, Breathing, Points / streak, a kind thought | Kotlin only, compiled by CI; one-tap widgets open an allow-listed route (`Shortcuts.ROUTES`). |
+| O5 | UX batch: a "Now" Home mode, one-step run view, "start for me", a starter pack after choosing a method, a weekly calm summary, density and clear-font settings, backup reminder, a "who sees this" badge on routine cards, an interactive first-run tour, uniform undo | Proposed 2026-11-06; the owner approved all. |
+| O6 | Visual kit: task icons (needs an icon field that can point at a kit icon, with an emoji fallback for widgets / notifications / reports), award / level / achievement badges and animations in the UI, per-look logo in the About / boot screen | Waiting for the final kit round (task silhouettes, achievement badges). |
+| O7 | Checks on a real device: speech recognition, share sheet, adaptive and themed launcher icon, notification icon, avatar animations on a low-end phone, the icon looks | Cannot be done in CI. |

@@ -11,6 +11,7 @@ import { rewardProgress } from '../rewards.js';
 import { avatarNode, openProfiles } from './avatar.js';
 import { levelInfo } from '../levels.js';
 import { openRoutineIO } from './routineIO.js';
+import { emptyState } from './visualKit.js';
 import { splitForToday } from '../schedule.js';
 import { icon, iconBtn, toast, confirmBox, toolbar } from './common.js';
 import { openPauseSheet, pausedBanner } from './pause.js';
@@ -102,7 +103,7 @@ export function renderHome(root, nav) {
       simple ? null : suggestionBelow,
       favs.length ? h('section', {}, h('h2', {}, t('favorites')), h('div', { class: 'stack' }, favs.map((x) => card(x, nav)))) : null,
       (() => { const sp = splitForToday(templates, new Date().getDay()); return [
-        h('section', {}, h('h2', {}, sp.scheduled ? t('today') : t('allRoutines')), sp.today.length ? h('div', { class: 'stack' }, sp.today.map((x) => card(x, nav))) : h('p', { class: 'empty' }, templates.length ? t('noRoutinesToday') : t('noRoutines'))),
+        h('section', {}, h('h2', {}, sp.scheduled ? t('today') : t('allRoutines')), sp.today.length ? h('div', { class: 'stack' }, sp.today.map((x) => card(x, nav))) : templates.length ? h('p', { class: 'empty' }, t('noRoutinesToday')) : emptyState('empty-routines', t('noRoutines'))),
         sp.other.length ? h('section', {}, h('h2', {}, t('otherDays')), h('div', { class: 'stack dim' }, sp.other.map((x) => card(x, nav)))) : null]; })(),
       h('p', { class: 'version-line' }, `${t('appName')} v${getVersion() || '?'} · `, h('button', { class: 'btn link', type: 'button', onclick: () => openWhatsNew(nav) }, t('wnLink'))));
   };

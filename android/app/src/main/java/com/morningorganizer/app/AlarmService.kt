@@ -94,7 +94,7 @@ class AlarmService : Service() {
         val startNow = PendingIntent.getActivity(this, 3, MainActivity.startIntent(this, templateId), PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
         val stop = PendingIntent.getService(this, 2, Intent(this, AlarmService::class.java).setAction(ACTION_STOP), PendingIntent.FLAG_IMMUTABLE)
         return NotificationCompat.Builder(this, CHANNEL)
-            .setSmallIcon(android.R.drawable.ic_lock_idle_alarm)
+            .setSmallIcon(R.drawable.ic_stat_sonrise)
             .setContentTitle(if (of > 1) getString(R.string.alarm_title_n, name, n, of) else getString(R.string.alarm_title, name)).setContentText(text.ifBlank { getString(R.string.alarm_text) })
             .setCategory(NotificationCompat.CATEGORY_ALARM).setPriority(NotificationCompat.PRIORITY_MAX)
             .setContentIntent(open).setFullScreenIntent(open, true).setOngoing(true).setAutoCancel(true)

@@ -35,8 +35,12 @@ const EL = new Set(['svg', 'g', 'path', 'circle', 'ellipse', 'rect', 'line', 'po
 const AT = new Set(['xmlns', 'viewBox', 'width', 'height', 'id', 'class', 'd', 'cx', 'cy', 'r', 'rx', 'ry', 'x', 'y', 'x1', 'y1', 'x2', 'y2', 'points', 'fill', 'fill-opacity', 'stroke', 'stroke-width', 'stroke-linecap', 'stroke-linejoin', 'opacity', 'transform', 'clip-path', 'offset', 'stop-color', 'stop-opacity', 'gradientUnits', 'gradientTransform']);
 export const MAX_PART = 8000;
 /** Strict check of one part: only known elements and attributes, only local url(#id) references, well-formed nesting, not too big. */
-export function checkSvg(svg) {
-  if (typeof svg !== 'string' || svg.length > MAX_PART || !svg.startsWith('<svg') || /<!|<\?|&(?!amp;|lt;|gt;|quot;|apos;|#\d+;)/.test(svg)) return false;
+export const checkSvg = (svg) => checkSvgWith(svg, AT);
+/** The same strict check for the icon / illustration kit, which also uses pathLength, fill-rule and clip-rule. */
+export const checkIconSvg = (svg) => checkSvgWith(svg, AT_ICON, 24000);
+const AT_ICON = new Set([...AT, 'pathLength', 'fill-rule', 'clip-rule']);
+function checkSvgWith(svg, AT, max = MAX_PART) {
+  if (typeof svg !== 'string' || svg.length > max || !svg.startsWith('<svg') || /<!|<\?|&(?!amp;|lt;|gt;|quot;|apos;|#\d+;)/.test(svg)) return false;
   const stack = [], ids = new Set(), refs = new Set(); let i = 0;
   const tag = /<(\/?)([A-Za-z][A-Za-z0-9]*)((?:\s+[A-Za-z:-]+="[^"<]*")*)\s*(\/?)>/y;
   while (i < svg.length) {

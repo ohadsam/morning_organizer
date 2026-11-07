@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.24.1
+- **Android adaptive icon**: the launcher icon is now an adaptive icon (sky gradient behind, the sun and rays in front inside the safe zone) with a one-colour version for themed icons (Android 13+); notifications (alarms, family messages) use a SonRise sunrise silhouette instead of a generic system icon. The web app's maskable icon is now a true full-bleed one.
+- Tests: the schedule/gear step is pinned to a weekday (it failed on weekends), and the app icon keeps its accessible name.
+
+## 1.24.0
+- **New app icon**: the sunrise icon is redrawn (smoother sky, nine fine rays, a soft highlight on the sun, layered hills, a two-tone "SonRise" wordmark) for the web app (192 / 512 / maskable / Apple touch), the boot screen and the Android launcher.
+- **Illustrations** from the corrected visual kit in the places that used to say "nothing here yet": no routines, no statistics, no goals, an empty journal, no alarms, and a scene in the welcome sheet. They are recoloured by the chosen look (all 8 looks, light and dark), so the artwork always matches the app.
+- **Feeling faces** for the mood question after a routine (and wherever the mood row is used): five clearly different faces instead of emoji, still with their spoken names.
+- Safety: the kit goes through the same strict SVG allow-list as the avatar parts (the narrower avatar list is unchanged), and anything that fails is left out; the data is cached for offline use.
+
 ## 1.23.1
 - **Two new looks** from the visual kit's tokens: *Calm* (one muted hue family, low stimulation, for people overwhelmed by colour) and *Bold* (strong contrast, thicker focus ring and borders, for attention difficulties and low vision), in light and dark, axe-checked in Hebrew and English with big text.
 

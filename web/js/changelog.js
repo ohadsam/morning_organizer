@@ -1,5 +1,9 @@
 // "What's new" content shown inside the app (newest first). Keep in step with docs/CHANGELOG.md; a unit test checks the current version is listed and both languages match.
 export const CHANGES = [
+  { v: '1.24.1', en: ['📱 The Android icon now follows your launcher’s shape (round, square...) and can be tinted by the theme; notifications carry a small sunrise.'],
+    he: ['📱 האייקון באנדרואיד מתאים עכשיו לצורת המשגר שלכם (עגול, מרובע...) ואפשר לצבוע אותו לפי ערכת הנושא; בהתראות יש שמש קטנה.'] },
+  { v: '1.24.0', en: ['🌅 A redrawn SonRise icon on the home screen, in the app and while it starts.', '🖼️ Friendly illustrations where there was nothing yet (routines, statistics, goals, journal, alarms, welcome) - coloured by your look.', '🙂 New feeling faces for “how did it go?” after a routine.'],
+    he: ['🌅 אייקון SonRise מצויר מחדש במסך הבית, באפליקציה ובזמן הפתיחה.', '🖼️ איורים ידידותיים במקום שבו עוד אין כלום (שגרות, סטטיסטיקה, מטרות, יומן, שעונים, ברוכים הבאים) - בצבעי המראה שבחרתם.', '🙂 פרצופי תחושות חדשים לשאלה “איך היה?” אחרי שגרה.'] },
   { v: '1.23.1', en: ['🎨 Two new looks: Calm (one soft colour family, low stimulation) and Bold (strong contrast, a thicker focus ring) - find them under Settings → Appearance.'],
     he: ['🎨 שני מראות חדשים: שקט (משפחת צבעים רכה אחת, גירוי נמוך) ובולט (ניגודיות חזקה, מסגרת מיקוד עבה) - בהגדרות ← מראה.'] },
   { v: '1.23.0', en: ['🎨 Avatar studio: build your own avatar - face, hair, eyes, mouth, clothes, hats, glasses, a little friend, a background - and choose the colours. It waves, cheers, dances and shows feelings.', '🧑‍🎨 My avatars: save, edit, duplicate and delete your designs, and share one with a short code (WhatsApp, e-mail). Add an avatar from a code with a preview first.'],

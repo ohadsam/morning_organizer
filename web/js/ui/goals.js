@@ -1,5 +1,6 @@
 // Goals: Goal - Plan - Do - Check. Pick a meaningful goal, choose up to three strategies, try them in the routine, check what worked.
 import { h, setChildren } from '../util.js';
+import { emptyState } from './visualKit.js';
 import { t } from '../i18n.js';
 import * as S from '../store.js';
 import { STRATEGIES, DOMAINS, MAX_STRATS, MAX_GOALS, progress, strategyStats } from '../cogfun.js';
@@ -64,7 +65,7 @@ export function renderGoals(root, nav) {
     setChildren(root, h('div', { class: 'row between' }, h('h1', {}, `🎯 ${t('goalsTitle')}`), h('button', { class: 'btn', type: 'button', onclick: () => nav('#/') }, t('back'))),
       h('div', { class: 'gpdc', 'aria-hidden': 'true' }, ['gpdc1', 'gpdc2', 'gpdc3', 'gpdc4'].map((k) => h('span', { class: 'chip' }, t(k)))), h('p', { class: 'note' }, t('goalsIntro')),
       h('button', { class: 'btn primary', type: 'button', disabled: all.length >= MAX_GOALS, onclick: () => openGoalWizard(null, { onSave: async (x) => { await S.saveGoal(x); draw(); } }) }, `+ ${t('goalNew')}`),
-      open.length ? h('div', { class: 'stack' }, open.map((g) => goalCard(g, runs, draw, nav))) : h('p', { class: 'empty' }, t('goalsEmpty')),
+      open.length ? h('div', { class: 'stack' }, open.map((g) => goalCard(g, runs, draw, nav))) : emptyState('empty-goals', t('goalsEmpty')),
       done.length ? h('details', {}, h('summary', {}, t('goalsDone', { n: done.length })), h('div', { class: 'stack' }, done.map((g) => goalCard(g, runs, draw)))) : null,
       h('p', { class: 'note' }, t('goalsDisclaimer')));
   };

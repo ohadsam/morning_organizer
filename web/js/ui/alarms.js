@@ -1,5 +1,6 @@
 // The Alarms screen: every routine with its wake-up alarm in one place - switch on/off, see the schedule, edit the whole chain.
 import { h, setChildren, debounce } from '../util.js';
+import { artNode } from './visualKit.js';
 import { t } from '../i18n.js';
 import * as S from '../store.js';
 import { schedule, normalizeAlarm } from '../wake.js';
@@ -25,7 +26,7 @@ export function renderAlarms(root, nav) {
   const draw = () => {
     const templates = S.myTemplates(), any = templates.some((x) => x.alarm?.enabled);
     setChildren(root, h('div', { class: 'row between' }, h('h1', {}, `⏰ ${t('alarmsTitle')}`), h('button', { class: 'btn', type: 'button', onclick: () => nav('#/') }, t('back'))),
-      h('p', { class: 'note' }, t('alarmsIntro')), any ? null : h('p', { class: 'chip solid' }, t('alarmsNone')),
+      h('p', { class: 'note' }, t('alarmsIntro')), any ? null : [artNode('empty-alarms', { size: 120 }), h('p', { class: 'chip solid' }, t('alarmsNone'))],
       h('div', { class: 'stack' }, templates.map((x) => h('article', { class: 'card alarm-card', style: { '--accent': x.color } },
         h('div', { class: 'row between' }, h('span', { class: 'row' }, h('span', { class: 'emoji', 'aria-hidden': 'true' }, x.icon), h('span', { class: 'routine-text' }, h('strong', {}, x.name), h('small', {}, alarmSummary(x)))),
           h('label', { class: 'switch row' }, h("span", { class: "sr-only" }, `${t('alarmEnable')}: ${x.name}`), h('input', { type: 'checkbox', checked: !!x.alarm?.enabled, 'aria-label': `${t('alarmEnable')}: ${x.name}`, onchange: async (e) => { await S.saveTemplate({ ...x, alarm: { ...normalizeAlarm(x.alarm), enabled: e.target.checked } }); } }))),

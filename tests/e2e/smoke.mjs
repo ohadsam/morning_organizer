@@ -1525,5 +1525,29 @@ await step('v1.23.1: the calm and bold looks - zero axe violations in light and 
   assert.deepEqual(bad, []);
 });
 
+// ── v1.24: visual kit artwork (illustrations, feeling faces) and the new app icon ──
+await step('v1.24: illustrations in the empty states and feeling faces for the moods, recoloured by the look (light and dark), zero axe violations', async () => {
+  const bad = [];
+  for (const [lang, scheme, skin, big] of [['en', 'light', 'default', false], ['he', 'dark', 'ocean', true], ['en', 'dark', 'calm', false], ['he', 'light', 'bold', true]]) {
+    const { page } = await newPage({ lang, ctx: { colorScheme: scheme } }); await page.goto(base + '#/'); if (lang === 'he') await dismissWelcome(page); await page.waitForSelector('.routine');
+    await page.evaluate(async ([sk, b]) => { const S = await import('./js/store.js'); await S.updateSettings({ skin: sk, fontScale: b ? 150 : 100 }); for (const x of [...S.get().templates]) await S.deleteTemplate(x.id); }, [skin, big]);
+    await page.goto(base + '#/'); await page.waitForSelector('.empty-state svg'); assert.ok(await page.locator('.empty-state .vk svg path').count() > 3, 'the illustration is drawn');
+    const fill = await page.evaluate(() => { const e = document.querySelector('.empty-state .vk .k1, .empty-state .vk .k2, .empty-state .vk .k3'); return [getComputedStyle(e).fill, getComputedStyle(document.documentElement).getPropertyValue('--k1').trim(), e.getAttribute('class')]; });
+    assert.notEqual(fill[0], 'rgb(0, 0, 0)', 'recoloured through the look, not left black'); bad.push(...await audit(page, `${lang}/${skin}/${scheme}/empty-home`));
+    for (const r of ['stats', 'goals', 'journal', 'alarms']) { await page.goto(base + `#/${r}`); await page.waitForSelector('.vk svg'); bad.push(...await audit(page, `${lang}/${skin}/${scheme}/empty-${r}`)); }
+  }
+  if (bad.length) console.error([...new Set(bad)].join('\n'));
+  assert.deepEqual(bad, []);
+  const { page } = await newPage({ lang: 'en' }); await page.goto(base + '#/'); await page.waitForSelector('.routine'); await page.evaluate(async () => { const S = await import('./js/store.js'); await S.patchProfile(S.activeProfile().id, { tools: { moodCheck: true } }); });
+  await page.locator('.routine .start').first().click(); await page.waitForSelector('.ring'); for (let i = 0; i < 12 && !(await page.locator('.summary').count()); i++) await page.click('.main-btns .primary', { timeout: 3000 }).catch(() => {});
+  await page.waitForSelector('.summary .moods .mood svg'); assert.equal(await page.locator('.summary .moods .mood').count(), 5, 'five mood faces'); assert.match(await page.getAttribute('.summary .moods .mood >> nth=1', 'aria-label'), /\w/, 'each face keeps its spoken name');
+  await page.click('.summary .moods .mood >> nth=3'); assert.equal(await page.getAttribute('.summary .moods .mood >> nth=3', 'aria-pressed'), 'true'); bad.push(...await audit(page, 'mood-faces')); assert.deepEqual(bad, []);
+});
+await step('v1.24: the welcome sheet shows its scene; the web app uses the new icons (192, 512, maskable, apple-touch) and the boot logo', async () => {
+  const { page } = await newPage({ lang: 'he' }); await page.goto(base + '#/'); await page.waitForSelector('dialog.welcome .vk svg'); assert.deepEqual(await audit(page, 'welcome-art'), []);
+  for (const f of ['icons/icon-192.png', 'icons/icon-512.png', 'icons/icon-maskable-512.png', 'icons/apple-touch-icon.png', 'icon.svg', 'data/visual-kit.json']) assert.equal((await page.request.get(base + f)).status(), 200, f);
+  assert.match(await page.getAttribute('link[rel=apple-touch-icon]', 'href'), /apple-touch-icon\.png/);
+});
+
 await browser.close(); server.close();
 console.log(failures ? `\n${failures} e2e step(s) failed` : '\nall e2e steps passed'); process.exit(failures ? 1 : 0);

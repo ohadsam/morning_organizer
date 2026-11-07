@@ -1,5 +1,6 @@
 // The journal screen: optional password lock (set up here), "forgot password" through security questions, entries by day, voice playback.
 import { h, setChildren, fmtDur } from '../util.js';
+import { emptyState } from './visualKit.js';
 import { t } from '../i18n.js';
 import * as S from '../store.js';
 import * as J from '../journal.js';
@@ -144,7 +145,7 @@ export async function renderJournal(root, nav) {
     setChildren(host,
       aprtInsights(entries),
       entries.length ? h('div', { class: 'chips filter', role: 'group', 'aria-label': t('jFilter') }, kinds.map((k) => h('button', { class: `chip btn-chip ${filter === k ? 'on' : ''}`, type: 'button', 'aria-pressed': String(filter === k), onclick: () => { filter = k; refresh(); } }, k === 'all' ? t('jAll') : `${KIND_EMOJI[k]} ${t(`kind_${k}`)}`))) : null,
-      list.length ? [...days].map(([day, es]) => h('section', {}, h('h2', {}, day), h('div', { class: 'stack' }, es.map((e) => entryCard(e, refresh, pid))))) : h('p', { class: 'empty' }, t('jEmpty')), settings);
+      list.length ? [...days].map(([day, es]) => h('section', {}, h('h2', {}, day), h('div', { class: 'stack' }, es.map((e) => entryCard(e, refresh, pid))))) : emptyState('empty-journal', t('jEmpty')), settings);
   }
   addEventListener('journal-changed', refresh);
   await draw();

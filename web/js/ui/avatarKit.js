@@ -16,7 +16,8 @@ export function loadPack() {
 }
 
 const copy = (src) => { const e = document.createElementNS(NS, src.localName); for (const a of src.attributes) e.setAttribute(a.name, a.value); for (const c of src.children) e.append(copy(c)); return e; };
-function inner(svg) {
+/** The elements of one validated SVG string, ready to append (parsed once). */
+export function inner(svg) {
   let kids = parsed.get(svg);
   if (!kids) { const doc = new DOMParser().parseFromString(svg, 'image/svg+xml'); kids = doc.querySelector('parsererror') ? [] : [...doc.documentElement.children]; parsed.set(svg, kids); }
   return kids.map(copy);

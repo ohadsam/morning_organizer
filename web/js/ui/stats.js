@@ -10,6 +10,7 @@ import { moodStats, MOODS } from '../mood.js';
 import { unplannedCard, patternCards } from './unplanned.js';
 import { taskDifficulty, difficultyTrends, hardSpots, hardAndSlow, summary as diffSummary, levelEmoji } from '../difficulty.js';
 import { exportCard } from './report.js';
+import { emptyState } from './visualKit.js';
 import { series as scoreSeries, totalPoints, awardCounts, AWARD_EMOJI } from '../points.js';
 import { estimateAccuracy } from '../awareness.js';
 import { overview as retroOverview } from '../retro.js';
@@ -101,7 +102,7 @@ export function renderStats(root, templateId, nav) {
     if (!templateId) {
       const items = templates.map((x) => ({ x, n: ST.finished(runs, x.id).length }));
       const hasRuns = items.some((i) => i.n);
-      setChildren(root, h('h1', {}, t('statsTitle')), hasRuns ? overview(runs) : null, hasRuns ? pointsCard(runs) : null, hasRuns ? achievementsCard(runs) : null, hasRuns ? moodCard(runs) : null, hasRuns ? unplannedCard(runs) : null, hasRuns ? retroCard(runs) : null, hasRuns ? awarenessCard(runs) : null, hasRuns ? difficultyCard(runs) : null, hasRuns ? exportCard(nav) : null,
+      setChildren(root, h('h1', {}, t('statsTitle')), hasRuns ? null : emptyState('empty-history', t('noStats')), hasRuns ? overview(runs) : null, hasRuns ? pointsCard(runs) : null, hasRuns ? achievementsCard(runs) : null, hasRuns ? moodCard(runs) : null, hasRuns ? unplannedCard(runs) : null, hasRuns ? retroCard(runs) : null, hasRuns ? awarenessCard(runs) : null, hasRuns ? difficultyCard(runs) : null, hasRuns ? exportCard(nav) : null,
         hasRuns ? h('div', { class: 'stack' }, items.filter((i) => i.n).map(({ x, n }) =>
           h('a', { class: 'card link-card', href: `#/stats/${x.id}`, style: { '--accent': x.color } }, h('span', { class: 'emoji' }, x.icon), h('span', { class: 'routine-text' }, h('strong', {}, x.name), h('small', {}, t('runsCount', { n })))))) : h('p', { class: 'empty' }, t('noStats')));
       return;
@@ -113,7 +114,7 @@ export function renderStats(root, templateId, nav) {
     const ins = ST.insights(rs);
     setChildren(root, 
       h('div', { class: 'page-head' }, iconBtn('back', t('back'), () => nav('#/stats')), h('h1', {}, `${tpl.icon} ${tpl.name}`)),
-      !rs.length ? h('p', { class: 'empty' }, t('noStats')) : h('div', {}, [
+      !rs.length ? emptyState('empty-history', t('noStats')) : h('div', {}, [
         h('div', { class: 'tiles' },
           tile(t('runsCount', { n: tot.count }), `${tot.onTime}/${tot.count}`, t('onTimeRuns')), tile(t('avgTime'), fmtHuman(tot.avgActual, u)), tile(t('bestTime'), fmtHuman(tot.best, u))),
         h('h2', {}, t('chartTitle')),

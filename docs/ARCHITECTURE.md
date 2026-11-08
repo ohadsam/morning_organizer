@@ -107,3 +107,6 @@ Colour (1.25.2): each `.vki` gets `data-ic` (0-7, a hash of the icon id) and CSS
 - `specialTasks.js` (pure catalogue, grouped, searchable) + `task.helper` (whitelisted by `isHelper`): the run screen's task-help card opens the tool; calm-corner tools run without pausing the clock.
 - `points.js` (pure): `scoreTask` / `scoreRun` (stored on the run as `run.score`, sanitised on read), `podium`, `series`, `totalPoints`; `ui/podium.js` + `fx.fireworks`; `pointsCard` in Statistics. Off by default; the calm pace never takes points away.
 - `routineIO.js` (pure) + `ui/routineIO.js`: a versioned routines file (`sonrise-routines`) and also full backups are read strictly (size/count limits, rebuilt through `normalizeTemplate`, new ids, alarm off).
+
+## Calm kit scenes (1.26)
+`web/data/calm-kit.json` (built by `scripts/build-calm-kit.mjs` from the extracted ChatGPT zips, later dirs win) -> `parseCalmKit` (strict allow-list, drops bad scenes) -> `ui/calmScene.js` (`sceneStage().show(idA, idB, t)` cross-fades two layers; copies elements with createElementNS). `ui/calm.js` picks the scene per tick: `breath-<pattern>-0..4` via `frameMix(size)`, `imagery-<guide>-f1..f4` via `storyFrame`, `grounding-<n>`, `bodyscan-<zone>` via `scanZone`. `calmVisual` setting: scene | avatar | circle. The avatar mode sets `--p` on the kit avatar (`.avatar-breathe .kit-move` scales).

@@ -600,3 +600,21 @@ html[data-motion="calm"] *, html[data-motion="calm"] *::before, html[data-motion
 [data-iconmono] #nav a .vki { color: inherit; } .btn.primary .vki, .btn.danger .vki, [aria-pressed="true"] > .vki { color: inherit !important; } .tb-i .vki { font-size: 1.1rem; }
 .studio-tabs, .anim-strip { flex-wrap: wrap; overflow: visible; } .anim-strip .chip { min-height: 40px; padding: 0 8px; } .anim-fold summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; } .studio-tabs { } dialog footer .btn { white-space: nowrap; text-align: center; justify-content: center; flex: 1 1 auto; } dialog footer .btn.primary { flex-basis: 100%; order: -1; } .btn-pair .btn { white-space: nowrap; padding-inline: 8px; } .studio-ctl .btn-pair { grid-template-columns: 1fr; } .studio-ctl .btn.link, .wiz-info .btn.link { justify-self: center; }
 .anim-fold > .stack { padding: 4px 12px 12px; gap: 8px; } .anim-strip { gap: 6px; } .studio-ctl .btn.link, .wiz-info .btn.link { white-space: normal; text-align: center; }
+
+/* calm kit scenes (1.26): the breath, a journey step, a grounding sense or a body-scan zone drawn as one picture */
+.breath-circle.hidden-circle { display: none; } .breath-stage.has-scene { width: min(82vw, 320px); aspect-ratio: 1; }
+.cs-stage { position: relative; width: 100%; aspect-ratio: 1; border-radius: 24px; overflow: hidden; background: var(--surface); box-shadow: var(--shadow); }
+.cs-stage svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.cs .k1{fill:var(--k1)} .cs .k2{fill:var(--k2)} .cs .k3{fill:var(--k3)} .cs .k4{fill:var(--k4)} .cs .k5{fill:var(--k5)} .cs .k6{fill:var(--k6)} .cs .k7{fill:var(--k7)} .cs .k8{fill:var(--k8)}
+.cs .i-bg { fill: var(--surface); } .cs .i-tint { fill: var(--text); fill-opacity: .15; } .cs .i-ink[stroke] { stroke: var(--text); } .cs .i-ink:not([fill="none"]) { fill: var(--text); }
+.cs *[class*="a-"] { transform-box: fill-box; transform-origin: center; }
+@keyframes cs-float { 50% { transform: translateY(-3px); } } @keyframes cs-pulse { 50% { transform: scale(1.035); } } @keyframes cs-twinkle { 50% { opacity: .65; } }
+@keyframes cs-drift { 50% { transform: translateX(4px); } } @keyframes cs-flow { 50% { transform: translateX(14px); } } @keyframes cs-rise { 50% { transform: translateY(-8px); opacity: .65; } }
+@keyframes cs-fade { 50% { opacity: .35; } } @keyframes cs-wiggle { 25% { transform: rotate(-2deg); } 75% { transform: rotate(2deg); } }
+.cs .a-float { animation: cs-float 8s ease-in-out infinite; } .cs .a-pulse { animation: cs-pulse 8s ease-in-out infinite; } .cs .a-twinkle { animation: cs-twinkle 7s ease-in-out infinite; }
+.cs .a-drift { animation: cs-drift 12s ease-in-out infinite; } .cs .a-flow { animation: cs-flow 10s ease-in-out infinite; } .cs .a-rise { animation: cs-rise 12s ease-in-out infinite; }
+.cs .a-fade { animation: cs-fade 8s ease-in-out infinite; } .cs .a-wiggle { animation: cs-wiggle 9s ease-in-out infinite; }
+.cs .d1 { animation-delay: 1s; } .cs .d2 { animation-delay: 2s; } .cs .d3 { animation-delay: 3s; } .cs .d4 { animation-delay: 4s; } .cs .d5 { animation-delay: 5s; } .cs .d6 { animation-delay: 6s; }
+@media (prefers-reduced-motion: reduce) { .cs * { animation: none !important; } }
+/* the person's own avatar breathes: the whole figure grows a little with --p (0 empty .. 1 full) from the exercise timer */
+.avatar-breathe { width: 100%; height: 100%; --av: 100%; } .avatar-breathe .kit-move { transform-box: fill-box; transform-origin: 50% 85%; transform: scale(calc(1 + .045 * var(--p, 0))); }

@@ -1,5 +1,7 @@
 // "What's new" content shown inside the app (newest first). Keep in step with docs/CHANGELOG.md; a unit test checks the current version is listed and both languages match.
 export const CHANGES = [
+  { v: '1.26.0', en: ['🌬️ The calm corner now shows a picture that moves with you: the sun rises as you breathe in, a journey step has its own scene, grounding shows what to look for and the body scan lights the part to relax. Choose “My avatar” to watch your own avatar breathe, or keep the simple circle.'],
+    he: ['🌬️ בפינה הרגועה יש עכשיו תמונה שזזה איתך: השמש עולה בשאיפה, לכל שלב בדמיון מודרך יש סצנה משלו, ב-grounding רואים מה לחפש, ובסריקת הגוף מוארת הנקודה להרפיה. אפשר לבחור “האווטר שלי” ולראות אותו נושם, או להישאר עם העיגול הפשוט.'] },
   { v: '1.25.2', en: ['🎨 Icons are colourful now (turn on “Black & white icons” in Settings for the old look). 🧭 The avatar studio has a step-by-step guide: boy / girl / neutral first, then face, hair, eyes, clothes, extras, buddy, colours and a name. Buttons keep their words on one line.'],
     he: ['🎨 האייקונים צבעוניים עכשיו (אפשר להפעיל “אייקונים בשחור־לבן” בהגדרות). 🧭 באולפן האווטרים יש מדריך שלב אחרי שלב: קודם ילד / ילדה / ניטרלי, ואז פנים, שיער, עיניים, בגדים, תוספות, חבר, צבעים ושם. כפתורים כבר לא שוברים מילים באמצע.'] },
   { v: '1.25.1', en: ['🔄 Looking back is easier to find: a clear card after every routine, a calm reminder on Home, a dot on the Track button when one is due, and a button in each routine’s statistics.'],

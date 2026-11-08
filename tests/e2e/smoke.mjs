@@ -1515,6 +1515,25 @@ await step('v1.25.2: the avatar wizard goes step by step (boy / girl / neutral f
   await page.context().close();
 });
 
+await step('v1.26: the calm corner shows a drawn scene for the breath, the journey step, the grounding sense and the scan zone; "My avatar" breathes; the circle is still there; zero axe violations', async () => {
+  const { page } = await newPage({ lang: 'en' }); await dismissWelcome(page); await page.goto(base + '#/calm'); await page.waitForSelector('.calm-menu');
+  const start = async () => { await page.click('.calm-menu .btn.primary.xl'); await page.waitForSelector('.calm-run'); await page.waitForTimeout(700); };
+  const stop = async () => { await page.click('.calm-run .btn'); await page.waitForSelector('.calm-menu'); };
+  await start(); await page.waitForSelector('.cs-stage svg g, .cs-stage svg path'); assert.ok(await page.locator('.cs-stage svg').first().evaluate((s) => s.children.length > 5), 'the breathing scene is drawn');
+  const id1 = await page.locator('.cs-stage svg').first().getAttribute('data-id'); assert.match(id1, /^breath-slow-\d$/);
+  assert.deepEqual(await audit(page, 'calm-scene'), []); await stop();
+  await page.locator('.calm-menu .seg-group').first().locator('button').nth(3).click(); await start(); assert.match(await page.locator('.cs-stage svg').first().getAttribute('data-id'), /^imagery-elements-f1$/); await stop();
+  await page.locator('.calm-menu .seg-group').first().locator('button').nth(1).click(); await start(); assert.match(await page.locator('.cs-stage svg').first().getAttribute('data-id'), /^grounding-5$/); await stop();
+  await page.locator('.calm-menu .seg-group').first().locator('button').nth(2).click(); await start(); assert.match(await page.locator('.cs-stage svg').first().getAttribute('data-id'), /^bodyscan-0$/); await stop();
+  await page.locator('.calm-menu .seg-group').first().locator('button').nth(0).click();
+  // the circle
+  await page.locator('.calm-menu button:has-text("Circle")').click(); await start(); assert.equal(await page.locator('.cs-stage').count(), 0); assert.ok(await page.locator('.breath-circle:not(.hidden-circle)').count()); await stop();
+  // my avatar breathes (a kit avatar)
+  await page.evaluate(async () => { const S = await import('./js/store.js'), K = await import('./js/avatarKit.js'); const p = S.activeProfile(); await S.saveProfile({ ...p, avatar: K.defaultKit() }); await S.updateSettings({ calmVisual: 'avatar' }); });
+  await page.goto(base + '#/calm'); await page.waitForSelector('.calm-menu'); await start(); await page.waitForSelector('.breath-stage svg.avatar-breathe'); assert.ok(await page.locator('.avatar-breathe').evaluate((e) => e.style.getPropertyValue('--p') !== ''), 'the exercise timer drives --p');
+  assert.deepEqual(await audit(page, 'calm-avatar'), []); await page.context().close();
+});
+
 await step('v1.23: the picker offers "Build my own" and an avatar picked there is used at once; a kit avatar survives sanitising and other profiles keep theirs', async () => {
   const { page } = await newPage({ lang: 'en' }); await page.goto(base + '#/settings/profile'); await page.waitForSelector('details[data-group=profile]');
   await page.click('details[data-group=profile] button:has-text("Avatar")'); await page.waitForSelector('dialog[open] .avatar-picker'); assert.deepEqual(await audit(page, 'picker'), []);

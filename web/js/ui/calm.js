@@ -3,6 +3,10 @@ import { h, setChildren } from '../util.js';
 import { t } from '../i18n.js';
 import * as S from '../store.js';
 import * as J from '../journal.js';
+import { loadCalmKit, calmScenes, sceneStage, breathScene } from './calmScene.js';
+import { storyFrame, scanZone } from '../calmKit.js';
+import { kitNode } from './avatarKit.js';
+import { isKit } from '../avatarKit.js';
 import { PATTERNS, phaseAt, cyclesFor, cycleSec, GROUNDING, stepAt } from '../calm.js';
 import { SCANS, SCAN_IDS, GUIDES, guideText } from '../calmGuides.js';
 import { getLang } from '../i18n.js';
@@ -21,6 +25,7 @@ export function calmPanel(host, { onClose, compact = false, initial = {} } = {})
   const s = S.get().settings;
   const cue = (label) => { if (label === last) return; last = label; if (s.mode !== 'silent' && s.mode !== 'beep') native.vibrate([0, label === 'in' ? 120 : 60]) ; };
   function stop() { cancelAnimationFrame(raf); raf = null; }
+  void loadCalmKit();
   function menu() {
     stop();
     const seg = (items, cur, set, label) => h('div', { class: 'seg-group', role: 'group', 'aria-label': label }, items.map(([v, txt]) => h('button', { class: `btn small ${cur === v ? 'primary' : ''}`, type: 'button', 'aria-pressed': String(cur === v), onclick: () => { set(v); menu(); } }, txt)));
@@ -31,6 +36,7 @@ export function calmPanel(host, { onClose, compact = false, initial = {} } = {})
       kind === 'guide' ? h('div', { class: 'guide-grid', role: 'radiogroup', 'aria-label': t('calmGuide') }, GUIDES.map((g) => h('button', { type: 'button', class: `sound-tile ${guideId === g.id ? 'on' : ''}`, role: 'radio', 'aria-checked': String(guideId === g.id), onclick: () => { guideId = g.id; menu(); } }, h('span', { class: 'st-e', 'aria-hidden': 'true' }, g.emoji), h('span', {}, g.title[getLang() === 'he' ? 'he' : 'en'])))) : null,
       kind === 'breath' ? seg(Object.keys(PATTERNS).map((id) => [id, t(`pat_${id}`)]), pattern, (v) => { pattern = v; }, t('calmPattern')) : null,
       seg((kind === 'breath' || kind === 'ground' ? MIN_OPTIONS : LONG_OPTIONS).map((m) => [m, t('calmMin', { n: m })]), minutes, (v) => { minutes = v; }, t('calmLength')),
+      kind === 'breath' ? seg([['scene', `🎨 ${t('calmVisScene')}`], ['avatar', `🧒 ${t('calmVisAvatar')}`], ['circle', `⚪ ${t('calmVisCircle')}`]], s.calmVisual || 'scene', (v) => { S.updateSettings({ calmVisual: v }); }, t('calmVisual')) : null,
       h('button', { class: 'btn primary xl', type: 'button', onclick: begin }, `▶ ${t('calmStart')}`),
       compact ? null : h('p', { class: 'note' }, t('calmNote'))));
   }
@@ -45,9 +51,12 @@ export function calmPanel(host, { onClose, compact = false, initial = {} } = {})
   function begin() {
     over = false; started = performance.now(); last = '';
     const total = kind === 'breath' ? cyclesFor(PATTERNS[pattern], minutes) * cycleSec(PATTERNS[pattern]) : minutes * 60;
-    const circle = h('div', { class: 'breath-circle', 'aria-hidden': 'true' }), label = h('div', { class: 'calm-label', role: 'status', 'aria-live': 'polite' }), sub = h('div', { class: 'calm-sub' });
+    const vis = S.get().settings.calmVisual || 'scene', av = S.activeProfile?.()?.avatar, useAvatar = kind === 'breath' && vis === 'avatar' && isKit(av);
+    const stage = !useAvatar && vis !== 'circle' && calmScenes() ? sceneStage(t('calmSceneAlt')) : null;
+    const avNode = useAvatar ? kitNode(av, { size: 240, anim: 'calm' }) : null; if (avNode) avNode.classList.add('avatar-breathe');
+    const circle = stage || avNode ? h('div', { class: 'breath-circle hidden-circle', 'aria-hidden': 'true' }) : h('div', { class: 'breath-circle', 'aria-hidden': 'true' }), label = h('div', { class: 'calm-label', role: 'status', 'aria-live': 'polite' }), sub = h('div', { class: 'calm-sub' });
     const stopBtn = h('button', { class: 'btn', type: 'button', onclick: () => { stop(); menu(); } }, `⏹ ${t('calmStop')}`);
-    setChildren(host, h('div', { class: 'stack center calm-run' }, h('div', { class: 'breath-stage' }, circle), label, sub, stopBtn));
+    setChildren(host, h('div', { class: 'stack center calm-run' }, h('div', { class: `breath-stage ${stage || avNode ? 'has-scene' : ''}` }, stage ? stage.node : avNode ? avNode : circle), label, sub, stopBtn));
     let lastSpoken = '';
     const frame = (now) => {
       const sec = (now - started) / 1000;
@@ -55,12 +64,14 @@ export function calmPanel(host, { onClose, compact = false, initial = {} } = {})
       if (kind === 'breath') {
         const ph = phaseAt(PATTERNS[pattern], sec), text = t(`ph_${ph.label}`);
         circle.style.setProperty('--sz', reduced() ? (ph.label === 'out' ? 0.4 : 1) : String(0.4 + 0.6 * ph.size));
+        const pp = reduced() ? (ph.label === 'out' ? 0 : 1) : ph.size; if (stage) stage.show(...breathScene(pattern, pp)); if (avNode) avNode.style.setProperty('--p', String(pp));
         circle.dataset.phase = ph.label; setChildren(label, text); sub.textContent = `${Math.ceil(ph.left)}`;
         if (text !== lastSpoken) { lastSpoken = text; cue(ph.label); if (s.speak || s.coachSpeak) speakWithSettings(text, { kind: 'short' }); }
       } else {
         const guide = kind === 'guide' ? guideText(guideId, getLang()) : null, scan = SCANS[scanKind] || SCANS.quick;
         const list = guide ? guide.steps : kind === 'ground' ? GROUNDING : scan.parts, i = stepAt(list.length, total, sec), item = list[i];
         circle.style.setProperty('--sz', '0.8'); if (guide) circle.dataset.emoji = guide.emoji;
+        if (stage) stage.show(guide ? `imagery-${guideId}-f${storyFrame(i, list.length)}` : kind === 'ground' ? `grounding-${item.n}` : `bodyscan-${scanZone(i, list.length)}`);
         const txt = guide ? item : kind === 'ground' ? t('groundStep', { n: item.n, sense: t(`sense_${item.sense}`) }) : t(scan.step, { part: t(`part_${item}`) });
         setChildren(label, txt); sub.textContent = `${i + 1}/${list.length}`;
         if (txt !== lastSpoken) { lastSpoken = txt; cue('in'); if (s.speak || s.coachSpeak) speakWithSettings(txt, { kind: 'short' }); }

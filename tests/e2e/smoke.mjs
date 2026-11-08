@@ -1565,6 +1565,31 @@ await step('v1.29: "How do I feel" - one tap on a face, a question for the chose
   await page.context().close();
 });
 
+await step('v1.29.1: a quick "how do I feel" inside a routine (start, after a chosen task, end), "tell more" with chips, voice note shown and playable, found in the routine editor; zero axe violations', async () => {
+  const { page } = await newPage({ lang: 'en' }); await dismissWelcome(page);
+  const id = await page.evaluate(async () => { const S = await import('./js/store.js'); const tpl = S.get().templates[0]; await S.saveTemplate({ ...tpl, feelAt: 'both', tasks: tpl.tasks.map((k, i) => ({ ...k, feelAfter: i === 0 })) }); return tpl.id; });
+  await page.goto(base + '#/edit/' + id); await page.waitForSelector('.task-more', { state: 'attached' }); assert.ok(await page.locator('select[aria-label="Ask me how I feel"]').count(), 'the routine editor can set when to ask'); assert.ok(await page.locator('.task-more input[type=checkbox]').count() >= 1);
+  await page.goto(base + '#/run/' + id); await page.waitForSelector('.ring'); await page.waitForSelector('.feel-quick .mood'); assert.match(await page.textContent('.feel-quick'), /before we start/);
+  assert.deepEqual(await audit(page, 'feel-quick'), []);
+  await page.click('.feel-quick .mood >> nth=3'); await page.waitForSelector('.feel-quick [role=status]'); await page.click('.feel-quick button:has-text("Tell more")'); await page.waitForSelector('dialog[open] .chips');
+  await page.click('dialog[open] .chip >> nth=1'); await page.fill('dialog[open] textarea', 'a bit nervous'); assert.ok(await page.locator('dialog[open] .voice-note button').count() >= 1); await page.click('dialog[open] footer button:has-text("Save")'); await page.waitForTimeout(400);
+  await page.click('.feel-quick button:has-text("Close")'); assert.equal(await page.locator('.feel-quick').count(), 0);
+  await page.click('text=Done ✓'); await page.waitForSelector('.feel-quick .mood'); assert.match(await page.textContent('.feel-quick'), /after “/); await page.click('.feel-quick .mood >> nth=4'); await page.waitForSelector('.feel-quick [role=status]');
+  for (let i = 0; i < 12 && !(await page.locator('.summary').count()); i++) await page.click('.main-btns .primary', { timeout: 2000 }).catch(() => {});
+  await page.waitForSelector('.summary .feel-quick .mood'); assert.match(await page.textContent('.summary .feel-quick'), /now that you finished/); await page.click('.summary .feel-quick .mood >> nth=4');
+  const got = await page.evaluate(async () => { const S = await import('./js/store.js'); return S.feelings().map((f) => [f.moment, f.mood, f.tag, f.note]); });
+  assert.deepEqual(got.map((x) => x[0]), ['start', 'task', 'end']); assert.equal(got[0][3], 'a bit nervous'); assert.ok(got[0][2], 'the chip was kept');
+  // a voice note: kept beside the entry, a play button shows, deleting removes the sound
+  const aid = await page.evaluate(async () => { const S = await import('./js/store.js'); const e = await S.addFeeling({ mood: 3, ap: 'general', moment: 'now', audio: { sec: 3 } }, new Blob([new Uint8Array(2000)], { type: 'audio/webm' })); return e.audio.id; });
+  await page.goto(base + '#/feel'); await page.waitForSelector('.feel-list li'); assert.ok(await page.locator('.feel-list li button[aria-label^="Play the voice note"]').count(), 'a play button for the voice note');
+  await page.click('.feel-faces .mood >> nth=2'); await page.waitForSelector('.feel-form .voice-note button'); assert.ok(await page.locator('.feel-form .voice-note button:visible').count() >= 1, 'the feel screen offers the voice tools');
+  assert.ok(await page.evaluate(async (i) => { const { db } = await import('./js/db.js'); return !!(await db.get('audio', i)); }, aid));
+  await page.click('.feel-list li:has(button[aria-label^="Play"]) button[aria-label^="Delete"]'); await page.waitForTimeout(300);
+  assert.ok(!(await page.evaluate(async (i) => { const { db } = await import('./js/db.js'); return !!(await db.get('audio', i)); }, aid)), 'the sound is deleted with the entry');
+  assert.deepEqual(await audit(page, 'feel-page-voice'), []);
+  await page.context().close();
+});
+
 await step('v1.23: the picker offers "Build my own" and an avatar picked there is used at once; a kit avatar survives sanitising and other profiles keep theirs', async () => {
   const { page } = await newPage({ lang: 'en' }); await page.goto(base + '#/settings/profile'); await page.waitForSelector('details[data-group=profile]');
   await page.click('details[data-group=profile] button:has-text("Avatar")'); await page.waitForSelector('dialog[open] .avatar-picker'); assert.deepEqual(await audit(page, 'picker'), []);

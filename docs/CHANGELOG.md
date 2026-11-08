@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.29.1
+- **Voice in "How do I feel"** (owner request): dictation (speech to text, same consent step as the journal) fills the private note; a recorded voice note (up to 90 s / 3 MB) is kept beside the entry on this device only (`audio` store, `feelings[].audio`), with a play button in the recent list, deleted with the entry or the person, never inside the therapist summary unless notes are switched on (then only a "(voice note attached)" marker). `ui/voiceNote.js` is the shared widget.
+- **Asked inside a routine** (owner request): each routine has "Ask me how I feel: never / at the start / at the end / both" (`feelAt`) and each task "Ask how I feel after this task" (`feelAfter`). A calm, skippable card with five faces (`quickFeel`): at the start (under the title), after the chosen task, and on the summary (it replaces the older mood card when set). After a tap: "Tell more" (chip question + note + voice) or close; a low face offers the calm corner. Entries carry `moment`, `routine`, `task`; the screen says whether the face after routines is higher than before them (`momentStats`, needs three of each).
+- **Easier to reach**: launcher shortcut "How do I feel" (and `#/feel/1..5` routes allowed for a future widget), in the Calm menu and the search.
+
 ## 1.29.0
 - **"How do I feel?"** (open item O2): route `#/feel` (and `#/feel/1..5` with the face pre-chosen, for a widget). One tap on one of the five kit faces, then ONE question that follows the person's approach (`approachOf(view)`: the chosen method, else the first help area, else general; each has four chips: body / kind of thought / plan / outcome / focus / worry / organised / drive) and an optional private note (400 characters). A low face (1-2) offers a minute in the calm corner. Entries are kept per person on this device (`kv feelings`, max 800, in the backup, erased with the person).
 - **Over time**: a 14-day bar strip (daily average), overall average, trend against the week before (needs three days in each half), the last seven entries with delete.

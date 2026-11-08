@@ -24,6 +24,7 @@ import { celebrationFor } from './progressUi.js';
 import { coachTrigger, newMemo } from '../coach.js';
 import { sprintPlan, sprintState } from '../sprints.js';
 import { openCapture, openPark, moodRow } from './capture.js';
+import { quickFeel } from './feel.js';
 import { calmPanel } from './calm.js';
 import { modal } from './common.js';
 import { planText } from './goals.js';
@@ -175,12 +176,15 @@ export async function renderRunner(root, id, nav) {
     const label = run.interrupt?.label; run = E.endInterruption(run, Date.now()); persist(); paintStatic(); paintLive(); announce(t('unpBackSay', { name: label || '' }));
   }
   const act = (fn) => { run = fn(run, Date.now()); afterChange(); };
+  const tplNow = () => S.getTemplate(run.templateId), feelAtNow = () => tplNow()?.feelAt || 'none', feelSlot = h('div', { class: 'feel-slot' });
+  function showFeel(moment, task = '') { setChildren(feelSlot, quickFeel({ moment, routine: run.templateName, task, onClose: (why) => { feelSlot.replaceChildren(); if (why === 'calm') openCalm({}, true); } })); }
   const doComplete = () => {
     const cur = run.tasks[run.current], now = Date.now();
     const ev = taskEvent(E.elapsedMs(run, run.current, now) / 1000, cur.plannedSec + cur.extraSec);
     if (st().mode === 'both' || st().mode === 'vibrate') native.vibrate([0, 25]);   // a light tick: that counted
     const doneIdx = run.current; run = E.completeCurrent(run, now);
     { const s = st(); if (s.scoring !== 'off') pendingGain = scoreTask(run.tasks[doneIdx], { mode: s.scoring, penalty: s.scorePenalty, calm: calm(run) }).total; }
+    { const tk = tplNow()?.tasks?.[doneIdx]; if (tk?.feelAfter) showFeel('task', run.tasks[doneIdx]?.name || tk.name || ''); }
     if (E.isActive(run)) { say(ev); showTransition(t('nextUp', { task: run.tasks[run.current]?.name || '' })); }
     afterChange();
   };
@@ -330,7 +334,8 @@ export async function renderRunner(root, id, nav) {
     setChildren(root, h('div', { class: 'summary' },
       h('div', { class: 'big-emoji' }, avatarNode(st().avatar, { size: 110, anim: done ? 'dance' : 'think' })), h('h1', {}, done ? t('allDone') : t('stopped')), starRow,
       h('p', { class: 'muted' }, run.templateName), h('div', { class: 'celebrate-slot' }), h('div', { class: 'podium-slot' }), bubble, lookBackSummaryCard(nav, run.id),
-      feat.moodCheck ? h('div', { class: 'card center' }, h('strong', {}, t('moodAsk')), moodRow(async (v) => { run.mood = v; await S.setRunMood(run.id, v); }, run.mood || null)) : null,
+      done && ['end', 'both'].includes(feelAtNow()) ? quickFeel({ moment: 'end', routine: run.templateName, onClose: (why) => { if (why === 'calm') nav('#/calm'); } }) : null,
+      feat.moodCheck && !(done && ['end', 'both'].includes(feelAtNow())) ? h('div', { class: 'card center' }, h('strong', {}, t('moodAsk')), moodRow(async (v) => { run.mood = v; await S.setRunMood(run.id, v); }, run.mood || null)) : null,
       myGoals.length && done ? h('div', { class: 'card center' }, h('strong', {}, `🎯 ${myGoals[0].title}`), h('p', {}, t('checkAsk')), moodRow(async (v) => { await S.addCheck(myGoals[0].id, { rating: v }); toast(t('checkSaved')); })) : null,
       feat.journal ? h('button', { class: 'btn', type: 'button', onclick: () => openCapture({ routine: run.templateName }) }, `📝 ${t('jAfter')}`) : null,
       h('div', { class: 'card kvs' },
@@ -353,10 +358,10 @@ export async function renderRunner(root, id, nav) {
 
   setChildren(root, h('div', { class: 'run' },
     h('div', { class: 'run-top', style: { '--accent': run.color || '#6c5ce7' } }, h('span', { class: 'emoji' }, run.icon), h('h1', { class: 'run-title' }, run.templateName)),
-    bubble, coachHost, transEl, sitEl, intrEl, goalBox, planBox, gearBox, pw.el, head, leaveEl, h('div', { class: 'ring-wrap' }, ring, pausedBadge), sprintEl, taskName, ptsEl, pace, controls, vc?.el, helpCard?.el, list));
+    bubble, coachHost, transEl, feelSlot, sitEl, intrEl, goalBox, planBox, gearBox, pw.el, head, leaveEl, h('div', { class: 'ring-wrap' }, ring, pausedBadge), sprintEl, taskName, ptsEl, pace, controls, vc?.el, helpCard?.el, list));
   paintStatic(); paintLive(); paintGear();
   if (vc && st().voiceCmdAuto && st().transcribe) vc.start();
-  if (fresh) { say('start'); pushActive(true); }   // the parent sees "doing now" from the very first task
+  if (fresh) { say('start'); pushActive(true); if (['start', 'both'].includes(feelAtNow())) showFeel('start'); }   // the parent sees "doing now" from the very first task
   timer = setInterval(loop, 250);
   return () => { vc?.destroy(); clearInterval(timer); clearTimeout(bubbleTimer); clearTimeout(transTimer); coach.hide(); document.removeEventListener('visibilitychange', onVis); setAwake('run', false); if (E.isActive(run) && !discarded) persist(); };
 }

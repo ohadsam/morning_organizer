@@ -19,6 +19,7 @@
     <string name="nfc_hint">קרבו את הטלפון לתג NFC</string>
     <string name="shortcut_calm">פינת רוגע</string>
     <string name="shortcut_journal">יומן</string>
+    <string name="shortcut_feel">איך אני מרגיש/ה</string>
     <string name="widget_card_label">כרטיס שגרה</string>
     <string name="widget_card_desc">מציג שגרה ואת משימותיה, מפעיל אותה עם כל ההגדרות שלה; ‹ › מחליפים שגרה</string>
     <string name="widget_prev">שגרה קודמת</string>

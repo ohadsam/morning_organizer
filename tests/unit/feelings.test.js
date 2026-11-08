@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { sanitizeFeeling, sanitizeFeelings, approachOf, feelingStats, summaryText, TAGS, APPROACHES, MAX_FEELINGS, DAY } from '../../web/js/feelings.js';
+import { momentStats, sanitizeFeelAt, FEEL_AT, sanitizeFeeling, sanitizeFeelings, approachOf, feelingStats, summaryText, TAGS, APPROACHES, MAX_FEELINGS, DAY } from '../../web/js/feelings.js';
 
 const NOW = new Date(2026, 10, 8, 12, 0, 0).getTime();
 const f = (daysAgo, mood, extra = {}) => sanitizeFeeling({ at: NOW - daysAgo * DAY, mood, pid: 'p1', ap: 'general', ...extra });
@@ -30,4 +30,24 @@ test('the summary for a therapist: only what was chosen, notes only when asked',
   const a = summaryText(list, { now: NOW, days: 14, name: 'Dana' }, L); assert.match(a, /T - Dana/); assert.match(a, /C2\/2/); assert.match(a, /cbt\.worry/); assert.ok(!a.includes('secret'), 'notes stay out by default'); assert.match(a, /D$/);
   const b = summaryText(list, { now: NOW, days: 14, includeNotes: true }, L); assert.match(b, /Note: secret thing/);
   assert.ok(!summaryText(list, { now: NOW, days: 1 }, L).includes('m4'), 'only the chosen period');
+});
+
+test('a check-in remembers when in a routine it was asked, and a voice note is only a safe reference', () => {
+  const a = sanitizeFeeling({ mood: 4, moment: 'start', routine: 'Morning', task: 'Brush teeth' }); assert.equal(a.moment, 'start'); assert.equal(a.routine, 'Morning'); assert.equal(sanitizeFeeling({ mood: 4, moment: 'junk' }).moment, 'now');
+  assert.deepEqual(sanitizeFeeling({ mood: 3, audio: { id: 'a1_b-2', mime: 'audio/webm', sec: 500 } }).audio, { id: 'a1_b-2', mime: 'audio/webm', sec: 90 });
+  assert.equal(sanitizeFeeling({ mood: 3, audio: { id: '../../x', mime: 'audio/webm' } }).audio, null); assert.equal(sanitizeFeeling({ mood: 3, audio: 'x' }).audio, null);
+  assert.equal(sanitizeFeeling({ mood: 3, audio: { id: 'ok', mime: 'text/html' } }).audio.mime, 'audio/webm');
+  assert.deepEqual(FEEL_AT, ['none', 'start', 'end', 'both']); assert.equal(sanitizeFeelAt('both'), 'both'); assert.equal(sanitizeFeelAt('x'), 'none');
+});
+test('momentStats compares the face at the start with the face at the end of routines, with enough data', () => {
+  const at = (m, mood) => sanitizeFeeling({ mood, moment: m, at: NOW });
+  assert.equal(momentStats([at('start', 2), at('end', 4)]).verdict, null);
+  const better = momentStats([at('start', 2), at('start', 2), at('start', 3), at('end', 4), at('end', 4), at('end', 5)]); assert.equal(better.verdict, 'better'); assert.ok(better.diff > 1.5);
+  assert.equal(momentStats([at('start', 4), at('start', 4), at('start', 4), at('end', 2), at('end', 2), at('end', 2)]).verdict, 'lower');
+  assert.equal(momentStats([at('start', 3), at('start', 3), at('start', 3), at('end', 3), at('end', 3), at('end', 3)]).verdict, 'same');
+});
+test('the summary names the moment, and mentions a voice note only when notes are included', () => {
+  const l = { ...L, moment: (m, r, t) => `M:${m}:${r}:${t}`, voice: 'VOICE' };
+  const list = [sanitizeFeeling({ mood: 3, moment: 'task', routine: 'R', task: 'T', at: NOW - DAY, audio: { id: 'x', mime: 'audio/webm', sec: 4 }, pid: 'p' })];
+  const a = summaryText(list, { now: NOW, days: 14 }, l); assert.match(a, /M:task:R:T/); assert.ok(!a.includes('VOICE')); assert.match(summaryText(list, { now: NOW, days: 14, includeNotes: true }, l), /VOICE/);
 });

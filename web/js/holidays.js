@@ -18,11 +18,25 @@ function computeParts(date) {
   const o = {}; for (const p of MONTHS_FMT.formatToParts(noon(date))) if (p.type === 'day') o.d = Number(p.value); else if (p.type === 'month') o.m = p.value; else if (p.type === 'year') o.y = Number(p.value);
   return o;
 }
-/** The date as a person writes it, e.g. "כ״ב בתשרי תשפ״ו" / "22 Tishri 5786". */
+/** A number as Hebrew letters (gematria), e.g. 28 -> כ״ח, 15 -> ט״ו, 787 -> תשפ״ז. */
+export function gematria(n) {
+  let x = Math.floor(Number(n)); if (!(x > 0)) return '';
+  const hundreds = ['', 'ק', 'ר', 'ש', 'ת'], tens = ['', 'י', 'כ', 'ל', 'מ', 'נ', 'ס', 'ע', 'פ', 'צ'], ones = ['', 'א', 'ב', 'ג', 'ד', 'ה', 'ו', 'ז', 'ח', 'ט'];
+  let out = ''; while (x >= 400) { out += 'ת'; x -= 400; }
+  out += hundreds[Math.floor(x / 100)]; x %= 100;
+  if (x === 15) out += 'טו'; else if (x === 16) out += 'טז'; else { out += tens[Math.floor(x / 10)] + ones[x % 10]; }
+  return out.length > 1 ? `${out.slice(0, -1)}״${out.slice(-1)}` : `${out}׳`;
+}
+/** The date as a person writes it: Hebrew in letters, "כ״ח בחשוון התשפ״ז"; English "28 Heshvan 5787". */
 const LABEL_FMT = {};
 export function hebrewLabel(date, lang = 'he') {
   const k = lang === 'he' ? 'he' : 'en';
-  return (LABEL_FMT[k] ??= new Intl.DateTimeFormat(`${k}-u-ca-hebrew`, { day: 'numeric', month: 'long', year: 'numeric' })).format(noon(date));
+  const f = (LABEL_FMT[k] ??= new Intl.DateTimeFormat(`${k}-u-ca-hebrew`, { day: 'numeric', month: 'long', year: 'numeric' }));
+  if (k !== 'he') return f.format(noon(date));
+  const parts = f.formatToParts(noon(date)), get = (t) => parts.find((x) => x.type === t)?.value || '';
+  const day = parseInt(get('day'), 10), year = parseInt(get('year'), 10), month = get('month');
+  if (!day || !year || !month) return f.format(noon(date));
+  return `${gematria(day)} ב${month} ה${gematria(year % 1000)}`;
 }
 
 const SUMMER = (d) => d.getMonth() === 6 || d.getMonth() === 7;   // 1 July - 31 August: the "Great Vacation"

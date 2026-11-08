@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { hebrewParts, hebrewLabel, dayOff, daysOffBetween, upcoming, skipDates } from '../../web/js/holidays.js';
+import { gematria, hebrewParts, hebrewLabel, dayOff, daysOffBetween, upcoming, skipDates } from '../../web/js/holidays.js';
 
 const D = (s) => { const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d, 9); };
 test('Hebrew date comes from the platform calendar', () => {
@@ -24,4 +24,10 @@ test('kinds, upcoming runs and the dates handed to the Android app', () => {
   assert.equal(dayOff(D('2026-12-06')).kind, 'vacation'); assert.equal(dayOff(D('2026-09-12')).kind, 'holiday');
   const up = upcoming(D('2026-09-01'), 3); assert.equal(up[0].key, 'roshHashana'); assert.equal(up[0].to.getDate() - up[0].from.getDate(), 1);
   const sd = skipDates(D('2026-09-01'), 430); assert.ok(sd.includes('2026-09-12') && sd.every((x) => /^\d{4}-\d{2}-\d{2}$/.test(x)) && sd.length > 100 && sd.length < 200);
+});
+
+test('the Hebrew date is written in letters, like a person writes it', () => {
+  assert.equal(gematria(28), 'כ״ח'); assert.equal(gematria(15), 'ט״ו'); assert.equal(gematria(16), 'ט״ז'); assert.equal(gematria(787), 'תשפ״ז'); assert.equal(gematria(1), 'א׳'); assert.equal(gematria(30), 'ל׳'); assert.equal(gematria(0), '');
+  assert.equal(hebrewLabel(D('2026-11-08'), 'he'), 'כ״ח בחשוון התשפ״ז'); assert.match(hebrewLabel(D('2026-09-12'), 'he'), /^א׳ בתשרי התשפ״ז$/);
+  assert.match(hebrewLabel(D('2026-11-08'), 'en'), /28 Heshvan 5787|28 Cheshvan 5787/);
 });

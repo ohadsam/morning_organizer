@@ -1,6 +1,7 @@
 // Strings for 1.23: the avatar studio, My avatars, sharing an avatar.
 export const EN = {
   rcHintTitle: 'Looking back makes mornings easier', rcHintBody: 'Two quiet minutes: where did it get stuck, and what could help next time?', rcHintGo: 'Look back', rcHintLater: 'Not now', rcSumTitle: 'Look back at this run', rcSumBody: 'Two quiet minutes: where did it get stuck, and what could help next time? You can change the routine from here.', rcSumGo: 'Look back (2 minutes)', rcStatsGo: 'Look back at this routine',
+  avSunny: 'Sunny, the little sun',
   calmVisual: 'What to look at', calmVisScene: 'Scene', calmVisAvatar: 'My avatar', calmVisCircle: 'Circle', calmSceneAlt: 'A calm picture that changes with the breath or the step',
   iconMono: 'Black & white icons', iconMonoHint: 'Icons are colourful by default. Turn this on to draw them in the text colour only.',
   iconStyle: 'Icon style', iconStyleHint: 'How the icons in the bar and menus are drawn. “Follow the look” picks what suits the look you chose.', iconAuto: 'Follow the look', iconLine: 'Thin lines', iconDuotone: 'Soft two-tone', iconFilled: 'Solid shapes',
@@ -17,6 +18,7 @@ export const EN = {
 };
 export const HE = {
   rcHintTitle: 'מבט לאחור מקל על הבקרים', rcHintBody: 'שתי דקות רגועות: איפה נתקענו, ומה יכול לעזור בפעם הבאה?', rcHintGo: 'מסתכלים אחורה', rcHintLater: 'לא עכשיו', rcSumTitle: 'מסתכלים אחורה על ההרצה הזאת', rcSumBody: 'שתי דקות רגועות: איפה נתקענו, ומה יכול לעזור בפעם הבאה? אפשר גם לשנות את השגרה מכאן.', rcSumGo: 'מסתכלים אחורה (2 דקות)', rcStatsGo: 'מסתכלים אחורה על השגרה',
+  avSunny: 'שמשי, השמש הקטנה',
   calmVisual: 'על מה להסתכל', calmVisScene: 'תמונה', calmVisAvatar: 'האווטר שלי', calmVisCircle: 'עיגול', calmSceneAlt: 'תמונה רגועה שמשתנה עם הנשימה או עם השלב',
   iconMono: 'אייקונים בשחור־לבן', iconMonoHint: 'כברירת מחדל האייקונים צבעוניים. הפעילו כדי לצייר אותם בצבע הטקסט בלבד.',
   iconStyle: 'סגנון אייקונים', iconStyleHint: 'איך מצוירים האייקונים בסרגל ובתפריטים. “לפי המראה” בוחר את מה שמתאים למראה שבחרתם.', iconAuto: 'לפי המראה', iconLine: 'קווים דקים', iconDuotone: 'דו-גוני רך', iconFilled: 'צורות מלאות',

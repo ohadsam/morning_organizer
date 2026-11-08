@@ -16,11 +16,12 @@ const isPhoto = (v) => typeof v === 'string' && v.length <= 40_000 && /^data:ima
 const HEX = /^#[0-9a-fA-F]{6}$/;
 const isChar = (id) => typeof id === 'string' && Object.hasOwn(CHARACTERS, id); // plain lookup would accept "__proto__", "constructor"...
 
-export const defaultAvatar = () => ({ k: 'char', id: 'fox', color: CHARACTERS.fox.base });
+export const defaultAvatar = () => ({ k: 'sunny' });
 /** -> a valid avatar object, or the default. Never trusts the shape it is given. */
 export function sanitizeAvatar(a) {
   if (!a || typeof a !== 'object') return defaultAvatar();
   if (a.k === 'char' && isChar(a.id)) return { k: 'char', id: a.id, color: HEX.test(a.color) ? a.color : CHARACTERS[a.id].base };
+  if (a.k === 'sunny') return { k: 'sunny' };
   if (a.k === 'kit') return sanitizeKit(a);
   if (a.k === 'emoji' && typeof a.e === 'string') { const e = a.e.replace(/[\u0000-\u001f<>&"']/g, '').slice(0, 8); if (e) return { k: 'emoji', e }; }
   if (a.k === 'photo' && isPhoto(a.url)) return { k: 'photo', url: a.url };
@@ -30,12 +31,13 @@ export function sanitizeAvatar(a) {
 /** Text stand-in for contexts that can't draw (messages, other phones): emoji of the character, or the emoji itself, or a smiley. */
 export function avatarEmoji(a) {
   const v = sanitizeAvatar(a);
-  return v.k === 'char' ? CHARACTERS[v.id].emoji : v.k === 'emoji' ? v.e : '🙂';
+  return v.k === 'char' ? CHARACTERS[v.id].emoji : v.k === 'emoji' ? v.e : v.k === 'sunny' ? '🌞' : '🙂';
 }
 /** What another phone gets to see: photos/GIFs never leave the device (privacy + size), characters/emoji do. */
 export const shareableAvatar = (a) => { const v = sanitizeAvatar(a); return v.k === 'photo' || v.k === 'gif' ? { k: 'emoji', e: '🙂' } : v; };
 /** Legacy `mascot` emoji -> nearest character. */
 export function avatarFromMascot(e) {
+  if (e === '🦊') return { k: 'sunny' };   // the old default mascot: the app's own Sunny takes its place
   const hit = Object.entries(CHARACTERS).find(([, c]) => c.emoji === e);
   return hit ? { k: 'char', id: hit[0], color: hit[1].base } : { k: 'emoji', e: typeof e === 'string' && e ? e : '🦊' };
 }

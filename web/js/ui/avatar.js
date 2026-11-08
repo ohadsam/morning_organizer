@@ -8,6 +8,7 @@ import { totalStars, finished } from '../stats.js';
 import { resizeToDataUrl } from '../photo.js';
 import { modal, toast, confirmBox, icon } from './common.js';
 import { kitNode } from './avatarKit.js';
+import { sunnyNode } from './mascot.js';
 import { openAvatarStudio } from './avatarStudio.js';
 import { openMyAvatars } from './avatarLibrary.js';
 
@@ -30,7 +31,7 @@ export function avatarNode(avatar, { size = 56, anim = 'idle', label = '' } = {}
     const body = document.createElementNS(NS, 'g'); body.setAttribute('class', 'av-body'); sh.body.forEach((s) => body.append(svgNode(s)));
     const z = document.createElementNS(NS, 'text'); z.setAttribute('class', 'av-z'); z.setAttribute('x', '72'); z.setAttribute('y', '20'); z.setAttribute('font-size', '22'); z.textContent = 'z';
     el.append(body, svgNode(sh.hand), z);
-  } else if (a.k === 'kit') { el = kitNode(a, { size, anim }); } else if (a.k === 'emoji') { el = h('span', { class: 'avatar avatar-emoji' }, a.e); el.style.fontSize = `${Math.round(size * 0.82)}px`; }
+  } else if (a.k === 'sunny') { el = sunnyNode({ size, anim }); } else if (a.k === 'kit') { el = kitNode(a, { size, anim }); } else if (a.k === 'emoji') { el = h('span', { class: 'avatar avatar-emoji' }, a.e); el.style.fontSize = `${Math.round(size * 0.82)}px`; }
   else el = h('img', { class: 'avatar avatar-img', src: a.url, alt: '' });
   el.dataset.anim = anim; el.style.setProperty('--av', `${size}px`);
   if (label) { el.setAttribute('role', 'img'); el.setAttribute('aria-label', label); } else el.setAttribute('aria-hidden', 'true');
@@ -61,11 +62,12 @@ export function openAvatarPicker(initial, onPick, { lvl = level() } = {}) {
     setChildren(emojis, EMOJIS.map((e) => h('button', { type: 'button', class: `emoji-pick ${cur.k === 'emoji' && cur.e === e ? 'on' : ''}`, 'aria-label': e, 'aria-pressed': String(cur.k === 'emoji' && cur.e === e), onclick: () => { cur = { k: 'emoji', e }; draw(); } }, e)));
     big = avatarNode(cur, { size: 120, label: t('avatar') }); setChildren(preview, big);
     setChildren(anims, ANIMATIONS.filter((a) => a !== 'idle').map((a) => h('button', { class: 'btn small', type: 'button', 'aria-label': `${t('avatarAnim')}: ${a}`, onclick: () => animate(big, a, 2200) }, ANIM_LABEL[a])));
-    setChildren(grid, Object.entries(CHARACTERS).map(([id, c]) => {
+    const sunnyOn = cur.k === 'sunny';
+    setChildren(grid, [h('button', { type: 'button', class: `char ${sunnyOn ? 'on' : ''}`, role: 'radio', 'aria-checked': String(sunnyOn), 'aria-label': t('avSunny'), title: t('avSunny'), onclick: () => { cur = { k: 'sunny' }; draw(); } }, avatarNode({ k: 'sunny' }, { size: 52 })), ...Object.entries(CHARACTERS).map(([id, c]) => {
       const locked = c.unlock > lvl, on = cur.k === 'char' && cur.id === id;
       return h('button', { type: 'button', class: `char ${on ? 'on' : ''}`, disabled: locked, role: 'radio', 'aria-checked': String(on), 'aria-label': locked ? `${c.emoji} ${t('avatarLocked', { n: c.unlock })}` : c.emoji,
         onclick: () => { cur = { k: 'char', id, color: cur.k === 'char' && !c.fixed ? cur.color : c.base }; draw(); } }, avatarNode({ k: 'char', id, color: c.base }, { size: 52 }), locked ? h('small', {}, `🔒 ${t('levelShort', { n: c.unlock })}`) : null);
-    }));
+    })]);
     const ch = cur.k === 'char' ? CHARACTERS[cur.id] : null;
     setChildren(colors, ch && !ch.fixed ? AVATAR_COLORS.map((c) => h('button', { type: 'button', class: `swatch ${cur.color === c ? 'on' : ''}`, style: { '--c': c }, role: 'radio', 'aria-checked': String(cur.color === c), 'aria-label': c, onclick: () => { cur = { ...cur, color: c }; draw(); } })) : []);
   };

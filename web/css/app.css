@@ -618,3 +618,6 @@ html[data-motion="calm"] *, html[data-motion="calm"] *::before, html[data-motion
 @media (prefers-reduced-motion: reduce) { .cs * { animation: none !important; } }
 /* the person's own avatar breathes: the whole figure grows a little with --p (0 empty .. 1 full) from the exercise timer */
 .avatar-breathe { width: 100%; height: 100%; --av: 100%; } .avatar-breathe .kit-move { transform-box: fill-box; transform-origin: 50% 85%; transform: scale(calc(1 + .045 * var(--p, 0))); }
+/* Sunny the mascot as an avatar: hooks from the calm kit (.cs) move her rays and glow slowly; a soft bob for the resting looks */
+.avatar-sunny { color: var(--text); } .avatar-sunny[data-anim="idle"], .avatar-sunny[data-anim="calm"] { animation: av-bob 3.6s ease-in-out infinite alternate; }
+html[data-motion="calm"] .avatar-sunny { animation: none; }

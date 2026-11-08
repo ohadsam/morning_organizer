@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.26.2
+- **Locked avatar pieces explained** (owner question): the locks are intentional (pieces open with levels, levels come from stars, stars from finished routines). The studio shows a note on any tab that still has locked pieces ("Locked pieces open as you level up... You are level N. K more stars to level N+1"), and the celebration card after a level-up now says how many new avatar pieces opened (`partsUnlockedBetween`) with a button to the avatar picker, next to the characters that already unlocked. No pop-up during the day: the news arrives on the calm summary screen.
+
 ## 1.26.1
 - **Sunny is the default avatar** (owner request: the fox / cat on the first screen): `data/mascot.json` (14 moods from the scenery kit, 50 KB, offline) drawn by `ui/mascot.js`; the animation or feeling picks the mood (`js/mascot.js`). Avatar kind `{k:'sunny'}`; she is in the picker as the first tile. One-time migration (`kv sunnyMig`): an untouched default fox (orange, never customised) becomes Sunny; any avatar the person chose stays. The old default mascot emoji 🦊 also maps to Sunny for new profiles.
 - **The Hebrew date in letters**: "כ״ח בחשוון התשפ״ז" (gematria with the thousands left out, `gematria()` in `js/holidays.js`) instead of the platform's numbers; English unchanged.

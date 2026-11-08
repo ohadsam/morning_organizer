@@ -82,6 +82,11 @@ export function parsePack(raw) {
 }
 export const optionOf = (pack, slot, id) => pack?.slots[slot]?.options.find((o) => o.id === id) || pack?.slots[slot]?.options[0] || null;
 /** The unlocked options of a slot at this level. */
+/** The avatar parts that open when a person goes from level `from` to level `to`: [{ slot, id }]. */
+export function partsUnlockedBetween(pack, from, to) {
+  const out = []; for (const [slot, s] of Object.entries(pack?.slots || {})) for (const o of s.options || []) if (o.unlock > from && o.unlock <= to) out.push({ slot, id: o.id });
+  return out;
+}
 export const unlocked = (pack, slot, level) => (pack?.slots[slot]?.options || []).filter((o) => o.unlock <= level);
 
 // ── what each animation / feeling looks like: which variant of the arms, eyes, brows, mouth, which effect. `flip` = two frames that alternate. ──

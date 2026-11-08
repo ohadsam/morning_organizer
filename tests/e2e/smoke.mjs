@@ -1534,6 +1534,21 @@ await step('v1.26: the calm corner shows a drawn scene for the breath, the journ
   assert.deepEqual(await audit(page, 'calm-avatar'), []); await page.context().close();
 });
 
+await step('v1.26.2: the avatar studio says why pieces are locked and how many stars are missing; level-up shows what opened', async () => {
+  const { page } = await newPage({ lang: 'en' }); await dismissWelcome(page);
+  await page.evaluate(async () => { const m = await import('./js/ui/avatarStudio.js'); m.openAvatarStudio({ lvl: 1, wizard: false }); });
+  await page.waitForSelector('.studio .lock-hint'); const txt = await page.textContent('.studio .lock-hint'); assert.match(txt, /level up/); assert.match(txt, /You are level 1/); assert.match(txt, /more stars to level 2/);
+  assert.deepEqual(await audit(page, 'studio-lock-hint'), []); await closeDialogs(page);
+  // five good runs take a person from level 1 to level 3: the celebration says which avatar pieces opened and offers the picker
+  const card = await page.evaluate(async () => {
+    const S = await import('./js/store.js'), P = await import('./js/ui/progressUi.js'), pid = S.activeProfile().id; let last = null;
+    for (let i = 0; i < 5; i++) { last = { id: 'lv' + i, templateId: 'x', profileId: pid, name: 'x', tasks: [], startedAt: Date.now() - 9e5 + i, endedAt: Date.now() - 8e5 + i, status: 'done', plannedTotal: 60, actualTotal: 50, taskResults: [] }; if (i < 4) await S.saveRun(last); }
+    await S.saveRun(last); const el = await P.celebrationFor(last); return el ? el.textContent : null;
+  });
+  assert.match(card, /Level up/); assert.match(card, /new avatar pieces are open/);
+  await page.context().close();
+});
+
 await step('v1.23: the picker offers "Build my own" and an avatar picked there is used at once; a kit avatar survives sanitising and other profiles keep theirs', async () => {
   const { page } = await newPage({ lang: 'en' }); await page.goto(base + '#/settings/profile'); await page.waitForSelector('details[data-group=profile]');
   await page.click('details[data-group=profile] button:has-text("Avatar")'); await page.waitForSelector('dialog[open] .avatar-picker'); assert.deepEqual(await audit(page, 'picker'), []);

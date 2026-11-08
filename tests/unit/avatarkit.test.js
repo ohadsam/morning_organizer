@@ -72,3 +72,10 @@ test('My avatars: save, rename (replace by id), duplicate, delete, limit, clean 
 test('avatar texts exist in both languages', () => {
   for (const l of ['en', 'he']) for (const k of ['avkTitle', 'avkSave', 'avkUse', 'avkShare', 'avkRandom', 'avkLibrary', 'avkImport']) assert.ok(STR[l][k], `${l} ${k}`);
 });
+
+test('partsUnlockedBetween lists what opens when a person levels up', async () => {
+  const { partsUnlockedBetween } = await import('../../web/js/avatarKit.js');
+  const pack = { slots: { hair: { options: [{ id: 'a', unlock: 1 }, { id: 'b', unlock: 8 }, { id: 'c', unlock: 9 }] }, eyes: { options: [{ id: 'd', unlock: 8 }, { id: 'e', unlock: 12 }] } } };
+  assert.deepEqual(partsUnlockedBetween(pack, 7, 8), [{ slot: 'hair', id: 'b' }, { slot: 'eyes', id: 'd' }]);
+  assert.deepEqual(partsUnlockedBetween(pack, 1, 1), []); assert.equal(partsUnlockedBetween(pack, 1, 14).length, 4); assert.deepEqual(partsUnlockedBetween(null, 1, 5), []);
+});

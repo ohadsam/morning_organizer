@@ -50,6 +50,14 @@
     <string name="sentence_h_3">3 hours</string>
     <string name="sentence_h_6">6 hours</string>
     <string name="sentence_h_24">a day</string>
+    <string name="widget_mood_label">How do I feel</string>
+    <string name="widget_mood_title">How do you feel?</string>
+    <string name="widget_mood_desc">Five faces: tap the one that fits and note it in a moment</string>
+    <string name="mood_1">Very sad</string>
+    <string name="mood_2">Sad</string>
+    <string name="mood_3">Okay</string>
+    <string name="mood_4">Good</string>
+    <string name="mood_5">Great</string>
     <string name="widget_journal_text">Quick note</string>
     <string name="widget_journal_desc">Open the journal in one tap</string>
     <string name="widget_calm_desc">Open the calm corner in one tap</string>

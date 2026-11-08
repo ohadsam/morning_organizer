@@ -107,6 +107,10 @@
             <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE"/></intent-filter>
             <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_calm_sunny_info"/>
         </receiver>
+        <receiver android:name=".MoodWidget" android:exported="false" android:label="@string/widget_mood_label">
+            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE"/></intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_mood_info"/>
+        </receiver>
         <receiver android:name=".SentenceWidget" android:exported="false" android:label="@string/widget_sentence_label">
             <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE"/></intent-filter>
             <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_sentence_info"/>

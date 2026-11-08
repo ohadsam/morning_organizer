@@ -7,6 +7,8 @@ import { sanitizeKit, defaultKit, randomKit, isKit, TABS, ANIM_NAMES, FEELING_NA
 import { modal, toast } from './common.js';
 import { kitNode, loadPack } from './avatarKit.js';
 import { shareAvatar } from './avatarShare.js';
+import { levelInfo, LEVEL_STARS } from '../levels.js';
+import { finished, totalStars } from '../stats.js';
 
 const ANIM_EMOJI = { idle: '🙂', wave: '👋', cheer: '🎉', dance: '💃', sleep: '😴', alert: '😮', think: '🤔', happy: '😊', calm: '😌', sad: '😢', worried: '😟', angry: '😠', tired: '🥱', excited: '🤩', proud: '🏅' };
 const PRESETS = {
@@ -38,6 +40,11 @@ export async function openAvatarStudio({ avatar, id = null, name = '', lvl = 1, 
     return h('button', { type: 'button', class: `opt-tile ${on ? 'on' : ''} ${locked ? 'locked' : ''}`, 'aria-pressed': String(on), disabled: locked, 'aria-label': `${label}${locked ? `, ${t('avkLocked', { n: o.unlock })}` : ''}`, onclick: () => set(slot, o.id) },
       kitNode({ ...kit, p: { ...kit.p, [slot]: o.id } }, { size: 60, anim: 'none' }), h('small', {}, label), locked ? h('span', { class: 'opt-lock', 'aria-hidden': 'true' }, `🔒 ${o.unlock}`) : null);
   };
+  // why some pieces are locked and how to open them: levels come from stars, stars from finished routines
+  function lockHint() {
+    const info = levelInfo(totalStars(finished(S.myRuns()))), left = info.level === lvl && info.next !== null ? info.next - info.stars : null;
+    return h('p', { class: 'note lock-hint', role: 'note' }, `🔒 ${t('avkLockHint', { lvl })}${left !== null ? ` ${t('avkLockLeft', { n: left, next: lvl + 1 })}` : ''}`);
+  }
   function paintPanel() {
     if (tab === 'colors') {
       setChildren(panel, COLOR_KEYS.map((k) => h('div', { class: 'stack', role: 'group', 'aria-label': t(`avkColor_${k}`) }, h('span', { class: 'lbl' }, t(`avkColor_${k}`)),
@@ -46,7 +53,8 @@ export async function openAvatarStudio({ avatar, id = null, name = '', lvl = 1, 
       return;
     }
     const slots = TABS.find(([id]) => id === tab)[1];
-    setChildren(panel, slots.map((slot) => h('section', { class: 'stack' }, h('h3', {}, t(`avkSlot_${slot}`)), h('div', { class: 'opt-grid' }, pack.slots[slot].options.map((o) => tile(slot, o))))));
+    const locked = slots.some((slot) => pack.slots[slot].options.some((o) => o.unlock > lvl));
+    setChildren(panel, locked ? lockHint() : null, slots.map((slot) => h('section', { class: 'stack' }, h('h3', {}, t(`avkSlot_${slot}`)), h('div', { class: 'opt-grid' }, pack.slots[slot].options.map((o) => tile(slot, o))))));
   }
   const paintTabs = () => setChildren(tabsEl, [...TABS.map(([id]) => id), 'colors'].map((id) => h('button', { type: 'button', role: 'tab', class: `chip btn-chip ${tab === id ? 'on' : ''}`, 'aria-selected': String(tab === id), onclick: () => { tab = id; paintTabs(); paintPanel(); } }, `${TAB_EMOJI[id]} ${t(`avkTab_${id}`)}`)));
   const nameIn = h('input', { type: 'text', maxLength: 30, value: nm, placeholder: t('avkNamePh'), 'aria-label': t('avkName'), oninput: (e) => { nm = e.target.value; } });

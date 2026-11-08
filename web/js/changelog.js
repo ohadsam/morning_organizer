@@ -1,5 +1,7 @@
 // "What's new" content shown inside the app (newest first). Keep in step with docs/CHANGELOG.md; a unit test checks the current version is listed and both languages match.
 export const CHANGES = [
+  { v: '1.26.2', en: ['🔒 The avatar studio now explains the locked pieces: they open as you level up (every finished routine earns stars), with how many stars are left for the next level. When you level up, the card after the routine tells you how many new avatar pieces opened and takes you to the picker.'],
+    he: ['🔒 באולפן האווטרים יש עכשיו הסבר על החלקים הנעולים: הם נפתחים כשעולים רמה (כל שגרה שמסיימים מזכה בכוכבים), ומוצג כמה כוכבים חסרים לרמה הבאה. כשעולים רמה, הכרטיס אחרי השגרה מספר כמה חלקים חדשים נפתחו ומוביל לבורר.'] },
   { v: '1.26.1', en: ['☀️ Meet Sunny, the app’s own little sun, now the first avatar (anyone who still had the untouched fox gets her once; every avatar you picked yourself stays). 📅 The Hebrew date is written in letters, like כ״ח בחשוון התשפ״ז.'],
     he: ['☀️ הכירו את שמשי, השמש הקטנה של האפליקציה, עכשיו האווטר הראשון (מי שעוד היה לו השועל כברירת מחדל מקבל אותה פעם אחת; אווטרים שבחרתם בעצמכם נשארים). 📅 התאריך העברי כתוב באותיות, כמו כ״ח בחשוון התשפ״ז.'] },
   { v: '1.26.0', en: ['🌬️ The calm corner now shows a picture that moves with you: the sun rises as you breathe in, a journey step has its own scene, grounding shows what to look for and the body scan lights the part to relax. Choose “My avatar” to watch your own avatar breathe, or keep the simple circle.'],

@@ -1,6 +1,7 @@
 // Strings for 1.23: the avatar studio, My avatars, sharing an avatar.
 export const EN = {
   rcHintTitle: 'Looking back makes mornings easier', rcHintBody: 'Two quiet minutes: where did it get stuck, and what could help next time?', rcHintGo: 'Look back', rcHintLater: 'Not now', rcSumTitle: 'Look back at this run', rcSumBody: 'Two quiet minutes: where did it get stuck, and what could help next time? You can change the routine from here.', rcSumGo: 'Look back (2 minutes)', rcStatsGo: 'Look back at this routine',
+  avkLockHint: 'Locked pieces open as you level up: every routine you finish earns stars. You are level {lvl}.', avkLockLeft: '{n} more stars to level {next}.', unlockedParts: '🎨 {n} new avatar pieces are open!', unlockedPartsBtn: 'Try them in the avatar picker',
   avSunny: 'Sunny, the little sun',
   calmVisual: 'What to look at', calmVisScene: 'Scene', calmVisAvatar: 'My avatar', calmVisCircle: 'Circle', calmSceneAlt: 'A calm picture that changes with the breath or the step',
   iconMono: 'Black & white icons', iconMonoHint: 'Icons are colourful by default. Turn this on to draw them in the text colour only.',
@@ -18,6 +19,7 @@ export const EN = {
 };
 export const HE = {
   rcHintTitle: 'מבט לאחור מקל על הבקרים', rcHintBody: 'שתי דקות רגועות: איפה נתקענו, ומה יכול לעזור בפעם הבאה?', rcHintGo: 'מסתכלים אחורה', rcHintLater: 'לא עכשיו', rcSumTitle: 'מסתכלים אחורה על ההרצה הזאת', rcSumBody: 'שתי דקות רגועות: איפה נתקענו, ומה יכול לעזור בפעם הבאה? אפשר גם לשנות את השגרה מכאן.', rcSumGo: 'מסתכלים אחורה (2 דקות)', rcStatsGo: 'מסתכלים אחורה על השגרה',
+  avkLockHint: 'חלקים נעולים נפתחים כשעולים רמה: כל שגרה שמסיימים מזכה בכוכבים. אתם ברמה {lvl}.', avkLockLeft: 'עוד {n} כוכבים לרמה {next}.', unlockedParts: '🎨 {n} חלקים חדשים לאווטר נפתחו!', unlockedPartsBtn: 'לנסות אותם בבורר האווטרים',
   avSunny: 'שמשי, השמש הקטנה',
   calmVisual: 'על מה להסתכל', calmVisScene: 'תמונה', calmVisAvatar: 'האווטר שלי', calmVisCircle: 'עיגול', calmSceneAlt: 'תמונה רגועה שמשתנה עם הנשימה או עם השלב',
   iconMono: 'אייקונים בשחור־לבן', iconMonoHint: 'כברירת מחדל האייקונים צבעוניים. הפעילו כדי לצייר אותם בצבע הטקסט בלבד.',

@@ -1,5 +1,7 @@
 // "What's new" content shown inside the app (newest first). Keep in step with docs/CHANGELOG.md; a unit test checks the current version is listed and both languages match.
 export const CHANGES = [
+  { v: '1.28.0', en: ['📱 Two calm widgets to choose from: a calm ball and Sunny breathing slowly. And a new widget, “A good sentence”: pick an approach (CBT, NLP, ADHD, anxiety, organising, motivation…) and how often it changes, and a kind sentence for it shows on your home screen.'],
+    he: ['📱 שני ווידג׳טי רוגע לבחירה: כדור רוגע ושמשי שנושמת לאט. וווידג׳ט חדש, “משפט טוב”: בוחרים גישה (CBT, NLP, קשב, חרדה, ארגון, מוטיבציה…) וכל כמה זמן להחליף, ומשפט טוב לגישה הזאת מופיע במסך הבית.'] },
   { v: '1.27.0', en: ['📱 The home-screen widgets have the new look (calm sky backgrounds, light and dark), the calm widget shows a drawn breathing circle, and there is a new Journal widget: one tap to a quick note.'],
     he: ['📱 הווידג׳טים במסך הבית קיבלו מראה חדש (רקעי שמיים רגועים, בהיר וכהה), בווידג׳ט הרוגע יש עיגול נשימה מצויר, ויש ווידג׳ט יומן חדש: לחיצה אחת לרשימה מהירה.'] },
   { v: '1.26.2', en: ['🔒 The avatar studio now explains the locked pieces: they open as you level up (every finished routine earns stars), with how many stars are left for the next level. When you level up, the card after the routine tells you how many new avatar pieces opened and takes you to the picker.'],

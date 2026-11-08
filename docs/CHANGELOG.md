@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.28.0
+- **Two calm widgets** (owner request): "Calm ball" (the five circle frames in a `ViewFlipper`, in and out, 1 s per frame) and the new "Sunny breathes" (`CalmSunnyWidget`, five frames of Sunny's calm-breathe mood rendered from `mascot.json` at 0.90 to 1.10 scale, light and dark, four densities). RemoteViews cannot animate by itself; a `ViewFlipper` with `autoStart` is allowed and only runs while the widget is on screen. A tap opens the calm corner.
+- **"A good sentence" widget** (`SentenceWidget`, 4x1): when it is placed, `SentenceConfigActivity` asks for the approach (a mix, CBT, time / memory / planning, NLP, ADHD, anxiety, organising, motivation) and how often the sentence changes (1, 3, 6 or 24 hours). 56 sentences x English + Hebrew live in `values/sentences.xml` and `values-he/sentences.xml` (neutral Hebrew, no gender forms); `SentenceMath.index` picks the sentence from the clock and the widget id, so it needs no background service (the system refreshes every 30 minutes). Unit tests in `SentenceMathTest`. The widget follows the phone's language, not the app's.
+- Verified by CI only (no device here).
+
 ## 1.27.0
 - **Widgets in the new look** (from the ChatGPT widget kit, Sunrise look): every existing widget (routines, card, run, stats, calm) now has a drawn background (`wbg_*`, xhdpi + xxhdpi, `drawable-night-*` for dark), an `ImageView` behind the original layout; text colours unchanged (the kit measured >= 4.5 over the real pixels, worst 4.6). The calm widget shows the breathing circle (`wi_breath`) instead of the emoji.
 - **New Journal widget** (`JournalWidget`, 2x1, opens `#/journal`; English + Hebrew strings). Kotlin / resources are verified by CI only (no device here).

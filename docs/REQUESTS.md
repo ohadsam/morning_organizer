@@ -72,6 +72,7 @@ Status: ✅ shipped (version) · 🟡 partly (what is missing) · ⛔ not possib
 | 46 | Choose built-in special tasks (journal, thought parking, relaxation, guided imagery...) from a grouped, searchable picker, not only as suggestions | ✅ 1.21 |
 | 49 | NLP as a method like CBT / Cog-Fun: choose tasks, guidance and adaptation by it | ✅ 1.22 (needs model, six guided tools, special-task group; honest evidence note) |
 | 50 | Suggest and add more UI/UX improvements | ✅ 1.22 (calm animations switch, method notes in the chooser, light vibration tick) |
+| 68 | Calm widget: a ball and Sunny breathing; a widget that shows a good sentence for a chosen treatment approach, changing every few hours | ✅ 1.28.0 (CalmWidget ball flipper, CalmSunnyWidget, SentenceWidget + config screen, 56 sentences he/en, unit tests) |
 | 67 | Widgets with the kit visuals + a Journal widget (integration step 2) | ✅ 1.27.0 (backgrounds light/dark for all five widgets, drawn calm icon, Journal widget); mood / thought / points / balance widgets and per-look backgrounds still open |
 | 66 | Why are some avatar pieces locked, how to open them, and tell the person when they open | ✅ 1.26.2 (intentional level unlocks; hint with stars left in the studio; level-up card lists the new pieces with a button) |
 | 65 | Landing screen still shows the cat; the Hebrew date shows numbers instead of letters | ✅ 1.26.1 (Sunny is the default avatar, one-time migration for the untouched fox; date in letters) |

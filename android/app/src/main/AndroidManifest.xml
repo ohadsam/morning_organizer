@@ -99,10 +99,21 @@
             <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE"/></intent-filter>
             <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_stats_info"/>
         </receiver>
-        <receiver android:name=".CalmWidget" android:exported="false" android:label="@string/shortcut_calm">
+        <receiver android:name=".CalmWidget" android:exported="false" android:label="@string/widget_calm_ball_text">
             <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE"/></intent-filter>
             <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_calm_info"/>
         </receiver>
+        <receiver android:name=".CalmSunnyWidget" android:exported="false" android:label="@string/widget_calm_sunny_text">
+            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE"/></intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_calm_sunny_info"/>
+        </receiver>
+        <receiver android:name=".SentenceWidget" android:exported="false" android:label="@string/widget_sentence_label">
+            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE"/></intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_sentence_info"/>
+        </receiver>
+        <activity android:name=".SentenceConfigActivity" android:exported="true" android:theme="@style/Theme.MorningOrganizer">
+            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_CONFIGURE"/></intent-filter>
+        </activity>
         <receiver android:name=".JournalWidget" android:exported="false" android:label="@string/shortcut_journal">
             <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE"/></intent-filter>
             <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_journal_info"/>

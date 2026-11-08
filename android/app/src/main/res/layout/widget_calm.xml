@@ -6,9 +6,18 @@
         android:src="@drawable/wbg_calm" android:importantForAccessibility="no"/>
     <LinearLayout
     android:layout_width="match_parent" android:layout_height="match_parent"
-    android:orientation="vertical" android:gravity="center" android:padding="10dp">
-    <ImageView android:layout_width="44dp" android:layout_height="44dp" android:src="@drawable/wi_breath" android:importantForAccessibility="no"/>
-    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/shortcut_calm"
-        android:textColor="@color/widget_text" android:textSize="14sp" android:textStyle="bold"/>
-</LinearLayout>
+    android:orientation="vertical" android:gravity="center" android:padding="6dp">
+    <ViewFlipper android:layout_width="wrap_content" android:layout_height="wrap_content" android:autoStart="true" android:flipInterval="1000">
+        <ImageView android:layout_width="56dp" android:layout_height="56dp" android:src="@drawable/wi_ball_1" android:importantForAccessibility="no"/>
+        <ImageView android:layout_width="56dp" android:layout_height="56dp" android:src="@drawable/wi_ball_2" android:importantForAccessibility="no"/>
+        <ImageView android:layout_width="56dp" android:layout_height="56dp" android:src="@drawable/wi_ball_3" android:importantForAccessibility="no"/>
+        <ImageView android:layout_width="56dp" android:layout_height="56dp" android:src="@drawable/wi_ball_4" android:importantForAccessibility="no"/>
+        <ImageView android:layout_width="56dp" android:layout_height="56dp" android:src="@drawable/wi_ball_5" android:importantForAccessibility="no"/>
+        <ImageView android:layout_width="56dp" android:layout_height="56dp" android:src="@drawable/wi_ball_4" android:importantForAccessibility="no"/>
+        <ImageView android:layout_width="56dp" android:layout_height="56dp" android:src="@drawable/wi_ball_3" android:importantForAccessibility="no"/>
+        <ImageView android:layout_width="56dp" android:layout_height="56dp" android:src="@drawable/wi_ball_2" android:importantForAccessibility="no"/>
+    </ViewFlipper>
+    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/widget_calm_ball_text"
+        android:textColor="@color/widget_text" android:textSize="13sp" android:textStyle="bold"/>
+    </LinearLayout>
 </FrameLayout>

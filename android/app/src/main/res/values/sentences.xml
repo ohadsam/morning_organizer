@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="sentences_cbt">
+        <item>A thought is a thought, not a fact. I can check it before I believe it.</item>
+        <item>What is the evidence for this thought, and what is the evidence against it?</item>
+        <item>What would I tell a good friend who had this thought?</item>
+        <item>Small steps first: doing a little changes how I feel more than waiting does.</item>
+        <item>Feelings rise and fall like waves. This one will pass.</item>
+        <item>Is there another way to see this? Try one more.</item>
+        <item>I notice the worry, I name it, and I choose my next small action.</item>
+        <item>Not “always” and not “never”: what really happened today?</item>
+    </string-array>
+    <string-array name="sentences_cogfun">
+        <item>A plan on paper frees my mind to do the task.</item>
+        <item>One task at a time. What is the very first step?</item>
+        <item>Set a timer and let it keep the time for me.</item>
+        <item>Prepare tonight what I will need tomorrow.</item>
+        <item>Break it into pieces I can finish in five minutes.</item>
+        <item>Put it where I will see it: reminders belong in sight.</item>
+        <item>Check: what do I need, in what order, and how long will it take?</item>
+        <item>Routines save energy. Each repeat gets a little easier.</item>
+    </string-array>
+    <string-array name="sentences_nlp">
+        <item>Start with the outcome: what do I want, and how will I know I have it?</item>
+        <item>The map is not the territory: another point of view is always possible.</item>
+        <item>Same situation, new frame: what else could this mean?</item>
+        <item>Picture it going well, in colour, step by step, and feel it.</item>
+        <item>Choose the words I use on myself. Words steer attention.</item>
+        <item>Anchor a good moment: remember it, and press thumb and finger together.</item>
+        <item>Ask better questions: “How can I?” opens more doors than “Why can’t I?”</item>
+        <item>I can step into someone else’s shoes for a minute, then back into mine.</item>
+    </string-array>
+    <string-array name="sentences_adhd">
+        <item>My brain works differently, not worse. I can build supports that fit it.</item>
+        <item>Start with two minutes. Starting is the hardest part.</item>
+        <item>Move a little, then focus: the body helps the mind.</item>
+        <item>Make it visible: a timer, a list, a note where my eyes go.</item>
+        <item>Celebrate finishing, even the small things.</item>
+        <item>If I drift, I just gently come back. No blame.</item>
+        <item>One thing at a time, with a short break after.</item>
+        <item>A reward right now helps the brain keep going: choose a small one.</item>
+    </string-array>
+    <string-array name="sentences_anxiety">
+        <item>Breathe in for four, out for six. Slow breaths tell the body it is safe.</item>
+        <item>Name five things I can see. I am here, now.</item>
+        <item>Worry is a guess about the future, not a fact.</item>
+        <item>I can feel afraid and still take one small step.</item>
+        <item>Put the worry in a box for now; I can open it later.</item>
+        <item>My body is safe right now. Feel my feet on the floor.</item>
+        <item>What is the kindest thing I can do for myself this minute?</item>
+        <item>This feeling is uncomfortable, not dangerous. It will pass.</item>
+    </string-array>
+    <string-array name="sentences_organize">
+        <item>A place for everything makes mornings calm.</item>
+        <item>Gear by the door tonight means no searching tomorrow.</item>
+        <item>If it takes two minutes, do it now.</item>
+        <item>A short list beats a long one. Pick the top three.</item>
+        <item>Same time, same order: habits do the organising for me.</item>
+        <item>Plan a buffer: leave a little extra time for the unexpected.</item>
+        <item>Done is better than perfect. Tick it off.</item>
+        <item>Clear one small surface and feel the difference.</item>
+    </string-array>
+    <string-array name="sentences_motivation">
+        <item>I do not wait for motivation. I start, and motivation follows.</item>
+        <item>Every finished routine is a vote for the person I want to be.</item>
+        <item>Look at how far I have come, not only how far there is to go.</item>
+        <item>Small steps every day beat a big plan once.</item>
+        <item>I can do hard things, one step at a time.</item>
+        <item>A mistake is a step in learning. I try again.</item>
+        <item>Reward the effort, not only the result.</item>
+        <item>Today I choose one thing I am proud to do.</item>
+    </string-array>
+</resources>

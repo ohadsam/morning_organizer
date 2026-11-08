@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.27.0
+- **Widgets in the new look** (from the ChatGPT widget kit, Sunrise look): every existing widget (routines, card, run, stats, calm) now has a drawn background (`wbg_*`, xhdpi + xxhdpi, `drawable-night-*` for dark), an `ImageView` behind the original layout; text colours unchanged (the kit measured >= 4.5 over the real pixels, worst 4.6). The calm widget shows the breathing circle (`wi_breath`) instead of the emoji.
+- **New Journal widget** (`JournalWidget`, 2x1, opens `#/journal`; English + Hebrew strings). Kotlin / resources are verified by CI only (no device here).
+- Not yet: widgets for mood check-in (needs the feeling check-in screen, O2), kind thought, points and the bell pulse; the per-look backgrounds (the widget cannot know the web look yet).
+
 ## 1.26.2
 - **Locked avatar pieces explained** (owner question): the locks are intentional (pieces open with levels, levels come from stars, stars from finished routines). The studio shows a note on any tab that still has locked pieces ("Locked pieces open as you level up... You are level N. K more stars to level N+1"), and the celebration card after a level-up now says how many new avatar pieces opened (`partsUnlockedBetween`) with a button to the avatar picker, next to the characters that already unlocked. No pop-up during the day: the news arrives on the calm summary screen.
 

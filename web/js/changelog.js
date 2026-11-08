@@ -1,5 +1,7 @@
 // "What's new" content shown inside the app (newest first). Keep in step with docs/CHANGELOG.md; a unit test checks the current version is listed and both languages match.
 export const CHANGES = [
+  { v: '1.27.0', en: ['📱 The home-screen widgets have the new look (calm sky backgrounds, light and dark), the calm widget shows a drawn breathing circle, and there is a new Journal widget: one tap to a quick note.'],
+    he: ['📱 הווידג׳טים במסך הבית קיבלו מראה חדש (רקעי שמיים רגועים, בהיר וכהה), בווידג׳ט הרוגע יש עיגול נשימה מצויר, ויש ווידג׳ט יומן חדש: לחיצה אחת לרשימה מהירה.'] },
   { v: '1.26.2', en: ['🔒 The avatar studio now explains the locked pieces: they open as you level up (every finished routine earns stars), with how many stars are left for the next level. When you level up, the card after the routine tells you how many new avatar pieces opened and takes you to the picker.'],
     he: ['🔒 באולפן האווטרים יש עכשיו הסבר על החלקים הנעולים: הם נפתחים כשעולים רמה (כל שגרה שמסיימים מזכה בכוכבים), ומוצג כמה כוכבים חסרים לרמה הבאה. כשעולים רמה, הכרטיס אחרי השגרה מספר כמה חלקים חדשים נפתחו ומוביל לבורר.'] },
   { v: '1.26.1', en: ['☀️ Meet Sunny, the app’s own little sun, now the first avatar (anyone who still had the untouched fox gets her once; every avatar you picked yourself stays). 📅 The Hebrew date is written in letters, like כ״ח בחשוון התשפ״ז.'],

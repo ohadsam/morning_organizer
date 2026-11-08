@@ -1,9 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/stats_root"
+    android:layout_width="match_parent" android:layout_height="match_parent">
+    <ImageView android:layout_width="match_parent" android:layout_height="match_parent" android:scaleType="centerCrop"
+        android:src="@drawable/wbg_stats" android:importantForAccessibility="no"/>
+    <LinearLayout
     android:layout_width="match_parent" android:layout_height="match_parent"
-    android:orientation="vertical" android:gravity="center" android:padding="10dp"
-    android:background="@drawable/widget_bg">
+    android:orientation="vertical" android:gravity="center" android:padding="10dp">
     <TextView android:id="@+id/stats_title" android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center"
         android:textColor="@color/widget_text" android:textSize="13sp" android:textStyle="bold" android:maxLines="1" android:ellipsize="end"/>
     <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center">
@@ -13,3 +16,4 @@
     <TextView android:id="@+id/stats_week" android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center"
         android:textColor="@color/widget_text" android:textSize="12sp"/>
 </LinearLayout>
+</FrameLayout>

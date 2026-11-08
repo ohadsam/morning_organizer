@@ -29,6 +29,8 @@
     <string name="widget_prev_glyph">‹</string>
     <string name="widget_next_glyph">›</string>
     <string name="alarm_snooze">Snooze 5 min</string>
+    <string name="widget_journal_text">Quick note</string>
+    <string name="widget_journal_desc">Open the journal in one tap</string>
     <string name="widget_calm_desc">Open the calm corner in one tap</string>
     <string name="widget_stats_label">My progress</string>
     <string name="widget_stats_desc">Stars, streak and routines on time this week</string>

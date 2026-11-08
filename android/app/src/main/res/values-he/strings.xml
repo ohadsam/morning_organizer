@@ -29,6 +29,8 @@
     <string name="widget_prev_glyph">›</string>
     <string name="widget_next_glyph">‹</string>
     <string name="alarm_snooze">נודניק 5 דק׳</string>
+    <string name="widget_journal_text">רשימה מהירה</string>
+    <string name="widget_journal_desc">פתיחת היומן בלחיצה אחת</string>
     <string name="widget_calm_desc">פתיחת פינת הרוגע בלחיצה אחת</string>
     <string name="widget_stats_label">ההתקדמות שלי</string>
     <string name="widget_stats_desc">כוכבים, רצף ושגרות בזמן השבוע</string>

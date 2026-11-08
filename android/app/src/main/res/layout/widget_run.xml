@@ -1,9 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/run_root"
+    android:layout_width="match_parent" android:layout_height="match_parent">
+    <ImageView android:layout_width="match_parent" android:layout_height="match_parent" android:scaleType="centerCrop"
+        android:src="@drawable/wbg_run" android:importantForAccessibility="no"/>
+    <LinearLayout
     android:layout_width="match_parent" android:layout_height="match_parent"
-    android:orientation="vertical" android:padding="12dp" android:gravity="center_vertical"
-    android:background="@drawable/widget_bg">
+    android:orientation="vertical" android:padding="12dp" android:gravity="center_vertical">
     <TextView android:id="@+id/run_title"
         android:layout_width="match_parent" android:layout_height="wrap_content"
         android:textColor="@color/widget_text" android:textSize="14sp" android:textStyle="bold"
@@ -18,3 +21,4 @@
         android:layout_width="match_parent" android:layout_height="8dp" android:max="100"
         android:progressTint="@color/brand"/>
 </LinearLayout>
+</FrameLayout>

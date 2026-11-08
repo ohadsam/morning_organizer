@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.29.0
+- **"How do I feel?"** (open item O2): route `#/feel` (and `#/feel/1..5` with the face pre-chosen, for a widget). One tap on one of the five kit faces, then ONE question that follows the person's approach (`approachOf(view)`: the chosen method, else the first help area, else general; each has four chips: body / kind of thought / plan / outcome / focus / worry / organised / drive) and an optional private note (400 characters). A low face (1-2) offers a minute in the calm corner. Entries are kept per person on this device (`kv feelings`, max 800, in the backup, erased with the person).
+- **Over time**: a 14-day bar strip (daily average), overall average, trend against the week before (needs three days in each half), the last seven entries with delete.
+- **Summary for a therapist or a parent** (`summaryText`, pure): 2 or 4 weeks, plain text, with the chips and faces; private notes are OFF unless the person switches them on. Copy or share (native share sheet, Web Share, or clipboard).
+- New feature id `feel` in the needs sets (every method and help area shows it); it sits first in the Calm toolbar menu and in global search.
+
 ## 1.28.0
 - **Two calm widgets** (owner request): "Calm ball" (the five circle frames in a `ViewFlipper`, in and out, 1 s per frame) and the new "Sunny breathes" (`CalmSunnyWidget`, five frames of Sunny's calm-breathe mood rendered from `mascot.json` at 0.90 to 1.10 scale, light and dark, four densities). RemoteViews cannot animate by itself; a `ViewFlipper` with `autoStart` is allowed and only runs while the widget is on screen. A tap opens the calm corner.
 - **"A good sentence" widget** (`SentenceWidget`, 4x1): when it is placed, `SentenceConfigActivity` asks for the approach (a mix, CBT, time / memory / planning, NLP, ADHD, anxiety, organising, motivation) and how often the sentence changes (1, 3, 6 or 24 hours). 56 sentences x English + Hebrew live in `values/sentences.xml` and `values-he/sentences.xml` (neutral Hebrew, no gender forms); `SentenceMath.index` picks the sentence from the clock and the widget id, so it needs no background service (the system refreshes every 30 minutes). Unit tests in `SentenceMathTest`. The widget follows the phone's language, not the app's.

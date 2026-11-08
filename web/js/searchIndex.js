@@ -13,6 +13,7 @@ export const ENTRIES = [
   ['alarms', '⏰', 'sr_alarms', { route: '#/alarms' }, 'alarm alarms wake up clock ring remind reminder snooze', 'שעון מעורר שעונים התעוררות צלצול תזכורת דחייה'],
   ['goals', '🎯', 'sr_goals', { route: '#/goals' }, 'goal goals plan target practice cog fun check', 'מטרה מטרות תכנון יעד תרגול קוגפאן בדיקה'],
   ['retros', '🔄', 'sr_retros', { route: '#/retros' }, 'look back retrospective review reflect improve what worked what happened stuck summary lessons conclusions debrief', 'מסתכלים אחורה רטרוספקטיבה סיכום חשיבה שיפור מה עבד מה קרה נתקענו תחקיר מסקנות לקחים תובנות הסתכלות'],
+  ['feel', '🙂', 'sr_feel', { route: '#/feel' }, 'feel feeling mood how do i feel check in emotions face sad happy anxious therapist summary', 'מרגיש הרגשה מצב רוח בדיקה פרצוף עצוב שמח חרדה מטפל סיכום איך אני'],
   ['calm', '🌬️', 'sr_calm', { route: '#/calm' }, 'calm breathe breathing anxiety relax worry panic ground', 'רוגע נשימה חרדה הרגעה לחץ דאגה הארקה'],
   ['journal', '📓', 'sr_journal', { route: '#/journal' }, 'journal diary write notes password private', 'יומן כתיבה פתקים סיסמה פרטי'],
   ['aprt', '🧭', 'sr_aprt', { action: 'aprt' }, 'situation log aprt abc cbt event interpretation emotion response thought feeling hard moment record', 'תיעוד מצב אפרת אפר״ת cbt אירוע פרשנות רגש תגובה מחשבה תחושה רגע קשה'],

@@ -18,6 +18,7 @@ import { sanitizeAvatar, avatarEmoji, avatarFromMascot, defaultAvatar } from './
 import { toolsFor } from './focus.js';
 import { widgetItems } from './widgetData.js';
 import { sanitizeMood } from './mood.js';
+import { sanitizeFeelings, sanitizeFeeling, MAX_FEELINGS } from './feelings.js';
 import { sanitizeUnplanned, sanitizeWatch } from './unplanned.js';
 import { sanitizeGoal, MAX_GOALS } from './cogfun.js';
 import { sanitizeRetro, sanitizeRetros, applyActions, undoActions, MAX_RETROS } from './retro.js';
@@ -44,7 +45,7 @@ export const COLORS = ['#6c5ce7', '#0984e3', '#00b894', '#e17055', '#e84393', '#
 export const MASCOTS = ['🦊', '🐼', '🦄', '🐯', '🐸', '🤖', '🐶', '🐱'];
 export const ICONS = ['🌅', '☀️', '🎒', '🪥', '👕', '🥣', '🏃', '📚', '🧘', '🐶', '🚌', '⏰'];
 
-const state = { avatarLib: [], templates: [], runs: [], watch: [], retros: [], library: { routines: [], tasks: [] }, profiles: [], settings: { ...DEFAULT_SETTINGS }, ready: false };
+const state = { avatarLib: [], templates: [], runs: [], watch: [], retros: [], feelings: [], library: { routines: [], tasks: [] }, profiles: [], settings: { ...DEFAULT_SETTINGS }, ready: false };
 const subs = new Set();
 export const subscribe = (fn) => { subs.add(fn); return () => subs.delete(fn); };
 const emit = () => subs.forEach((f) => f(state));
@@ -132,12 +133,21 @@ export async function init() {
   mirrorActiveProfile();
   state.watch = sanitizeWatch(await db.get('kv', 'watch'));
   state.retros = sanitizeRetros(await db.get('kv', 'retros'));
+  state.feelings = sanitizeFeelings(await db.get('kv', 'feelings'));
   state.avatarLib = sanitizeLib(await db.get('kv', 'avatarLib'));
   state.library = sanitizeLibrary(await db.get('kv', 'library'));
   state.ready = true;
   emit();
 }
 
+// ── "how do I feel" check-ins (see feelings.js): per person, on this device ──
+export const feelings = (profileId = activeProfile().id) => state.feelings.filter((f) => f.pid === profileId);
+const persistFeelings = async () => { await db.put('kv', state.feelings, 'feelings'); emit(); };
+export async function addFeeling(f) {
+  const clean = sanitizeFeeling({ ...f, id: undefined, pid: f.pid || activeProfile().id, at: Date.now() }); if (!clean) return null;
+  state.feelings = [...state.feelings, clean].slice(-MAX_FEELINGS); await persistFeelings(); return clean;
+}
+export async function removeFeeling(id) { state.feelings = state.feelings.filter((f) => f.id !== id); await persistFeelings(); }
 // ── retrospectives: look back at a run, change the routine, check later whether it helped ──
 export const retros = (profileId = activeProfile().id) => state.retros.filter((r) => r.profileId === profileId);
 export const retrosForRun = (runId) => state.retros.filter((r) => r.runId === runId).sort((a, b) => a.at - b.at);
@@ -274,6 +284,7 @@ export async function deleteProfile(id) {
   const mine = runsOf(state.runs, id, firstId()), wasActive = id === state.settings.activeProfile;
   state.runs = state.runs.filter((r) => !mine.includes(r)); for (const r of mine) await db.del('runs', r.id);
   state.profiles = state.profiles.filter((p) => p.id !== id); await persistProfiles(); await eraseJournal(id);
+  if (state.feelings.some((x) => x.pid === id)) { state.feelings = state.feelings.filter((x) => x.pid !== id); await persistFeelings(); }
   if (state.retros.some((x) => x.profileId === id)) { state.retros = state.retros.filter((x) => x.profileId !== id); await persistRetros(); }
   if (wasActive) { state.settings = { ...state.settings, activeProfile: state.profiles[0].id }; }
   for (const x of state.templates.filter((k) => k.owners?.includes(id))) await saveTemplate({ ...x, owners: x.owners.filter((o) => o !== id) }, { touch: false });   // a routine only that person saw becomes shared with everyone, never lost
@@ -408,7 +419,7 @@ export const saveActive = (run) => db.put('kv', run ? structuredClone(run) : nul
 export const loadActive = () => db.get('kv', 'activeRun');
 
 export function exportAll() {
-  return JSON.stringify({ app: 'morning-organizer', v: 1, templates: state.templates, runs: state.runs, profiles: state.profiles, library: state.library, retros: state.retros, avatarLib: state.avatarLib, settings: state.settings });
+  return JSON.stringify({ app: 'morning-organizer', v: 1, templates: state.templates, runs: state.runs, profiles: state.profiles, library: state.library, retros: state.retros, feelings: state.feelings, avatarLib: state.avatarLib, settings: state.settings });
 }
 /** Keep only known settings with the right type and sane ranges (a backup is untrusted input). */
 export function sanitizeSettings(raw) {
@@ -459,6 +470,10 @@ export async function importBackup(text, { mode = 'merge', settings = true } = {
     if (!state.profiles.length) state.profiles = [newProfile({})];
     if (!state.profiles.some((x) => x.id === state.settings.activeProfile)) state.settings.activeProfile = state.profiles[0].id;
     await persistProfiles(); mirrorActiveProfile();
+  }
+  if (Array.isArray(d.feelings)) { // feeling check-ins: union by id; "replace" mirrors the backup
+    const incoming = sanitizeFeelings(d.feelings).map((x) => ({ ...x, pid: x.pid || activeProfile().id })), known = new Set(mode === 'replace' ? [] : state.feelings.map((x) => x.id));
+    state.feelings = (mode === 'replace' ? [] : state.feelings).concat(incoming.filter((x) => !known.has(x.id))).slice(-MAX_FEELINGS); await persistFeelings();
   }
   if (Array.isArray(d.retros)) { // retrospectives: union by id; "replace" mirrors the backup
     const incoming = sanitizeRetros(d.retros).map((x) => ({ ...x, profileId: x.profileId || activeProfile().id })), known = new Set(mode === 'replace' ? [] : state.retros.map((x) => x.id));

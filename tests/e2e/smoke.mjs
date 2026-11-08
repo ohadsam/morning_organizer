@@ -1321,7 +1321,7 @@ await step('v1.20: axe on settings (needs, people, voice commands), the top menu
     await closeDialogs(page); await page.click('details[data-group="needs"] .btn.primary'); await page.waitForSelector('dialog[open] .needs'); bad.push(...await audit(page, `${lang}/needs-sheet`)); await closeDialogs(page);
     await page.click('#topbar .pm-btn'); bad.push(...await audit(page, `${lang}/profile-menu`)); await page.keyboard.press('Escape');
     await page.goto(base + '#/settings/voicecmd'); await page.reload(); await page.waitForSelector('.vc-help'); bad.push(...await audit(page, `${lang}/voicecmd`));
-    await page.click('.vc-help'); await page.waitForSelector('dialog[open] .vc-list'); bad.push(...await audit(page, `${lang}/voice-help`)); await closeDialogs(page);
+    await page.waitForTimeout(400); await closeDialogs(page); await page.click('.vc-help'); await page.waitForSelector('dialog[open] .vc-list'); bad.push(...await audit(page, `${lang}/voice-help`)); await closeDialogs(page);
   }
   if (bad.length) console.error([...new Set(bad)].join('\n'));
   assert.deepEqual(bad, []);
@@ -1513,6 +1513,25 @@ await step('v1.25.2: the avatar wizard goes step by step (boy / girl / neutral f
   const c2 = await colour(); assert.notEqual(c1, c2, 'coloured by default, different when black & white is on'); void text;
   await set(false); assert.equal(await page.evaluate(() => document.documentElement.dataset.iconmono || ''), '');
   await page.context().close();
+});
+
+await step('v1.26: the calm corner shows a drawn scene for the breath, the journey step, the grounding sense and the scan zone; "My avatar" breathes; the circle is still there; zero axe violations', async () => {
+  const { page } = await newPage({ lang: 'en' }); await dismissWelcome(page); await page.goto(base + '#/calm'); await page.waitForSelector('.calm-menu');
+  const start = async () => { await page.click('.calm-menu .btn.primary.xl'); await page.waitForSelector('.calm-run'); await page.waitForTimeout(700); };
+  const stop = async () => { await page.click('.calm-run .btn'); await page.waitForSelector('.calm-menu'); };
+  await start(); await page.waitForSelector('.cs-stage svg g, .cs-stage svg path'); assert.ok(await page.locator('.cs-stage svg').first().evaluate((s) => s.children.length > 5), 'the breathing scene is drawn');
+  const id1 = await page.locator('.cs-stage svg').first().getAttribute('data-id'); assert.match(id1, /^breath-slow-\d$/);
+  assert.deepEqual(await audit(page, 'calm-scene'), []); await stop();
+  await page.locator('.calm-menu .seg-group').first().locator('button').nth(3).click(); await start(); assert.match(await page.locator('.cs-stage svg').first().getAttribute('data-id'), /^imagery-elements-f1$/); await stop();
+  await page.locator('.calm-menu .seg-group').first().locator('button').nth(1).click(); await start(); assert.match(await page.locator('.cs-stage svg').first().getAttribute('data-id'), /^grounding-5$/); await stop();
+  await page.locator('.calm-menu .seg-group').first().locator('button').nth(2).click(); await start(); assert.match(await page.locator('.cs-stage svg').first().getAttribute('data-id'), /^bodyscan-0$/); await stop();
+  await page.locator('.calm-menu .seg-group').first().locator('button').nth(0).click();
+  // the circle
+  await page.locator('.calm-menu button:has-text("Circle")').click(); await start(); assert.equal(await page.locator('.cs-stage').count(), 0); assert.ok(await page.locator('.breath-circle:not(.hidden-circle)').count()); await stop();
+  // my avatar breathes (a kit avatar)
+  await page.evaluate(async () => { const S = await import('./js/store.js'), K = await import('./js/avatarKit.js'); const p = S.activeProfile(); await S.saveProfile({ ...p, avatar: K.defaultKit() }); await S.updateSettings({ calmVisual: 'avatar' }); });
+  await page.goto(base + '#/calm'); await page.waitForSelector('.calm-menu'); await start(); await page.waitForSelector('.breath-stage svg.avatar-breathe'); assert.ok(await page.locator('.avatar-breathe').evaluate((e) => e.style.getPropertyValue('--p') !== ''), 'the exercise timer drives --p');
+  assert.deepEqual(await audit(page, 'calm-avatar'), []); await page.context().close();
 });
 
 await step('v1.23: the picker offers "Build my own" and an avatar picked there is used at once; a kit avatar survives sanitising and other profiles keep theirs', async () => {

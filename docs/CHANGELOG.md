@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.26.0
+- **Calm kit scenes** (from the ChatGPT calm-animation kit, repaired in three rounds): `data/calm-kit.json` (86 scenes, 150 KB, kept offline by the service worker) is read through the same strict SVG allow-list as the icons (`js/calmKit.js`, `js/ui/calmScene.js`); a scene that fails is dropped and the circle stays. Breathing: five frames per pattern cross-faded by the breath fullness (`phaseAt().size`); guided journeys: four storyboard frames over the steps; grounding: one scene per sense (5 to 1); body scan: nine zones over the parts of the quick or the full scan.
+- **My avatar breathes**: a kit avatar (calm face, eyes closed) grows a little with `--p` from the exercise timer; people with an older character avatar get the scene. "What to look at" (Scene / My avatar / Circle) is a per-person setting, shown in the breathing menu.
+- Skin in the grounding and body-scan scenes is `k8` (peach) and glows / progress dots `k3` (gold) - the supplied `k6` is coral red in the Sunrise look (build step in `scripts/build-calm-kit.mjs`).
+- Calm hooks (`a-float`, `a-pulse`, `a-twinkle`, `a-drift`, `a-flow`, `a-rise`, `a-fade`, `a-wiggle`, `d1..d6`) are plain CSS, off with "calm animations" / reduced motion.
+
 ## 1.25.2
 - **Colourful icons by default** (owner request): every kit icon keeps one hue from an accessible palette (3:1 on light and dark surfaces); Settings → Appearance → "Black & white icons" draws them in the text colour only. Kept per person; icons on primary / danger buttons and the active tab stay in the button's own colour.
 - **Avatar studio wizard**: a new avatar starts step by step (Boy / Girl / Neutral starting point, then face, hair, eyes and mouth, clothes, extras, buddy, colours, name and save) with Back / Next and a progress bar; "Edit freely" switches to the old tabs and back. Existing avatars still open in free editing.

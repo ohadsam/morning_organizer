@@ -38,7 +38,7 @@ export const DEFAULT_SETTINGS = Object.freeze({
   avatar: defaultAvatar(), activeProfile: '', transcribe: false,
 });
 /** The settings keys that mirror the ACTIVE profile (so the rest of the app can keep reading settings.personName etc.). */
-const isDefaultAvatar = (a) => !a || (a.k === 'char' && a.id === 'fox');
+const isDefaultAvatar = (a) => !a || a.k === 'sunny' || (a.k === 'char' && a.id === 'fox');
 const PROFILE_KEYS = ['personName', 'age', 'gender', 'mascot', 'avatar'];
 export const COLORS = ['#6c5ce7', '#0984e3', '#00b894', '#e17055', '#e84393', '#fdcb6e', '#2d3436'];
 export const MASCOTS = ['🦊', '🐼', '🦄', '🐯', '🐸', '🤖', '🐶', '🐱'];
@@ -119,6 +119,12 @@ export async function init() {
   if (!state.profiles.length) {
     state.profiles = [newProfile({ name: state.settings.personName, age: state.settings.age, gender: state.settings.gender, avatar: isDefaultAvatar(state.settings.avatar) ? avatarFromMascot(state.settings.mascot) : state.settings.avatar })];
     await db.put('kv', state.profiles, 'profiles');
+  }
+  if (!(await db.get('kv', 'sunnyMig'))) {   // 1.26.1: the untouched default fox (never customised) becomes Sunny, once; every other avatar is left alone
+    const isDefaultFox = (a) => a?.k === 'char' && a.id === 'fox' && String(a.color).toLowerCase() === '#f59e0b';
+    if (state.profiles.some((p) => isDefaultFox(p.avatar))) { state.profiles = state.profiles.map((p) => (isDefaultFox(p.avatar) ? { ...p, avatar: { k: 'sunny' } } : p)); await db.put('kv', state.profiles, 'profiles'); }
+    if (isDefaultFox(state.settings.avatar)) state.settings.avatar = { k: 'sunny' };
+    await db.put('kv', true, 'sunnyMig');
   }
   if (!state.profiles.some((p) => p.id === state.settings.activeProfile)) state.settings.activeProfile = state.profiles[0].id;
   { // an install from before per-person settings: every existing person starts with the settings that were on the device

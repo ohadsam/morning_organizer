@@ -114,7 +114,7 @@ await step('v1.1: name + buddy, encouragement bubble, progress widget, pause, ac
   await page.click('button[aria-label="🐼"]'); await page.waitForTimeout(100);
   await page.goto(base + '#/'); await page.waitForSelector('.routine'); assert.match(await page.textContent('.hero'), /Good morning, Dana/);
   await page.locator('.routine .start').first().click(); await page.waitForSelector('.ring');
-  assert.ok(await page.locator('.bubble .bm svg.avatar-char').count(), 'the encouragement bubble shows the (panda) avatar'); assert.match(await page.textContent('.bubble .bt'), /Dana|!/);
+  assert.ok(await page.locator('.bubble .bm svg.avatar').count(), 'the encouragement bubble shows the (panda) avatar'); assert.match(await page.textContent('.bubble .bt'), /Dana|!/);
   assert.equal(await page.locator('.pw .seg').count(), 6); assert.equal(await page.getAttribute('.pw-track', 'aria-valuenow'), '0');
   await page.click('.pause-btn'); assert.ok(await page.locator('.ring.paused').count()); assert.ok(await page.isVisible('.paused-badge'));
   await page.clock.runFor(30_000); await page.click('.pause-btn'); assert.ok(!(await page.locator('.ring.paused').count()));
@@ -381,7 +381,7 @@ await step('hosting: the repo ROOT (Pages "deploy from branch") redirects to the
 await step('v1.8: avatars (animated characters, photo, GIF), several people on one phone with separate history, levels, accessible dialogs', async () => {
   // reduced motion: continuously animated avatars are never "stable" for Playwright's click check (and this also proves the reduced-motion path works)
   const { page, errors } = await newPage({ ctx: { reducedMotion: 'reduce' } }); await page.goto(base + '#/'); await page.waitForSelector('.routine');
-  assert.ok(await page.locator('.hero-buddy svg.avatar-char').count(), 'animated character in the hero'); assert.match(await page.textContent('.chips'), /Level 1/);
+  assert.ok(await page.locator('.hero-buddy svg.avatar').count(), 'animated character in the hero'); assert.match(await page.textContent('.chips'), /Level 1/);
   // avatar picker: locked characters, colours, animation preview, own GIF and photo
   await page.goto(base + '#/settings'); await page.waitForSelector('details.settings-group'); await page.click('button:has-text("Avatar")');
   await page.waitForSelector(".char-grid"); assert.ok((await page.locator(".char[disabled]").count()) >= 5, "higher characters are locked at level 1"); {
@@ -395,7 +395,7 @@ await step('v1.8: avatars (animated characters, photo, GIF), several people on o
   // a second person: own name, own history
   await page.click('.hero-buddy'); await page.waitForSelector('.profile-grid'); assert.deepEqual(await audit(page, 'profile-switcher'), []);
   await page.click('.profile-card.add'); await page.fill('dialog input[type=text]', 'Dan'); await page.fill('dialog input[type=number]', '7'); await page.click('dialog footer button:has-text("Save")');
-  await page.waitForFunction(() => document.querySelector('.hero')?.textContent.includes('Dan')); assert.ok(await page.locator('.hero-buddy svg.avatar-char').count(), 'new person starts with the default character');
+  await page.waitForFunction(() => document.querySelector('.hero')?.textContent.includes('Dan')); assert.ok(await page.locator('.hero-buddy svg.avatar').count(), 'new person starts with the default character');
   await page.locator('.routine .start').first().click(); await page.waitForSelector('.ring'); for (let i = 0; i < 12 && !(await page.locator('.summary').count()); i++) await page.click('.main-btns .primary', { timeout: 3000 }).catch(() => {}); await page.waitForSelector('.summary'); assert.ok(await page.locator('.summary .avatar').count());
   await page.goto(base + '#/stats'); await page.waitForSelector('.week'); assert.match(await page.textContent('.week'), /1 routines/);
   await page.goto(base + '#/'); await page.click('.hero-buddy'); await page.click('.profile-card:not(.on):not(.add)'); await page.waitForFunction(() => !document.querySelector('.hero')?.textContent.includes('Dan'));

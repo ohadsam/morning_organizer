@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.26.1
+- **Sunny is the default avatar** (owner request: the fox / cat on the first screen): `data/mascot.json` (14 moods from the scenery kit, 50 KB, offline) drawn by `ui/mascot.js`; the animation or feeling picks the mood (`js/mascot.js`). Avatar kind `{k:'sunny'}`; she is in the picker as the first tile. One-time migration (`kv sunnyMig`): an untouched default fox (orange, never customised) becomes Sunny; any avatar the person chose stays. The old default mascot emoji 🦊 also maps to Sunny for new profiles.
+- **The Hebrew date in letters**: "כ״ח בחשוון התשפ״ז" (gematria with the thousands left out, `gematria()` in `js/holidays.js`) instead of the platform's numbers; English unchanged.
+
 ## 1.26.0
 - **Calm kit scenes** (from the ChatGPT calm-animation kit, repaired in three rounds): `data/calm-kit.json` (86 scenes, 150 KB, kept offline by the service worker) is read through the same strict SVG allow-list as the icons (`js/calmKit.js`, `js/ui/calmScene.js`); a scene that fails is dropped and the circle stays. Breathing: five frames per pattern cross-faded by the breath fullness (`phaseAt().size`); guided journeys: four storyboard frames over the steps; grounding: one scene per sense (5 to 1); body scan: nine zones over the parts of the quick or the full scan.
 - **My avatar breathes**: a kit avatar (calm face, eyes closed) grows a little with `--p` from the exercise timer; people with an older character avatar get the scene. "What to look at" (Scene / My avatar / Circle) is a per-person setting, shown in the breathing menu.

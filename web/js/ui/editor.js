@@ -44,6 +44,7 @@ export function renderEditor(root, id, nav) {
         h('div', { class: 'smart-slot' }, timeHint(task, (sec) => { change(() => { task.sec = sec; }, true); }) ?? ''),
         h('div', { class: 'task-times' }, timeField(t('duration'), task.sec, (v) => change(() => { task.sec = Math.max(1, v); }))),
         h('details', { class: 'task-more' }, h('summary', {}, t('taskMoreTime')),
+          h('label', { class: 'switch-row' }, h('input', { type: 'checkbox', checked: !!task.feelAfter, onchange: (e) => change(() => { task.feelAfter = e.target.checked; }) }), h('span', {}, t('feelAfterTask'))),
           timeField(t('estimate'), task.est, (v) => change(() => { task.est = v; }), { allowEmpty: true, emptyLabel: t('tpSame') }),
           S.get().settings.scoring === 'off' ? null : h('div', { class: 'stack task-score' },
             S.get().settings.scoring === 'custom' ? h('label', { class: 'field' }, h('span', { class: 'lbl' }, t('ptsTaskPoints')), h('input', { type: 'number', min: 0, max: MAX_PTS, inputMode: 'numeric', value: task.pts || '', placeholder: t('ptsAutoN', { n: autoBase(task.sec) }), 'aria-label': t('ptsTaskPoints'), oninput: (e) => change(() => { task.pts = Math.max(0, Math.min(MAX_PTS, Math.round(Number(e.target.value)) || 0)); }) }), h('small', { class: 'hint' }, t('ptsTaskHint'))) : null,
@@ -201,6 +202,8 @@ export function renderEditor(root, id, nav) {
           const at = suggestStart(tpl.leaveBy, S.totalSec(tpl)); if (!at) return;
           tpl.alarm.time = at; save(); drawAlarm(); toast(t('startBy', { time: at }));
         } }, t('suggestStart'))))).el,
+    fold(t('feelAtTitle'), t(`feelAt_${tpl.feelAt || 'none'}`), h('div', { class: 'stack' }, h('p', { class: 'note' }, t('feelAtHint')),
+      h('select', { 'aria-label': t('feelAtTitle'), onchange: (e) => { tpl.feelAt = e.target.value; save(); } }, ['none', 'start', 'end', 'both'].map((v) => h('option', { value: v, selected: (tpl.feelAt || 'none') === v }, t(`feelAt_${v}`)))))).el,
     fold(t('alarm'), foldAlarm, alarmBox).el,
     h('div', { class: 'sticky-actions' },
       h('button', { class: 'btn', type: 'button', onclick: () => { save.flush(); nav('#/'); } }, t('save')),

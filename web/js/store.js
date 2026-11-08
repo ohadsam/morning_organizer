@@ -18,7 +18,7 @@ import { sanitizeAvatar, avatarEmoji, avatarFromMascot, defaultAvatar } from './
 import { toolsFor } from './focus.js';
 import { widgetItems } from './widgetData.js';
 import { sanitizeMood } from './mood.js';
-import { sanitizeFeelings, sanitizeFeeling, MAX_FEELINGS } from './feelings.js';
+import { sanitizeFeelings, sanitizeFeeling, sanitizeFeelAt, MAX_FEELINGS, MAX_AUDIO_BYTES as MAX_FEEL_AUDIO } from './feelings.js';
 import { sanitizeUnplanned, sanitizeWatch } from './unplanned.js';
 import { sanitizeGoal, MAX_GOALS } from './cogfun.js';
 import { sanitizeRetro, sanitizeRetros, applyActions, undoActions, MAX_RETROS } from './retro.js';
@@ -80,13 +80,13 @@ export function normalizeTemplate(tpl) {
     id: typeof tpl.id === 'string' && tpl.id ? tpl.id.slice(0, 64) : uid(),
     name: cleanText(tpl.name, LIMITS.maxName), icon: cleanText(tpl.icon, 8) || '⏰',
     color: /^#[0-9a-fA-F]{6}$/.test(tpl.color) ? tpl.color : COLORS[0], favorite: !!tpl.favorite, builtin: !!tpl.builtin, owners: cleanOwners(tpl.owners),
-    createdAt: num(tpl.createdAt, Date.now()), updatedAt: num(tpl.updatedAt, Date.now()), leaveBy: validLeaveBy(tpl.leaveBy), from: cleanText(tpl.from, 30), days: normDays(tpl.days),
+    createdAt: num(tpl.createdAt, Date.now()), updatedAt: num(tpl.updatedAt, Date.now()), leaveBy: validLeaveBy(tpl.leaveBy), feelAt: sanitizeFeelAt(tpl.feelAt), from: cleanText(tpl.from, 30), days: normDays(tpl.days),
     plans: (Array.isArray(tpl.plans) ? tpl.plans : []).filter((x) => x && typeof x === 'object' && cleanText(x.when, 80) && cleanText(x.then, 80)).slice(0, 5).map((x) => ({ id: typeof x.id === 'string' && x.id ? x.id.slice(0, 64) : uid(), when: cleanText(x.when, 80), then: cleanText(x.then, 80) })),
     gear: (Array.isArray(tpl.gear) ? tpl.gear : []).filter((g) => g && typeof g === 'object' && cleanText(g.name, 40)).slice(0, 20).map((g) => ({ id: typeof g.id === 'string' && g.id ? g.id.slice(0, 64) : uid(), name: cleanText(g.name, 40), icon: cleanText(g.icon, 8), days: normDays(g.days) })),
     tasks: (Array.isArray(tpl.tasks) ? tpl.tasks : []).slice(0, LIMITS.maxTasks).map((x) => ({
       id: typeof x?.id === 'string' && x.id ? x.id.slice(0, 64) : uid(), name: cleanText(x?.name, LIMITS.maxName), icon: cleanText(x?.icon, 8), photo: isSafePhoto(x?.photo) ? x.photo : '',
       sec: clamp(Math.round(Number(x?.sec)) || 1, 1, LIMITS.maxTaskSec), est: clamp(Math.round(Number(x?.est)) || 0, 0, LIMITS.maxTaskSec),
-      helper: isHelper(x?.helper) ? x.helper : '', pts: clamp(Math.round(Number(x?.pts)) || 0, 0, MAX_PTS), award: isAward(x?.award) ? x.award : '', helperKey: typeof x?.helperKey === 'string' && /^sx_[a-z]+$/.test(x.helperKey) ? x.helperKey : '' })),
+      feelAfter: !!x?.feelAfter, helper: isHelper(x?.helper) ? x.helper : '', pts: clamp(Math.round(Number(x?.pts)) || 0, 0, MAX_PTS), award: isAward(x?.award) ? x.award : '', helperKey: typeof x?.helperKey === 'string' && /^sx_[a-z]+$/.test(x.helperKey) ? x.helperKey : '' })),
     alarm: normalizeAlarm(a),
   };
 }
@@ -143,11 +143,21 @@ export async function init() {
 // ── "how do I feel" check-ins (see feelings.js): per person, on this device ──
 export const feelings = (profileId = activeProfile().id) => state.feelings.filter((f) => f.pid === profileId);
 const persistFeelings = async () => { await db.put('kv', state.feelings, 'feelings'); emit(); };
-export async function addFeeling(f) {
-  const clean = sanitizeFeeling({ ...f, id: undefined, pid: f.pid || activeProfile().id, at: Date.now() }); if (!clean) return null;
+/** Saves a check-in. `audioBlob` (a recorded voice note, up to 3 MB) is kept beside it, on this device only. Returns the entry, or null for a bad one. */
+export async function addFeeling(f, audioBlob = null) {
+  const pid = f.pid || activeProfile().id, aid = audioBlob && audioBlob.size <= MAX_FEEL_AUDIO ? uid() : '';
+  const clean = sanitizeFeeling({ ...f, id: undefined, pid, at: Date.now(), audio: aid ? { id: aid, mime: audioBlob.type, sec: f.audio?.sec } : null }); if (!clean) return null;
+  if (clean.audio) await db.put('audio', { id: clean.audio.id, profileId: pid, blob: audioBlob });
   state.feelings = [...state.feelings, clean].slice(-MAX_FEELINGS); await persistFeelings(); return clean;
 }
-export async function removeFeeling(id) { state.feelings = state.feelings.filter((f) => f.id !== id); await persistFeelings(); }
+/** Adds a typed or dictated note to a check-in that was already saved (the quick question inside a routine). */
+export async function updateFeeling(id, patch, audioBlob = null) {
+  const old = state.feelings.find((f) => f.id === id); if (!old) return null;
+  let audio = old.audio; if (audioBlob && audioBlob.size <= MAX_FEEL_AUDIO) { if (audio) await db.del('audio', audio.id); audio = { id: uid(), mime: audioBlob.type, sec: patch.sec }; await db.put('audio', { id: audio.id, profileId: old.pid, blob: audioBlob }); }
+  const clean = sanitizeFeeling({ ...old, tag: patch.tag ?? old.tag, note: patch.note ?? old.note, audio }); state.feelings = state.feelings.map((f) => (f.id === id ? clean : f)); await persistFeelings(); return clean;
+}
+export async function removeFeeling(id) { const old = state.feelings.find((f) => f.id === id); if (old?.audio) await db.del('audio', old.audio.id); state.feelings = state.feelings.filter((f) => f.id !== id); await persistFeelings(); }
+export async function feelingAudioUrl(f) { const a = f?.audio && await db.get('audio', f.audio.id); return a?.blob ? URL.createObjectURL(a.blob) : null; }
 // ── retrospectives: look back at a run, change the routine, check later whether it helped ──
 export const retros = (profileId = activeProfile().id) => state.retros.filter((r) => r.profileId === profileId);
 export const retrosForRun = (runId) => state.retros.filter((r) => r.runId === runId).sort((a, b) => a.at - b.at);
@@ -284,7 +294,7 @@ export async function deleteProfile(id) {
   const mine = runsOf(state.runs, id, firstId()), wasActive = id === state.settings.activeProfile;
   state.runs = state.runs.filter((r) => !mine.includes(r)); for (const r of mine) await db.del('runs', r.id);
   state.profiles = state.profiles.filter((p) => p.id !== id); await persistProfiles(); await eraseJournal(id);
-  if (state.feelings.some((x) => x.pid === id)) { state.feelings = state.feelings.filter((x) => x.pid !== id); await persistFeelings(); }
+  if (state.feelings.some((x) => x.pid === id)) { for (const x of state.feelings.filter((y) => y.pid === id && y.audio)) await db.del('audio', x.audio.id); state.feelings = state.feelings.filter((x) => x.pid !== id); await persistFeelings(); }
   if (state.retros.some((x) => x.profileId === id)) { state.retros = state.retros.filter((x) => x.profileId !== id); await persistRetros(); }
   if (wasActive) { state.settings = { ...state.settings, activeProfile: state.profiles[0].id }; }
   for (const x of state.templates.filter((k) => k.owners?.includes(id))) await saveTemplate({ ...x, owners: x.owners.filter((o) => o !== id) }, { touch: false });   // a routine only that person saw becomes shared with everyone, never lost

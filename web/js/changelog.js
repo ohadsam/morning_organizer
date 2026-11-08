@@ -1,5 +1,7 @@
 // "What's new" content shown inside the app (newest first). Keep in step with docs/CHANGELOG.md; a unit test checks the current version is listed and both languages match.
 export const CHANGES = [
+  { v: '1.30.0', en: ['📱 New home-screen widget “How do I feel”: five faces, tap the one that fits and the app opens with it already chosen, ready for a word or a voice note.'],
+    he: ['📱 ווידג׳ט חדש במסך הבית, “איך אני מרגיש/ה”: חמישה פרצופים, לוחצים על זה שמתאים והאפליקציה נפתחת כשהוא כבר נבחר, מוכנה למילה או להקלטה.'] },
   { v: '1.29.1', en: ['🎙️ In “How do I feel?” you can now dictate a note or record a voice note. 🙂 You can also be asked how you feel inside a routine: at the start, at the end, or after a task you choose (set it in the routine editor). One tap, skippable; if you answered at the start and the end, you will see whether routines lift your mood. There is also a launcher shortcut.'],
     he: ['🎙️ ב“איך אני מרגיש/ה?” אפשר עכשיו להכתיב הערה או להקליט הקלטה. 🙂 אפשר גם לשאול אותי איך אני מרגיש/ה בתוך שגרה: בהתחלה, בסוף או אחרי משימה שבוחרים (בעורך השגרה). לחיצה אחת, אפשר לדלג; ואם ענו בהתחלה ובסוף רואים אם השגרות מעלות את מצב הרוח. יש גם קיצור במסך הבית של הטלפון.'] },
   { v: '1.29.0', en: ['🙂 New: “How do I feel?”. One tap on a face, one short question that fits the approach you chose (CBT, NLP, ADHD, anxiety…), and an optional private note. See how your days look over time, and make a plain summary to show a therapist or a parent (your notes stay out unless you switch them on). It is in the Calm menu and in search.'],

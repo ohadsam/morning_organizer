@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/mood_root"
+    android:layout_width="match_parent" android:layout_height="match_parent">
+    <ImageView android:layout_width="match_parent" android:layout_height="match_parent" android:scaleType="centerCrop"
+        android:src="@drawable/wbg_mood" android:importantForAccessibility="no"/>
+    <LinearLayout
+    android:layout_width="match_parent" android:layout_height="match_parent"
+    android:orientation="vertical" android:gravity="center" android:padding="8dp">
+    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center"
+        android:text="@string/widget_mood_title" android:textColor="@color/widget_text" android:textSize="14sp" android:textStyle="bold"/>
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center" android:paddingTop="4dp">
+        <ImageView android:id="@+id/mood_1" android:layout_width="0dp" android:layout_height="48dp" android:layout_weight="1" android:src="@drawable/wi_face_1" android:contentDescription="@string/mood_1"/>
+        <ImageView android:id="@+id/mood_2" android:layout_width="0dp" android:layout_height="48dp" android:layout_weight="1" android:src="@drawable/wi_face_2" android:contentDescription="@string/mood_2"/>
+        <ImageView android:id="@+id/mood_3" android:layout_width="0dp" android:layout_height="48dp" android:layout_weight="1" android:src="@drawable/wi_face_3" android:contentDescription="@string/mood_3"/>
+        <ImageView android:id="@+id/mood_4" android:layout_width="0dp" android:layout_height="48dp" android:layout_weight="1" android:src="@drawable/wi_face_4" android:contentDescription="@string/mood_4"/>
+        <ImageView android:id="@+id/mood_5" android:layout_width="0dp" android:layout_height="48dp" android:layout_weight="1" android:src="@drawable/wi_face_5" android:contentDescription="@string/mood_5"/>
+    </LinearLayout>
+    </LinearLayout>
+</FrameLayout>

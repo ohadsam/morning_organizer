@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.30.0
+- **Mood widget** (`MoodWidget`, 4x1): the kit's five faces (very sad ... great, with the repaired sad faces) on the Sunrise sky background, light and dark; each face opens the app on `#/feel/<1-5>` (allowed in `Shortcuts.ROUTES`), where that face is already chosen and the approach's question, note and voice tools wait. English + Hebrew labels and spoken descriptions. Verified by CI only.
+
 ## 1.29.1
 - **Voice in "How do I feel"** (owner request): dictation (speech to text, same consent step as the journal) fills the private note; a recorded voice note (up to 90 s / 3 MB) is kept beside the entry on this device only (`audio` store, `feelings[].audio`), with a play button in the recent list, deleted with the entry or the person, never inside the therapist summary unless notes are switched on (then only a "(voice note attached)" marker). `ui/voiceNote.js` is the shared widget.
 - **Asked inside a routine** (owner request): each routine has "Ask me how I feel: never / at the start / at the end / both" (`feelAt`) and each task "Ask how I feel after this task" (`feelAfter`). A calm, skippable card with five faces (`quickFeel`): at the start (under the title), after the chosen task, and on the summary (it replaces the older mood card when set). After a tap: "Tell more" (chip question + note + voice) or close; a low face offers the calm corner. Entries carry `moment`, `routine`, `task`; the screen says whether the face after routines is higher than before them (`momentStats`, needs three of each).

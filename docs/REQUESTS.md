@@ -72,6 +72,7 @@ Status: ✅ shipped (version) · 🟡 partly (what is missing) · ⛔ not possib
 | 46 | Choose built-in special tasks (journal, thought parking, relaxation, guided imagery...) from a grouped, searchable picker, not only as suggestions | ✅ 1.21 |
 | 49 | NLP as a method like CBT / Cog-Fun: choose tasks, guidance and adaptation by it | ✅ 1.22 (needs model, six guided tools, special-task group; honest evidence note) |
 | 50 | Suggest and add more UI/UX improvements | ✅ 1.22 (calm animations switch, method notes in the chooser, light vibration tick) |
+| 71 | Mood widget on the home screen (O4 part) | ✅ 1.30.0 (five faces open `#/feel/<n>`); kind thought / points / balance widgets and per-look backgrounds still open |
 | 70 | Voice note + dictation in the feeling check-in; ask how I feel inside a routine (start / end / after a task); make it easy to reach | ✅ 1.29.1 (voiceNote widget, quickFeel, feelAt / feelAfter in the editor, moment statistics, launcher shortcut) |
 | 69 | The feeling check-in screen tuned to each approach, with statistics and a therapist summary (O2) | ✅ 1.29.0 (`#/feel`, per-approach question, bars over time, summary with notes off by default, backup, erase with the person, unit + e2e + axe). Mood widget on top of `#/feel/<1-5>` still to build |
 | 68 | Calm widget: a ball and Sunny breathing; a widget that shows a good sentence for a chosen treatment approach, changing every few hours | ✅ 1.28.0 (CalmWidget ball flipper, CalmSunnyWidget, SentenceWidget + config screen, 56 sentences he/en, unit tests) |

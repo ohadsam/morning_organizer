@@ -1321,7 +1321,7 @@ await step('v1.20: axe on settings (needs, people, voice commands), the top menu
     await closeDialogs(page); await page.click('details[data-group="needs"] .btn.primary'); await page.waitForSelector('dialog[open] .needs'); bad.push(...await audit(page, `${lang}/needs-sheet`)); await closeDialogs(page);
     await page.click('#topbar .pm-btn'); bad.push(...await audit(page, `${lang}/profile-menu`)); await page.keyboard.press('Escape');
     await page.goto(base + '#/settings/voicecmd'); await page.reload(); await page.waitForSelector('.vc-help'); bad.push(...await audit(page, `${lang}/voicecmd`));
-    await page.click('.vc-help'); await page.waitForSelector('dialog[open] .vc-list'); bad.push(...await audit(page, `${lang}/voice-help`)); await closeDialogs(page);
+    await page.waitForTimeout(400); await closeDialogs(page); await page.click('.vc-help'); await page.waitForSelector('dialog[open] .vc-list'); bad.push(...await audit(page, `${lang}/voice-help`)); await closeDialogs(page);
   }
   if (bad.length) console.error([...new Set(bad)].join('\n'));
   assert.deepEqual(bad, []);

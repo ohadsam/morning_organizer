@@ -1549,6 +1549,22 @@ await step('v1.26.2: the avatar studio says why pieces are locked and how many s
   await page.context().close();
 });
 
+await step('v1.29: "How do I feel" - one tap on a face, a question for the chosen approach, over time, a summary with notes off by default; zero axe violations (he + en, big text)', async () => {
+  const { page } = await newPage({ lang: 'en' }); await dismissWelcome(page); await page.goto(base + '#/feel'); await page.waitForSelector('.feel-faces');
+  assert.equal(await page.locator('.feel-faces .mood').count(), 5); assert.match(await page.textContent('.feel-page'), /No check-ins yet/);
+  await page.click('.feel-faces .mood >> nth=1'); await page.waitForSelector('.feel-form .chips'); assert.match(await page.textContent('.feel-form'), /What do I notice in my body/);
+  await page.click('.feel-form .chip >> nth=2'); await page.fill('.feel-form textarea', 'private words'); assert.deepEqual(await audit(page, 'feel-form'), []);
+  await page.click('.feel-form .btn.primary.xl'); await page.waitForSelector('.feel-form [role=status]'); assert.match(await page.textContent('.feel-form'), /Saved/); assert.ok(await page.locator('.feel-form button:has-text("Open the calm corner")').count(), 'a low face offers a minute of calm');
+  await page.waitForSelector('.feel-bars'); assert.match(await page.textContent('.feel-page'), /Average 2\.0 of 5 over 1 check-ins/);
+  const sum = () => page.textContent('.feel-summary'); assert.match(await sum(), /1 check-ins on 1 days/); assert.ok(!(await sum()).includes('private words'), 'notes are off by default');
+  await page.check('.feel-page .switch-row input'); assert.match(await sum(), /Note: private words/);
+  assert.deepEqual(await audit(page, 'feel-page'), []);
+  await page.goto(base + '#/feel/4'); await page.waitForSelector('.feel-form .chips'); assert.equal(await page.locator('.feel-faces .mood.on').count(), 1, '#/feel/4 comes with the face chosen (for the widget)');
+  const mine = await page.evaluate(async () => { const S = await import('./js/store.js'); const json = S.exportAll(); return JSON.parse(json).feelings.length; }); assert.equal(mine, 1, 'the check-in is in the backup');
+  for (const lang of ['he', 'en']) { await page.evaluate(async (l) => { const S = await import('./js/store.js'); await S.updateSettings({ lang: l, fontScale: 130 }); }, lang); await page.waitForTimeout(500); await page.goto(base + '#/feel'); await page.waitForSelector('.feel-faces'); const v = await audit(page, `${lang}/feel-big`); if (v.length) console.error(v.join('\n')); assert.deepEqual(v, []); }
+  await page.context().close();
+});
+
 await step('v1.23: the picker offers "Build my own" and an avatar picked there is used at once; a kit avatar survives sanitising and other profiles keep theirs', async () => {
   const { page } = await newPage({ lang: 'en' }); await page.goto(base + '#/settings/profile'); await page.waitForSelector('details[data-group=profile]');
   await page.click('details[data-group=profile] button:has-text("Avatar")'); await page.waitForSelector('dialog[open] .avatar-picker'); assert.deepEqual(await audit(page, 'picker'), []);

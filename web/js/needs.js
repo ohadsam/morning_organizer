@@ -7,19 +7,19 @@
 
 export const MODELS = ['full', 'cbt', 'cogfun', 'nlp'];
 export const PROBLEMS = ['adhd', 'anxiety', 'organize', 'motivation'];
-export const FEATURES = ['goals', 'retros', 'calm', 'journal', 'aprt', 'rewards', 'stats', 'reports', 'smart', 'family', 'nlp'];
+export const FEATURES = ['goals', 'retros', 'calm', 'journal', 'aprt', 'rewards', 'stats', 'reports', 'smart', 'family', 'nlp', 'feel'];
 export const CORE = ['alarms', 'library', 'wizard'];
 
 const MODEL_SET = {
-  cbt: ['calm', 'journal', 'aprt', 'goals', 'retros', 'stats'],              // thoughts, feelings, behaviour: calm corner, situation log, thought records, goals
-  nlp: ['nlp', 'goals', 'calm', 'journal', 'retros', 'stats'],              // clear outcomes, reframing, an anchor, precise words, other points of view, mental rehearsal
-  cogfun: ['goals', 'retros', 'stats', 'reports', 'smart'],                  // goal - plan - do - check, looking back, smart times and steps
+  cbt: ['feel', 'calm', 'journal', 'aprt', 'goals', 'retros', 'stats'],              // thoughts, feelings, behaviour: calm corner, situation log, thought records, goals
+  nlp: ['feel', 'nlp', 'goals', 'calm', 'journal', 'retros', 'stats'],              // clear outcomes, reframing, an anchor, precise words, other points of view, mental rehearsal
+  cogfun: ['feel', 'goals', 'retros', 'stats', 'reports', 'smart'],                  // goal - plan - do - check, looking back, smart times and steps
 };
 const PROBLEM_SET = {
-  adhd: ['goals', 'calm', 'rewards', 'smart', 'stats'],
-  anxiety: ['calm', 'journal', 'aprt', 'stats'],
-  organize: ['goals', 'smart', 'stats', 'retros', 'reports'],
-  motivation: ['rewards', 'goals', 'stats'],
+  adhd: ['feel', 'goals', 'calm', 'rewards', 'smart', 'stats'],
+  anxiety: ['feel', 'calm', 'journal', 'aprt', 'stats'],
+  organize: ['feel', 'goals', 'smart', 'stats', 'retros', 'reports'],
+  motivation: ['feel', 'rewards', 'goals', 'stats'],
 };
 /** The help areas (see focus.js) that each choice turns on, so the run screen's helpers follow as well. */
 const AREAS = { adhd: ['focus', 'time'], anxiety: ['calm'], organize: ['time', 'memory'], motivation: ['motivation', 'habits'] };

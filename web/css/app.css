@@ -621,3 +621,12 @@ html[data-motion="calm"] *, html[data-motion="calm"] *::before, html[data-motion
 /* Sunny the mascot as an avatar: hooks from the calm kit (.cs) move her rays and glow slowly; a soft bob for the resting looks */
 .avatar-sunny { color: var(--text); } .avatar-sunny[data-anim="idle"], .avatar-sunny[data-anim="calm"] { animation: av-bob 3.6s ease-in-out infinite alternate; }
 html[data-motion="calm"] .avatar-sunny { animation: none; }
+
+/* "How do I feel" (1.29) */
+.feel-faces { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; } .feel-faces .mood { width: auto; height: auto; border-radius: 14px; transform: none; display: grid; justify-items: center; gap: 2px; min-height: 84px; padding: 6px 2px; border-radius: 14px; } .feel-faces small { color: var(--text); font-size: .72rem; text-align: center; overflow-wrap: anywhere; }
+.feel-bars { display: grid; grid-template-columns: repeat(14, 1fr); gap: 3px; align-items: end; height: 70px; }
+.fbar { display: block; border-radius: 6px 6px 3px 3px; background: var(--line); height: 8%; } .fbar[data-level="1"] { height: 22%; background: var(--k5, #4a459a); } .fbar[data-level="2"] { height: 40%; background: var(--k1, #6c5ce7); } .fbar[data-level="3"] { height: 58%; background: var(--k7, #55efc4); }
+.fbar[data-level="4"] { height: 78%; background: var(--k3, #ffc233); } .fbar[data-level="5"] { height: 100%; background: var(--k2, #ff9f6b); }
+.feel-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; } .feel-list li { display: flex; align-items: center; gap: 10px; min-width: 0; } .feel-list li span { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.feel-summary { white-space: pre-wrap; overflow-wrap: anywhere; background: var(--surface-2); border-radius: 12px; padding: 10px; font: inherit; font-size: .85rem; max-height: 260px; overflow: auto; margin: 0; }
+.switch-row { display: flex; align-items: center; gap: 10px; min-height: 44px; }

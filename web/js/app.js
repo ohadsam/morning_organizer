@@ -29,6 +29,7 @@ import { renderGoals } from './ui/goals.js';
 import { maybeShowWhatsNew, setVersion, getVersion } from './ui/whatsnew.js';
 import { renderLibrary } from './ui/library.js';
 import { renderCalm } from './ui/calm.js';
+import { renderFeel } from './ui/feel.js';
 import { renderNlp } from './ui/nlp.js';
 import { loadPack as loadAvatarPack } from './ui/avatarKit.js';
 import { iconNode, refreshIcons } from './ui/visualKit.js';
@@ -57,7 +58,7 @@ async function route() {
     const views = {
       home: () => renderHome(root, nav), edit: () => renderEditor(root, arg, nav), run: () => renderRunner(root, arg, nav),
       stats: () => renderStats(root, arg, nav), family: () => renderFamily(root), settings: () => renderSettings(root, version, arg || ''), guide: () => renderGuide(root),
-      calm: () => renderCalm(root, nav), nlp: () => renderNlp(root, nav), library: () => renderLibrary(root, nav), alarms: () => renderAlarms(root, nav), report: () => renderReport(root, nav, arg, decodeURIComponent(arg2 || '')), retro: () => renderRetro(root, nav, decodeURIComponent(arg || ''), arg2, arg3), retros: () => renderRetros(root, nav), goals: () => renderGoals(root, nav), journal: () => renderJournal(root, nav),
+      calm: () => renderCalm(root, nav), feel: () => renderFeel(root, nav, arg), nlp: () => renderNlp(root, nav), library: () => renderLibrary(root, nav), alarms: () => renderAlarms(root, nav), report: () => renderReport(root, nav, arg, decodeURIComponent(arg2 || '')), retro: () => renderRetro(root, nav, decodeURIComponent(arg || ''), arg2, arg3), retros: () => renderRetros(root, nav), goals: () => renderGoals(root, nav), journal: () => renderJournal(root, nav),
     };
     // The route comes from the address bar: look it up as OWN data only ("#/constructor" or "#/__proto__" must fall back to home).
     const out = await (Object.hasOwn(views, view) ? views[view] : views.home)();
@@ -122,7 +123,7 @@ async function boot() {
     if (ev.type === 'qrfail') toast(t('scanUnsupported'));
     if (ev.type === 'saved') toast(t(ev.status === 'ok' ? 'savedFile' : 'saveFailed'));
     if (ev.type === 'import') await routeIncoming(ev.text);
-    if (ev.type === 'route' && ['#/calm', '#/journal'].includes(ev.hash)) nav(ev.hash);
+    if (ev.type === 'route' && ['#/calm', '#/journal', '#/feel'].includes(ev.hash) || /^#\/feel\/[1-5]$/.test(ev.hash)) nav(ev.hash);
   };
   initTransports();
   onNativeEvent(handle);

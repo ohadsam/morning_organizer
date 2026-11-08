@@ -1,5 +1,7 @@
 // "What's new" content shown inside the app (newest first). Keep in step with docs/CHANGELOG.md; a unit test checks the current version is listed and both languages match.
 export const CHANGES = [
+  { v: '1.29.0', en: ['🙂 New: “How do I feel?”. One tap on a face, one short question that fits the approach you chose (CBT, NLP, ADHD, anxiety…), and an optional private note. See how your days look over time, and make a plain summary to show a therapist or a parent (your notes stay out unless you switch them on). It is in the Calm menu and in search.'],
+    he: ['🙂 חדש: “איך אני מרגיש/ה?”. לחיצה אחת על פרצוף, שאלה קצרה אחת שמתאימה לגישה שבחרתם (CBT, NLP, קשב, חרדה…), והערה פרטית לא חובה. רואים איך הימים נראים לאורך זמן, ואפשר להכין סיכום פשוט להראות למטפל/ת או להורה (ההערות נשארות בחוץ אלא אם מפעילים אותן). זה בתפריט הרוגע ובחיפוש.'] },
   { v: '1.28.0', en: ['📱 Two calm widgets to choose from: a calm ball and Sunny breathing slowly. And a new widget, “A good sentence”: pick an approach (CBT, NLP, ADHD, anxiety, organising, motivation…) and how often it changes, and a kind sentence for it shows on your home screen.'],
     he: ['📱 שני ווידג׳טי רוגע לבחירה: כדור רוגע ושמשי שנושמת לאט. וווידג׳ט חדש, “משפט טוב”: בוחרים גישה (CBT, NLP, קשב, חרדה, ארגון, מוטיבציה…) וכל כמה זמן להחליף, ומשפט טוב לגישה הזאת מופיע במסך הבית.'] },
   { v: '1.27.0', en: ['📱 The home-screen widgets have the new look (calm sky backgrounds, light and dark), the calm widget shows a drawn breathing circle, and there is a new Journal widget: one tap to a quick note.'],

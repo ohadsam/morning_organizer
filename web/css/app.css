@@ -631,3 +631,7 @@ html[data-motion="calm"] .avatar-sunny { animation: none; }
 .feel-summary { white-space: pre-wrap; overflow-wrap: anywhere; background: var(--surface-2); border-radius: 12px; padding: 10px; font: inherit; font-size: .85rem; max-height: 260px; overflow: auto; margin: 0; }
 .switch-row { display: flex; align-items: center; gap: 10px; min-height: 44px; }
 .shorten-card { display: grid; gap: 8px; } .shorten-list { margin: 0; padding-inline-start: 18px; display: grid; gap: 4px; } .shorten-list small { color: var(--muted); }
+
+/* O5 first slice (1.32): "just what to do now" on Home, and one step at a time while running */
+.now-card { display: grid; gap: 10px; justify-items: center; text-align: center; padding-block: 18px; } .now-card .now-name { margin: 0; font-size: 1.6rem; overflow-wrap: anywhere; } .now-card .btn.xl { width: 100%; }
+html[data-runview="single"] .run :is(.checklist, .run-meta, .pace, .sprint-line, .gear-card) { display: none; }

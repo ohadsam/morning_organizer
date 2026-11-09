@@ -102,7 +102,7 @@ async function boot() {
   S.subscribe(() => { const { textStyle, age } = S.get().settings, on = shouldBePlayful(textStyle, age); if (on !== isPlayful()) { setPlayful(on); route(); } });
   // each profile has its own look / language / sizes: when the person (or the settings) change, re-apply them and redraw
   let lookKey = '';
-  const look = () => { const x = S.get().settings; return [x.activeProfile, x.lang, x.theme, x.skin, x.easyRead, x.fontScale, x.colorSafe, x.contrast, x.accent, x.simpleMode, x.reduceMotion, x.iconStyle, x.iconMono].join('|'); };
+  const look = () => { const x = S.get().settings; return [x.activeProfile, x.lang, x.theme, x.skin, x.easyRead, x.fontScale, x.colorSafe, x.contrast, x.accent, x.simpleMode, x.reduceMotion, x.iconStyle, x.iconMono, x.runView].join('|'); };
   lookKey = look();
   S.subscribe(() => { const k = look(); if (k === lookKey) return; const was = lookKey.split('|'), x = S.get().settings; lookKey = k;
     setLang(x.lang); applyTheme(x.theme); applyA11y(x); refreshIcons(); document.title = t('appName'); try { localStorage.setItem('mo.theme', x.theme); localStorage.setItem('mo.lang', x.lang); } catch { /* blocked */ }

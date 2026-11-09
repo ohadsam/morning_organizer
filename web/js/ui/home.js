@@ -52,7 +52,7 @@ function card(tpl, nav) {
       h('span', { class: 'emoji', 'aria-hidden': tpl.alarm?.enabled ? null : 'true', role: tpl.alarm?.enabled ? 'img' : null, 'aria-label': tpl.alarm?.enabled ? t('alarmBadge') : null }, tpl.icon, tpl.alarm?.enabled ? h('i', { class: 'alarm-sticker', 'aria-hidden': 'true' }, '⏰') : null),
       h('span', { class: 'routine-text' }, h('strong', {}, tpl.name || t('untitled')),
         h('small', {}, `${t('tasksCount', { n: tpl.tasks.length })} · ${fmtHuman(total, units())}${tpl.from ? ` · ${t('fromParentTag', { name: tpl.from })}` : ''}`),
-        (() => { const w = whoSees(tpl, S.profiles()); return w ? h('small', { class: 'who-chip' }, w.kind === 'all' ? `👥 ${t('whoAll')}` : `👤 ${t('whoSome', { names: w.names.join(', ') })}`) : null; })(),
+        (() => { const w = whoSees(tpl, S.profiles()); return w ? h('small', { class: 'who-chip' }, w.kind === 'all' ? `👥 ${t('whoChipAll')}` : `👤 ${t('whoChipSome', { names: w.names.join(', ') })}`) : null; })(),
         S.goals().filter((g) => g.templateId === tpl.id && !g.done).slice(0, 2).map((g) => h('small', { class: 'goal-chip' }, `🎯 ${t('goalChip', { title: g.title })}`)))),
     simple ? null : alarmSwitch(tpl),
     h('div', { class: `routine-actions ${simple ? 'simple' : ''}` },

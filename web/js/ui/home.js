@@ -19,6 +19,7 @@ import { discardActiveRun } from './runAdmin.js';
 import { isPaused } from '../alarmPause.js';
 import { dayOff, hebrewLabel } from '../holidays.js';
 import { pickNow } from '../nowPick.js';
+import { weeklyCard, backupCard } from './homeCards.js';
 import { openSearch } from './search.js';
 import { runAction } from './actions.js';
 import { suggestionCard } from './suggest.js';
@@ -98,7 +99,7 @@ export function renderHome(root, nav) {
       activeCard(),
       nowMode && !active ? nowCard() : null,
       focusEl,
-      simple ? null : followUpCard(nav, draw) ?? dueCard(nav, draw) ?? lookBackHint(nav, draw),
+      simple ? null : followUpCard(nav, draw) ?? dueCard(nav, draw) ?? lookBackHint(nav, draw) ?? weeklyCard(draw) ?? backupCard(draw),
       simple ? null : (() => { const g = S.goals().find((x) => needsCheck(x)); return g ? h('section', { class: 'card focus-card' }, h('strong', {}, `🎯 ${t('checkDue')}`), h('p', {}, g.title), h('button', { class: 'btn primary', type: 'button', onclick: () => openCheckin(g, draw) }, `✔ ${t('checkTitle')}`)) : null; })(),
       simple ? null : h('button', { class: 'home-search', type: 'button', 'aria-haspopup': 'dialog', onclick: () => openSearch(nav) }, h('span', { 'aria-hidden': 'true' }, '🔍'), h('span', {}, t('homeSearch'))),
       simple ? null : (() => { const f = S.features(), b = (emoji, label, fn, id = '') => h('button', { class: 'btn', type: 'button', onclick: fn }, id ? iconNode(id, { size: 20, fallback: emoji }) : h('span', { 'aria-hidden': 'true' }, emoji), label), paused = isPaused(settings.alarmsPause); return toolbar([

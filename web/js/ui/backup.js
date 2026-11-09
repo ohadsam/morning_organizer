@@ -10,12 +10,14 @@ import { modal, toast, confirmBox } from './common.js';
 const stamp = () => new Date().toISOString().slice(0, 10);
 
 export function saveBackupFile() {
+  try { localStorage.setItem('mo.lastBackup', String(Date.now())); } catch { /* blocked */ }
   const json = S.exportAll(), name = `morning-organizer-${stamp()}.json`;
   if (native.available) { native.saveFile(name, json); return; } // WebView can't download blobs: use the system "save as" picker
   const url = URL.createObjectURL(new Blob([json], { type: 'application/json' }));
   const a = h('a', { href: url, download: name }); document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 5000); toast(t('savedFile'));
 }
 export async function copySyncCode() {
+  try { localStorage.setItem('mo.lastBackup', String(Date.now())); } catch { /* blocked */ }
   const code = await packBackup(S.exportAll());
   try { await navigator.clipboard.writeText(code); toast(t('shareCopied')); } catch { toast(t('error')); }
 }

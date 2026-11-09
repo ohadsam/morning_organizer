@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.34.1
+- Took the corrected **4-7-8** scene of the Sunny visual-corrections kit (k7 stars, k1 air lines, larger strokes; the build script now strips an XML prolog). Reviewed and not adopted: the new **box** scene (a heavy gold square that hides Sunny), the bell frames (coloured now, but 16 almost identical frames), the imagery (smaller figures, teal skin: worse than the current scenes). The mood faces are clearer in the kit (raised brows, tears) but lose Sunny's rays and cheeks, so the faces composed from her own layers stay. The cameos are real props now (thumbs up, clipboard, plug, bell, medal) but Sunny's eyes stay closed in all of them: kept for a later round.
+
 ## 1.34.0
 - **Layered breathing Sunny** (from the ChatGPT "Sunny animations v2" kit, stage 1): `calm-kit.json` has `sunny-breath-<pattern>` (slow, box, relax478, sigh): one picture with stable parts (`s-body`, `s-rays`, `s-glow`, `s-cheeks`, `s-mouth-in/out`, `s-air-in/out`, cues). `calmScene.sunnyBreath` moves the parts with the sine-eased breath, exactly by the kit's `HOOKS.md` table (body 0.90-1.03 x 0.88-1.06 and up 5 units, rays 0.92-1.10, glow 0.85-1.10 and opacity 0.25-0.7, cheeks, the two mouths and the air lines by phase); nothing is swapped or rebuilt. The simpler whole-figure version stays as the fallback.
 - **Widget**: "Sunny breathes" uses the kit's 24 frames (Sunrise look, light and dark, four densities) at 250 ms, replacing the ten interim frames.

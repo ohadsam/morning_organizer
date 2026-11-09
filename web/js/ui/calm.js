@@ -68,7 +68,7 @@ export function calmPanel(host, { onClose, compact = false, initial = {} } = {})
       if (kind === 'breath') {
         const ph = phaseAt(PATTERNS[pattern], sec), text = t(`ph_${ph.label}`);
         circle.style.setProperty('--sz', reduced() ? (ph.label === 'out' ? 0.4 : 1) : String(0.4 + 0.6 * ph.size));
-        const pp = reduced() ? (ph.label === 'out' ? 0 : 1) : ph.size; const ease = 0.5 - 0.5 * Math.cos(Math.PI * Math.min(1, Math.max(0, pp))); if (stage) stage.breath(pattern, ease); if (sb) sb.update(ease, ph.label); else if (sunnyEl) sunnyEl.style.setProperty('--p', ease.toFixed(4)); if (avNode) avNode.style.setProperty('--p', String(pp));
+        const pp = reduced() ? (ph.label === 'out' ? 0 : 1) : ph.size; const ease = 0.5 - 0.5 * Math.cos(Math.PI * Math.min(1, Math.max(0, pp))); if (stage) stage.breath(pattern, ease); if (sb) sb.update(ease, ph.label, { index: ph.index, progress: ph.progress }); else if (sunnyEl) sunnyEl.style.setProperty('--p', ease.toFixed(4)); if (avNode) avNode.style.setProperty('--p', String(pp));
         circle.dataset.phase = ph.label; setChildren(label, text); sub.textContent = `${Math.ceil(ph.left)}`;
         if (text !== lastSpoken) { lastSpoken = text; cue(ph.label); if (s.speak || s.coachSpeak) speakWithSettings(text, { kind: 'short' }); }
       } else {

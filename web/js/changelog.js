@@ -1,5 +1,7 @@
 // "What's new" content shown inside the app (newest first). Keep in step with docs/CHANGELOG.md; a unit test checks the current version is listed and both languages match.
 export const CHANGES = [
+  { v: '1.34.2', en: ['🟧 Box breathing: a thin rounded frame around Sunny with a small star that travels along its four sides, one side for each step (in, hold, out, hold).'],
+    he: ['🟧 נשימת קופסה: מסגרת דקה ומעוגלת סביב שמשי, וכוכב קטן שנע לאורך ארבע הצלעות שלה, צלע לכל שלב (שאיפה, החזקה, נשיפה, החזקה).'] },
   { v: '1.34.1', en: ['🌙 The 4-7-8 breathing scene has clearer teal stars and air lines.'],
     he: ['🌙 בנשימת 4-7-8 הכוכבים וקווי האוויר ברורים יותר, בטורקיז.'] },
   { v: '1.34.0', en: ['🌬️ Sunny now breathes with her own parts: her body swells, her rays reach out and her glow grows as you breathe in, and she lets it all out with a small round mouth as you breathe out. The Sunny widget has 24 smooth frames.'],

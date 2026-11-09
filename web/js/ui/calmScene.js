@@ -42,5 +42,23 @@ export function breathStage(label = '') {
     const x = Math.min(1, Math.max(0, p)) * 4, a = Math.min(3, Math.floor(x)), t = x - a;
     layers.forEach((s, i) => { s.style.opacity = i === a ? '1' : i === a + 1 ? String(t) : '0'; }); } };
 }
+/**
+ * Sunny breathing, drawn as ONE picture with stable parts (data/calm-kit.json `sunny-breath-<pattern>`, ids s-body, s-rays, s-glow, s-cheeks, s-mouth-in / -out, s-air-in / -out):
+ * nothing is swapped, each part is moved by the breath p (0 empty .. 1 full), the way HOOKS.md of the kit describes. -> { node, update(p, label) } or null without the picture.
+ */
+export function sunnyBreath(pattern, label = '') {
+  const sc = scenes?.[`sunny-breath-${pattern}`]; if (!sc) return null;
+  const svg = document.createElementNS(NS, 'svg'); svg.setAttribute('viewBox', '0 0 256 256'); svg.setAttribute('class', 'cs sunny-breath2'); svg.setAttribute('role', 'img'); svg.setAttribute('focusable', 'false'); if (label) svg.setAttribute('aria-label', label);
+  for (const n of inner(sc.svg)) svg.append(n);
+  const part = (id) => svg.querySelector(`#${id}`), P = { body: part('s-body'), rays: part('s-rays'), glow: part('s-glow'), cheeks: part('s-cheeks'), mIn: part('s-mouth-in'), mOut: part('s-mouth-out'), aIn: part('s-air-in'), aOut: part('s-air-out') };
+  const about = (cx, cy, sx, sy = sx, ty = 0) => `translate(${cx} ${cy}) scale(${sx.toFixed(4)} ${sy.toFixed(4)}) translate(${-cx} ${-cy})${ty ? ` translate(0 ${ty.toFixed(2)})` : ''}`;
+  return { node: svg, update(p, phase = 'in') {
+    p = Math.min(1, Math.max(0, p)); const out = phase === 'out';
+    P.body?.setAttribute('transform', about(128, 224, 0.9 + 0.13 * p, 0.88 + 0.18 * p, -5 * p)); P.rays?.setAttribute('transform', about(128, 122, 0.92 + 0.18 * p));
+    P.glow?.setAttribute('transform', about(128, 121, 0.85 + 0.25 * p)); P.glow?.setAttribute('opacity', (0.25 + 0.45 * p).toFixed(3)); P.cheeks?.setAttribute('transform', about(128, 122, 1 + 0.055 * p, 1 + 0.04 * p));
+    P.mIn?.setAttribute('opacity', out ? '0' : '1'); P.mOut?.setAttribute('opacity', out ? '1' : '0');
+    P.aIn?.setAttribute('opacity', (out ? 0.12 : 0.22 + 0.62 * p).toFixed(3)); P.aOut?.setAttribute('opacity', (out ? 0.25 + 0.6 * p : 0.08).toFixed(3));
+  } };
+}
 /** The two frames and the mix for breathing pattern `pattern` at breath fullness `p`. */
 export const breathScene = (pattern, p) => { const m = frameMix(p); return [`breath-${pattern}-${m.a}`, `breath-${pattern}-${m.b}`, m.t]; };

@@ -3,7 +3,7 @@ import { h, setChildren } from '../util.js';
 import { t } from '../i18n.js';
 import * as S from '../store.js';
 import * as J from '../journal.js';
-import { loadCalmKit, calmScenes, sceneStage, breathStage } from './calmScene.js';
+import { loadCalmKit, calmScenes, sceneStage, breathStage, sunnyBreath } from './calmScene.js';
 import { sunnyNode, loadMascot } from './mascot.js';
 import { storyFrame, scanZone } from '../calmKit.js';
 import { kitNode } from './avatarKit.js';
@@ -54,7 +54,8 @@ export function calmPanel(host, { onClose, compact = false, initial = {} } = {})
     const total = kind === 'breath' ? cyclesFor(PATTERNS[pattern], minutes) * cycleSec(PATTERNS[pattern]) : minutes * 60;
     const vis = S.get().settings.calmVisual || 'sunny', av = S.activeProfile?.()?.avatar, useAvatar = kind === 'breath' && vis === 'avatar' && isKit(av);
     const sunny = kind === 'breath' && (vis === 'sunny' || (vis === 'avatar' && !useAvatar && !isKit(av) && av?.k === 'sunny'));
-    const sunnyEl = sunny ? h('div', { class: 'sunny-breath', role: 'img', 'aria-label': t('calmSunnyAlt') }, h('div', { class: 'sb-halo', 'aria-hidden': 'true' }), sunnyNode({ size: 260, anim: 'calm' })) : null;
+    const sb = sunny ? sunnyBreath(pattern, t('calmSunnyAlt')) : null;   // the layered Sunny of the calm kit; her own parts move with the breath
+    const sunnyEl = sunny ? (sb ? h('div', { class: 'sunny-breath2-wrap' }, sb.node) : h('div', { class: 'sunny-breath', role: 'img', 'aria-label': t('calmSunnyAlt') }, h('div', { class: 'sb-halo', 'aria-hidden': 'true' }), sunnyNode({ size: 260, anim: 'calm' }))) : null;
     const stage = !useAvatar && !sunny && vis !== 'circle' && calmScenes() ? (kind === 'breath' ? breathStage(t('calmSceneAlt')) : sceneStage(t('calmSceneAlt'))) : null;
     const avNode = useAvatar ? kitNode(av, { size: 240, anim: 'calm' }) : null; if (avNode) avNode.classList.add('avatar-breathe');
     const circle = stage || avNode || sunnyEl ? h('div', { class: 'breath-circle hidden-circle', 'aria-hidden': 'true' }) : h('div', { class: 'breath-circle', 'aria-hidden': 'true' }), label = h('div', { class: 'calm-label', role: 'status', 'aria-live': 'polite' }), sub = h('div', { class: 'calm-sub' });
@@ -67,7 +68,7 @@ export function calmPanel(host, { onClose, compact = false, initial = {} } = {})
       if (kind === 'breath') {
         const ph = phaseAt(PATTERNS[pattern], sec), text = t(`ph_${ph.label}`);
         circle.style.setProperty('--sz', reduced() ? (ph.label === 'out' ? 0.4 : 1) : String(0.4 + 0.6 * ph.size));
-        const pp = reduced() ? (ph.label === 'out' ? 0 : 1) : ph.size; const ease = 0.5 - 0.5 * Math.cos(Math.PI * Math.min(1, Math.max(0, pp))); if (stage) stage.breath(pattern, ease); if (sunnyEl) sunnyEl.style.setProperty('--p', ease.toFixed(4)); if (avNode) avNode.style.setProperty('--p', String(pp));
+        const pp = reduced() ? (ph.label === 'out' ? 0 : 1) : ph.size; const ease = 0.5 - 0.5 * Math.cos(Math.PI * Math.min(1, Math.max(0, pp))); if (stage) stage.breath(pattern, ease); if (sb) sb.update(ease, ph.label); else if (sunnyEl) sunnyEl.style.setProperty('--p', ease.toFixed(4)); if (avNode) avNode.style.setProperty('--p', String(pp));
         circle.dataset.phase = ph.label; setChildren(label, text); sub.textContent = `${Math.ceil(ph.left)}`;
         if (text !== lastSpoken) { lastSpoken = text; cue(ph.label); if (s.speak || s.coachSpeak) speakWithSettings(text, { kind: 'short' }); }
       } else {

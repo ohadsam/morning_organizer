@@ -10,6 +10,16 @@ export function loadMascot() {
   loading ??= fetch(new URL('../../data/mascot.json', import.meta.url)).then((r) => (r.ok ? r.json() : null)).then((j) => { moods = parseMascot(j); return moods; }).catch(() => null);
   return loading;
 }
+const FACE_EMOJI = { 1: '😞', 2: '🙁', 3: '😐', 4: '🙂', 5: '😄' };
+/** One of the five "how do I feel" faces drawn as Sunny (1 very sad ... 5 great); the emoji shows until her pictures are loaded. */
+export function moodFace(level, { size = 40 } = {}) {
+  const v = Math.min(5, Math.max(1, Math.round(Number(level)) || 3)), svg = document.createElementNS(NS, 'svg');
+  svg.setAttribute('class', 'avatar avatar-sunny cs sunny-face'); svg.style.setProperty('--av', `${size}px`); svg.setAttribute('aria-hidden', 'true'); svg.setAttribute('focusable', 'false');
+  const draw = () => { const s = moods?.[`feel-${v}`]; if (!s) { svg.setAttribute('viewBox', '0 0 256 256'); const t = document.createElementNS(NS, 'text'); t.setAttribute('x', '128'); t.setAttribute('y', '190'); t.setAttribute('font-size', '170'); t.setAttribute('text-anchor', 'middle'); t.textContent = FACE_EMOJI[v]; setChildren(svg, t); return; }
+    svg.setAttribute('viewBox', /viewBox="([\d.\s-]+)"/.exec(s)?.[1] || '0 0 256 256'); setChildren(svg, ...inner(s)); };
+  draw(); if (!moods) loadMascot().then(draw);
+  return svg;
+}
 export function sunnyNode({ size = 56, anim = 'idle' } = {}) {
   const svg = document.createElementNS(NS, 'svg');
   svg.setAttribute('viewBox', '0 0 256 256'); svg.setAttribute('class', 'avatar avatar-sunny cs'); svg.dataset.anim = anim; svg.style.setProperty('--av', `${size}px`);

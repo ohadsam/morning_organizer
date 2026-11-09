@@ -74,9 +74,10 @@ export function renderHome(root, nav) {
         h('button', { class: 'btn', type: 'button', onclick: async () => { if (await confirmBox(t('cancelConfirm'), t('cancelRun'), true)) { await discardActiveRun(); active = null; clearInterval(tick); toast(t('cancelledToast')); draw(); } } }, '✖', t('cancelRun'))));
   };
   let showAll = false;   // "Now" mode: the person asked to see everything this time
-  const nowCard = () => { const pick = pickNow(S.myTemplates(), finished(S.myRuns())); if (!pick) return null; const x = pick.template, total = x.tasks.reduce((s, k) => s + k.sec, 0);
+  const nowCard = () => { const pick = pickNow(S.myTemplates(), finished(S.myRuns())); if (!pick) return null; const x = pick.template, last = finished(S.myRuns()).filter((r) => r.endedAt && new Date(r.endedAt).toDateString() === new Date().toDateString()).sort((a, b) => b.endedAt - a.endedAt)[0], total = x.tasks.reduce((s, k) => s + k.sec, 0);
     return h('section', { class: 'card now-card', 'aria-label': t('nowTitle') }, h('p', { class: 'muted' }, t(`nowWhy_${pick.why}`)), h('h2', { class: 'now-name' }, `${x.icon || ''} ${x.name}`), h('p', {}, `${t('tasksCount', { n: x.tasks.length })} · ${fmtHuman(total, units())}`),
       h('button', { class: 'btn primary xl', type: 'button', onclick: () => nav(`#/run/${x.id}`) }, icon('play', 20), t('nowStart')),
+      h('div', { class: 'run-around now-around' }, last ? h('span', { class: 'ra-prev' }, h('span', { 'aria-hidden': 'true' }, '✓ '), t('runPrev', { name: last.templateName || '—' })) : h('span', {}), pick.after ? h('span', { class: 'ra-next' }, t('runNext', { name: pick.after.name || '—' }), h('span', { 'aria-hidden': 'true' }, ' ›')) : h('span', {})),
       h('button', { class: 'btn link', type: 'button', onclick: () => { showAll = true; draw(); } }, t('nowSeeAll'))); };
   let alive = true;   // a draw that arrives after the person already left Home must not overwrite the page they are on
   const draw = () => {

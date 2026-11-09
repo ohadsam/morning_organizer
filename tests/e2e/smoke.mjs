@@ -1518,9 +1518,11 @@ await step('v1.25.2: the avatar wizard goes step by step (boy / girl / neutral f
 await step('v1.26: the calm corner shows a drawn scene for the breath, the journey step, the grounding sense and the scan zone; "My avatar" breathes; the circle is still there; zero axe violations', async () => {
   const { page } = await newPage({ lang: 'en' }); await dismissWelcome(page); await page.goto(base + '#/calm'); await page.waitForSelector('.calm-menu');
   const start = async () => { await page.click('.calm-menu .btn.primary.xl'); await page.waitForSelector('.calm-run'); await page.waitForTimeout(700); };
+  await start(); await page.waitForSelector('.sunny-breath svg.avatar-sunny'); assert.ok(await page.evaluate(() => document.querySelector('.sunny-breath').style.getPropertyValue('--p') !== ''), 'Sunny breathes with the exercise timer'); await page.click('.calm-run .btn'); await page.waitForSelector('.calm-menu');
+  await page.locator('.calm-menu button:has-text("Scene")').first().click();
   const stop = async () => { await page.click('.calm-run .btn'); await page.waitForSelector('.calm-menu'); };
   await start(); await page.waitForSelector('.cs-stage svg g, .cs-stage svg path'); assert.ok(await page.locator('.cs-stage svg').first().evaluate((s) => s.children.length > 5), 'the breathing scene is drawn');
-  const id1 = await page.locator('.cs-stage svg').first().getAttribute('data-id'); assert.match(id1, /^breath-slow-\d$/);
+  assert.equal(await page.locator('.cs-stage svg').count(), 5, 'five frames, built once and only cross-faded');
   assert.deepEqual(await audit(page, 'calm-scene'), []); await stop();
   await page.locator('.calm-menu .seg-group').first().locator('button').nth(3).click(); await start(); assert.match(await page.locator('.cs-stage svg').first().getAttribute('data-id'), /^imagery-elements-f1$/); await stop();
   await page.locator('.calm-menu .seg-group').first().locator('button').nth(1).click(); await start(); assert.match(await page.locator('.cs-stage svg').first().getAttribute('data-id'), /^grounding-5$/); await stop();
@@ -1607,7 +1609,7 @@ await step('v1.32: "just what to do now" on Home (one routine, a big Start, "See
   const { page } = await newPage({ lang: 'en' }); await dismissWelcome(page);
   await page.evaluate(async () => { const S = await import('./js/store.js'); await S.updateSettings({ homeMode: 'now', runView: 'single' }); });
   await page.goto(base + '#/'); await page.waitForSelector('.now-card'); assert.equal(await page.locator('.now-card .btn.primary').count(), 1); assert.equal(await page.locator('.home-search').count(), 0, 'nothing else competes');
-  assert.equal(await page.locator('.routine').count(), 0, 'no list of routines'); assert.deepEqual(await audit(page, 'now-home'), []);
+  assert.equal(await page.locator('.routine').count(), 0, 'no list of routines'); assert.ok(await page.locator('.now-around').count(), 'a small line for what came before and what comes next'); assert.deepEqual(await audit(page, 'now-home'), []);
   await page.click('.now-card .btn.link'); await page.waitForSelector('.routine'); assert.ok(await page.locator('.home-search').count(), 'See everything brings the rest back');
   await page.reload(); await page.waitForSelector('.now-card'); await page.click('.now-card .btn.primary'); await page.waitForSelector('.ring');
   assert.equal(await page.locator('.checklist').isVisible(), false, 'the list is hidden'); assert.ok(await page.locator('.now').isVisible()); assert.ok(await page.locator('.run-around').isVisible()); assert.match(await page.textContent('.run-around'), /Next: /); assert.ok(!/Before: /.test(await page.textContent('.run-around')), 'no step before the first');

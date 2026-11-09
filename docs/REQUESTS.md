@@ -72,6 +72,7 @@ Status: ✅ shipped (version) · 🟡 partly (what is missing) · ⛔ not possib
 | 46 | Choose built-in special tasks (journal, thought parking, relaxation, guided imagery...) from a grouped, searchable picker, not only as suggestions | ✅ 1.21 |
 | 49 | NLP as a method like CBT / Cog-Fun: choose tasks, guidance and adaptation by it | ✅ 1.22 (needs model, six guided tools, special-task group; honest evidence note) |
 | 50 | Suggest and add more UI/UX improvements | ✅ 1.22 (calm animations switch, method notes in the chooser, light vibration tick) |
+| 74 | Sunny as the guiding character: she breathes in the calm corner and widget, the feeling faces are Sunny; neighbours in "Now" mode; a prompt to improve the animations | ✅ 1.33.0 (interim versions built from her existing layers) + `docs/SUNNY_ANIMATION_PROMPT.md` for a proper smooth set |
 | 73 | UX batch part 1: Home shows just what to do now; the run screen shows one step at a time (O5) | ✅ 1.32.0 (`nowPick.js`, `homeMode`, `runView`, unit + e2e + axe he/en); rest of O5 open |
 | 72 | Smart suggestion to shorten steps when the leave-by time will be missed, recorded in the statistics (O3) | ✅ 1.31.0 (`shorten.js`, runner card, `shortened` on the run, summary row, stats note, unit + e2e + axe) |
 | 71 | Mood widget on the home screen (O4 part) | ✅ 1.30.0 (five faces open `#/feel/<n>`); kind thought / points / balance widgets and per-look backgrounds still open |

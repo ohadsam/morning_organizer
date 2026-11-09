@@ -14,9 +14,9 @@ export function pickNow(templates, runs, now = Date.now()) {
   const d = new Date(now), dow = d.getDay(), nowMin = d.getHours() * 60 + d.getMinutes();
   const doneToday = new Set((runs || []).filter((r) => r.status === 'done' && r.endedAt && sameDay(r.endedAt, now)).map((r) => r.templateId));
   const todays = list.filter((x) => isActiveOn(x, dow) && !doneToday.has(x.id));
-  const timed = todays.map((x) => ({ x, m: x.alarm?.enabled ? minutesOf(x.alarm.time) : null })).filter((y) => y.m !== null && y.m >= nowMin - 90).sort((a, b) => a.m - b.m);
-  if (timed.length) return { template: timed[0].x, why: 'alarm' };
-  if (todays.length) return { template: todays.find((x) => x.favorite) || todays[0], why: 'today' };
-  const fav = list.find((x) => x.favorite); if (fav) return { template: fav, why: 'favorite' };
-  return { template: list[0], why: 'any' };
+  const timed = todays.map((x) => ({ x, m: x.alarm?.enabled ? minutesOf(x.alarm.time) : null })).filter((y) => y.m !== null && y.m >= nowMin - 90).sort((a, b) => a.m - b.m).map((y) => y.x);
+  const rest = [...todays.filter((x) => !timed.includes(x)).sort((a, b) => Number(!!b.favorite) - Number(!!a.favorite)), ...list.filter((x) => !todays.includes(x)).sort((a, b) => Number(!!b.favorite) - Number(!!a.favorite))];
+  const order = [...timed, ...rest], first = order[0];
+  const why = timed.length ? 'alarm' : todays.includes(first) ? 'today' : first.favorite ? 'favorite' : 'any';
+  return { template: first, why, after: order[1] || null };
 }

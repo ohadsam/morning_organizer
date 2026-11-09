@@ -1,6 +1,6 @@
 {
   "name": "morning-organizer",
-  "version": "1.32.1",
+  "version": "1.33.0",
   "private": true,
   "type": "module",
   "description": "Morning routine organizer - PWA + Android shell",

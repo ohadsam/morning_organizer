@@ -2,7 +2,7 @@
 // an avatar of kind "sunny" shows the mood that fits the animation or feeling.
 import { checkIconSvg } from './avatarKit.js';
 
-const ID = /^[a-z-]{1,24}$/;
+const ID = /^[a-z0-9-]{1,24}$/;
 /** Avatar animation / feeling -> the mood picture. */
 export const MOOD_OF = { idle: 'idle', wave: 'wave', cheer: 'cheer', dance: 'dance', sleep: 'sleep', alert: 'alert', think: 'think',
   happy: 'cheer', calm: 'calm-breathe', sad: 'sad-comfort', worried: 'sad-comfort', angry: 'alert', tired: 'sleep', excited: 'celebrate', proud: 'proud', none: 'idle' };

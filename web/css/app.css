@@ -636,3 +636,8 @@ html[data-motion="calm"] .avatar-sunny { animation: none; }
 .now-card { display: grid; gap: 10px; justify-items: center; text-align: center; padding-block: 18px; } .now-card .now-name { margin: 0; font-size: 1.6rem; overflow-wrap: anywhere; } .now-card .btn.xl { width: 100%; }
 html[data-runview="single"] .run :is(.checklist, .run-meta, .pace, .sprint-line, .gear-card) { display: none; }
 .run-around { display: none; } html[data-runview="single"] .run .run-around { display: flex; justify-content: space-between; gap: 12px; font-size: .85rem; color: var(--muted); min-height: 1.4em; } .run-around span { min-width: 0; overflow-wrap: anywhere; } .run-around .ra-next { text-align: end; margin-inline-start: auto; }
+.now-around { display: flex !important; width: 100%; justify-content: space-between; gap: 12px; font-size: .85rem; color: var(--muted); min-height: 1.4em; }
+/* Sunny breathes (1.33): the whole figure swells a little with --p (0 empty .. 1 full), a touch taller than wide, from her hill; a soft halo follows the breath */
+.sunny-breath { position: relative; width: 100%; aspect-ratio: 1; display: grid; place-items: center; }
+.sunny-breath .avatar-sunny { width: 92%; height: 92%; transform-origin: 50% 88%; transform: translateY(calc(var(--p, 0) * -2%)) scale(calc(.9 + .13 * var(--p, 0)), calc(.88 + .18 * var(--p, 0))); will-change: transform; animation: none !important; }
+.sunny-breath .sb-halo { position: absolute; inset: 6%; border-radius: 50%; background: radial-gradient(circle at 50% 45%, color-mix(in srgb, var(--k3, #ffc233) 55%, transparent), transparent 68%); opacity: calc(.25 + .55 * var(--p, 0)); transform: scale(calc(.85 + .25 * var(--p, 0))); will-change: transform, opacity; }

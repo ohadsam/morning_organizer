@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.33.0
+- **Sunny breathes** (owner feedback: the calm corner's movement was not pleasant): new default "Sunny" in the breathing menu (`calmVisual: sunny`; one-time migration moves a stored "scene" to it): `data/mascot.json`'s calm-breathe mood scales with the exercise's `--p` (a little taller than wide, from her hill, a soft halo), driven by a sine-eased fullness every animation frame. The old scenes no longer swap pictures: `breathStage` builds the five frames once and only changes their opacity (no rebuilding, so no flicker).
+- **"How do I feel" faces are Sunny** (owner request): five close-ups composed from her own layers (very sad with tears ... great with sparkles) in `mascot.json` (`feel-1..5`), used by the feel screen, the quick check-in and the journal mood row (`moodFace`). The mood widget uses the same faces (PNG, Sunrise look, light and dark).
+- **Widget**: "Sunny breathes" has ten eased frames (squash and stretch) played ping-pong at 330 ms; a ViewFlipper cannot be smoother without many more frames - see the new prompt.
+- **"Just what to do now" shows the neighbours**: a small "Before: X" (the last routine finished today) and "Next: Y" (the next one in order, `pickNow(...).after`).
+- New prompt `docs/SUNNY_ANIMATION_PROMPT.md` for ChatGPT: layered parametric Sunny breathing with exact mappings and easings (4 patterns), 24 widget frames, Sunny mood faces, Sunny cameos to replace generic icons, and a fix list for the other animations.
+
 ## 1.32.1
 - **One-step run view shows its neighbours** (owner request): a small line under the step name with "Before: X" (the last finished or skipped step, with a tick or a skip mark) and "Next: Y" (the next one still ahead); nothing shown when there is none. Only in the one-step view.
 

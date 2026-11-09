@@ -1,5 +1,7 @@
 // "What's new" content shown inside the app (newest first). Keep in step with docs/CHANGELOG.md; a unit test checks the current version is listed and both languages match.
 export const CHANGES = [
+  { v: '1.33.0', en: ['☀️ Sunny is the guide: in the calm corner Sunny herself breathes with you (she swells softly as you breathe in and sinks back as you breathe out), the “How do I feel” faces are now Sunny showing the feeling (also on the mood widget), and the Sunny widget breathes with ten smooth frames. “Just what to do now” also shows what came before and what comes next, in small.'],
+    he: ['☀️ שמשי היא המדריכה: בפינת הרוגע שמשי עצמה נושמת איתכם (מתנפחת בעדינות בשאיפה וחוזרת בנשיפה), הפרצופים של “איך אני מרגיש/ה” הם עכשיו שמשי שמראה את ההרגשה (גם בווידג׳ט מצב הרוח), וווידג׳ט שמשי נושם בעשרה פריימים חלקים. “רק מה לעשות עכשיו” מציג גם בקטן מה היה קודם ומה בא אחר כך.'] },
   { v: '1.32.1', en: ['👀 In “one step at a time” you now also see, small, the step you just did and the step that comes next.'],
     he: ['👀 במצב “שלב אחד בכל פעם” רואים עכשיו גם, בקטן, את השלב שעשיתם עכשיו ואת השלב הבא.'] },
   { v: '1.32.0', en: ['🎯 Two calmer ways to use the app (Settings → Appearance): a Home that shows just what to do now (one routine, a big Start button; “See everything” brings the rest back), and a run screen that shows one step at a time.'],

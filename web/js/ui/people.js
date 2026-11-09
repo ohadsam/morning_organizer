@@ -1,7 +1,8 @@
 // People and needs: the small profile menu at the top of every screen, the "who is using the app?" choice, managing all profiles, and the
 // "what do you need the app for?" picker (a way of working and/or what is hard) that makes the app show only what fits.
 import { h, setChildren } from '../util.js';
-import { t } from '../i18n.js';
+import { t, getLang } from '../i18n.js';
+import { starterFor, starterEntry } from '../starterPack.js';
 import * as S from '../store.js';
 import { modal, toast } from './common.js';
 import { requestGate } from './gate.js';
@@ -15,6 +16,16 @@ export const shownList = (view) => { const set = visibleSet(view); return set ? 
 export const needsLine = (view) => labelKeys(view).map((k) => t(k)).join(' · ');
 
 /** The picker, in a sheet, for one profile. onDone() after saving. */
+/** After choosing what the app is for: a few small ready-made routines that fit, once per choice, ticked by default, added for this person only (no alarms). */
+function offerStarter(profile, view) {
+  const list = starterFor(view); if (!list.length || isFull(view)) return;
+  const key = `mo.starter.${profile.id}.${list.map((x) => x.id).join(',')}`; try { if (localStorage.getItem(key)) return; localStorage.setItem(key, '1'); } catch { /* blocked: offer anyway */ }
+  const chosen = new Set(list.map((x) => x.id)), lang = getLang();
+  const rows = h('div', { class: 'stack' }, list.map((r) => h('label', { class: 'switch-row card' }, h('input', { type: 'checkbox', checked: true, onchange: (e) => { if (e.target.checked) chosen.add(r.id); else chosen.delete(r.id); } }),
+    h('span', {}, h('strong', {}, `${r.icon} ${r.name[lang === 'he' ? 'he' : 'en']}`), h('small', { class: 'hint' }, ` ${r.steps.map((s) => s[lang === 'he' ? 'he' : 'en']).join(' · ')}`)))));
+  modal(`🌱 ${t('starterTitle')}`, h('div', { class: 'stack' }, h('p', {}, t('starterIntro')), rows, h('small', { class: 'hint' }, t('starterHint'))), [{ label: t('starterNo') },
+    { label: t('starterAdd'), primary: true, fn: async () => { let n = 0; for (const r of list.filter((x) => chosen.has(x.id))) { const tpl = S.templateFromEntry(starterEntry(r, lang)); tpl.owners = [profile.id]; tpl.alarm = { ...tpl.alarm, enabled: false }; await S.saveTemplate(S.normalizeTemplate(tpl)); n++; } toast(t('starterAdded', { n })); } }]);
+}
 export function openNeeds(profile, onDone = () => {}) {
   const st = { ...sanitizeView(profile.view) }; st.problems = [...st.problems]; let age = profile.age;
   const body = h('div', { class: 'stack needs' });
@@ -31,7 +42,7 @@ export function openNeeds(profile, onDone = () => {}) {
   const m = modal(`🎯 ${t('needsTitle')}${profile.name ? ` · ${profile.name}` : ''}`, body, [
     { label: t('cancel') },
     isFull(profile.view) ? null : { label: t('needShowAll'), fn: async () => { await S.setNeeds(profile.id, { model: 'full', problems: [] }); toast(t('needAllToast')); onDone(); } },
-    { label: t('needSave'), primary: true, fn: async () => { const a = Math.round(Number(age)); await S.patchProfile(profile.id, { age: Number.isFinite(a) && a >= 3 && a <= 120 ? a : null }); await S.setNeeds(profile.id, st); toast(t('needSaved')); onDone(); } }].filter(Boolean));
+    { label: t('needSave'), primary: true, fn: async () => { const a = Math.round(Number(age)); await S.patchProfile(profile.id, { age: Number.isFinite(a) && a >= 3 && a <= 120 ? a : null }); await S.setNeeds(profile.id, st); toast(t('needSaved')); onDone(); offerStarter(profile, st); } }].filter(Boolean));
   return m;
 }
 

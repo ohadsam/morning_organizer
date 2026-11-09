@@ -1270,7 +1270,7 @@ const FAKE_SPEECH = () => {
 await step('v1.20: "what the app is for" hides what does not fit and "Show everything" brings it back', async () => {
   const { page } = await newPage({ lang: 'he' }); await page.goto(base + '#/settings/needs'); await dismissWelcome(page);
   await page.click('button:has-text("שינוי למה האפליקציה משמשת")'); await page.waitForSelector('dialog[open] .needs');
-  await page.click('dialog[open] .needs-opt:has-text("חרדה")'); await page.click('dialog[open] footer button.primary'); await page.waitForTimeout(300);
+  await page.click('dialog[open] .needs-opt:has-text("חרדה")'); await page.click('dialog[open] footer button.primary'); await page.waitForTimeout(300); await page.waitForSelector('dialog[open]:has-text("סט התחלה")'); await closeDialogs(page);
   await page.goto(base + '#/'); await page.waitForSelector('.tb-btn');
   assert.equal(await page.locator('.tb-btn:has-text("מעקב")').count() >= 0, true);
   await page.click('.tb-btn[data-tb="plan"], .tb-btn >> nth=2'); assert.equal(await page.locator('.tb-panel:not([hidden]) button:has-text("מטרות")').count(), 0, 'goals are hidden for "anxiety"');
@@ -1426,7 +1426,11 @@ await step('v1.22: NLP - a choice in "what the app is for" (with the honest note
   const { page } = await newPage({ lang: 'en' }); await page.goto(base + '#/settings/needs'); await page.waitForSelector('details[data-group=needs] .btn.primary');
   await page.click('details[data-group=needs] .btn.primary'); await page.waitForSelector('dialog[open] .needs'); await page.click('dialog[open] .needs-opt:has-text("NLP")');
   assert.match(await page.textContent('dialog[open] .needs-note'), /limited and mixed/); assert.deepEqual(await audit(page, 'needs-nlp'), []);
-  await page.click('dialog[open] footer button.primary'); await page.waitForTimeout(300);
+  const before = await page.evaluate(async () => { const S = await import('./js/store.js'); return S.get().templates.length; });
+  await page.click('dialog[open] footer button.primary'); await page.waitForSelector('dialog[open]:has-text("A starter set?")'); assert.equal(await page.locator('dialog[open] input[type=checkbox]').count(), 2, 'two routines for the method');
+  assert.deepEqual(await audit(page, 'starter-set'), []); await page.click('dialog[open] footer button.primary'); await page.waitForTimeout(500);
+  const after = await page.evaluate(async () => { const S = await import('./js/store.js'); const pid = S.activeProfile().id; return [S.get().templates.length, S.get().templates.filter((x) => x.name === 'A clear goal' || x.name === 'Mental rehearsal').map((x) => [x.owners.join(), x.alarm.enabled]), pid]; });
+  assert.equal(after[0], before + 2, 'both were added'); assert.ok(after[1].every(([o, a]) => o === after[2] && a === false), 'for this person only, no alarm');
   await page.goto(base + '#/'); await page.waitForSelector('.tb-btn'); await qk(page, 'NLP tools'); await page.waitForSelector('.nlp-tool');
   assert.equal(await page.locator('.nlp-tool').count(), 6); assert.match(await page.textContent('main, #app'), /limited and mixed/); assert.deepEqual(await audit(page, 'nlp-page'), []);
   await page.click('.nlp-tool:has-text("Precise words")'); await page.waitForSelector('dialog[open] textarea');
@@ -1674,7 +1678,7 @@ await step('v1.24: illustrations in the empty states and feeling faces for the m
   await page.click('.summary .moods .mood >> nth=3'); assert.equal(await page.getAttribute('.summary .moods .mood >> nth=3', 'aria-pressed'), 'true'); bad.push(...await audit(page, 'mood-faces')); assert.deepEqual(bad, []);
 });
 await step('v1.24: the welcome sheet shows its scene; the web app uses the new icons (192, 512, maskable, apple-touch) and the boot logo', async () => {
-  const { page } = await newPage({ lang: 'he' }); await page.goto(base + '#/'); await page.waitForSelector('dialog.welcome .vk svg'); assert.deepEqual(await audit(page, 'welcome-art'), []);
+  const { page } = await newPage({ lang: 'he' }); await page.goto(base + '#/'); await page.waitForSelector('dialog.welcome svg.sunny-cameo path'); assert.deepEqual(await audit(page, 'welcome-art'), []);
   for (const f of ['icons/icon-192.png', 'icons/icon-512.png', 'icons/icon-maskable-512.png', 'icons/apple-touch-icon.png', 'icon.svg', 'data/visual-kit.json']) assert.equal((await page.request.get(base + f)).status(), 200, f);
   assert.match(await page.getAttribute('link[rel=apple-touch-icon]', 'href'), /apple-touch-icon\.png/);
 });

@@ -4,7 +4,7 @@ import { t } from '../i18n.js';
 import * as S from '../store.js';
 import * as J from '../journal.js';
 import { loadCalmKit, calmScenes, sceneStage, breathStage, sunnyBreath } from './calmScene.js';
-import { sunnyNode, loadMascot } from './mascot.js';
+import { sunnyNode, loadMascot, cameoNode } from './mascot.js';
 import { storyFrame, scanZone } from '../calmKit.js';
 import { kitNode } from './avatarKit.js';
 import { isKit } from '../avatarKit.js';
@@ -43,7 +43,7 @@ export function calmPanel(host, { onClose, compact = false, initial = {} } = {})
   }
   function finish() {
     stop(); over = true;
-    setChildren(host, h('div', { class: 'stack center calm-done' }, h('div', { class: 'big-emoji', 'aria-hidden': 'true' }, '🌿'), h('h2', {}, t('calmWell')), h('p', {}, t('moodAsk')),
+    setChildren(host, h('div', { class: 'stack center calm-done' }, cameoNode('calm', { size: 120 }), h('h2', {}, t('calmWell')), h('p', {}, t('moodAsk')),
       moodRow(async (v) => { await J.addEntry(S.activeProfile().id, { kind: 'calm', mood: v }); toast(t('jSaved')); }),
       S.features().journal !== false ? h('button', { class: 'btn', type: 'button', onclick: () => openAprt({}) }, `🧭 ${t('calmWrite')}`) : null,
       h('div', { class: 'row-btns' }, h('button', { class: 'btn', type: 'button', onclick: () => { over = false; menu(); } }, t('calmAgain')), onClose ? h('button', { class: 'btn primary', type: 'button', onclick: onClose }, t('calmBack')) : null)));

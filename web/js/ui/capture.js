@@ -9,8 +9,7 @@ import { audience } from '../feedback.js';
 import { recorderSupported, startRecording } from '../recorder.js';
 import { dictationSupported, dictationIsLocal, startDictation } from '../dictation.js';
 import { modal, toast } from './common.js';
-import { feelingNode } from './visualKit.js';
-import { MOOD_FACES } from '../visualKit.js';
+import { moodFace } from './mascot.js';
 
 const pid = () => S.activeProfile().id;
 const saved = async () => toast((await J.getLock(pid())) && !(await J.isUnlocked(pid())) ? t('jSavedLocked') : t('jSaved'));
@@ -30,7 +29,7 @@ export function askTranscribeConsent() {
 export function moodRow(onPick, current = null) {
   const wrap = h('div', { class: 'moods', role: 'group', 'aria-label': t('moodAsk') });
   const mark = (v) => [...wrap.children].forEach((b, i) => { const on = MOODS[i].v === v; b.classList.toggle('on', on); b.setAttribute('aria-pressed', String(on)); });
-  for (const m of MOODS) wrap.append(h('button', { class: 'mood', type: 'button', 'aria-label': t(`mood${m.v}`), 'aria-pressed': 'false', onclick: () => { mark(m.v); onPick(m.v); } }, feelingNode(MOOD_FACES[m.v], { size: 40 })));   // the face of the visual kit, drawn in the look's colours
+  for (const m of MOODS) wrap.append(h('button', { class: 'mood', type: 'button', 'aria-label': t(`mood${m.v}`), 'aria-pressed': 'false', onclick: () => { mark(m.v); onPick(m.v); } }, moodFace(m.v, { size: 40 })));   // the face of the visual kit, drawn in the look's colours
   mark(current);
   return wrap;
 }

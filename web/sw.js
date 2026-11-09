@@ -1,5 +1,5 @@
 // Offline-first service worker. VERSION is kept equal to version.json by scripts/bump-version.mjs (a unit test enforces it).
-const VERSION = '1.32.1';
+const VERSION = '1.33.0';
 const CACHE = `morning-organizer-${VERSION}`;
 const SHELL = ['./', 'index.html', 'manifest.webmanifest', 'version.json', 'icon.svg', 'css/app.css', 'css/report.css',
   'js/app.js', 'js/theme-boot.js', 'js/config.js', 'js/util.js', 'js/i18n.js', 'js/db.js', 'js/store.js', 'js/engine.js', 'js/stats.js', 'js/share.js',

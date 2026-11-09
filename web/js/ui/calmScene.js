@@ -28,5 +28,19 @@ export function sceneStage(label = '') {
   node.append(a, b);
   return { node, a, b, show(idA, idB = null, t = 0) { layer(a, idA); const second = idB && idB !== idA && layer(b, idB); if (!second) layer(b, ''); b.style.opacity = second ? String(Math.min(1, Math.max(0, t))) : '0'; } };
 }
+/**
+ * A stage for a breathing pattern that never rebuilds its pictures while it runs: the five frames are drawn once, stacked, and only their opacity changes
+ * with the breath (frame a opaque underneath, the next one fading in above it). -> { node, breath(pattern, p) } with p 0 (empty) .. 1 (full).
+ */
+export function breathStage(label = '') {
+  const node = document.createElement('div'); node.className = 'cs cs-stage'; node.setAttribute('role', 'img'); if (label) node.setAttribute('aria-label', label);
+  let layers = null, pat = '';
+  const build = (pattern) => { pat = pattern; layers = Array.from({ length: 5 }, (_, i) => { const s = document.createElementNS(NS, 'svg'); s.setAttribute('viewBox', '0 0 256 256'); s.setAttribute('focusable', 'false'); s.setAttribute('aria-hidden', 'true');
+    for (const n of inner(scenes?.[`breath-${pattern}-${i}`]?.svg || '<svg xmlns="http://www.w3.org/2000/svg"></svg>')) s.append(n); s.style.opacity = '0'; return s; }); node.replaceChildren(...layers); };
+  return { node, breath(pattern, p) {
+    if (!layers || pat !== pattern) build(pattern);
+    const x = Math.min(1, Math.max(0, p)) * 4, a = Math.min(3, Math.floor(x)), t = x - a;
+    layers.forEach((s, i) => { s.style.opacity = i === a ? '1' : i === a + 1 ? String(t) : '0'; }); } };
+}
 /** The two frames and the mix for breathing pattern `pattern` at breath fullness `p`. */
 export const breathScene = (pattern, p) => { const m = frameMix(p); return [`breath-${pattern}-${m.a}`, `breath-${pattern}-${m.b}`, m.t]; };

@@ -7,15 +7,25 @@
     <LinearLayout
     android:layout_width="match_parent" android:layout_height="match_parent"
     android:orientation="vertical" android:gravity="center" android:padding="6dp">
-    <ViewFlipper android:layout_width="wrap_content" android:layout_height="wrap_content" android:autoStart="true" android:flipInterval="1000">
-        <ImageView android:layout_width="64dp" android:layout_height="64dp" android:src="@drawable/wi_sunny_1" android:importantForAccessibility="no"/>
-        <ImageView android:layout_width="64dp" android:layout_height="64dp" android:src="@drawable/wi_sunny_2" android:importantForAccessibility="no"/>
-        <ImageView android:layout_width="64dp" android:layout_height="64dp" android:src="@drawable/wi_sunny_3" android:importantForAccessibility="no"/>
-        <ImageView android:layout_width="64dp" android:layout_height="64dp" android:src="@drawable/wi_sunny_4" android:importantForAccessibility="no"/>
-        <ImageView android:layout_width="64dp" android:layout_height="64dp" android:src="@drawable/wi_sunny_5" android:importantForAccessibility="no"/>
-        <ImageView android:layout_width="64dp" android:layout_height="64dp" android:src="@drawable/wi_sunny_4" android:importantForAccessibility="no"/>
-        <ImageView android:layout_width="64dp" android:layout_height="64dp" android:src="@drawable/wi_sunny_3" android:importantForAccessibility="no"/>
-        <ImageView android:layout_width="64dp" android:layout_height="64dp" android:src="@drawable/wi_sunny_2" android:importantForAccessibility="no"/>
+    <ViewFlipper android:layout_width="wrap_content" android:layout_height="wrap_content" android:autoStart="true" android:flipInterval="330">
+        <ImageView android:layout_width="68dp" android:layout_height="68dp" android:src="@drawable/wi_sunny_1" android:importantForAccessibility="no"/>
+        <ImageView android:layout_width="68dp" android:layout_height="68dp" android:src="@drawable/wi_sunny_2" android:importantForAccessibility="no"/>
+        <ImageView android:layout_width="68dp" android:layout_height="68dp" android:src="@drawable/wi_sunny_3" android:importantForAccessibility="no"/>
+        <ImageView android:layout_width="68dp" android:layout_height="68dp" android:src="@drawable/wi_sunny_4" android:importantForAccessibility="no"/>
+        <ImageView android:layout_width="68dp" android:layout_height="68dp" android:src="@drawable/wi_sunny_5" android:importantForAccessibility="no"/>
+        <ImageView android:layout_width="68dp" android:layout_height="68dp" android:src="@drawable/wi_sunny_6" android:importantForAccessibility="no"/>
+        <ImageView android:layout_width="68dp" android:layout_height="68dp" android:src="@drawable/wi_sunny_7" android:importantForAccessibility="no"/>
+        <ImageView android:layout_width="68dp" android:layout_height="68dp" android:src="@drawable/wi_sunny_8" android:importantForAccessibility="no"/>
+        <ImageView android:layout_width="68dp" android:layout_height="68dp" android:src="@drawable/wi_sunny_9" android:importantForAccessibility="no"/>
+        <ImageView android:layout_width="68dp" android:layout_height="68dp" android:src="@drawable/wi_sunny_10" android:importantForAccessibility="no"/>
+        <ImageView android:layout_width="68dp" android:layout_height="68dp" android:src="@drawable/wi_sunny_9" android:importantForAccessibility="no"/>
+        <ImageView android:layout_width="68dp" android:layout_height="68dp" android:src="@drawable/wi_sunny_8" android:importantForAccessibility="no"/>
+        <ImageView android:layout_width="68dp" android:layout_height="68dp" android:src="@drawable/wi_sunny_7" android:importantForAccessibility="no"/>
+        <ImageView android:layout_width="68dp" android:layout_height="68dp" android:src="@drawable/wi_sunny_6" android:importantForAccessibility="no"/>
+        <ImageView android:layout_width="68dp" android:layout_height="68dp" android:src="@drawable/wi_sunny_5" android:importantForAccessibility="no"/>
+        <ImageView android:layout_width="68dp" android:layout_height="68dp" android:src="@drawable/wi_sunny_4" android:importantForAccessibility="no"/>
+        <ImageView android:layout_width="68dp" android:layout_height="68dp" android:src="@drawable/wi_sunny_3" android:importantForAccessibility="no"/>
+        <ImageView android:layout_width="68dp" android:layout_height="68dp" android:src="@drawable/wi_sunny_2" android:importantForAccessibility="no"/>
     </ViewFlipper>
     <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/widget_calm_sunny_text"
         android:textColor="@color/widget_text" android:textSize="13sp" android:textStyle="bold"/>

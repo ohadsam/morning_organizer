@@ -35,7 +35,7 @@ export const DEFAULT_SETTINGS = Object.freeze({
   lang: 'he', theme: 'auto', mode: 'both', volume: 80, warnSec: 10, defTaskSec: 300, defEstSec: 0,
   autoAdvance: false, keepAwake: true, keepAwakeApp: false, personName: '', mascot: '🦊', feedback: true, speak: false, age: null, gender: 'other', profileDone: false,
   textStyle: 'auto', timerStyle: 'auto', retroStyle: 'ask', alarmsMig: false, samplesAlarmsOff: false, paceMode: 'normal', accent: '', simpleMode: false, announceTasks: false, fontScale: 100, colorSafe: false, contrast: 'normal', srAnnounce: false,
-  coachButton: true, coachAuto: false, coachSpeak: false, voiceURI: '', voicePreset: 'natural', voiceFlavor: 'neutral', skin: 'default', easyRead: false, reduceMotion: false, iconStyle: 'auto', iconMono: false, calmVisual: 'scene', homeMode: 'full', runView: 'full', askProfile: true, voiceCmdAuto: false, scoring: 'off', scorePenalty: true, scoreCumulative: true, voiceEngine: '', alarmsPause: 0, weeklyOn: true, weeklyDay: 5, voiceRate: 100, seeded: false,
+  coachButton: true, coachAuto: false, coachSpeak: false, voiceURI: '', voicePreset: 'natural', voiceFlavor: 'neutral', skin: 'default', easyRead: false, reduceMotion: false, iconStyle: 'auto', iconMono: false, calmVisual: 'sunny', homeMode: 'full', runView: 'full', askProfile: true, voiceCmdAuto: false, scoring: 'off', scorePenalty: true, scoreCumulative: true, voiceEngine: '', alarmsPause: 0, weeklyOn: true, weeklyDay: 5, voiceRate: 100, seeded: false,
   avatar: defaultAvatar(), activeProfile: '', transcribe: false,
 });
 /** The settings keys that mirror the ACTIVE profile (so the rest of the app can keep reading settings.personName etc.). */
@@ -122,6 +122,7 @@ export async function init() {
     state.profiles = [newProfile({ name: state.settings.personName, age: state.settings.age, gender: state.settings.gender, avatar: isDefaultAvatar(state.settings.avatar) ? avatarFromMascot(state.settings.mascot) : state.settings.avatar })];
     await db.put('kv', state.profiles, 'profiles');
   }
+  if (!(await db.get('kv', 'calmVisMig'))) { if (state.settings.calmVisual === 'scene') state.settings.calmVisual = 'sunny'; state.profiles = state.profiles.map((p) => (p.prefs?.calmVisual === 'scene' ? { ...p, prefs: { ...p.prefs, calmVisual: 'sunny' } } : p)); await db.put('kv', true, 'calmVisMig'); await persistProfiles?.(); }
   if (!(await db.get('kv', 'sunnyMig'))) {   // 1.26.1: the untouched default fox (never customised) becomes Sunny, once; every other avatar is left alone
     const isDefaultFox = (a) => a?.k === 'char' && a.id === 'fox' && String(a.color).toLowerCase() === '#f59e0b';
     if (state.profiles.some((p) => isDefaultFox(p.avatar))) { state.profiles = state.profiles.map((p) => (isDefaultFox(p.avatar) ? { ...p, avatar: { k: 'sunny' } } : p)); await db.put('kv', state.profiles, 'profiles'); }
@@ -436,7 +437,7 @@ export function exportAll() {
 export function sanitizeSettings(raw) {
   const out = {};
   if (!raw || typeof raw !== 'object') return out;
-  const ENUM = { homeMode: ['full', 'now'], runView: ['full', 'single'], calmVisual: ['scene', 'avatar', 'circle'], iconStyle: ['auto', 'line', 'duotone', 'filled'], skin: SKINS, scoring: SCORE_MODES, lang: ['auto', 'he', 'en'], theme: ['auto', 'light', 'dark'], mode: ['both', 'beep', 'vibrate', 'silent'], paceMode: ['normal', 'quick', 'calm'], contrast: ['normal', 'high'], textStyle: ['auto', 'playful', 'plain'], timerStyle: ['auto', 'ring', 'pie', 'bar', 'sand'], voiceFlavor: ['neutral', 'casual', 'warm', 'formal'], retroStyle: ['ask', 'guided', 'free'], fontScale: [100, 115, 130, 150] };
+  const ENUM = { homeMode: ['full', 'now'], runView: ['full', 'single'], calmVisual: ['sunny', 'scene', 'avatar', 'circle'], iconStyle: ['auto', 'line', 'duotone', 'filled'], skin: SKINS, scoring: SCORE_MODES, lang: ['auto', 'he', 'en'], theme: ['auto', 'light', 'dark'], mode: ['both', 'beep', 'vibrate', 'silent'], paceMode: ['normal', 'quick', 'calm'], contrast: ['normal', 'high'], textStyle: ['auto', 'playful', 'plain'], timerStyle: ['auto', 'ring', 'pie', 'bar', 'sand'], voiceFlavor: ['neutral', 'casual', 'warm', 'formal'], retroStyle: ['ask', 'guided', 'free'], fontScale: [100, 115, 130, 150] };
   for (const [k, def] of Object.entries(DEFAULT_SETTINGS)) {
     if (k === 'seeded' || !(k in raw)) continue;
     const v = raw[k];

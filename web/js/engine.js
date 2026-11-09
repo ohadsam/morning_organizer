@@ -77,6 +77,13 @@ export function setDifficulty(run, i, v) { const t = run.tasks[i]; if (!t) retur
 export function noteHelp(run, i, kind) { const t = run.tasks[i]; if (t && ['note', 'thought', 'relax'].includes(kind)) { t.help ??= { note: 0, thought: 0, relax: 0 }; t.help[kind] = Math.min(99, (t.help[kind] || 0) + 1); } return run; }
 
 /** Add (or remove) time on the current task without changing the planned figure used in statistics. */
+/** Applies a shortening plan (see shorten.js) to steps that have not started: sets their planned time and records what was changed, for the summary and the statistics. */
+export function shortenSteps(run, changes) {
+  run.shortened ??= [];
+  for (const c of changes) { const t = run.tasks[c.i]; if (!t || t.done || t.skipped || c.i === run.current || c.toSec >= t.plannedSec + t.extraSec) continue;
+    run.shortened.push({ i: c.i, name: t.name, fromSec: t.plannedSec + t.extraSec, toSec: c.toSec }); t.plannedSec = c.toSec; t.extraSec = 0; }
+  return run;
+}
 export function addTime(run, sec, now = Date.now()) {
   const t = cur(run); if (!t) return run;
   t.extraSec += sec; t.warned = false; t.ended = remainingSec(run, now) <= 0;
@@ -130,7 +137,7 @@ export function summarize(run) {
   return {
     plannedSec: run.plannedTotal, estSec: run.estTotal, actualSec: run.actualTotal, wallSec,
     deltaSec: run.actualTotal - run.plannedTotal, pausedSec: Math.round((run.pausedMs || 0) / 1000), done: run.tasks.filter((t) => t.done).length,
-    skipped: run.tasks.filter((t) => t.skipped).length, total: run.tasks.length, unplannedSec: unplannedSec(run), unplannedCount: (run.unplanned || []).length,
+    skipped: run.tasks.filter((t) => t.skipped).length, total: run.tasks.length, unplannedSec: unplannedSec(run), unplannedCount: (run.unplanned || []).length, shortenedCount: (run.shortened || []).length, shortenedSec: (run.shortened || []).reduce((s, x) => s + Math.max(0, x.fromSec - x.toSec), 0),
   };
 }
 

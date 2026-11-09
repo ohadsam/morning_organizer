@@ -1,5 +1,7 @@
 // "What's new" content shown inside the app (newest first). Keep in step with docs/CHANGELOG.md; a unit test checks the current version is listed and both languages match.
 export const CHANGES = [
+  { v: '1.31.0', en: ['✂️ If a routine will miss your leave-by time, the app now offers to shorten steps that are still ahead, starting with what you usually need (from your own history). One tap to accept, never automatic. It shows on the summary and in the routine’s statistics.'],
+    he: ['✂️ אם שגרה עומדת לפספס את שעת היציאה, האפליקציה מציעה עכשיו לקצר שלבים שעוד לפניכם, ומתחילה במה שבדרך כלל מספיק לכם (לפי ההיסטוריה שלכם). לחיצה אחת לאישור, אף פעם לא אוטומטי. זה מופיע בסיכום ובסטטיסטיקה של השגרה.'] },
   { v: '1.30.0', en: ['📱 New home-screen widget “How do I feel”: five faces, tap the one that fits and the app opens with it already chosen, ready for a word or a voice note.'],
     he: ['📱 ווידג׳ט חדש במסך הבית, “איך אני מרגיש/ה”: חמישה פרצופים, לוחצים על זה שמתאים והאפליקציה נפתחת כשהוא כבר נבחר, מוכנה למילה או להקלטה.'] },
   { v: '1.29.1', en: ['🎙️ In “How do I feel?” you can now dictate a note or record a voice note. 🙂 You can also be asked how you feel inside a routine: at the start, at the end, or after a task you choose (set it in the routine editor). One tap, skippable; if you answered at the start and the end, you will see whether routines lift your mood. There is also a launcher shortcut.'],

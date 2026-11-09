@@ -98,6 +98,7 @@ export function sanitizeRun(r) {
     id: String(r.id).slice(0, 64), profileId: typeof r.profileId === 'string' ? r.profileId.slice(0, 64) : '', templateId: String(r.templateId ?? '').slice(0, 64), templateName: cleanText(r.templateName, LIMITS.maxName),
     icon: cleanText(r.icon, 8), color: /^#[0-9a-fA-F]{6}$/.test(r.color) ? r.color : COLORS[0],
     startedAt: n(r.startedAt), endedAt: n(r.endedAt), status: r.status === 'done' ? 'done' : 'stopped', mood: sanitizeMood(r.mood), unplanned: sanitizeUnplanned(r.unplanned), current: 0, pausedMs: n(r.pausedMs),
+    shortened: (Array.isArray(r.shortened) ? r.shortened : []).slice(0, 12).map((x) => ({ i: n(x?.i, 99), name: cleanText(x?.name, LIMITS.maxName), fromSec: n(x?.fromSec, LIMITS.maxTaskSec), toSec: n(x?.toSec, LIMITS.maxTaskSec) })).filter((x) => x.toSec < x.fromSec),
     score: sanitizeScore(r.score), plannedTotal: n(r.plannedTotal, 1e7), estTotal: n(r.estTotal, 1e7), actualTotal: n(r.actualTotal, 1e7),
     tasks: r.tasks.slice(0, LIMITS.maxTasks).map((x) => ({ id: String(x?.id ?? '').slice(0, 64), name: cleanText(x?.name, LIMITS.maxName), icon: cleanText(x?.icon, 8),
       plannedSec: n(x?.plannedSec, LIMITS.maxTaskSec), estSec: n(x?.estSec, LIMITS.maxTaskSec), extraSec: n(x?.extraSec, LIMITS.maxTaskSec), actualSec: n(x?.actualSec, LIMITS.maxTaskSec),

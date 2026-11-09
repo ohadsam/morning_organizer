@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.34.2
+- **Box breathing** from the Sunny refinement kit: a thin rounded frame (3.2 units, no fill) and a star (`#cue-box-star`) that `sunnyBreath` moves along the four sides by the phase (`index + progress` of the pattern, clockwise from the top-left corner). New rule `.cs [fill="none"] { fill: none !important }` so that a stroke-only shape with a colour class does not get filled by the class rule (this was the "heavy gold square" of the previous round: partly the kit, mostly the class rule).
+- Reviewed, not used yet: the open-eyed cameos (real expressions and props now: usable for empty, error and success states later), the mood faces (clearer, but without Sunny's rays; the composed ones stay), the 16 bell frames.
+
 ## 1.34.1
 - Took the corrected **4-7-8** scene of the Sunny visual-corrections kit (k7 stars, k1 air lines, larger strokes; the build script now strips an XML prolog). Reviewed and not adopted: the new **box** scene (a heavy gold square that hides Sunny), the bell frames (coloured now, but 16 almost identical frames), the imagery (smaller figures, teal skin: worse than the current scenes). The mood faces are clearer in the kit (raised brows, tears) but lose Sunny's rays and cheeks, so the faces composed from her own layers stay. The cameos are real props now (thumbs up, clipboard, plug, bell, medal) but Sunny's eyes stay closed in all of them: kept for a later round.
 

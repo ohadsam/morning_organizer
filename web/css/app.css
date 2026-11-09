@@ -645,3 +645,4 @@ html[data-runview="single"] .run :is(.checklist, .run-meta, .pace, .sprint-line,
 .sunny-breath2-wrap { width: 100%; aspect-ratio: 1; display: grid; place-items: center; } .sunny-breath2 { width: 100%; height: 100%; display: block; }
 .sunny-breath2 #s-mouth-in, .sunny-breath2 #s-mouth-out { transition: opacity .3s ease; } .sunny-breath2 #s-air-in, .sunny-breath2 #s-air-out { transition: opacity .15s linear; }
 .cs .i-ink[stroke] { stroke: var(--text); }
+.cs [fill="none"] { fill: none !important; }   /* a stroke-only shape keeps no fill even when it carries a colour class */

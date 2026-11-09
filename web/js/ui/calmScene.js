@@ -52,7 +52,10 @@ export function sunnyBreath(pattern, label = '') {
   for (const n of inner(sc.svg)) svg.append(n);
   const part = (id) => svg.querySelector(`#${id}`), P = { body: part('s-body'), rays: part('s-rays'), glow: part('s-glow'), cheeks: part('s-cheeks'), mIn: part('s-mouth-in'), mOut: part('s-mouth-out'), aIn: part('s-air-in'), aOut: part('s-air-out') };
   const about = (cx, cy, sx, sy = sx, ty = 0) => `translate(${cx} ${cy}) scale(${sx.toFixed(4)} ${sy.toFixed(4)}) translate(${-cx} ${-cy})${ty ? ` translate(0 ${ty.toFixed(2)})` : ''}`;
-  return { node: svg, update(p, phase = 'in') {
+  const star = svg.querySelector('#cue-box-star');   // the box pattern: a small star travels round the frame, one side for each of the four phases
+  const around = (u) => { const L = 19, T = 18, R = 237, B = 236, f = ((u % 1) + 1) % 1 * 4, k = Math.floor(f), r = f - k; return [[L + (R - L) * r, T], [R, T + (B - T) * r], [R - (R - L) * r, B], [L, B - (B - T) * r]][k]; };
+  return { node: svg, update(p, phase = 'in', step = null) {
+    if (star && step) { const [x, y] = around((step.index + step.progress) / 4); star.setAttribute('transform', `translate(${(x - 45).toFixed(2)} ${(y - 16).toFixed(2)})`); }
     p = Math.min(1, Math.max(0, p)); const out = phase === 'out';
     P.body?.setAttribute('transform', about(128, 224, 0.9 + 0.13 * p, 0.88 + 0.18 * p, -5 * p)); P.rays?.setAttribute('transform', about(128, 122, 0.92 + 0.18 * p));
     P.glow?.setAttribute('transform', about(128, 121, 0.85 + 0.25 * p)); P.glow?.setAttribute('opacity', (0.25 + 0.45 * p).toFixed(3)); P.cheeks?.setAttribute('transform', about(128, 122, 1 + 0.055 * p, 1 + 0.04 * p));

@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.39.0
+- **"Who sees this" badge** (open item O5): `whoSees(tpl, profiles)` (pure) - with two or more people each routine card shows "👥 Everyone sees this" or "👤 Only Dana, Ron" (an owner that no longer exists never hides a routine). With one person nothing is shown.
+- **Spacing setting** (`density`: normal / compact / roomy, per person): `data-density` on the page changes the gaps and the card padding; buttons and touch targets keep their size. The "clear font" part of the plan already exists as "Easy reading" (`easyRead`).
+- Still open from O5: the interactive first-run tour and a uniform undo.
+
 ## 1.38.0
 - **"Start for me"** (open item O5): a second button on the "just what to do now" card sets a one-time flag (`sessionStorage mo.startForMe`) and opens the run; that run speaks an opening sentence, each step (even if "announce steps" is off) and "well done" at the end through the usual voice settings (`speakWithSettings`, the phone's or the browser's voice).
 - **Sunny placements**: `think` on the NLP page, `goodbye` instead of the avatar on a stopped routine's summary (the finished summary keeps the person's own avatar dancing).

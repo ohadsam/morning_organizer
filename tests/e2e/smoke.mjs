@@ -1649,6 +1649,18 @@ await step('v1.38: "Start for me" says the steps out loud for that run, a stoppe
   await page.context().close();
 });
 
+await step('v1.39: routine cards say who sees them (only with several people), and the spacing setting changes the look; zero axe violations (he + en)', async () => {
+  const { page } = await newPage({ lang: 'en' }); await page.goto(base + '#/'); await dismissWelcome(page); await page.waitForSelector('.routine');
+  assert.equal(await page.locator('.who-chip').count(), 0, 'one person: nothing to explain');
+  await page.evaluate(async () => { const S = await import('./js/store.js'); const p = await S.saveProfile({ name: 'Ron' }); const x = S.get().templates[0]; await S.saveTemplate({ ...x, owners: [S.activeProfile().id] }); });
+  await page.goto(base + '#/settings'); await page.goto(base + '#/'); await page.waitForSelector('.who-chip');
+  const chips = await page.locator('.who-chip').allTextContents(); assert.ok(chips.some((c) => /Only /.test(c)) && chips.some((c) => /Everyone sees this/.test(c)), chips.join(' | '));
+  const gap = async () => page.evaluate(() => getComputedStyle(document.querySelector('.stack')).rowGap);
+  const g0 = await gap(); await page.evaluate(async () => { const S = await import('./js/store.js'); await S.updateSettings({ density: 'roomy' }); }); await page.waitForTimeout(300); assert.notEqual(await gap(), g0, 'roomy changes the spacing'); assert.equal(await page.evaluate(() => document.documentElement.dataset.density), 'roomy');
+  for (const lang of ['he', 'en']) { await page.evaluate(async (l) => { const S = await import('./js/store.js'); await S.updateSettings({ lang: l, fontScale: 130, density: 'compact' }); }, lang); await page.waitForTimeout(500); await page.goto(base + '#/settings'); await page.goto(base + '#/'); await page.waitForSelector('.routine'); const v = await audit(page, `${lang}/who-density`); if (v.length) console.error(v.join('\n')); assert.deepEqual(v, []); }
+  await page.context().close();
+});
+
 await step('v1.23: the picker offers "Build my own" and an avatar picked there is used at once; a kit avatar survives sanitising and other profiles keep theirs', async () => {
   const { page } = await newPage({ lang: 'en' }); await page.goto(base + '#/settings/profile'); await page.waitForSelector('details[data-group=profile]');
   await page.click('details[data-group=profile] button:has-text("Avatar")'); await page.waitForSelector('dialog[open] .avatar-picker'); assert.deepEqual(await audit(page, 'picker'), []);

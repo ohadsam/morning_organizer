@@ -647,3 +647,7 @@ html[data-runview="single"] .run :is(.checklist, .run-meta, .pace, .sprint-line,
 .cs .i-ink[stroke] { stroke: var(--text); }
 .cs [fill="none"] { fill: none !important; }   /* a stroke-only shape keeps no fill even when it carries a colour class */
 .paused-banner { display: flex; align-items: center; gap: 10px; } .wk-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; } .weekly-card, .backup-card { display: grid; justify-items: center; gap: 8px; }
+/* spacing (1.39): how close things sit; touch targets keep their size */
+html[data-density="compact"] .stack { gap: 7px; } html[data-density="compact"] .card { padding: 10px; } html[data-density="compact"] .routine { padding-block: 6px; } html[data-density="compact"] h2 { margin-block: 10px 6px; }
+html[data-density="roomy"] .stack { gap: 20px; } html[data-density="roomy"] .card { padding: 22px; } html[data-density="roomy"] .routine { padding-block: 16px; } html[data-density="roomy"] h2 { margin-block: 22px 12px; }
+.who-chip { display: inline-block; color: var(--muted); font-size: .8rem; margin-inline-end: 8px; }

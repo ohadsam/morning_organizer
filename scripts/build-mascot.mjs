@@ -9,5 +9,9 @@ const FEEL = { 1: { eyes: 'sad', brows: 'worried', mouth: 'worried', effects: 't
 const L = m.layers;
 for (const [lv, o0] of Object.entries(FEEL)) { const o = { ...DEF, ...o0 };
   moods[`feel-${lv}`] = { svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="20 6 216 216">${ORDER.map((n) => { const v = o[n] && L[n][o[n]]; return v ? inner(v.svg ?? v.frames?.[0] ?? '') : ''; }).join('')}</svg>`, name: { en: `Feeling ${lv}`, he: `מרגיש ${lv}` }, description: { en: 'Sunny shows how it feels', he: 'שמשי מראה איך מרגישים' } }; }
+// the cameos (open-eyed Sunny with a prop: thumbs up, clipboard, plug...) from the "Sunny refinement" kit: CAMEO_SVG=<dir with sunny-<name>.svg>
+if (process.env.CAMEO_SVG) for (const n of ['check', 'empty', 'error', 'offline', 'loading', 'reminder', 'calm', 'tired', 'proud', 'think', 'hello', 'goodbye']) {
+  const svg = readFileSync(`${process.env.CAMEO_SVG}/sunny-${n}.svg`, 'utf8').replace(/^<\?xml[^>]*\?>\s*/, '').trim().replace(/ id="[^"]*"/g, '').replace(/ data-[a-z-]+="[^"]*"/g, '');
+  moods[`cameo-${n}`] = { svg, name: { en: n, he: n }, description: { en: 'Sunny with a prop', he: 'שמשי עם אביזר' } }; }
 writeFileSync('web/data/mascot.json', JSON.stringify({ format: 'sonrise-mascot', version: 1, name: m.name, moods }));
 console.log(Object.keys(moods).length, 'moods');

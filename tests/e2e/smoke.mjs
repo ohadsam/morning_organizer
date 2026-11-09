@@ -1661,10 +1661,10 @@ await step('v1.24: illustrations in the empty states and feeling faces for the m
   for (const [lang, scheme, skin, big] of [['en', 'light', 'default', false], ['he', 'dark', 'ocean', true], ['en', 'dark', 'calm', false], ['he', 'light', 'bold', true]]) {
     const { page } = await newPage({ lang, ctx: { colorScheme: scheme } }); await page.goto(base + '#/'); if (lang === 'he') await dismissWelcome(page); await page.waitForSelector('.routine');
     await page.evaluate(async ([sk, b]) => { const S = await import('./js/store.js'); await S.updateSettings({ skin: sk, fontScale: b ? 150 : 100 }); for (const x of [...S.get().templates]) await S.deleteTemplate(x.id); }, [skin, big]);
-    await page.goto(base + '#/'); await page.waitForSelector('.empty-state svg'); assert.ok(await page.locator('.empty-state .vk svg path').count() > 3, 'the illustration is drawn');
-    const fill = await page.evaluate(() => { const e = document.querySelector('.empty-state .vk .k1, .empty-state .vk .k2, .empty-state .vk .k3'); return [getComputedStyle(e).fill, getComputedStyle(document.documentElement).getPropertyValue('--k1').trim(), e.getAttribute('class')]; });
+    await page.goto(base + '#/'); await page.waitForSelector('.empty-state svg'); await page.waitForSelector('.empty-state svg.sunny-cameo path'); assert.ok(await page.locator('.empty-state svg.sunny-cameo path').count() > 3, 'Sunny with her prop is drawn');
+    const fill = await page.evaluate(() => { const e = document.querySelector('.empty-state .cs .k1, .empty-state .cs .k2, .empty-state .cs .k3'); return [getComputedStyle(e).fill, getComputedStyle(document.documentElement).getPropertyValue('--k1').trim(), e.getAttribute('class')]; });
     assert.notEqual(fill[0], 'rgb(0, 0, 0)', 'recoloured through the look, not left black'); bad.push(...await audit(page, `${lang}/${skin}/${scheme}/empty-home`));
-    for (const r of ['stats', 'goals', 'journal', 'alarms']) { await page.goto(base + `#/${r}`); await page.waitForSelector('.vk svg'); bad.push(...await audit(page, `${lang}/${skin}/${scheme}/empty-${r}`)); }
+    for (const r of ['stats', 'goals', 'journal', 'alarms']) { await page.goto(base + `#/${r}`); await page.waitForSelector('.vk svg, svg.sunny-cameo'); bad.push(...await audit(page, `${lang}/${skin}/${scheme}/empty-${r}`)); }
   }
   if (bad.length) console.error([...new Set(bad)].join('\n'));
   assert.deepEqual(bad, []);

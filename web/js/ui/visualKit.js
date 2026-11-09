@@ -4,6 +4,7 @@ import { h, setChildren } from '../util.js';
 import { parseVisualKit, iconVariantFor } from '../visualKit.js';
 import * as S from '../store.js';
 import { inner } from './avatarKit.js';
+import { cameoNode } from './mascot.js';
 
 const NS = 'http://www.w3.org/2000/svg';
 let kit = null, loading = null;
@@ -27,7 +28,8 @@ function node(section, id, { size = 64, label = '' } = {}) {
   return box;
 }
 /** An illustration (256 grid): empty-routines, welcome-1, calm-scene-sea ... */
-export const artNode = (id, opts) => node('art', id, opts);
+const ART_CAMEO = { 'empty-routines': 'empty', 'empty-history': 'empty', 'empty-goals': 'empty', 'empty-journal': 'empty', 'empty-alarms': 'reminder', offline: 'offline', error: 'error' };   // Sunny herself shows these moments
+export const artNode = (id, opts = {}) => (Object.hasOwn(ART_CAMEO, id) ? cameoNode(ART_CAMEO[id], { size: opts.size || 120, label: opts.label || '' }) : node('art', id, opts));
 /** A feeling face: feel-happy, feel-sad ... */
 export const feelingNode = (id, opts) => node('feelings', id, opts);
 /** A calm "nothing here yet" block: a picture and a sentence. */

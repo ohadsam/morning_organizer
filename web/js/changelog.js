@@ -1,5 +1,7 @@
 // "What's new" content shown inside the app (newest first). Keep in step with docs/CHANGELOG.md; a unit test checks the current version is listed and both languages match.
 export const CHANGES = [
+  { v: '1.35.0', en: ['☀️ Sunny now shows the quiet moments herself: an empty list, no statistics yet, no internet, something went wrong - she is there with her little prop (a clipboard, a plug, a bell…) instead of a generic picture.'],
+    he: ['☀️ שמשי מופיעה עכשיו ברגעים השקטים בעצמה: רשימה ריקה, עוד אין סטטיסטיקה, אין אינטרנט, משהו השתבש - היא שם עם האביזר הקטן שלה (לוח, תקע, פעמון…) במקום תמונה כללית.'] },
   { v: '1.34.2', en: ['🟧 Box breathing: a thin rounded frame around Sunny with a small star that travels along its four sides, one side for each step (in, hold, out, hold).'],
     he: ['🟧 נשימת קופסה: מסגרת דקה ומעוגלת סביב שמשי, וכוכב קטן שנע לאורך ארבע הצלעות שלה, צלע לכל שלב (שאיפה, החזקה, נשיפה, החזקה).'] },
   { v: '1.34.1', en: ['🌙 The 4-7-8 breathing scene has clearer teal stars and air lines.'],

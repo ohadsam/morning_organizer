@@ -104,7 +104,7 @@ export function renderStats(root, templateId, nav) {
       const hasRuns = items.some((i) => i.n);
       setChildren(root, h('h1', {}, t('statsTitle')), hasRuns ? null : emptyState('empty-history', t('noStats')), hasRuns ? overview(runs) : null, hasRuns ? pointsCard(runs) : null, hasRuns ? achievementsCard(runs) : null, hasRuns ? moodCard(runs) : null, hasRuns ? unplannedCard(runs) : null, hasRuns ? retroCard(runs) : null, hasRuns ? awarenessCard(runs) : null, hasRuns ? difficultyCard(runs) : null, hasRuns ? exportCard(nav) : null,
         hasRuns ? h('div', { class: 'stack' }, items.filter((i) => i.n).map(({ x, n }) =>
-          h('a', { class: 'card link-card', href: `#/stats/${x.id}`, style: { '--accent': x.color } }, h('span', { class: 'emoji' }, x.icon), h('span', { class: 'routine-text' }, h('strong', {}, x.name), h('small', {}, t('runsCount', { n })))))) : h('p', { class: 'empty' }, t('noStats')));
+          h('a', { class: 'card link-card', href: `#/stats/${x.id}`, style: { '--accent': x.color } }, h('span', { class: 'emoji' }, x.icon), h('span', { class: 'routine-text' }, h('strong', {}, x.name), h('small', {}, t('runsCount', { n })))))) : null);
       return;
     }
     const tpl = S.getTemplate(templateId);

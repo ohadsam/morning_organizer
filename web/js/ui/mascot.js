@@ -20,6 +20,15 @@ export function moodFace(level, { size = 40 } = {}) {
   draw(); if (!moods) loadMascot().then(draw);
   return svg;
 }
+/** Sunny with a prop for a moment of the app (empty list, offline, error, success...): `name` is one of check, empty, error, offline, loading, reminder, calm, tired, proud, think, hello, goodbye. */
+export function cameoNode(name, { size = 120, label = '' } = {}) {
+  const svg = document.createElementNS(NS, 'svg');
+  svg.setAttribute('viewBox', '0 0 256 256'); svg.setAttribute('class', 'avatar avatar-sunny cs sunny-cameo'); svg.style.setProperty('--av', `${size}px`); svg.setAttribute('focusable', 'false');
+  if (label) { svg.setAttribute('role', 'img'); svg.setAttribute('aria-label', label); } else svg.setAttribute('aria-hidden', 'true');
+  const draw = () => { const s = moods?.[`cameo-${name}`]; if (!s) { const t = document.createElementNS(NS, 'text'); t.setAttribute('x', '128'); t.setAttribute('y', '190'); t.setAttribute('font-size', '170'); t.setAttribute('text-anchor', 'middle'); t.textContent = '🌞'; setChildren(svg, t); return; } setChildren(svg, ...inner(s)); };
+  draw(); if (!moods) loadMascot().then(draw);
+  return svg;
+}
 export function sunnyNode({ size = 56, anim = 'idle' } = {}) {
   const svg = document.createElementNS(NS, 'svg');
   svg.setAttribute('viewBox', '0 0 256 256'); svg.setAttribute('class', 'avatar avatar-sunny cs'); svg.dataset.anim = anim; svg.style.setProperty('--av', `${size}px`);

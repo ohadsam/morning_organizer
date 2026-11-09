@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.35.0
+- **Sunny's cameos replace generic illustrations** (owner: she should be the guiding line): `mascot.json` has the twelve open-eyed cameos (`cameo-*`, from the refinement kit); `cameoNode` draws them, and `artNode` maps the empty-state ids (`empty-routines`, `empty-history`, `empty-goals`, `empty-journal` -> clipboard, `empty-alarms` -> bell, `offline`, `error`) to them, so every empty list / offline / error screen shows Sunny. Built by `CAMEO_SVG=<dir> node scripts/build-mascot.mjs <scenery kit>`. Zero axe violations in light / dark / big text.
+- Fixed: the statistics screen said "finish a routine once to see statistics" twice when there were none.
+
 ## 1.34.2
 - **Box breathing** from the Sunny refinement kit: a thin rounded frame (3.2 units, no fill) and a star (`#cue-box-star`) that `sunnyBreath` moves along the four sides by the phase (`index + progress` of the pattern, clockwise from the top-left corner). New rule `.cs [fill="none"] { fill: none !important }` so that a stroke-only shape with a colour class does not get filled by the class rule (this was the "heavy gold square" of the previous round: partly the kit, mostly the class rule).
 - Reviewed, not used yet: the open-eyed cameos (real expressions and props now: usable for empty, error and success states later), the mood faces (clearer, but without Sunny's rays; the composed ones stay), the 16 bell frames.

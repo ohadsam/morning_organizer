@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.32.1
+- **One-step run view shows its neighbours** (owner request): a small line under the step name with "Before: X" (the last finished or skipped step, with a tick or a skip mark) and "Next: Y" (the next one still ahead); nothing shown when there is none. Only in the one-step view.
+
 ## 1.32.0
 - **UX batch, first slice** (open item O5): **Home "just what to do now"** (`homeMode: now`, per person): the hero, the running routine, and ONE card from `pickNow` (nearest alarm from 90 minutes ago, else a routine of today not finished yet, favourites first, else any) with a big Start; "See everything" shows the usual Home until the next visit; no search, toolbar, suggestions or lists. **Run "one step at a time"** (`runView: single`, per person): CSS hides the checklist, the details line, pace, sprints and the gear card; the step, timer, buttons, leave line and the shorten card stay. Both are selects in Settings → Appearance.
 - Still open from O5: "start for me" (a spoken start), a starter pack after choosing a method, weekly calm summary, density / clear-font settings, backup reminder, "who sees this" badge, interactive first-run tour, uniform undo.

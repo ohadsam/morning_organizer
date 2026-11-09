@@ -610,7 +610,7 @@ await step('v1.10: axe on alarm editor, unplanned sheet, pattern card and magnif
         await S.saveRun({ id: `seed${i}`, profileId: S.activeProfile().id, templateId: tpl.id, templateName: tpl.name, icon: tpl.icon, color: '#6c5ce7', startedAt: Date.now() - (9 - i) * day, endedAt: Date.now() - (9 - i) * day + 600_000, status: 'done', current: 0, pausedMs: 0, plannedTotal: tot, estTotal: tot, actualTotal: tot, tasks, unplanned: [{ key: 'spill', label: 'Spill', emoji: '🥛', sec: 90, at: 1, task: tpl.tasks[0].name }] }); }
     });
     await page.goto(base + '#/stats'); await page.waitForSelector('a.card.link-card'); bad.push(...await audit(page, `${L}/stats-unplanned`));
-    await page.locator('a.card.link-card').first().click(); await page.waitForSelector('.pattern'); bad.push(...await audit(page, `${L}/pattern-card`));
+    await closeDialogs(page); await page.locator('a.card.link-card').first().click(); await page.waitForSelector('.pattern'); bad.push(...await audit(page, `${L}/pattern-card`));
     await page.click('.pattern button >> text=/🔍/'); await page.waitForSelector('dialog textarea'); bad.push(...await audit(page, `${L}/magnifier`));
   }
   if (bad.length) console.error([...new Set(bad)].join('\n'));
@@ -1610,7 +1610,8 @@ await step('v1.32: "just what to do now" on Home (one routine, a big Start, "See
   assert.equal(await page.locator('.routine').count(), 0, 'no list of routines'); assert.deepEqual(await audit(page, 'now-home'), []);
   await page.click('.now-card .btn.link'); await page.waitForSelector('.routine'); assert.ok(await page.locator('.home-search').count(), 'See everything brings the rest back');
   await page.reload(); await page.waitForSelector('.now-card'); await page.click('.now-card .btn.primary'); await page.waitForSelector('.ring');
-  assert.equal(await page.locator('.checklist').isVisible(), false, 'the list is hidden'); assert.ok(await page.locator('.now').isVisible()); assert.deepEqual(await audit(page, 'run-single'), []);
+  assert.equal(await page.locator('.checklist').isVisible(), false, 'the list is hidden'); assert.ok(await page.locator('.now').isVisible()); assert.ok(await page.locator('.run-around').isVisible()); assert.match(await page.textContent('.run-around'), /Next: /); assert.ok(!/Before: /.test(await page.textContent('.run-around')), 'no step before the first');
+  await page.click('text=Done ✓'); await page.waitForFunction(() => document.querySelector('.run-around')?.textContent.includes('Before: ')); assert.match(await page.textContent('.run-around'), /Before: /); assert.deepEqual(await audit(page, 'run-single'), []);
   for (const lang of ['he', 'en']) { await page.evaluate(async (l) => { const S = await import('./js/store.js'); await S.updateSettings({ lang: l, fontScale: 130 }); }, lang); await page.waitForTimeout(500); await page.goto(base + '#/settings'); await page.goto(base + '#/'); await page.waitForSelector('.now-card, .active-card, .hero'); const v = await audit(page, `${lang}/now-big`); if (v.length) console.error(v.join('\n')); assert.deepEqual(v, []); }
   await page.context().close();
 });

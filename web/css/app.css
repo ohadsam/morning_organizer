@@ -635,3 +635,4 @@ html[data-motion="calm"] .avatar-sunny { animation: none; }
 /* O5 first slice (1.32): "just what to do now" on Home, and one step at a time while running */
 .now-card { display: grid; gap: 10px; justify-items: center; text-align: center; padding-block: 18px; } .now-card .now-name { margin: 0; font-size: 1.6rem; overflow-wrap: anywhere; } .now-card .btn.xl { width: 100%; }
 html[data-runview="single"] .run :is(.checklist, .run-meta, .pace, .sprint-line, .gear-card) { display: none; }
+.run-around { display: none; } html[data-runview="single"] .run .run-around { display: flex; justify-content: space-between; gap: 12px; font-size: .85rem; color: var(--muted); min-height: 1.4em; } .run-around span { min-width: 0; overflow-wrap: anywhere; } .run-around .ra-next { text-align: end; margin-inline-start: auto; }

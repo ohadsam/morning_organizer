@@ -1,5 +1,7 @@
 // "What's new" content shown inside the app (newest first). Keep in step with docs/CHANGELOG.md; a unit test checks the current version is listed and both languages match.
 export const CHANGES = [
+  { v: '1.32.1', en: ['👀 In “one step at a time” you now also see, small, the step you just did and the step that comes next.'],
+    he: ['👀 במצב “שלב אחד בכל פעם” רואים עכשיו גם, בקטן, את השלב שעשיתם עכשיו ואת השלב הבא.'] },
   { v: '1.32.0', en: ['🎯 Two calmer ways to use the app (Settings → Appearance): a Home that shows just what to do now (one routine, a big Start button; “See everything” brings the rest back), and a run screen that shows one step at a time.'],
     he: ['🎯 שתי דרכים רגועות יותר להשתמש באפליקציה (הגדרות ← מראה): מסך בית שמציג רק מה לעשות עכשיו (שגרה אחת וכפתור התחלה גדול; “להציג הכול” מחזיר את השאר), ומסך ריצה שמציג שלב אחד בכל פעם.'] },
   { v: '1.31.0', en: ['✂️ If a routine will miss your leave-by time, the app now offers to shorten steps that are still ahead, starting with what you usually need (from your own history). One tap to accept, never automatic. It shows on the summary and in the routine’s statistics.'],

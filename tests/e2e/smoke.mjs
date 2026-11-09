@@ -1610,7 +1610,8 @@ await step('v1.32: "just what to do now" on Home (one routine, a big Start, "See
   assert.equal(await page.locator('.routine').count(), 0, 'no list of routines'); assert.deepEqual(await audit(page, 'now-home'), []);
   await page.click('.now-card .btn.link'); await page.waitForSelector('.routine'); assert.ok(await page.locator('.home-search').count(), 'See everything brings the rest back');
   await page.reload(); await page.waitForSelector('.now-card'); await page.click('.now-card .btn.primary'); await page.waitForSelector('.ring');
-  assert.equal(await page.locator('.checklist').isVisible(), false, 'the list is hidden'); assert.ok(await page.locator('.now').isVisible()); assert.deepEqual(await audit(page, 'run-single'), []);
+  assert.equal(await page.locator('.checklist').isVisible(), false, 'the list is hidden'); assert.ok(await page.locator('.now').isVisible()); assert.ok(await page.locator('.run-around').isVisible()); assert.match(await page.textContent('.run-around'), /Next: /); assert.ok(!/Before: /.test(await page.textContent('.run-around')), 'no step before the first');
+  await page.click('text=Done ✓'); await page.waitForFunction(() => document.querySelector('.run-around')?.textContent.includes('Before: ')); assert.match(await page.textContent('.run-around'), /Before: /); assert.deepEqual(await audit(page, 'run-single'), []);
   for (const lang of ['he', 'en']) { await page.evaluate(async (l) => { const S = await import('./js/store.js'); await S.updateSettings({ lang: l, fontScale: 130 }); }, lang); await page.waitForTimeout(500); await page.goto(base + '#/settings'); await page.goto(base + '#/'); await page.waitForSelector('.now-card, .active-card, .hero'); const v = await audit(page, `${lang}/now-big`); if (v.length) console.error(v.join('\n')); assert.deepEqual(v, []); }
   await page.context().close();
 });

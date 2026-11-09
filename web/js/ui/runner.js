@@ -100,7 +100,7 @@ export async function renderRunner(root, id, nav) {
     const sc = scoreRun(run, { mode: s.scoring, penalty: s.scorePenalty }), gain = pendingGain; pendingGain = 0;
     ptsEl.hidden = false; setChildren(ptsEl, `⭐ ${sc.total} ${t('ptsUnit')}`, gain > 0 ? h('span', { class: 'pts-pop' }, ` +${gain}`) : null);
   }
-  const taskName = h('h2', { class: 'now' }), head = h('div', { class: 'run-meta' });
+  const taskName = h('h2', { class: 'now' }), head = h('div', { class: 'run-meta' }), around = h('div', { class: 'run-around' });   // "one step at a time": a small look at the step before and the step after
   const list = h('ul', { class: 'checklist' }), controls = h('div', { class: 'run-controls' }), pace = h('p', { class: 'pace' });
   // sand clock: an hourglass whose top empties while the bottom fills (only shown with the "sand" timer look)
   const SVGNS = 'http://www.w3.org/2000/svg', sv = (tag, a) => { const e = document.createElementNS(SVGNS, tag); for (const [k, v] of Object.entries(a)) e.setAttribute(k, v); return e; };
@@ -248,6 +248,8 @@ export async function renderRunner(root, id, nav) {
   function paintStatic() {
     const cur = run.tasks[run.current], paused = run.status === 'paused';
     taskName.textContent = cur?.name || ''; setChildren(ti, cur ? taskIcon(cur) : '');
+    { const before = run.tasks.slice(0, run.current).filter((x) => x.done || x.skipped).at(-1), after = run.tasks.slice(run.current + 1).find((x) => !x.done && !x.skipped);
+      setChildren(around, before ? h('span', { class: 'ra-prev' }, h('span', { 'aria-hidden': 'true' }, before.done ? '✓ ' : '↷ '), t('runPrev', { name: before.name || '—' })) : h('span', {}), after ? h('span', { class: 'ra-next' }, t('runNext', { name: after.name || '—' }), h('span', { 'aria-hidden': 'true' }, ' ›')) : h('span', {})); }
     if (cur && run.current !== lastCur) { lastCur = run.current; announceTask(cur); }
     ring.classList.toggle('calm', calm(run)); { const ts = st().timerStyle, style = ts && ts !== 'auto' ? ts : feat.timerPie ? 'pie' : 'ring'; ring.classList.toggle('pie', style === 'pie'); ring.classList.toggle('bar', style === 'bar'); ring.classList.toggle('sandy', style === 'sand'); }
     ring.classList.toggle('paused', paused); pausedBadge.hidden = !paused || !!run.interrupt;
@@ -377,7 +379,7 @@ export async function renderRunner(root, id, nav) {
 
   setChildren(root, h('div', { class: 'run' },
     h('div', { class: 'run-top', style: { '--accent': run.color || '#6c5ce7' } }, h('span', { class: 'emoji' }, run.icon), h('h1', { class: 'run-title' }, run.templateName)),
-    bubble, coachHost, transEl, feelSlot, sitEl, intrEl, goalBox, planBox, gearBox, pw.el, head, leaveEl, shortenEl, h('div', { class: 'ring-wrap' }, ring, pausedBadge), sprintEl, taskName, ptsEl, pace, controls, vc?.el, helpCard?.el, list));
+    bubble, coachHost, transEl, feelSlot, sitEl, intrEl, goalBox, planBox, gearBox, pw.el, head, leaveEl, shortenEl, h('div', { class: 'ring-wrap' }, ring, pausedBadge), sprintEl, taskName, around, ptsEl, pace, controls, vc?.el, helpCard?.el, list));
   paintStatic(); paintLive(); paintGear();
   if (vc && st().voiceCmdAuto && st().transcribe) vc.start();
   if (fresh) { say('start'); pushActive(true); if (['start', 'both'].includes(feelAtNow())) showFeel('start'); }   // the parent sees "doing now" from the very first task

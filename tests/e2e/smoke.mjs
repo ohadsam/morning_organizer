@@ -1590,6 +1590,19 @@ await step('v1.29.1: a quick "how do I feel" inside a routine (start, after a ch
   await page.context().close();
 });
 
+await step('v1.31: a routine that will miss the leave-by time offers shorter steps (one tap), records it on the summary; zero axe violations', async () => {
+  const { page } = await newPage({ lang: 'en' }); await dismissWelcome(page);
+  const id = await page.evaluate(async () => { const S = await import('./js/store.js'); const x = S.newTemplate('Late test'); const d = new Date(Date.now() + 3 * 60000); x.leaveBy = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+    x.tasks = ['A', 'B', 'C'].map((n) => ({ ...S.newTask(), name: n, sec: 600, est: 0 })); await S.saveTemplate(x); return x.id; });
+  await page.goto(base + '#/run/' + id); await page.waitForSelector('.ring'); await page.waitForSelector('.shorten-card'); assert.match(await page.textContent('.shorten-card'), /You may be late by/);
+  assert.ok((await page.locator('.shorten-card li').count()) >= 1); assert.deepEqual(await audit(page, 'shorten-card'), []);
+  await page.click('.shorten-card button:has-text("Shorten them")'); await page.waitForTimeout(400);
+  const n = await page.evaluate(async () => { const S = await import('./js/store.js'); const r = await S.loadActive(); return (r.shortened || []).length; }); assert.ok(n >= 1, 'recorded on the run');
+  for (let i = 0; i < 12 && !(await page.locator('.summary').count()); i++) await page.click('.main-btns .primary', { timeout: 2000 }).catch(() => {});
+  await page.waitForSelector('.summary'); assert.match(await page.textContent('.summary'), /Shortened steps/);
+  await page.context().close();
+});
+
 await step('v1.23: the picker offers "Build my own" and an avatar picked there is used at once; a kit avatar survives sanitising and other profiles keep theirs', async () => {
   const { page } = await newPage({ lang: 'en' }); await page.goto(base + '#/settings/profile'); await page.waitForSelector('details[data-group=profile]');
   await page.click('details[data-group=profile] button:has-text("Avatar")'); await page.waitForSelector('dialog[open] .avatar-picker'); assert.deepEqual(await audit(page, 'picker'), []);

@@ -19,6 +19,8 @@ import { afterRun, pushActive, alertParents } from '../family.js';
 import { celebrateGoals } from './family.js';
 import { announce } from '../a11y.js';
 import { leaveStatus, leaveEvent, newLeaveMemo } from '../leave.js';
+import { planShortening } from '../shorten.js';
+import { buildHistory } from '../smart.js';
 import { gearFor } from '../schedule.js';
 import { celebrationFor } from './progressUi.js';
 import { coachTrigger, newMemo } from '../coach.js';
@@ -109,7 +111,24 @@ export async function renderRunner(root, id, nav) {
   ring.append(ti, sandSvg, time, sub);
 
   let lastHelpIdx = -1; let alerted = false; let lastCur = -1; const srMarks = new Set(), leaveMemo = newLeaveMemo();
-  const leaveEl = h('p', { class: 'leave-line', hidden: true });
+  const leaveEl = h('p', { class: 'leave-line', hidden: true }), shortenEl = h('div', { class: 'shorten-slot' });
+  // the routine will miss the leave-by time: offer shorter steps (the person's own history first), one tap to accept, never automatic
+  let shortenKey = '', shortenDismissedMiss = null, hist = null;
+  function paintShorten(ls) {
+    const clear = () => { if (shortenKey) { shortenEl.replaceChildren(); shortenKey = ''; } };
+    if (!ls || ls.marginSec >= 0 || run.status !== 'running') { clear(); return; }
+    const miss = -ls.marginSec; if (shortenDismissedMiss !== null && miss < shortenDismissedMiss + 180) { clear(); return; }
+    const steps = run.tasks.map((x, i) => ({ i, name: x.name, plannedSec: x.plannedSec, extraSec: x.extraSec, done: x.done, skipped: x.skipped })).filter((x) => x.i > run.current && !x.done && !x.skipped);
+    const plan = planShortening({ steps, missSec: miss, history: (hist ??= buildHistory(S.myRuns())) });
+    if (!plan.steps.length) { clear(); return; }
+    const key = `${plan.steps.map((x) => `${x.i}:${x.toSec}`).join(',')}${plan.covers ? 'c' : 'p'}`; if (key === shortenKey) return; shortenKey = key;
+    const u = units();
+    setChildren(shortenEl, h('section', { class: 'card shorten-card', role: 'group', 'aria-label': t('shortenTitle', { t: fmtHuman(miss, u) }) }, h('strong', {}, t('shortenTitle', { t: fmtHuman(miss, u) })),
+      h('ul', { class: 'shorten-list' }, plan.steps.map((x) => h('li', {}, h('span', {}, `${x.name || '—'}: ${fmtHuman(x.fromSec, u)} → ${fmtHuman(x.toSec, u)}`), x.source === 'history' ? h('small', {}, ` ${t('shortenUsually')}`) : null))),
+      plan.covers ? null : h('p', { class: 'note' }, t('shortenNotEnough')),
+      h('div', { class: 'row-btns' }, h('button', { class: 'btn primary', type: 'button', onclick: () => { run = E.shortenSteps(run, plan.steps); shortenKey = ''; persist(); paintStatic(); paintLive(); toast(t('shortenDone', { t: fmtHuman(plan.saveSec, u) })); } }, t('shortenApply')),
+        h('button', { class: 'btn', type: 'button', onclick: () => { shortenDismissedMiss = miss; shortenKey = ''; shortenEl.replaceChildren(); } }, t('shortenLater')))));
+  }
   const feat = S.features();                                       // which helpers this person has switched on (focus areas)
   const intrEl = h('div', { class: 'intr-banner', role: 'status', hidden: true });
   const sitEl = h('p', { class: 'chip solid sit-chip', role: 'status', hidden: true });
@@ -278,7 +297,7 @@ export async function renderRunner(root, id, nav) {
     pace.textContent = Math.abs(diff) < 10 ? t('onPlan') : `${fmtHuman(Math.abs(diff), units())} ${diff > 0 ? t('behind') : t('ahead')}`;
     const planned = run.tasks.reduce((s, x) => s + x.plannedSec + x.extraSec, 0);
     const ls = leaveStatus(run.leaveBy, run.startedAt, E.etaMs(run, now));
-    leaveEl.hidden = !ls;
+    leaveEl.hidden = !ls; paintShorten(ls);
     if (ls) {
       const late = ls.marginSec < 0, tm = (sec) => fmtHuman(Math.abs(sec), units());
       leaveEl.className = `leave-line ${late ? 'late' : 'ok'}`;
@@ -342,7 +361,7 @@ export async function renderRunner(root, id, nav) {
         dRow(t('startedAt'), clock(run.startedAt)), dRow(t('wall'), fmtHuman(s.wallSec, u)),
         dRow(t('planned'), fmtHuman(s.plannedSec, u)), dRow(t('estimated'), fmtHuman(s.estSec, u)), dRow(t('actual'), fmtHuman(s.actualSec, u)),
         dRow(t('difference'), `${s.deltaSec > 0 ? '+' : ''}${fmtHuman(s.deltaSec, u)}`, s.deltaSec > 0 ? 'bad' : 'good'),
-        s.pausedSec ? dRow(t('pausedTotal'), fmtHuman(s.pausedSec, u)) : null, s.unplannedCount ? dRow(`⚡ ${t('unpTotal')}`, `${fmtHuman(s.unplannedSec, u)} (${s.unplannedCount}×)`) : null, (run.gear || []).length ? dRow(`🎒 ${t('gear')}`, `${run.gear.filter((g) => g.done).length}/${run.gear.length}`) : null, dRow(t('tasksDone'), `${s.done}/${s.total}`), s.skipped ? dRow(t('tasksSkipped'), String(s.skipped)) : null),
+        s.pausedSec ? dRow(t('pausedTotal'), fmtHuman(s.pausedSec, u)) : null, s.shortenedCount ? dRow(`✂️ ${t('shortenedRow')}`, t('shortenedVal', { n: s.shortenedCount, t: fmtHuman(s.shortenedSec, u) })) : null, s.unplannedCount ? dRow(`⚡ ${t('unpTotal')}`, `${fmtHuman(s.unplannedSec, u)} (${s.unplannedCount}×)`) : null, (run.gear || []).length ? dRow(`🎒 ${t('gear')}`, `${run.gear.filter((g) => g.done).length}/${run.gear.length}`) : null, dRow(t('tasksDone'), `${s.done}/${s.total}`), s.skipped ? dRow(t('tasksSkipped'), String(s.skipped)) : null),
       (run.unplanned || []).length ? h('ul', { class: 'unp-list' }, run.unplanned.map((x) => h('li', {}, `${x.emoji} ${reasonName(x)} · ${fmtHuman(x.sec, u)}${x.task ? ` · ${x.task}` : ''}`))) : null, h('div', { class: 'pattern-slot' }),
       h('h2', {}, t('perTask')),
       h('table', { class: 'tbl' }, h('thead', {}, h('tr', {}, h('th', {}, t('colTask')), h('th', {}, t('colPlanned')), h('th', {}, t('colActual')))),
@@ -358,7 +377,7 @@ export async function renderRunner(root, id, nav) {
 
   setChildren(root, h('div', { class: 'run' },
     h('div', { class: 'run-top', style: { '--accent': run.color || '#6c5ce7' } }, h('span', { class: 'emoji' }, run.icon), h('h1', { class: 'run-title' }, run.templateName)),
-    bubble, coachHost, transEl, feelSlot, sitEl, intrEl, goalBox, planBox, gearBox, pw.el, head, leaveEl, h('div', { class: 'ring-wrap' }, ring, pausedBadge), sprintEl, taskName, ptsEl, pace, controls, vc?.el, helpCard?.el, list));
+    bubble, coachHost, transEl, feelSlot, sitEl, intrEl, goalBox, planBox, gearBox, pw.el, head, leaveEl, shortenEl, h('div', { class: 'ring-wrap' }, ring, pausedBadge), sprintEl, taskName, ptsEl, pace, controls, vc?.el, helpCard?.el, list));
   paintStatic(); paintLive(); paintGear();
   if (vc && st().voiceCmdAuto && st().transcribe) vc.start();
   if (fresh) { say('start'); pushActive(true); if (['start', 'both'].includes(feelAtNow())) showFeel('start'); }   // the parent sees "doing now" from the very first task

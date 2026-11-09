@@ -117,6 +117,7 @@ export function renderStats(root, templateId, nav) {
       !rs.length ? emptyState('empty-history', t('noStats')) : h('div', {}, [
         h('div', { class: 'tiles' },
           tile(t('runsCount', { n: tot.count }), `${tot.onTime}/${tot.count}`, t('onTimeRuns')), tile(t('avgTime'), fmtHuman(tot.avgActual, u)), tile(t('bestTime'), fmtHuman(tot.best, u))),
+        rs.some((r) => r.shortened?.length) ? h('p', { class: 'note' }, `✂️ ${t('shortenStats', { n: rs.filter((r) => r.shortened?.length).length, m: rs.length })}`) : null,
         h('h2', {}, t('chartTitle')),
         rs.length >= 2 ? h('div', { class: 'card' }, lineChart(ST.series(rs)),
           h('div', { class: 'legend' }, h('span', { class: 'k actual' }, t('legendActual')), h('span', { class: 'k planned' }, t('legendPlanned')), h('span', { class: 'k est' }, t('legendEstimate')))) : h('p', { class: 'note' }, t('chartEmpty')),

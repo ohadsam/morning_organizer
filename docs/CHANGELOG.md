@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.31.0
+- **Smart shortening when the leave-by time will be missed** (open item O3): `shorten.js` (pure) looks at the steps still ahead (never the one in progress), cuts each at most to half of its plan and never below a minute, prefers what the person usually needs for that step (median of their last runs, `buildHistory`), else a gentle 25 % cut, ignores savings under 30 s, offers at most four steps and says when it cannot cover the whole miss. The runner shows a card under the leave line ("You may be late by X. Shorten some steps?" with the list; "Shorten them" / "Not now" - asking again only when it is 3 minutes worse). Applying (`engine.shortenSteps`) records `run.shortened` (kept in the backup, sanitised); the summary shows "Shortened steps: N, X saved" and the routine's statistics note how often the person shortened. The late line is darker for contrast.
+- Not yet: method-specific sounds for the leave time, and the card for other lateness (only the leave-by time triggers it).
+
 ## 1.30.0
 - **Mood widget** (`MoodWidget`, 4x1): the kit's five faces (very sad ... great, with the repaired sad faces) on the Sunrise sky background, light and dark; each face opens the app on `#/feel/<1-5>` (allowed in `Shortcuts.ROUTES`), where that face is already chosen and the approach's question, note and voice tools wait. English + Hebrew labels and spoken descriptions. Verified by CI only.
 

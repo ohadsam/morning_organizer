@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.34.0
+- **Layered breathing Sunny** (from the ChatGPT "Sunny animations v2" kit, stage 1): `calm-kit.json` has `sunny-breath-<pattern>` (slow, box, relax478, sigh): one picture with stable parts (`s-body`, `s-rays`, `s-glow`, `s-cheeks`, `s-mouth-in/out`, `s-air-in/out`, cues). `calmScene.sunnyBreath` moves the parts with the sine-eased breath, exactly by the kit's `HOOKS.md` table (body 0.90-1.03 x 0.88-1.06 and up 5 units, rays 0.92-1.10, glow 0.85-1.10 and opacity 0.25-0.7, cheeks, the two mouths and the air lines by phase); nothing is swapped or rebuilt. The simpler whole-figure version stays as the fallback.
+- **Widget**: "Sunny breathes" uses the kit's 24 frames (Sunrise look, light and dark, four densities) at 250 ms, replacing the ten interim frames.
+- Reviewed and NOT adopted from that kit: the mood faces (thinner and less readable than the ones composed from Sunny's own layers, which stay), the cameos (the same sleeping Sunny with a small icon in the corner, not real poses), the bell frames and imagery strips (their previews rendered black). The breath cues (box star, 4-7-8 stars, air lines) are drawn but faint.
+
 ## 1.33.0
 - **Sunny breathes** (owner feedback: the calm corner's movement was not pleasant): new default "Sunny" in the breathing menu (`calmVisual: sunny`; one-time migration moves a stored "scene" to it): `data/mascot.json`'s calm-breathe mood scales with the exercise's `--p` (a little taller than wide, from her hill, a soft halo), driven by a sine-eased fullness every animation frame. The old scenes no longer swap pictures: `breathStage` builds the five frames once and only changes their opacity (no rebuilding, so no flicker).
 - **"How do I feel" faces are Sunny** (owner request): five close-ups composed from her own layers (very sad with tears ... great with sparkles) in `mascot.json` (`feel-1..5`), used by the feel screen, the quick check-in and the journal mood row (`moodFace`). The mood widget uses the same faces (PNG, Sunrise look, light and dark).

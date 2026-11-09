@@ -4,7 +4,7 @@ import { h, setChildren } from '../util.js';
 import { t, getLang } from '../i18n.js';
 import * as S from '../store.js';
 import { MOODS } from '../mood.js';
-import { moodFace } from './mascot.js';
+import { moodFace, cameoNode } from './mascot.js';
 import { TAGS, approachOf, feelingStats, momentStats, summaryText } from '../feelings.js';
 import { voiceNote } from './voiceNote.js';
 import { modal } from './common.js';
@@ -51,7 +51,7 @@ export function renderFeel(root, nav, arg = '') {
   const faces = () => h('div', { class: 'moods feel-faces', role: 'group', 'aria-label': t('feelTitle') }, MOODS.map((m) => h('button', { class: `mood ${mood === m.v ? 'on' : ''}`, type: 'button', 'aria-label': t(`mood${m.v}`), 'aria-pressed': String(mood === m.v),
     onclick: () => { mood = m.v; paintForm(); } }, moodFace(m.v, { size: 52 }), h('small', {}, t(`mood${m.v}`)))));
   function paintForm(done = false, low = false) {
-    if (done) { setChildren(form, h('div', { class: 'stack center', role: 'status' }, h('p', { class: 'big-emoji', 'aria-hidden': 'true' }, '🌿'), h('p', {}, t('feelSaved')),
+    if (done) { setChildren(form, h('div', { class: 'stack center', role: 'status' }, cameoNode('check', { size: 110 }), h('p', {}, t('feelSaved')),
       low ? h('div', { class: 'stack center' }, h('p', { class: 'muted' }, t('feelCalmOffer')), h('button', { class: 'btn primary', type: 'button', onclick: () => nav('#/calm') }, `🌬️ ${t('feelCalmGo')}`)) : null)); return; }
     setChildren(form, h('h2', {}, t('feelTitle')), h('p', { class: 'muted' }, t('feelIntro')), faces(),
       mood !== null ? h('div', { class: 'stack' }, h('div', { class: 'lbl' }, t(`fq_${ap}`)),

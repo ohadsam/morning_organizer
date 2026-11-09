@@ -28,7 +28,7 @@ function node(section, id, { size = 64, label = '' } = {}) {
   return box;
 }
 /** An illustration (256 grid): empty-routines, welcome-1, calm-scene-sea ... */
-const ART_CAMEO = { 'empty-routines': 'empty', 'empty-history': 'empty', 'empty-goals': 'empty', 'empty-journal': 'empty', 'empty-alarms': 'reminder', offline: 'offline', error: 'error' };   // Sunny herself shows these moments
+const ART_CAMEO = { 'empty-routines': 'empty', 'empty-history': 'empty', 'empty-goals': 'empty', 'empty-journal': 'empty', 'empty-alarms': 'reminder', offline: 'offline', error: 'error', 'welcome-1': 'hello' };   // Sunny herself shows these moments
 export const artNode = (id, opts = {}) => (Object.hasOwn(ART_CAMEO, id) ? cameoNode(ART_CAMEO[id], { size: opts.size || 120, label: opts.label || '' }) : node('art', id, opts));
 /** A feeling face: feel-happy, feel-sad ... */
 export const feelingNode = (id, opts) => node('feelings', id, opts);

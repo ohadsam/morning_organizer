@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.36.0
+- **Starter pack after choosing a method** (open item O5): `starterPack.js` (pure; 14 small routines, 3 to 5 steps each, English + Hebrew, none over 30 minutes) and `starterFor(view)` (the method first, then the help areas, at most three). When the needs sheet is saved the person is offered the set once per choice (`localStorage mo.starter.<profile>.<ids>`): ticked by default, added for that person only (`owners`), alarms off, no alarm sound. Unit tests on sizes, languages, order and entries; e2e with axe; the older needs steps now close the offer.
+- **More Sunny placements**: the welcome sheet waves (`cameo-hello`), saving a feeling shows the thumbs-up (`check`), the end of a calm exercise shows `calm`, and the level-up card shows `proud`.
+
 ## 1.35.0
 - **Sunny's cameos replace generic illustrations** (owner: she should be the guiding line): `mascot.json` has the twelve open-eyed cameos (`cameo-*`, from the refinement kit); `cameoNode` draws them, and `artNode` maps the empty-state ids (`empty-routines`, `empty-history`, `empty-goals`, `empty-journal` -> clipboard, `empty-alarms` -> bell, `offline`, `error`) to them, so every empty list / offline / error screen shows Sunny. Built by `CAMEO_SVG=<dir> node scripts/build-mascot.mjs <scenery kit>`. Zero axe violations in light / dark / big text.
 - Fixed: the statistics screen said "finish a routine once to see statistics" twice when there were none.

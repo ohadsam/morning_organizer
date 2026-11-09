@@ -1,5 +1,7 @@
 // "What's new" content shown inside the app (newest first). Keep in step with docs/CHANGELOG.md; a unit test checks the current version is listed and both languages match.
 export const CHANGES = [
+  { v: '1.36.0', en: ['🌱 After you choose what the app is for, it offers a small starter set of routines that fit (for example “Thought check” for CBT, “Get started” for ADHD, “A calm minute” for anxiety): untick what you do not want, no alarms, only for you. Sunny also waves hello in the welcome, gives a thumbs up when you save how you feel, sits calmly after the calm corner and looks proud when you level up.'],
+    he: ['🌱 אחרי שבוחרים למה האפליקציה משמשת, היא מציעה סט התחלה קטן של שגרות שמתאימות (למשל “בדיקת מחשבה” ל-CBT, “להתחיל” לקשב, “דקת רוגע” לחרדה): מורידים סימון ממה שלא רוצים, בלי התראות, רק בשבילכם. שמשי גם מנופפת בברכת הפתיחה, מרימה אגודל כששומרים איך מרגישים, יושבת בשלווה אחרי פינת הרוגע ונראית גאה כשעולים רמה.'] },
   { v: '1.35.0', en: ['☀️ Sunny now shows the quiet moments herself: an empty list, no statistics yet, no internet, something went wrong - she is there with her little prop (a clipboard, a plug, a bell…) instead of a generic picture.'],
     he: ['☀️ שמשי מופיעה עכשיו ברגעים השקטים בעצמה: רשימה ריקה, עוד אין סטטיסטיקה, אין אינטרנט, משהו השתבש - היא שם עם האביזר הקטן שלה (לוח, תקע, פעמון…) במקום תמונה כללית.'] },
   { v: '1.34.2', en: ['🟧 Box breathing: a thin rounded frame around Sunny with a small star that travels along its four sides, one side for each step (in, hold, out, hold).'],

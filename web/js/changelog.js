@@ -1,5 +1,7 @@
 // "What's new" content shown inside the app (newest first). Keep in step with docs/CHANGELOG.md; a unit test checks the current version is listed and both languages match.
 export const CHANGES = [
+  { v: '1.32.0', en: ['🎯 Two calmer ways to use the app (Settings → Appearance): a Home that shows just what to do now (one routine, a big Start button; “See everything” brings the rest back), and a run screen that shows one step at a time.'],
+    he: ['🎯 שתי דרכים רגועות יותר להשתמש באפליקציה (הגדרות ← מראה): מסך בית שמציג רק מה לעשות עכשיו (שגרה אחת וכפתור התחלה גדול; “להציג הכול” מחזיר את השאר), ומסך ריצה שמציג שלב אחד בכל פעם.'] },
   { v: '1.31.0', en: ['✂️ If a routine will miss your leave-by time, the app now offers to shorten steps that are still ahead, starting with what you usually need (from your own history). One tap to accept, never automatic. It shows on the summary and in the routine’s statistics.'],
     he: ['✂️ אם שגרה עומדת לפספס את שעת היציאה, האפליקציה מציעה עכשיו לקצר שלבים שעוד לפניכם, ומתחילה במה שבדרך כלל מספיק לכם (לפי ההיסטוריה שלכם). לחיצה אחת לאישור, אף פעם לא אוטומטי. זה מופיע בסיכום ובסטטיסטיקה של השגרה.'] },
   { v: '1.30.0', en: ['📱 New home-screen widget “How do I feel”: five faces, tap the one that fits and the app opens with it already chosen, ready for a word or a voice note.'],

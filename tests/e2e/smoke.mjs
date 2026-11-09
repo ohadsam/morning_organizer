@@ -1603,6 +1603,18 @@ await step('v1.31: a routine that will miss the leave-by time offers shorter ste
   await page.context().close();
 });
 
+await step('v1.32: "just what to do now" on Home (one routine, a big Start, "See everything"), and one step at a time while running; zero axe violations (he + en)', async () => {
+  const { page } = await newPage({ lang: 'en' }); await dismissWelcome(page);
+  await page.evaluate(async () => { const S = await import('./js/store.js'); await S.updateSettings({ homeMode: 'now', runView: 'single' }); });
+  await page.goto(base + '#/'); await page.waitForSelector('.now-card'); assert.equal(await page.locator('.now-card .btn.primary').count(), 1); assert.equal(await page.locator('.home-search').count(), 0, 'nothing else competes');
+  assert.equal(await page.locator('.routine').count(), 0, 'no list of routines'); assert.deepEqual(await audit(page, 'now-home'), []);
+  await page.click('.now-card .btn.link'); await page.waitForSelector('.routine'); assert.ok(await page.locator('.home-search').count(), 'See everything brings the rest back');
+  await page.reload(); await page.waitForSelector('.now-card'); await page.click('.now-card .btn.primary'); await page.waitForSelector('.ring');
+  assert.equal(await page.locator('.checklist').isVisible(), false, 'the list is hidden'); assert.ok(await page.locator('.now').isVisible()); assert.deepEqual(await audit(page, 'run-single'), []);
+  for (const lang of ['he', 'en']) { await page.evaluate(async (l) => { const S = await import('./js/store.js'); await S.updateSettings({ lang: l, fontScale: 130 }); }, lang); await page.waitForTimeout(500); await page.goto(base + '#/settings'); await page.goto(base + '#/'); await page.waitForSelector('.now-card, .active-card, .hero'); const v = await audit(page, `${lang}/now-big`); if (v.length) console.error(v.join('\n')); assert.deepEqual(v, []); }
+  await page.context().close();
+});
+
 await step('v1.23: the picker offers "Build my own" and an avatar picked there is used at once; a kit avatar survives sanitising and other profiles keep theirs', async () => {
   const { page } = await newPage({ lang: 'en' }); await page.goto(base + '#/settings/profile'); await page.waitForSelector('details[data-group=profile]');
   await page.click('details[data-group=profile] button:has-text("Avatar")'); await page.waitForSelector('dialog[open] .avatar-picker'); assert.deepEqual(await audit(page, 'picker'), []);

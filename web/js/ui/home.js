@@ -18,6 +18,7 @@ import { openPauseSheet, pausedBanner } from './pause.js';
 import { discardActiveRun } from './runAdmin.js';
 import { isPaused } from '../alarmPause.js';
 import { dayOff, hebrewLabel } from '../holidays.js';
+import { pickNow } from '../nowPick.js';
 import { openSearch } from './search.js';
 import { runAction } from './actions.js';
 import { suggestionCard } from './suggest.js';
@@ -72,12 +73,17 @@ export function renderHome(root, nav) {
         h('button', { class: 'btn', type: 'button', onclick: async () => { if (await confirmBox(t('restartConfirm'), t('restartRun'))) { const id = active.templateId; await discardActiveRun(); active = null; nav(`#/run/${id}`); } } }, '↺', t('restartRun')),
         h('button', { class: 'btn', type: 'button', onclick: async () => { if (await confirmBox(t('cancelConfirm'), t('cancelRun'), true)) { await discardActiveRun(); active = null; clearInterval(tick); toast(t('cancelledToast')); draw(); } } }, '✖', t('cancelRun'))));
   };
+  let showAll = false;   // "Now" mode: the person asked to see everything this time
+  const nowCard = () => { const pick = pickNow(S.myTemplates(), finished(S.myRuns())); if (!pick) return null; const x = pick.template, total = x.tasks.reduce((s, k) => s + k.sec, 0);
+    return h('section', { class: 'card now-card', 'aria-label': t('nowTitle') }, h('p', { class: 'muted' }, t(`nowWhy_${pick.why}`)), h('h2', { class: 'now-name' }, `${x.icon || ''} ${x.name}`), h('p', {}, `${t('tasksCount', { n: x.tasks.length })} · ${fmtHuman(total, units())}`),
+      h('button', { class: 'btn primary xl', type: 'button', onclick: () => nav(`#/run/${x.id}`) }, icon('play', 20), t('nowStart')),
+      h('button', { class: 'btn link', type: 'button', onclick: () => { showAll = true; draw(); } }, t('nowSeeAll'))); };
   let alive = true;   // a draw that arrives after the person already left Home must not overwrite the page they are on
   const draw = () => {
     if (!alive) return;
     const { settings } = S.get(), templates = S.myTemplates();
     const done = finished(S.myRuns()), days = streak(done), starsN = totalStars(done);
-    const awake = isAwakeWanted(), simple = settings.simpleMode, lv = levelInfo(starsN);
+    const awake = isAwakeWanted(), lv = levelInfo(starsN), nowMode = settings.homeMode === 'now' && !settings.simpleMode && !showAll, simple = settings.simpleMode || nowMode;
     const goals = F.childLinks().filter((l) => l.parent.goal).map((l) => ({ g: l.parent.goal, p: rewardProgress(l.parent.goal, done) }));
     const favs = templates.filter((x) => x.favorite);
     const next = nextAcross(templates), focusEl = simple ? null : focusCard(), suggestionBelow = simple || focusEl ? null : suggestionCard(nav, draw);
@@ -89,6 +95,7 @@ export function renderHome(root, nav) {
           h('button', { class: `chip btn-chip ${awake ? 'on' : ''}`, type: 'button', 'aria-pressed': String(awake), onclick: async () => { await S.updateSettings({ keepAwakeApp: !awake }); setAwake('app', !awake); draw(); } }, awake ? `☀️ ${t('screenOn')}` : `🌙 ${t('screenOff')}`)),
         next ? h('a', { class: 'chip', href: '#/alarms' }, icon('bell', 16), t('alarmNext', { name: next.template.name, time: next.at.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) })) : null),
       activeCard(),
+      nowMode && !active ? nowCard() : null,
       focusEl,
       simple ? null : followUpCard(nav, draw) ?? dueCard(nav, draw) ?? lookBackHint(nav, draw),
       simple ? null : (() => { const g = S.goals().find((x) => needsCheck(x)); return g ? h('section', { class: 'card focus-card' }, h('strong', {}, `🎯 ${t('checkDue')}`), h('p', {}, g.title), h('button', { class: 'btn primary', type: 'button', onclick: () => openCheckin(g, draw) }, `✔ ${t('checkTitle')}`)) : null; })(),
@@ -102,8 +109,9 @@ export function renderHome(root, nav) {
         { id: 'alarms', icon: paused ? '🔕' : '🔔', iconId: paused ? 'alarm-pause' : 'alarms', label: paused ? t('pauseResume') : t('tbAlarms'), pressed: paused, run: () => openPauseSheet(draw) }], t('quickTitle')); })(),
       simple ? null : pausedBanner(draw),
       simple ? null : suggestionBelow,
-      favs.length ? h('section', {}, h('h2', {}, t('favorites')), h('div', { class: 'stack' }, favs.map((x) => card(x, nav)))) : null,
-      (() => { const sp = splitForToday(templates, new Date().getDay()); return [
+      nowMode ? (settings.simpleMode ? null : h('p', { class: 'muted center' }, t('nowHint'))) : null,
+      nowMode ? null : favs.length ? h('section', {}, h('h2', {}, t('favorites')), h('div', { class: 'stack' }, favs.map((x) => card(x, nav)))) : null,
+      nowMode ? null : (() => { const sp = splitForToday(templates, new Date().getDay()); return [
         h('section', {}, h('h2', {}, sp.scheduled ? t('today') : t('allRoutines')), sp.today.length ? h('div', { class: 'stack' }, sp.today.map((x) => card(x, nav))) : templates.length ? h('p', { class: 'empty' }, t('noRoutinesToday')) : emptyState('empty-routines', t('noRoutines'))),
         sp.other.length ? h('section', {}, h('h2', {}, t('otherDays')), h('div', { class: 'stack dim' }, sp.other.map((x) => card(x, nav)))) : null]; })(),
       h('p', { class: 'version-line' }, `${t('appName')} v${getVersion() || '?'} · `, h('button', { class: 'btn link', type: 'button', onclick: () => openWhatsNew(nav) }, t('wnLink'))));

@@ -7,6 +7,7 @@ export function applyA11y(s) {
   r.dataset.colors = s.colorSafe ? 'safe' : 'normal'; r.dataset.contrast = s.contrast === 'high' ? 'high' : 'normal';
   if (/^#[0-9a-f]{6}$/i.test(s.accent || '')) { r.dataset.accent = '1'; r.style.setProperty('--user-accent', s.accent); } else { delete r.dataset.accent; r.style.removeProperty('--user-accent'); }
   const skin = sanitizeSkin(s.skin); if (skin === 'default') delete r.dataset.skin; else r.dataset.skin = skin;
+  if (s.runView === 'single') r.dataset.runview = 'single'; else delete r.dataset.runview;
   if (s.iconMono) r.dataset.iconmono = '1'; else delete r.dataset.iconmono;
   if (s.easyRead) r.dataset.easy = '1'; else delete r.dataset.easy;
   if (s.reduceMotion) r.dataset.motion = 'calm'; else delete r.dataset.motion;

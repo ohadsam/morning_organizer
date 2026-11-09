@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.32.0
+- **UX batch, first slice** (open item O5): **Home "just what to do now"** (`homeMode: now`, per person): the hero, the running routine, and ONE card from `pickNow` (nearest alarm from 90 minutes ago, else a routine of today not finished yet, favourites first, else any) with a big Start; "See everything" shows the usual Home until the next visit; no search, toolbar, suggestions or lists. **Run "one step at a time"** (`runView: single`, per person): CSS hides the checklist, the details line, pace, sprints and the gear card; the step, timer, buttons, leave line and the shorten card stay. Both are selects in Settings → Appearance.
+- Still open from O5: "start for me" (a spoken start), a starter pack after choosing a method, weekly calm summary, density / clear-font settings, backup reminder, "who sees this" badge, interactive first-run tour, uniform undo.
+
 ## 1.31.0
 - **Smart shortening when the leave-by time will be missed** (open item O3): `shorten.js` (pure) looks at the steps still ahead (never the one in progress), cuts each at most to half of its plan and never below a minute, prefers what the person usually needs for that step (median of their last runs, `buildHistory`), else a gentle 25 % cut, ignores savings under 30 s, offers at most four steps and says when it cannot cover the whole miss. The runner shows a card under the leave line ("You may be late by X. Shorten some steps?" with the list; "Shorten them" / "Not now" - asking again only when it is 3 minutes worse). Applying (`engine.shortenSteps`) records `run.shortened` (kept in the backup, sanitised); the summary shows "Shortened steps: N, X saved" and the routine's statistics note how often the person shortened. The late line is darker for contrast.
 - Not yet: method-specific sounds for the leave time, and the card for other lateness (only the leave-by time triggers it).

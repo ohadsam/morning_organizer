@@ -134,6 +134,8 @@ export function renderSettings(root, version, focusKey = '') {
         h('div', { class: 'field' }, h('span', { class: 'lbl' }, t('skinTitle')), h('div', { class: 'skin-grid', role: 'radiogroup', 'aria-label': t('skinTitle') }, SKINS.map((k) => h('button', { type: 'button', class: `skin-tile ${(st.skin || 'default') === k ? 'on' : ''}`, role: 'radio', 'aria-checked': String((st.skin || 'default') === k), onclick: () => set({ skin: k }, true) },
           h('span', { class: 'skin-sw', style: { background: `linear-gradient(135deg, ${SKIN_SWATCH[k][0]} 50%, ${SKIN_SWATCH[k][1]} 50%)` }, 'aria-hidden': 'true' }), h('span', {}, t(`skin_${k}`)))))),
         select(t('iconStyle'), st.iconStyle, [['auto', t('iconAuto')], ['line', t('iconLine')], ['duotone', t('iconDuotone')], ['filled', t('iconFilled')]], (v) => set({ iconStyle: v })), h('small', { class: 'hint' }, t('iconStyleHint')),
+        select(t('homeMode'), st.homeMode || 'full', [['full', t('homeModeFull')], ['now', t('homeModeNow')]], (v) => set({ homeMode: v })), h('small', { class: 'hint' }, t('homeModeHint')),
+        select(t('runView'), st.runView || 'full', [['full', t('runViewFull')], ['single', t('runViewSingle')]], (v) => set({ runView: v })), h('small', { class: 'hint' }, t('runViewHint')),
         toggle(t('iconMono'), t('iconMonoHint'), st.iconMono, (v) => set({ iconMono: v })),
         toggle(t('easyRead'), t('easyReadHint'), st.easyRead, (v) => set({ easyRead: v })),
         toggle(t('reduceMotion'), t('reduceMotionHint'), st.reduceMotion, (v) => set({ reduceMotion: v })),

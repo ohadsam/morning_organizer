@@ -18,7 +18,7 @@ const alt = {};
 for (const d of dirs) { const j = `${d}/../calm-animations.json`; if (existsSync(j)) for (const a of JSON.parse(readFileSync(j, 'utf8'))) if (a.alt) alt[a.id] = a.alt; }
 // Sunny's layered breathing scenes (ChatGPT "sunny animations v2", stage 1): one still per pattern with stable group ids; the app moves the groups itself
 const sunnyDir = process.env.SUNNY_SVG, scenes = {}; let bytes = 0;
-if (sunnyDir) for (const pat of patterns) { const svg = readFileSync(`${sunnyDir}/sunny-breath-${pat}.svg`, 'utf8').trim().replace(/ data-[a-z-]+="[^"]*"/g, '').replace(/<g  id=/g, '<g id='); scenes[`sunny-breath-${pat}`] = { svg }; bytes += svg.length; }
+if (sunnyDir) for (const pat of patterns) { const svg = readFileSync(`${sunnyDir}/sunny-breath-${pat}.svg`, 'utf8').replace(/^<\?xml[^>]*\?>\s*/, '').trim().replace(/ data-[a-z-]+="[^"]*"/g, '').replace(/<g  id=/g, '<g id='); scenes[`sunny-breath-${pat}`] = { svg }; bytes += svg.length; }
 for (const id of ids) { const p = files.get(id === 'imagery-elements-f1' ? 'imagery-elements' : id);   // f1 of the four elements has the figure cut off at the corner: the full scene replaces it
    if (!p) { console.error('missing', id); process.exit(1); } const svg = fix(id, readFileSync(p, 'utf8').trim()).replace(/ data-zone="[^"]*"/g, ''); bytes += svg.length; scenes[id] = { svg, alt: alt[id] || undefined }; }
 writeFileSync('web/data/calm-kit.json', JSON.stringify({ format: 'sonrise-calm-kit', version: 1, scenes }));

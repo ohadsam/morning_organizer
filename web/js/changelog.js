@@ -1,5 +1,7 @@
 // "What's new" content shown inside the app (newest first). Keep in step with docs/CHANGELOG.md; a unit test checks the current version is listed and both languages match.
 export const CHANGES = [
+  { v: '1.34.1', en: ['🌙 The 4-7-8 breathing scene has clearer teal stars and air lines.'],
+    he: ['🌙 בנשימת 4-7-8 הכוכבים וקווי האוויר ברורים יותר, בטורקיז.'] },
   { v: '1.34.0', en: ['🌬️ Sunny now breathes with her own parts: her body swells, her rays reach out and her glow grows as you breathe in, and she lets it all out with a small round mouth as you breathe out. The Sunny widget has 24 smooth frames.'],
     he: ['🌬️ שמשי נושמת עכשיו עם החלקים שלה: הגוף מתנפח, הקרניים נפרשות וההילה גדלה בשאיפה, ובנשיפה היא מוציאה הכול עם פה עגול קטן. לווידג׳ט של שמשי יש 24 פריימים חלקים.'] },
   { v: '1.33.0', en: ['☀️ Sunny is the guide: in the calm corner Sunny herself breathes with you (she swells softly as you breathe in and sinks back as you breathe out), the “How do I feel” faces are now Sunny showing the feeling (also on the mood widget), and the Sunny widget breathes with ten smooth frames. “Just what to do now” also shows what came before and what comes next, in small.'],

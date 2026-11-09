@@ -6,6 +6,7 @@ import * as S from '../store.js';
 import * as J from '../journal.js';
 import { iconBtn, modal, toast } from './common.js';
 import { TOOLS, TOOL_IDS, isTool, keys, flagWords, composeNote } from '../nlpTools.js';
+import { cameoNode } from './mascot.js';
 
 /** The exercise `id` in a sheet. ctx: { routine, task, onSaved } when it was opened from a task. */
 export function openNlpTool(id, ctx = {}) {
@@ -56,7 +57,7 @@ export function openNlpTool(id, ctx = {}) {
 export function renderNlp(root, nav) {
   setChildren(root,
     h('div', { class: 'page-head' }, iconBtn('back', t('back'), () => nav('#/')), h('h1', {}, `🗣️ ${t('nlpTitle')}`)),
-    h('p', { class: 'note' }, t('nlpIntro')), h('p', { class: 'chip solid nlp-note' }, t('nlpEvidence')),
+    h('div', { class: 'vk-center' }, cameoNode('think', { size: 96 })), h('p', { class: 'note' }, t('nlpIntro')), h('p', { class: 'chip solid nlp-note' }, t('nlpEvidence')),
     h('div', { class: 'stack' }, TOOL_IDS.map((id) => h('button', { type: 'button', class: 'card nlp-tool', onclick: () => openNlpTool(id) },
       h('span', { class: 'nlp-i', 'aria-hidden': 'true' }, TOOLS[id].icon), h('span', { class: 'nlp-t' }, h('strong', {}, t(`nlp_${id}`)), h('small', { class: 'hint' }, t(`nlpd_${id}`))), h('span', { class: 'chip' }, t('nlpStart'))))),
     h('p', { class: 'hint' }, t('nlpNotTherapy')));

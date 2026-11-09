@@ -27,6 +27,7 @@ import { coachTrigger, newMemo } from '../coach.js';
 import { sprintPlan, sprintState } from '../sprints.js';
 import { openCapture, openPark, moodRow } from './capture.js';
 import { quickFeel } from './feel.js';
+import { cameoNode } from './mascot.js';
 import { calmPanel } from './calm.js';
 import { modal } from './common.js';
 import { planText } from './goals.js';
@@ -55,6 +56,8 @@ export async function renderRunner(root, id, nav) {
     run = E.createRun(tpl, Date.now(), { scale: pm === 'quick' ? 0.7 : 1, mode: pm, gear: gearFor(tpl, new Date().getDay()) }); fresh = true; run.profileId = S.activeProfile().id;
   }
   const st = () => S.get().settings;
+  // "Start for me" (from Home): this run speaks its steps out loud, whatever the usual setting, and opens and closes with a friendly sentence
+  const forMe = (() => { try { const v = sessionStorage.getItem('mo.startForMe'); sessionStorage.removeItem('mo.startForMe'); return v === id; } catch { return false; } })();
   unlockAudio();
   let discarded = false;   // cancel / start over: this run must never be written back
   const persist = () => (discarded ? undefined : S.saveActive(E.isActive(run) ? run : null));
@@ -177,7 +180,7 @@ export async function renderRunner(root, id, nav) {
   if (myGoals.length) { setChildren(goalBox, h('summary', {}, `🎯 ${t('goalMyPlanToday')}`), h('ul', { class: 'plan-list' }, myGoals.map((g) => h('li', {}, h('strong', {}, g.title), planText(g) ? ` — ${planText(g)}` : '')))); goalBox.open = fresh; }
   function announceTask(cur) {
     const msg = t('nowTask', { task: cur.name || '' });
-    if (st().announceTasks) setTimeout(() => speakWithSettings(msg, { kind: 'short' }), fresh ? 1800 : 300); // after the "start" encouragement
+    if (st().announceTasks || forMe) setTimeout(() => speakWithSettings(msg, { kind: 'short' }), fresh ? 1800 : 300); // after the "start" encouragement
     if (st().srAnnounce) announce(`${msg}, ${fmtHuman(cur.plannedSec + cur.extraSec, units())}`);
   }
   /** The calm corner over the run: the clock pauses while you breathe (nothing is "lost"), and resumes when you come back. */
@@ -338,7 +341,7 @@ export async function renderRunner(root, id, nav) {
   async function afterChange() {
     if (E.isActive(run)) { persist(); paintStatic(); paintLive(); pushActive(); return; }
     vc?.stop(); { const s = st(); if (s.scoring !== 'off') run.score = scoreRun(run, { mode: s.scoring, penalty: s.scorePenalty }); }
-    await S.saveActive(null); await S.saveRun(run); setAwake('run', false); pushWidget();
+    await S.saveActive(null); await S.saveRun(run); setAwake('run', false); pushWidget(); if (forMe && run.status === 'done') speakWithSettings(t('forMeDone'), { kind: 'short' });
     renderSummary();
     { const tpl = S.getTemplate(run.templateId), slot = root.querySelector('.pattern-slot'); if (tpl && slot) { const c = patternCards(tpl, nav, () => {}); if (c) setChildren(slot, c); } }
     { const slot = root.querySelector('.podium-slot'), card = slot && run.score ? podiumCard(run, S.myRuns(), { cumulative: st().scoreCumulative }) : null; if (card) setChildren(slot, card); }
@@ -353,7 +356,7 @@ export async function renderRunner(root, id, nav) {
     const done = run.status === 'done';
     const starRow = h('div', { class: 'stars', role: 'img', 'aria-label': `${t('starsEarned')}: ${n}/3` }, [0, 1, 2].map((i) => h('span', { class: `star ${i < n ? 'on' : ''}`, style: { '--i': String(i) } }, '⭐')));
     setChildren(root, h('div', { class: 'summary' },
-      h('div', { class: 'big-emoji' }, avatarNode(st().avatar, { size: 110, anim: done ? 'dance' : 'think' })), h('h1', {}, done ? t('allDone') : t('stopped')), starRow,
+      h('div', { class: 'big-emoji' }, (done ? avatarNode(st().avatar, { size: 110, anim: 'dance' }) : cameoNode('goodbye', { size: 120 }))), h('h1', {}, done ? t('allDone') : t('stopped')), starRow,
       h('p', { class: 'muted' }, run.templateName), h('div', { class: 'celebrate-slot' }), h('div', { class: 'podium-slot' }), bubble, lookBackSummaryCard(nav, run.id),
       done && ['end', 'both'].includes(feelAtNow()) ? quickFeel({ moment: 'end', routine: run.templateName, onClose: (why) => { if (why === 'calm') nav('#/calm'); } }) : null,
       feat.moodCheck && !(done && ['end', 'both'].includes(feelAtNow())) ? h('div', { class: 'card center' }, h('strong', {}, t('moodAsk')), moodRow(async (v) => { run.mood = v; await S.setRunMood(run.id, v); }, run.mood || null)) : null,
@@ -382,6 +385,7 @@ export async function renderRunner(root, id, nav) {
     bubble, coachHost, transEl, feelSlot, sitEl, intrEl, goalBox, planBox, gearBox, pw.el, head, leaveEl, shortenEl, h('div', { class: 'ring-wrap' }, ring, pausedBadge), sprintEl, taskName, around, ptsEl, pace, controls, vc?.el, helpCard?.el, list));
   paintStatic(); paintLive(); paintGear();
   if (vc && st().voiceCmdAuto && st().transcribe) vc.start();
+  if (fresh && forMe) speakWithSettings(t('forMeIntro', { name: run.templateName }), { kind: 'short' });
   if (fresh) { say('start'); pushActive(true); if (['start', 'both'].includes(feelAtNow())) showFeel('start'); }   // the parent sees "doing now" from the very first task
   timer = setInterval(loop, 250);
   return () => { vc?.destroy(); clearInterval(timer); clearTimeout(bubbleTimer); clearTimeout(transTimer); coach.hide(); document.removeEventListener('visibilitychange', onVis); setAwake('run', false); if (E.isActive(run) && !discarded) persist(); };

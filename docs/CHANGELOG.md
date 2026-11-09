@@ -1,9 +1,13 @@
 # Changelog
 
+## 1.38.0
+- **"Start for me"** (open item O5): a second button on the "just what to do now" card sets a one-time flag (`sessionStorage mo.startForMe`) and opens the run; that run speaks an opening sentence, each step (even if "announce steps" is off) and "well done" at the end through the usual voice settings (`speakWithSettings`, the phone's or the browser's voice).
+- **Sunny placements**: `think` on the NLP page, `goodbye` instead of the avatar on a stopped routine's summary (the finished summary keeps the person's own avatar dancing).
+
 ## 1.37.0
 - **Calm weekly summary** (open item O5): `weeklyCalm.js` (pure) summarises the previous week (Sunday to Saturday): finished routines and days, stars, on-time runs, check-ins and the average face. Home shows it once per week (`mo.weekly.<profile>` = the week's Sunday) with Sunny proud; only kind words, a week with nothing is skipped; closed with "Thank you".
 - **Backup reminder**: after 10 finished runs or 3 own routines, with no backup for 30 days (`mo.lastBackup`, set by every file / code backup) and not snoozed (14 days): Sunny with a bell and "Save a backup" / "Remind me later".
-- Home shows one quiet card at a time (look-back cards first, then the weekly summary, then the backup reminder); Sunny looks tired on the paused-alarms banner. Fixed in passing: an earlier note about the test file name (`weeklycalm.test.js`).
+- Home shows one quiet card at a time (look-back cards first, then the weekly summary, then the backup reminder); Sunny looks tired on the paused-alarms banner.
 
 ## 1.36.0
 - **Starter pack after choosing a method** (open item O5): `starterPack.js` (pure; 14 small routines, 3 to 5 steps each, English + Hebrew, none over 30 minutes) and `starterFor(view)` (the method first, then the help areas, at most three). When the needs sheet is saved the person is offered the set once per choice (`localStorage mo.starter.<profile>.<ids>`): ticked by default, added for that person only (`owners`), alarms off, no alarm sound. Unit tests on sizes, languages, order and entries; e2e with axe; the older needs steps now close the offer.

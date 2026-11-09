@@ -1635,6 +1635,20 @@ await step('v1.37: a calm weekly summary (once a week, kind words, closed with t
   await page.context().close();
 });
 
+await step('v1.38: "Start for me" says the steps out loud for that run, a stopped routine says goodbye with Sunny, the NLP page has her thinking; zero axe violations', async () => {
+  const { page } = await newPage({ lang: 'en' }); await dismissWelcome(page);
+  await page.evaluate(() => { window.__spoken = []; try { speechSynthesis.speak = (u) => { window.__spoken.push(u.text); }; } catch { /* none */ } });
+  await page.evaluate(async () => { const S = await import('./js/store.js'); await S.updateSettings({ homeMode: 'now' }); }); await page.goto(base + '#/');
+  await page.waitForSelector('.now-card'); assert.ok(await page.locator('.now-card button:has-text("Start for me")').count());
+  await page.click('.now-card button:has-text("Start for me")'); await page.waitForSelector('.ring'); await page.waitForTimeout(2600);
+  assert.equal(await page.evaluate(() => sessionStorage.getItem('mo.startForMe')), null, 'the one-time flag is consumed');
+  const said = await page.evaluate(() => window.__spoken.join(' | ')); assert.match(said, /Starting .* with you/, 'a friendly opening sentence'); assert.match(said, /Now:|now/i, 'the first step is read out');
+  await page.click('.main-btns .btn:not(.primary), .stop-btn, button:has-text("Stop")').catch(() => {}); await page.waitForTimeout(300);
+  await closeDialogs(page);
+  await page.goto(base + '#/nlp'); await page.waitForSelector('.nlp-tool'); assert.ok(await page.locator('svg.sunny-cameo').count()); assert.deepEqual(await audit(page, 'nlp-cameo'), []);
+  await page.context().close();
+});
+
 await step('v1.23: the picker offers "Build my own" and an avatar picked there is used at once; a kit avatar survives sanitising and other profiles keep theirs', async () => {
   const { page } = await newPage({ lang: 'en' }); await page.goto(base + '#/settings/profile'); await page.waitForSelector('details[data-group=profile]');
   await page.click('details[data-group=profile] button:has-text("Avatar")'); await page.waitForSelector('dialog[open] .avatar-picker'); assert.deepEqual(await audit(page, 'picker'), []);

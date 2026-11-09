@@ -6,6 +6,7 @@ import { modal, toast } from './common.js';
 import { PAUSE_CHOICES, pauseFor, activePause } from '../alarmPause.js';
 import { requestWebNotifications } from '../reminders.js';
 import { native } from '../native.js';
+import { cameoNode } from './mascot.js';
 
 const whenText = (p) => (p === -1 ? t('pausedForever') : t('pausedUntil', { when: new Intl.DateTimeFormat(getLang(), { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }).format(new Date(p)) }));
 
@@ -20,5 +21,5 @@ export function openPauseSheet(onDone = () => {}) {
 /** A line on Home while alarms are paused, with a one-tap way back. null when not paused. */
 export function pausedBanner(redraw) {
   const p = activePause(S.get().settings.alarmsPause); if (!p) return null;
-  return h('section', { class: 'card paused-banner', role: 'status' }, h('span', {}, `🔕 ${whenText(p)}`), h('button', { class: 'btn small primary', type: 'button', onclick: async () => { await S.updateSettings({ alarmsPause: 0 }); toast(t('resumedToast')); redraw(); } }, t('pauseOff')));
+  return h('section', { class: 'card paused-banner', role: 'status' }, cameoNode('tired', { size: 44 }), h('span', {}, `🔕 ${whenText(p)}`), h('button', { class: 'btn small primary', type: 'button', onclick: async () => { await S.updateSettings({ alarmsPause: 0 }); toast(t('resumedToast')); redraw(); } }, t('pauseOff')));
 }

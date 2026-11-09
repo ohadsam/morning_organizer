@@ -1622,6 +1622,19 @@ await step('v1.32: "just what to do now" on Home (one routine, a big Start, "See
   await page.context().close();
 });
 
+await step('v1.37: a calm weekly summary (once a week, kind words, closed with thanks) and a backup reminder (after something worth keeping, snoozable); zero axe violations', async () => {
+  const { page } = await newPage({ lang: 'en' }); await dismissWelcome(page);
+  await page.evaluate(async () => { localStorage.setItem('mo.retroHint', String(Date.now() + 1e10)); const S = await import('./js/store.js'), pid = S.activeProfile().id, d = new Date(); d.setHours(12, 0, 0, 0); const sun = d.getTime() - d.getDay() * 86400000;
+    for (let i = 0; i < 12; i++) { const end = sun - (4 + (i % 3)) * 86400000 + i * 1000; await S.saveRun({ id: 'wk' + i, templateId: 'x', profileId: pid, templateName: 'x', icon: '', color: '#6c5ce7', startedAt: end - 6e5, endedAt: end, status: 'done', plannedTotal: 600, actualTotal: i % 2 ? 500 : 700, pausedMs: 0, current: 0, tasks: [], unplanned: [] }); }
+    await S.addFeeling({ mood: 4, ap: 'general', moment: 'now' }); });
+  await page.goto(base + '#/'); await page.reload(); await page.waitForSelector('.weekly-card'); assert.match(await page.textContent('.weekly-card'), /You finished 12 routines/); assert.ok(await page.locator('.weekly-card svg.sunny-cameo').count());
+  assert.deepEqual(await audit(page, 'weekly-card'), []); await page.click('.weekly-card .btn.primary'); await page.waitForSelector('.backup-card'); assert.equal(await page.locator('.weekly-card').count(), 0, 'closed for this week');
+  assert.match(await page.textContent('.backup-card'), /backup/i); assert.deepEqual(await audit(page, 'backup-card'), []);
+  await page.click('.backup-card .btn:not(.primary)'); await page.waitForTimeout(300); assert.equal(await page.locator('.backup-card').count(), 0, 'snoozed');
+  await page.reload(); await page.waitForSelector('.routine'); assert.equal(await page.locator('.weekly-card, .backup-card').count(), 0, 'stays quiet after being closed');
+  await page.context().close();
+});
+
 await step('v1.23: the picker offers "Build my own" and an avatar picked there is used at once; a kit avatar survives sanitising and other profiles keep theirs', async () => {
   const { page } = await newPage({ lang: 'en' }); await page.goto(base + '#/settings/profile'); await page.waitForSelector('details[data-group=profile]');
   await page.click('details[data-group=profile] button:has-text("Avatar")'); await page.waitForSelector('dialog[open] .avatar-picker'); assert.deepEqual(await audit(page, 'picker'), []);

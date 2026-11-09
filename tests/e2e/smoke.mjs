@@ -610,7 +610,7 @@ await step('v1.10: axe on alarm editor, unplanned sheet, pattern card and magnif
         await S.saveRun({ id: `seed${i}`, profileId: S.activeProfile().id, templateId: tpl.id, templateName: tpl.name, icon: tpl.icon, color: '#6c5ce7', startedAt: Date.now() - (9 - i) * day, endedAt: Date.now() - (9 - i) * day + 600_000, status: 'done', current: 0, pausedMs: 0, plannedTotal: tot, estTotal: tot, actualTotal: tot, tasks, unplanned: [{ key: 'spill', label: 'Spill', emoji: '🥛', sec: 90, at: 1, task: tpl.tasks[0].name }] }); }
     });
     await page.goto(base + '#/stats'); await page.waitForSelector('a.card.link-card'); bad.push(...await audit(page, `${L}/stats-unplanned`));
-    await page.locator('a.card.link-card').first().click(); await page.waitForSelector('.pattern'); bad.push(...await audit(page, `${L}/pattern-card`));
+    await closeDialogs(page); await page.locator('a.card.link-card').first().click(); await page.waitForSelector('.pattern'); bad.push(...await audit(page, `${L}/pattern-card`));
     await page.click('.pattern button >> text=/🔍/'); await page.waitForSelector('dialog textarea'); bad.push(...await audit(page, `${L}/magnifier`));
   }
   if (bad.length) console.error([...new Set(bad)].join('\n'));

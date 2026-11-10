@@ -14,6 +14,7 @@ import { icon, toast } from './ui/common.js';
 import { openImport } from './ui/share.js';
 import { setAwake } from './awake.js';
 import { applyA11y } from './a11y.js';
+import { levelInfo } from './levels.js';
 import { openWelcome } from './ui/welcome.js';
 import { renderFamily } from './ui/family.js';
 import { routeIncoming } from './ui/incoming.js';
@@ -109,7 +110,7 @@ async function boot() {
     if (was[0] !== x.activeProfile || was[1] !== x.lang || was[9] !== String(x.simpleMode)) { drawNav(document.body.dataset.view); route(); } });
   // progress widget (Android): a tiny snapshot whenever something changes
   const { finished: finishedRuns, streak: streakOf, totalStars: starsOf } = await import('./stats.js'), { weeklyReport } = await import('./weekly.js');
-  const pushStats = debounce(() => { if (!native.available) return; const done = finishedRuns(S.myRuns()); native.setStats({ name: S.get().settings.personName, stars: starsOf(done), streak: streakOf(done), week: weeklyReport(done, Date.now()).onTime ?? 0 }); }, 800);
+  const pushStats = debounce(() => { if (!native.available) return; const done = finishedRuns(S.myRuns()); native.setStats({ name: S.get().settings.personName, stars: starsOf(done), streak: streakOf(done), week: weeklyReport(done, Date.now()).onTime ?? 0, level: levelInfo(starsOf(done)).level, toNext: levelInfo(starsOf(done)).toNext, pct: Math.round(levelInfo(starsOf(done)).pct * 100) }); }, 800);
   S.subscribe(pushStats); pushStats();
   if (native.available && S.get().settings.voiceEngine) native.ttsSetEngine(S.get().settings.voiceEngine);
   S.subscribe(() => scheduleWebReminders(onRing));

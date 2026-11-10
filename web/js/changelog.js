@@ -1,5 +1,7 @@
 // "What's new" content shown inside the app (newest first). Keep in step with docs/CHANGELOG.md; a unit test checks the current version is listed and both languages match.
 export const CHANGES = [
+  { v: '1.41.0', en: ['📱 New home-screen widget “Level and stars”: your level, a ring that fills on the way to the next one, and how many stars are missing.'],
+    he: ['📱 ווידג׳ט חדש במסך הבית, “רמה וכוכבים”: הרמה שלכם, טבעת שמתמלאת בדרך לרמה הבאה, וכמה כוכבים חסרים.'] },
   { v: '1.40.0', en: ['🧭 A short tour right after the welcome (five cards with Sunny; “Show me” takes you straight there), skippable, and again from Settings. And “Undo” now comes with every removal: a check-in with its voice note, a goal, a look-back.'],
     he: ['🧭 סיור קצר מיד אחרי ברכת הפתיחה (חמישה כרטיסים עם שמשי; “להראות לי” לוקח אתכם ישר לשם), אפשר לדלג, ושוב מההגדרות. ו“ביטול” מגיע עכשיו עם כל מחיקה: בדיקת מצב רוח עם ההקלטה שלה, יעד, מבט לאחור.'] },
   { v: '1.39.0', en: ['👥 Routine cards now say who sees them (“Everyone sees this” or “Only Dana”) when several people use the app. And a new “Spacing” setting (Settings → Appearance): normal, compact (more on a screen) or roomy (calmer, bigger gaps).'],

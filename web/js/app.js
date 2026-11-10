@@ -140,7 +140,7 @@ async function boot() {
   await route();
   maybeAskWho(nav);
   document.getElementById('boot')?.remove();
-  if (!S.get().settings.profileDone) openWelcome(); else maybeShowWhatsNew(version, nav);
+  if (!S.get().settings.profileDone) openWelcome({ nav }); else maybeShowWhatsNew(version, nav);
 
   if ('serviceWorker' in navigator && !native.available && location.protocol.startsWith('http')) {
     const hadController = !!navigator.serviceWorker.controller;

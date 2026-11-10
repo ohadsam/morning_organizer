@@ -1,5 +1,7 @@
 // "What's new" content shown inside the app (newest first). Keep in step with docs/CHANGELOG.md; a unit test checks the current version is listed and both languages match.
 export const CHANGES = [
+  { v: '1.40.0', en: ['🧭 A short tour right after the welcome (five cards with Sunny; “Show me” takes you straight there), skippable, and again from Settings. And “Undo” now comes with every removal: a check-in with its voice note, a goal, a look-back.'],
+    he: ['🧭 סיור קצר מיד אחרי ברכת הפתיחה (חמישה כרטיסים עם שמשי; “להראות לי” לוקח אתכם ישר לשם), אפשר לדלג, ושוב מההגדרות. ו“ביטול” מגיע עכשיו עם כל מחיקה: בדיקת מצב רוח עם ההקלטה שלה, יעד, מבט לאחור.'] },
   { v: '1.39.0', en: ['👥 Routine cards now say who sees them (“Everyone sees this” or “Only Dana”) when several people use the app. And a new “Spacing” setting (Settings → Appearance): normal, compact (more on a screen) or roomy (calmer, bigger gaps).'],
     he: ['👥 כרטיסי השגרות אומרים עכשיו מי רואה אותם (“כולם רואים” או “רק דנה”) כשכמה אנשים משתמשים באפליקציה. והגדרה חדשה, “ריווח” (הגדרות ← מראה): רגיל, צפוף (יותר על המסך) או מרווח (רגוע יותר, רווחים גדולים).'] },
   { v: '1.38.0', en: ['🗣️ New on the “just what to do now” card: “Start for me”. It starts the routine and says it out loud: a friendly opening, then every step as it comes, and “well done” at the end. Sunny also thinks on the NLP page and says goodbye when you stop a routine.'],

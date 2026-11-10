@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.40.0
+- **First-run tour** (open item O5, last part): `tour.js` (content) and `ui/tour.js`: after the very first welcome sheet (`openWelcome({ nav })`) a five-card tour (routines, calm corner, how do I feel, settings, search) with a Sunny cameo each, Back / Next, "Show me" (goes to the place and ends the tour) and "Skip the tour"; remembered in `localStorage mo.tour`; again from Settings → Welcome. The e2e helper sets the flag by default so the tour does not cover other steps.
+- **Uniform undo**: removing a check-in (with its voice note, put back from the copy kept for the toast), a goal or a look-back now shows an "Undo" toast like routines, avatars, saved routines, runs and library items already did (`removeFeeling` / `removeGoal` / `removeRetro` return a restore function).
+- Known flaky e2e step (seen twice, not reproduced on demand): `v1.14` waits for `.focus-item a`; it passes when rerun.
+
 ## 1.39.0
 - **"Who sees this" badge** (open item O5): `whoSees(tpl, profiles)` (pure) - with two or more people each routine card shows "👥 Everyone sees this" or "👤 Only Dana, Ron" (an owner that no longer exists never hides a routine). With one person nothing is shown.
 - **Spacing setting** (`density`: normal / compact / roomy, per person): `data-density` on the page changes the gaps and the card padding; buttons and touch targets keep their size. The "clear font" part of the plan already exists as "Easy reading" (`easyRead`).

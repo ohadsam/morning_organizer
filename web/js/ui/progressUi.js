@@ -8,6 +8,7 @@ import { finished, totalStars } from '../stats.js';
 import { CHARACTERS } from '../avatar.js';
 import { avatarNode, openAvatarPicker } from './avatar.js';
 import { cameoNode } from './mascot.js';
+import { framedAvatar } from './scenery.js';
 import { loadPack } from './avatarKit.js';
 import { partsUnlockedBetween } from '../avatarKit.js';
 import { confetti } from './fx.js';
@@ -30,7 +31,7 @@ export async function celebrationFor(run) {
   if (!fresh.length && lvAfter === lvBefore) return null;
   await S.saveProfile({ ...p, seenBadges: [...new Set([...(p.seenBadges || []), ...fresh])] });
   const card = h('section', { class: 'card celebrate', role: 'status' },
-    lvAfter > lvBefore ? h('div', { class: 'stack' }, cameoNode('proud', { size: 84 }), h('strong', { class: 'lvl' }, `🏅 ${t('levelUp', { n: lvAfter })}`),
+    lvAfter > lvBefore ? h('div', { class: 'stack' }, h('div', { class: 'row-btns' }, cameoNode('proud', { size: 84 }), framedAvatar(avatarNode(S.activeProfile().avatar, { size: 64, anim: 'cheer' }), lvAfter, 100)), h('strong', { class: 'lvl' }, `🏅 ${t('levelUp', { n: lvAfter })}`),
       unlocked.length ? h('div', {}, h('small', {}, t('unlockedChar')), h('div', { class: 'row' }, unlocked.map(([id, c]) => avatarNode({ k: 'char', id, color: c.base }, { size: 48, anim: 'dance' })))) : null,
       parts.length ? h('div', { class: 'stack' }, h('small', {}, t('unlockedParts', { n: parts.length })), h('button', { class: 'btn small', type: 'button', onclick: () => openAvatarPicker(S.activeProfile().avatar, (av) => { S.saveProfile({ ...S.activeProfile(), avatar: av }); }, { lvl: lvAfter }) }, `🎨 ${t('unlockedPartsBtn')}`)) : null) : null,
     fresh.length ? h('div', { class: 'stack' }, h('strong', {}, `✨ ${t('newBadgeTitle')}`), h('ul', { class: 'badges small' }, fresh.map((id) => { const b = BADGES.find((x) => x.id === id);

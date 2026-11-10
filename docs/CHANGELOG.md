@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.42.0
+- **Scenery kit** (`data/scenery.json` via `scripts/build-scenery.mjs`, `scenery.js`, `ui/scenery.js`): 14 avatar frames by level (`framedAvatar` in the picker preview and the level-up card, with Sunny's proud cameo), six time-of-day skies (`skyStrip` on the Home "now" card) and a sunrise divider in the weekly card. All pictures pass the icon allow-list.
+- Not integrated on purpose: the 14 screen backgrounds (distinct now but faint) and the kit's mood faces (Sunny's own composed faces stay).
+
 ## 1.41.0
 - **Points / level widget** (`PointsWidget`, 2x2, open item O4): the level, a five-step ring (`PointsMath.ringStep`, from the kit's ring pictures, light and dark) and "N stars to level N+1" (or "Top level!"). The web app adds `level`, `toNext` and `pct` to the stats snapshot (`NativeBridge.setStats` -> `StatsWidget.save`, which refreshes the new widget too); tap opens the app. English + Hebrew. Kotlin and resources are verified by CI only; `PointsMathTest` covers the ring rounding.
 - The "kind thought" widget is the existing "A good sentence" widget (chosen approach, changing every few hours); the balance bell widget has no reminder to show yet.

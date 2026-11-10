@@ -9,6 +9,7 @@ import { resizeToDataUrl } from '../photo.js';
 import { modal, toast, confirmBox, icon } from './common.js';
 import { kitNode } from './avatarKit.js';
 import { sunnyNode } from './mascot.js';
+import { framedAvatar } from './scenery.js';
 import { openAvatarStudio } from './avatarStudio.js';
 import { openMyAvatars } from './avatarLibrary.js';
 
@@ -60,7 +61,7 @@ export function openAvatarPicker(initial, onPick, { lvl = level() } = {}) {
   const EMOJIS = S.MASCOTS.concat(['🧒', '👧', '🦸', '🧙', '🐙', '🦁', '🐵', '🚀']);
   const draw = () => {
     setChildren(emojis, EMOJIS.map((e) => h('button', { type: 'button', class: `emoji-pick ${cur.k === 'emoji' && cur.e === e ? 'on' : ''}`, 'aria-label': e, 'aria-pressed': String(cur.k === 'emoji' && cur.e === e), onclick: () => { cur = { k: 'emoji', e }; draw(); } }, e)));
-    big = avatarNode(cur, { size: 120, label: t('avatar') }); setChildren(preview, big);
+    big = avatarNode(cur, { size: 120, label: t('avatar') }); setChildren(preview, framedAvatar(big, lvl, 150));
     setChildren(anims, ANIMATIONS.filter((a) => a !== 'idle').map((a) => h('button', { class: 'btn small', type: 'button', 'aria-label': `${t('avatarAnim')}: ${a}`, onclick: () => animate(big, a, 2200) }, ANIM_LABEL[a])));
     const sunnyOn = cur.k === 'sunny';
     setChildren(grid, [h('button', { type: 'button', class: `char ${sunnyOn ? 'on' : ''}`, role: 'radio', 'aria-checked': String(sunnyOn), 'aria-label': t('avSunny'), title: t('avSunny'), onclick: () => { cur = { k: 'sunny' }; draw(); } }, avatarNode({ k: 'sunny' }, { size: 52 })), ...Object.entries(CHARACTERS).map(([id, c]) => {

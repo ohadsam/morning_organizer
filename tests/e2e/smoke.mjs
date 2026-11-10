@@ -1690,6 +1690,18 @@ await step('v1.41: every removal can be undone - a check-in with its voice note,
   await page.context().close();
 });
 
+await step('v1.42: the scenery kit - a sky strip on the Home "now" card, a framed avatar in the picker, zero axe violations (he + en)', async () => {
+  for (const lang of ['en', 'he']) {
+    const { page } = await newPage({ lang }); await page.goto(base + '#/');
+    await page.evaluate(async () => { const S = await import('./js/store.js'); await S.updateSettings({ homeMode: 'now' }); }); await page.reload(); await page.waitForSelector('.now-card');
+    await page.waitForSelector('.now-card .sky-strip svg.sc', { state: 'attached', timeout: 15000 }).catch(async (e) => { throw new Error(e.message.split('\n')[0] + ' :: ' + await page.evaluate(async () => { const m = await import('./js/ui/scenery.js'); const r = await fetch('data/scenery.json'); return JSON.stringify({ kit: !!m.sceneryKit(), st: r.status, strip: document.querySelector('.now-card .sky-strip')?.outerHTML.slice(0, 120) }); })); });
+    assert.deepEqual(await audit(page, 'sky'), []);
+    await page.goto(base + '#/settings/profile'); await page.waitForSelector('details[data-group=profile]');
+    if (lang === 'en') { await page.click('details[data-group=profile] button:has-text("Avatar")'); await page.waitForSelector('dialog[open] .avatar-picker .framed svg.sc'); assert.deepEqual(await audit(page, 'frame'), []); }
+    await page.context().close();
+  }
+});
+
 await step('v1.23: the picker offers "Build my own" and an avatar picked there is used at once; a kit avatar survives sanitising and other profiles keep theirs', async () => {
   const { page } = await newPage({ lang: 'en' }); await page.goto(base + '#/settings/profile'); await page.waitForSelector('details[data-group=profile]');
   await page.click('details[data-group=profile] button:has-text("Avatar")'); await page.waitForSelector('dialog[open] .avatar-picker'); assert.deepEqual(await audit(page, 'picker'), []);

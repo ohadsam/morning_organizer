@@ -3,6 +3,7 @@ import { h } from '../util.js';
 import { t } from '../i18n.js';
 import * as S from '../store.js';
 import { cameoNode } from './mascot.js';
+import { divider } from './scenery.js';
 import { weekSummary, worthShowing, weekKey, needsBackupReminder } from '../weeklyCalm.js';
 import { saveBackupFile } from './backup.js';
 
@@ -13,7 +14,7 @@ export function weeklyCard(draw) {
   const p = S.activeProfile(), key = `mo.weekly.${p.id}`, now = Date.now(); if (get(key) === weekKey(now)) return null;
   const s = weekSummary(S.myRuns(), S.feelings(), now); if (!worthShowing(s)) return null;
   const lines = [s.runs ? t('wkRuns', { n: s.runs, d: s.days }) : null, s.stars ? t('wkStars', { n: s.stars }) : null, s.onTime ? t('wkOnTime', { n: s.onTime }) : null, s.feelN ? t('wkFeel', { x: s.feelAvg.toFixed(1), n: s.feelN }) : null].filter(Boolean);
-  return h('section', { class: 'card weekly-card center', role: 'group', 'aria-label': t('wkTitle') }, cameoNode('proud', { size: 84 }), h('strong', {}, t('wkTitle')), h('ul', { class: 'wk-list' }, lines.map((x) => h('li', {}, x))), h('p', { class: 'muted' }, t('wkKind')),
+  return h('section', { class: 'card weekly-card center', role: 'group', 'aria-label': t('wkTitle') }, cameoNode('proud', { size: 84 }), h('strong', {}, t('wkTitle')), divider('sunrise'), h('ul', { class: 'wk-list' }, lines.map((x) => h('li', {}, x))), h('p', { class: 'muted' }, t('wkKind')),
     h('button', { class: 'btn primary', type: 'button', onclick: () => { put(key, weekKey(now)); draw(); } }, t('wkThanks')));
 }
 

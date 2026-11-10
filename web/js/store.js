@@ -158,7 +158,13 @@ export async function updateFeeling(id, patch, audioBlob = null) {
   let audio = old.audio; if (audioBlob && audioBlob.size <= MAX_FEEL_AUDIO) { if (audio) await db.del('audio', audio.id); audio = { id: uid(), mime: audioBlob.type, sec: patch.sec }; await db.put('audio', { id: audio.id, profileId: old.pid, blob: audioBlob }); }
   const clean = sanitizeFeeling({ ...old, tag: patch.tag ?? old.tag, note: patch.note ?? old.note, audio }); state.feelings = state.feelings.map((f) => (f.id === id ? clean : f)); await persistFeelings(); return clean;
 }
-export async function removeFeeling(id) { const old = state.feelings.find((f) => f.id === id); if (old?.audio) await db.del('audio', old.audio.id); state.feelings = state.feelings.filter((f) => f.id !== id); await persistFeelings(); }
+/** Removes a check-in (and its voice note); the returned function puts both back, as long as the page stays open. */
+export async function removeFeeling(id) {
+  const old = state.feelings.find((f) => f.id === id); if (!old) return async () => {};
+  const blob = old.audio ? (await db.get('audio', old.audio.id))?.blob || null : null; if (old.audio) await db.del('audio', old.audio.id);
+  state.feelings = state.feelings.filter((f) => f.id !== id); await persistFeelings();
+  return async () => { if (state.feelings.some((f) => f.id === old.id)) return; if (old.audio && blob) await db.put('audio', { id: old.audio.id, profileId: old.pid, blob }); state.feelings = [...state.feelings, old].sort((x, y) => x.at - y.at).slice(-MAX_FEELINGS); await persistFeelings(); };
+}
 export async function feelingAudioUrl(f) { const a = f?.audio && await db.get('audio', f.audio.id); return a?.blob ? URL.createObjectURL(a.blob) : null; }
 // ── retrospectives: look back at a run, change the routine, check later whether it helped ──
 export const retros = (profileId = activeProfile().id) => state.retros.filter((r) => r.profileId === profileId);
@@ -198,7 +204,8 @@ export async function undoRetro(retroId, actionIds) {
   state.retros = state.retros.map((x) => (x.id === retroId ? { ...x, actions: rest, appliedAt: rest.some((a) => a.applied) ? x.appliedAt : 0 } : x)); await persistRetros();
   return { undone: chosen.length };
 }
-export async function removeRetro(id) { state.retros = state.retros.filter((x) => x.id !== id); await persistRetros(); }
+/** Removes a look-back; the returned function puts it back (for an "Undo" button). */
+export async function removeRetro(id) { const snap = state.retros.find((x) => x.id === id); state.retros = state.retros.filter((x) => x.id !== id); await persistRetros(); return async () => { if (snap && !state.retros.some((x) => x.id === snap.id)) { state.retros = [...state.retros, snap].slice(-MAX_RETROS); await persistRetros(); } }; }
 
 // ── goals (Goal - Plan - Do - Check) live on the profile ──
 export const goals = (p = activeProfile()) => p?.goals ?? [];
@@ -208,7 +215,8 @@ export async function saveGoal(g, profileId = activeProfile().id) {
   const i = p.goals.findIndex((x) => x.id === clean.id), next = i >= 0 ? p.goals.map((x, k) => (k === i ? clean : x)) : [...p.goals, clean].slice(-MAX_GOALS);
   await patchProfile(profileId, { goals: next }); return clean;
 }
-export async function removeGoal(id) { const p = activeProfile(); await patchProfile(p.id, { goals: p.goals.filter((x) => x.id !== id) }); }
+/** Removes a goal; the returned function puts it back. */
+export async function removeGoal(id) { const p = activeProfile(), snap = p.goals.find((x) => x.id === id); await patchProfile(p.id, { goals: p.goals.filter((x) => x.id !== id) }); return async () => { if (snap) await saveGoal(snap, p.id); }; }
 export async function addCheck(goalId, { rating, note = '', used = [] }) { const g = goals().find((x) => x.id === goalId); if (g) await saveGoal({ ...g, checks: [...g.checks, { at: Date.now(), rating, note, used }] }); }
 // ── template library: reusable tasks and routines ──
 export const library = () => state.library;

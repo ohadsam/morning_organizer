@@ -56,7 +56,7 @@ export function goalCard(g, runs, redraw, nav = null) {
       h('button', { class: 'btn small', type: 'button', onclick: () => openGoalWizard(g, { onSave: async (x) => { await S.saveGoal(x); redraw(); } }) }, t('edit')),
       nav ? h('button', { class: 'btn small', type: 'button', onclick: () => openWizard(nav, { goalId: g.id }) }, `🪄 ${t('goalBuild')}`) : null,
       h('button', { class: 'btn small', type: 'button', onclick: async () => { await S.saveGoal({ ...g, done: true, doneAt: Date.now() }); toast(t('goalCongrats')); redraw(); } }, `🎉 ${t('goalAchieved')}`)),
-    h('div', { class: 'row-btns' }, h('button', { class: 'btn small danger', type: 'button', onclick: async () => { if (await confirmBox(t('confirmDelete', { name: g.title }), t('delete'), true)) { await S.removeGoal(g.id); redraw(); } } }, t('delete'))));
+    h('div', { class: 'row-btns' }, h('button', { class: 'btn small danger', type: 'button', onclick: async () => { if (await confirmBox(t('confirmDelete', { name: g.title }), t('delete'), true)) { const undo = await S.removeGoal(g.id); redraw(); toast(t('goalDeleted'), { label: t('undo'), fn: async () => { await undo(); redraw(); } }); } } }, t('delete'))));
 }
 
 export function renderGoals(root, nav) {

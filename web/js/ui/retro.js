@@ -154,7 +154,7 @@ function retroForm(root, nav, run, existing, init) {
     drawSug();
   }
   function drawBar() {
-    const n = parts.includes('change') ? picked().length : 0, delBtn = existing ? h('button', { class: 'btn danger', type: 'button', onclick: async () => { if (await confirmBox(t('rcDeleteAsk'), t('delete'), true)) { await S.removeRetro(existing.id); nav(hubHash(run.id)); } } }, t('delete')) : null;
+    const n = parts.includes('change') ? picked().length : 0, delBtn = existing ? h('button', { class: 'btn danger', type: 'button', onclick: async () => { if (await confirmBox(t('rcDeleteAsk'), t('delete'), true)) { const undo = await S.removeRetro(existing.id); nav(hubHash(run.id)); toast(t('rcDeleted'), { label: t('undo'), fn: async () => { await undo(); } }); } } }, t('delete')) : null;
     const go = (d) => async () => { st.step = Math.max(0, Math.min(parts.length - 1, st.step + d)); await persist('draft'); drawMain(); window.scrollTo?.(0, 0); };
     setChildren(bar, st.mode === 'guided' && !last() ? [h('button', { class: 'btn', type: 'button', disabled: st.step === 0, onclick: go(-1) }, t('rcBack')), h('button', { class: 'btn primary', type: 'button', onclick: go(1) }, `${t('rcNext')} ›`)]
       : [st.mode === 'guided' ? h('button', { class: 'btn', type: 'button', disabled: st.step === 0, onclick: go(-1) }, t('rcBack')) : null, h('button', { class: 'btn', type: 'button', onclick: () => finish(false) }, `💾 ${t(st.mode === 'guided' ? 'rcFinish' : 'rcSave')}`), tpl && n ? h('button', { class: 'btn primary', type: 'button', onclick: () => finish(true) }, `✅ ${t('rcSaveApply', { n })}`) : null],

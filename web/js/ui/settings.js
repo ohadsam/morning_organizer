@@ -8,6 +8,7 @@ import { PRESETS, GROUPS, personaIds, voicesFor, ttsSupported, voiceLabel, canIn
 import { speakWithSettings } from './coach.js';
 import { openNeeds, peopleManager, needsLine } from './people.js';
 import { openWelcome } from './welcome.js';
+import { openTour } from './tour.js';
 import { commandList, helpButton } from './voiceControl.js';
 import { dictationSupported } from '../dictation.js';
 import { isFull } from '../needs.js';
@@ -122,7 +123,7 @@ export function renderSettings(root, version, focusKey = '') {
         h('p', { class: 'chip solid' }, `${me.name ? `${me.name}: ` : ''}${needsLine(me.view)}`), h('small', { class: 'hint' }, t('needsIntro')),
         h('div', { class: 'toolbar wrap' }, h('button', { class: 'btn primary', type: 'button', onclick: () => openNeeds(me, draw) }, t('needChange')),
           isFull(me.view) ? null : h('button', { class: 'btn', type: 'button', onclick: async () => { await S.setNeeds(me.id, { model: 'full', problems: [] }); toast(t('needAllToast')); draw(); } }, `🌐 ${t('needShowAll')}`),
-          h('button', { class: 'btn', type: 'button', onclick: () => openWelcome() }, `👋 ${t('setWelcome')}`)),
+          h('button', { class: 'btn', type: 'button', onclick: () => openWelcome() }, `👋 ${t('setWelcome')}`), h('button', { class: 'btn', type: 'button', onclick: () => openTour((hash) => { location.hash = hash; }) }, `🧭 ${t('tourTitle')}`)),
         isFull(me.view) ? null : h('small', { class: 'hint' }, t('needHiddenNote')), h('small', { class: 'hint' }, t('setWelcomeHint'))),
       group('people', `👥 ${t('peopleTitle')}`, false, peopleManager(draw),
         toggle(t('askProfile'), t('askProfileHint'), st.askProfile !== false, (v) => set({ askProfile: v }))),

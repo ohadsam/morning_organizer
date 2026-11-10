@@ -1,0 +1,8 @@
+// The first-run tour (pure content): a few short steps, each with a Sunny picture and a button that takes you straight to the thing it explains.
+export const TOUR = [
+  { id: 'routines', cameo: 'hello', route: '#/', he: ['השגרות שלכם', 'לוחצים על שגרה כדי לערוך אותה, ועל כפתור ההפעלה הגדול כדי להתחיל. אפשר גם להוסיף שגרה חדשה מהסרגל.'], en: ['Your routines', 'Tap a routine to edit it, and the big play button to start it. You can add a new routine from the bar.'] },
+  { id: 'calm', cameo: 'calm', route: '#/calm', he: ['פינת רוגע', 'נשימה, חמשת החושים, סריקת גוף ודמיון מודרך. שמשי נושמת איתכם. אפשר לפתוח אותה גם באמצע שגרה.'], en: ['A calm corner', 'Breathing, the five senses, a body scan and guided imagery. Sunny breathes with you. You can open it in the middle of a routine too.'] },
+  { id: 'feel', cameo: 'check', route: '#/feel', he: ['איך אני מרגיש/ה?', 'לחיצה אחת על פרצוף, ושאלה קצרה אחת. אפשר לראות את הימים שלכם לאורך זמן, ולהכין סיכום למטפל/ת.'], en: ['How do I feel?', 'One tap on a face and one short question. You can see your days over time and make a summary for a therapist.'] },
+  { id: 'needs', cameo: 'think', route: '#/settings', he: ['הופכים את זה לשלכם', 'בהגדרות בוחרים למה האפליקציה משמשת, את המראה, את הקול, את האווטר ועוד. כל אדם במכשיר מקבל הגדרות משלו.'], en: ['Make it yours', 'In Settings you choose what the app is for, the look, the voice, the avatar and more. Each person on the device has their own settings.'] },
+  { id: 'search', cameo: 'proud', route: '#/', he: ['מחפשים משהו?', 'בחיפוש בבית כותבים במילים שלכם, למשל “חרדה” או “גיבוי”, ומגיעים ישר למקום הנכון.'], en: ['Looking for something?', 'In the search on Home type it in your own words, like “worry” or “backup”, and go straight to the right place.'] },
+];

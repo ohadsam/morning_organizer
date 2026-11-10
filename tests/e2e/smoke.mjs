@@ -19,6 +19,7 @@ const dismissWelcome = async (page) => { try { await page.waitForSelector('dialo
 async function newPage(opts = {}) {
   const ctx = await browser.newContext({ viewport: { width: 390, height: 800 }, locale: opts.locale || 'en-US', serviceWorkers: 'block', ...opts.ctx });
   // settings groups are collapsible (state remembered); most steps need every field reachable, so start with all groups open
+  if (!opts.tour) await ctx.addInitScript(() => { try { localStorage.setItem('mo.tour', '1'); } catch { /* blocked */ } });   // the first-run tour would cover every step that follows the welcome sheet
   if (!opts.collapsed) await ctx.addInitScript(() => { try { localStorage.setItem('mo.sg', JSON.stringify(Object.fromEntries(['needs', 'people', 'look', 'profile', 'helpers', 'buddy', 'pace', 'a11y', 'coach', 'voice', 'voicecmd', 'alerts', 'defaults', 'sync', 'app'].map((k) => [k, true])))); } catch { /* blocked */ } });
   // v1.17: sections ("More", edit-page folds, task help, run "More") start closed for people; most steps just need their buttons reachable, so open them as they appear
   if (!opts.foldsClosed) await ctx.addInitScript(() => { const open = () => document.querySelectorAll('details.fold:not([data-keep]), details.help-fold, details.task-more, details.menu-group').forEach((d) => { if (!d.open && !d.dataset.seen) { d.dataset.seen = '1'; d.open = true; } }); new MutationObserver(open).observe(document, { childList: true, subtree: true }); });
@@ -1658,6 +1659,34 @@ await step('v1.39: routine cards say who sees them (only with several people), a
   const gap = async () => page.evaluate(() => getComputedStyle(document.querySelector('.stack')).rowGap);
   const g0 = await gap(); await page.evaluate(async () => { const S = await import('./js/store.js'); await S.updateSettings({ density: 'roomy' }); }); await page.waitForTimeout(300); assert.notEqual(await gap(), g0, 'roomy changes the spacing'); assert.equal(await page.evaluate(() => document.documentElement.dataset.density), 'roomy');
   for (const lang of ['he', 'en']) { await page.evaluate(async (l) => { const S = await import('./js/store.js'); await S.updateSettings({ lang: l, fontScale: 130, density: 'compact' }); }, lang); await page.waitForTimeout(500); await page.goto(base + '#/settings'); await page.goto(base + '#/'); await page.waitForSelector('.routine'); const v = await audit(page, `${lang}/who-density`); if (v.length) console.error(v.join('\n')); assert.deepEqual(v, []); }
+  await page.context().close();
+});
+
+await step('v1.40: the first-run tour follows the welcome sheet (five cards with Sunny, "Show me" goes there), is skippable, remembered, and can be opened again from Settings; zero axe violations (he + en)', async () => {
+  const { page } = await newPage({ lang: 'he', tour: true }); await page.goto(base + '#/'); await page.waitForSelector('dialog.welcome'); await page.click('dialog.welcome footer button >> nth=1');
+  await page.waitForSelector('dialog.tour .tour-body'); assert.match(await page.textContent('dialog.tour'), /שלב 1 מתוך 5/); assert.ok(await page.locator('dialog.tour svg.sunny-cameo').count()); { const v = await audit(page, 'he/tour-1'); if (v.length) console.error(v.join('\n')); assert.deepEqual(v, []); }
+  for (let n = 2; n <= 5; n++) { await page.click('dialog.tour .btn.primary'); await page.waitForFunction((k) => document.querySelector('dialog.tour')?.textContent.includes(`שלב ${k} מתוך 5`), n); }
+  await page.click('dialog.tour .btn.primary:has-text("סיום")'); await page.waitForTimeout(300); assert.equal(await page.locator('dialog.tour').count(), 0); assert.equal(await page.evaluate(() => localStorage.getItem('mo.tour')), '1', 'remembered');
+  await page.reload(); await page.waitForTimeout(800); assert.equal(await page.locator('dialog.tour').count(), 0, 'not shown again');
+  await page.evaluate(async () => { const S = await import('./js/store.js'); await S.updateSettings({ lang: 'en', fontScale: 130 }); }); await page.waitForTimeout(500);
+  await page.goto(base + '#/settings'); await closeDialogs(page); await page.waitForSelector('button:has-text("A short tour")'); await page.click('button:has-text("A short tour")'); await page.waitForSelector('dialog.tour');
+  { const v = await audit(page, 'en/tour'); if (v.length) console.error(v.join('\n')); assert.deepEqual(v, []); }
+  await page.click('dialog.tour .btn:has-text("Show me")'); await page.waitForTimeout(400); assert.equal(await page.locator('dialog.tour').count(), 0, '"Show me" closes the tour and goes there');
+  await page.evaluate(() => localStorage.removeItem('mo.tour')); await page.goto(base + '#/settings'); await page.click('button:has-text("A short tour")'); await page.click('dialog.tour footer button'); await page.waitForTimeout(300); assert.equal(await page.locator('dialog.tour').count(), 0, 'skippable');
+  await page.context().close();
+});
+
+await step('v1.41: every removal can be undone - a check-in with its voice note, a goal, a look-back; "Undo" in the toast', async () => {
+  const { page } = await newPage({ lang: 'en' }); await page.goto(base + '#/');
+  const aid = await page.evaluate(async () => { const S = await import('./js/store.js'); const e = await S.addFeeling({ mood: 3, ap: 'general', moment: 'now', audio: { sec: 2 } }, new Blob([new Uint8Array(500)], { type: 'audio/webm' })); return e.audio.id; });
+  await page.goto(base + '#/feel'); await page.waitForSelector('.feel-list li'); await page.click('.feel-list li button[aria-label^="Delete"]'); await page.waitForSelector('#toast button:has-text("Undo")');
+  const gone = await page.evaluate(async (i) => { const { db } = await import('./js/db.js'); const S = await import('./js/store.js'); return [S.feelings().length, !!(await db.get('audio', i))]; }, aid); assert.deepEqual(gone, [0, false]);
+  await page.click('#toast button:has-text("Undo")'); await page.waitForSelector('.feel-list li');
+  const back = await page.evaluate(async (i) => { const { db } = await import('./js/db.js'); const S = await import('./js/store.js'); return [S.feelings().length, !!(await db.get('audio', i))]; }, aid); assert.deepEqual(back, [1, true], 'the check-in and its sound are back');
+  const res = await page.evaluate(async () => { const S = await import('./js/store.js'); const g = await S.saveGoal({ title: 'Read daily', emoji: '📚' }); const un = await S.removeGoal(g.id); const n0 = S.goals().length; await un(); return [n0, S.goals().length, S.goals().some((x) => x.id === g.id)]; });
+  assert.deepEqual(res, [0, 1, true], 'a removed goal comes back');
+  const rr = await page.evaluate(async () => { const S = await import('./js/store.js'); const r = await S.saveRetro({ runId: 'x', templateId: 'x', note: 'n' }); if (!r) return 'skip'; const un = await S.removeRetro(r.id); const n0 = S.retros().length; await un(); return [n0, S.retros().length]; });
+  if (rr !== 'skip') assert.deepEqual(rr, [0, 1], 'a removed look-back comes back');
   await page.context().close();
 });
 

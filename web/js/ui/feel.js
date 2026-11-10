@@ -65,7 +65,7 @@ export function renderFeel(root, nav, arg = '') {
       h('div', { class: 'feel-bars', role: 'img', 'aria-label': t('feelChart') }, st.series.map((d) => h('span', { class: `fbar ${d.avg === null ? 'none' : ''}`, 'data-level': d.avg === null ? '0' : String(Math.round(d.avg)), title: `${dayLabel(Date.parse(d.day))}${d.avg === null ? '' : ` · ${d.avg.toFixed(1)}`}` }))),
       h('p', { class: 'note' }, t('feelAvg', { x: st.avg.toFixed(1), n: st.n })), st.trend ? h('p', { class: 'note' }, t(`feelTrend_${st.trend}`)) : null, ms.verdict ? h('p', { class: 'note' }, t(`feelMoment_${ms.verdict}`, { x: Math.abs(ms.diff).toFixed(1) })) : null,
       h('h3', {}, t('feelRecent')), h('ul', { class: 'feel-list' }, recent.map((f) => h('li', {}, moodFace(f.mood, { size: 28 }), h('span', {}, `${dayLabel(f.at)}${f.tag ? ` · ${t(`fo_${f.ap}_${f.tag}`)}` : ''}${f.moment !== 'now' ? ` · ${t(`fm_${f.moment}`, { routine: f.routine, task: f.task })}` : ''}`), f.audio ? playBtn(f) : null,
-        h('button', { class: 'btn small', type: 'button', 'aria-label': `${t('feelDelete')} ${dayLabel(f.at)}`, onclick: async () => { await S.removeFeeling(f.id); paintOver(); paintSum(); } }, '🗑️'))))));
+        h('button', { class: 'btn small', type: 'button', 'aria-label': `${t('feelDelete')} ${dayLabel(f.at)}`, onclick: async () => { const undo = await S.removeFeeling(f.id); paintOver(); paintSum(); toast(t('feelDeleted'), { label: t('undo'), fn: async () => { await undo(); paintOver(); paintSum(); } }); } }, '🗑️'))))));
   }
   function paintSum() {
     const text = summaryText(S.feelings(), { days, includeNotes: withNotes, name: S.activeProfile().name }, labels());

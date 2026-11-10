@@ -72,6 +72,7 @@ Status: ✅ shipped (version) · 🟡 partly (what is missing) · ⛔ not possib
 | 46 | Choose built-in special tasks (journal, thought parking, relaxation, guided imagery...) from a grouped, searchable picker, not only as suggestions | ✅ 1.21 |
 | 49 | NLP as a method like CBT / Cog-Fun: choose tasks, guidance and adaptation by it | ✅ 1.22 (needs model, six guided tools, special-task group; honest evidence note) |
 | 50 | Suggest and add more UI/UX improvements | ✅ 1.22 (calm animations switch, method notes in the chooser, light vibration tick) |
+| 84 | A prompt for the 14 distinct screen backgrounds and bolder Sunny mood faces | ✅ written: `docs/SCENERY_BACKGROUNDS_PROMPT.md`; waiting for the result |
 | 83 | Review the scenery kit round 3 (`SonRise_Scenery_Complete_20261110.zip`) | ✅ reviewed: 6 distinct sky backgrounds, a real sun-track, avatar frames are real rings (my earlier sheet misjudged them); open: assets mix `fill="none"` with a fill class so they render differently with and without the class CSS (dividers vs frames), the ring-sun stages and some dividers, photo frames invisible, 14 backgrounds unchanged, contrast numbers identical (flat); not integrated yet |
 | 82 | Points / level widget (O4 part) | ✅ 1.41.0 (level ring + stars to next); bell widget and per-look backgrounds still open |
 | 81 | Interactive first-run tour; uniform undo (end of the UX batch O5) | ✅ 1.40.0 |

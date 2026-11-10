@@ -58,6 +58,11 @@
     <string name="mood_3">בסדר</string>
     <string name="mood_4">טוב</string>
     <string name="mood_5">מצוין</string>
+    <string name="widget_points_label">רמה וכוכבים</string>
+    <string name="widget_points_desc">הרמה שלכם וכמה קרובה הרמה הבאה</string>
+    <string name="points_level">רמה %1$d</string>
+    <string name="points_next">%1$d כוכבים לרמה %2$d</string>
+    <string name="points_max">הרמה הגבוהה ביותר!</string>
     <string name="widget_journal_text">רשימה מהירה</string>
     <string name="widget_journal_desc">פתיחת היומן בלחיצה אחת</string>
     <string name="widget_calm_desc">פתיחת פינת הרוגע בלחיצה אחת</string>

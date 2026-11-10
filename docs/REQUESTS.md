@@ -72,6 +72,7 @@ Status: ✅ shipped (version) · 🟡 partly (what is missing) · ⛔ not possib
 | 46 | Choose built-in special tasks (journal, thought parking, relaxation, guided imagery...) from a grouped, searchable picker, not only as suggestions | ✅ 1.21 |
 | 49 | NLP as a method like CBT / Cog-Fun: choose tasks, guidance and adaptation by it | ✅ 1.22 (needs model, six guided tools, special-task group; honest evidence note) |
 | 50 | Suggest and add more UI/UX improvements | ✅ 1.22 (calm animations switch, method notes in the chooser, light vibration tick) |
+| 82 | Points / level widget (O4 part) | ✅ 1.41.0 (level ring + stars to next); bell widget and per-look backgrounds still open |
 | 81 | Interactive first-run tour; uniform undo (end of the UX batch O5) | ✅ 1.40.0 |
 | 80 | "Who sees this" badge on routine cards and a spacing (density) setting | ✅ 1.39.0 |
 | 79 | A spoken "start for me" and places for the remaining Sunny cameos | ✅ 1.38.0 (the cameos `think`, `goodbye` placed; `loading` still has no natural place); density / font settings, who-sees badge, tour, uniform undo still open |

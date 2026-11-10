@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/points_root"
+    android:layout_width="match_parent" android:layout_height="match_parent">
+    <ImageView android:layout_width="match_parent" android:layout_height="match_parent" android:scaleType="centerCrop"
+        android:src="@drawable/wbg_points" android:importantForAccessibility="no"/>
+    <LinearLayout
+    android:layout_width="match_parent" android:layout_height="match_parent"
+    android:orientation="vertical" android:gravity="center" android:padding="8dp">
+    <ImageView android:id="@+id/points_ring" android:layout_width="64dp" android:layout_height="64dp" android:src="@drawable/wi_ring_0" android:importantForAccessibility="no"/>
+    <TextView android:id="@+id/points_level" android:layout_width="wrap_content" android:layout_height="wrap_content"
+        android:textColor="@color/widget_text" android:textSize="18sp" android:textStyle="bold"/>
+    <TextView android:id="@+id/points_next" android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center"
+        android:textColor="@color/widget_text" android:textSize="12sp" android:maxLines="2" android:ellipsize="end"/>
+    </LinearLayout>
+</FrameLayout>

@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.41.0
+- **Points / level widget** (`PointsWidget`, 2x2, open item O4): the level, a five-step ring (`PointsMath.ringStep`, from the kit's ring pictures, light and dark) and "N stars to level N+1" (or "Top level!"). The web app adds `level`, `toNext` and `pct` to the stats snapshot (`NativeBridge.setStats` -> `StatsWidget.save`, which refreshes the new widget too); tap opens the app. English + Hebrew. Kotlin and resources are verified by CI only; `PointsMathTest` covers the ring rounding.
+- The "kind thought" widget is the existing "A good sentence" widget (chosen approach, changing every few hours); the balance bell widget has no reminder to show yet.
+
 ## 1.40.0
 - **First-run tour** (open item O5, last part): `tour.js` (content) and `ui/tour.js`: after the very first welcome sheet (`openWelcome({ nav })`) a five-card tour (routines, calm corner, how do I feel, settings, search) with a Sunny cameo each, Back / Next, "Show me" (goes to the place and ends the tour) and "Skip the tour"; remembered in `localStorage mo.tour`; again from Settings → Welcome. The e2e helper sets the flag by default so the tour does not cover other steps.
 - **Uniform undo**: removing a check-in (with its voice note, put back from the copy kept for the toast), a goal or a look-back now shows an "Undo" toast like routines, avatars, saved routines, runs and library items already did (`removeFeeling` / `removeGoal` / `removeRetro` return a restore function).

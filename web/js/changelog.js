@@ -1,5 +1,7 @@
 // "What's new" content shown inside the app (newest first). Keep in step with docs/CHANGELOG.md; a unit test checks the current version is listed and both languages match.
 export const CHANGES = [
+  { v: '1.44.0', en: ['🏞️ A soft picture behind each screen: a hill for Home, a cosy corner for the calm corner, gears for Settings, rising hills for Track... (none on the run screen, so nothing competes with the timer). Switch it off in Settings → Appearance; it is also off in the calm look and in high contrast.'],
+    he: ['🏞️ תמונה רכה מאחורי כל מסך: גבעה בבית, פינה נעימה בפינת הרוגע, גלגלים בהגדרות, גבעות עולות במעקב... (לא במסך הריצה, כדי שדבר לא יתחרה בשעון). אפשר לכבות בהגדרות ← מראה; היא גם כבויה במראה הרגוע ובניגודיות גבוהה.'] },
   { v: '1.43.0', en: ['😀 The five “how do I feel” faces are bolder: big eyes, clear brows and mouth, tears you can see, so even the small ones are easy to tell apart.'],
     he: ['😀 חמשת פרצופי “איך אני מרגיש” בולטים יותר: עיניים גדולות, גבות ופה ברורים ודמעות שרואים, כך שגם הקטנים קל להבדיל ביניהם.'] },
   { v: '1.42.0', en: ['🌅 Scenery from the new kit: your avatar gets a frame that grows richer with each level (shown in the avatar picker and when you level up, with Sunny looking proud), a small sky strip on the “now” card that follows the time of day, and a sunrise divider in the weekly card.'],

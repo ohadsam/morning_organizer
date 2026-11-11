@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { parseScenery, skyAt, frameFor, SKIES } from '../../web/js/scenery.js';
+import { parseScenery, skyAt, frameFor, screenArtFor, SKIES } from '../../web/js/scenery.js';
 
 test('the shipped scenery kit parses with 14 frames, 6 skies and the dividers', () => {
   const s = parseScenery(JSON.parse(readFileSync(new URL('../../web/data/scenery.json', import.meta.url), 'utf8')));
@@ -15,4 +15,10 @@ test('unsafe or foreign data is refused', () => {
 test('sky by hour and frame by level', () => {
   assert.equal(skyAt(6), 'dawn'); assert.equal(skyAt(9), 'morning'); assert.equal(skyAt(12), 'noon'); assert.equal(skyAt(16), 'afternoon'); assert.equal(skyAt(19), 'dusk'); assert.equal(skyAt(23), 'night'); assert.equal(skyAt(3), 'night');
   assert.equal(frameFor(0), 1); assert.equal(frameFor(5), 5); assert.equal(frameFor(99), 14); assert.equal(frameFor('x'), 1);
+});
+test('the 14 screen backgrounds ship, and each screen has its own picture (none behind the run screen)', () => {
+  const s = parseScenery(JSON.parse(readFileSync(new URL('../../web/data/scenery.json', import.meta.url), 'utf8')));
+  assert.equal(Object.keys(s.screens).length, 14);
+  for (const v of ['home', 'calm', 'feel', 'nlp', 'stats', 'settings', 'journal']) assert.ok(s.screens[screenArtFor(v)], v);
+  assert.equal(screenArtFor('run'), null); assert.equal(screenArtFor('constructor'), null); assert.equal(screenArtFor('home', true), 'play');
 });

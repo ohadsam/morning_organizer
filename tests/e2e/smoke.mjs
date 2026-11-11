@@ -1704,6 +1704,15 @@ await step('v1.42: the scenery kit - a sky strip on the Home "now" card, a frame
   }
 });
 
+await step('v1.44: a soft picture behind the screens (a different one per screen, none on the run screen), switchable in Settings, off for the calm look; zero axe violations', async () => {
+  const { page } = await newPage({ lang: 'en' }); await page.goto(base + '#/'); await dismissWelcome(page);
+  await page.goto(base + '#/settings'); await page.waitForSelector('#scene-bg svg'); const a = await page.evaluate(() => document.body.dataset.art);
+  await page.goto(base + '#/stats'); await page.waitForSelector('#scene-bg svg'); const b = await page.evaluate(() => document.body.dataset.art); assert.notEqual(a, b, 'each screen has its own picture'); assert.deepEqual(await audit(page, 'screen-art'), []);
+  await page.evaluate(async () => { const S = await import('./js/store.js'); await S.updateSettings({ screenArt: false }); }); await page.reload(); await page.waitForSelector('main'); assert.equal(await page.locator('#scene-bg').count(), 0, 'switched off in Settings');
+  await page.evaluate(async () => { const S = await import('./js/store.js'); await S.updateSettings({ screenArt: true, skin: 'calm' }); }); await page.reload(); await page.waitForSelector('main'); assert.equal(await page.locator('#scene-bg').count(), 0, 'not on the calm look');
+  await page.context().close();
+});
+
 await step('v1.23: the picker offers "Build my own" and an avatar picked there is used at once; a kit avatar survives sanitising and other profiles keep theirs', async () => {
   const { page } = await newPage({ lang: 'en' }); await page.goto(base + '#/settings/profile'); await page.waitForSelector('details[data-group=profile]');
   await page.click('details[data-group=profile] button:has-text("Avatar")'); await page.waitForSelector('dialog[open] .avatar-picker'); assert.deepEqual(await audit(page, 'picker'), []);

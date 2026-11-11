@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.44.0
+- **Screen backgrounds** (`screens` in `data/scenery.json`, built with `BG_SVG=<dir> node scripts/build-scenery.mjs <kit>`; `screenBg` in `ui/scenery.js`, `screenArtFor` in `scenery.js`): a fixed, quiet picture behind each screen (Home, calm corner, how-do-I-feel, NLP, Track, Settings, journal and looking back; the kids' Home uses the play scene); none on the run screen. New per-person setting `screenArt` (Settings → Appearance), off in the calm look and with high contrast.
+- Reviewed first: the no-panel backgrounds (the opaque centre block is gone; I measured the centre 60% myself: minimum contrast 7.27, Sunrise light and dark, the claimed table was not re-measured by ChatGPT). Their root width/height/preserveAspectRatio are stripped by the build, like the other scenery.
+- Not integrated yet: the balance widget art (now reads as a scale), badge fixes, task silhouettes (clearly distinct now), bell widget, logo marks, per-look widget cards: each needs its own feature (Kotlin widget content, a task icon field, a locked-badge state).
+
 ## 1.43.0
 - **Bolder mood faces**: `sunny-feel-1..5` replaced by the round-2 faces (big eyes, brows, mouth and tears; read at 32 px). Patched into `data/mascot.json`; `build-mascot.mjs` can redo it with `FEEL_SVG=<dir>` (together with `CAMEO_SVG`). Checked: allow-list, unit tests, e2e v1.24 / v1.29 (axe).
 - Not integrated: the loading sunrise (`anim-loading-sunrise`, no place for it yet; the file came with `ns0:` prefixes that the allow-list rejects, so it needs cleaning first). The faint backgrounds were not part of that package.

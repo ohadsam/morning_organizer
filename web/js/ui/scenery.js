@@ -1,7 +1,7 @@
 // Draws the scenery kit (see ../scenery.js): a frame around an avatar, a sky strip, a divider. The pictures are copied element by element, never as markup.
 import { parseScenery, frameFor, skyAt } from '../scenery.js';
 import { inner } from './avatarKit.js';
-import { h } from '../util.js';
+import { h, setChildren } from '../util.js';
 
 const NS = 'http://www.w3.org/2000/svg';
 let kit = null, loading = null;
@@ -33,4 +33,12 @@ export function divider(name) {
   const draw = () => { const t = kit?.dividers?.[name]; if (t) box.append(svgOf(t, /viewBox="([^"]+)"/.exec(t)?.[1] || '0 0 600 40')); };
   if (kit) draw(); else loadScenery().then(draw);
   return box;
+}
+/** A quiet picture behind the whole screen (fixed, under the cards): `name` is one of the 14 backgrounds, or null / `on` false for none. */
+export function screenBg(name, on = true) {
+  let el = document.getElementById('scene-bg');
+  if (!name || !on) { el?.remove(); delete document.body.dataset.art; return; }
+  if (!el) { el = h('div', { id: 'scene-bg', 'aria-hidden': 'true' }); document.body.prepend(el); }
+  const draw = () => { const v = kit?.screens?.[name]; if (!v || document.getElementById('scene-bg') !== el) return; const wide = window.innerWidth > window.innerHeight * 1.1; setChildren(el, svgOf(wide ? v.w : v.p, /viewBox="([^"]+)"/.exec(wide ? v.w : v.p)?.[1] || '0 0 360 640', true)); document.body.dataset.art = name; };
+  if (kit) draw(); else loadScenery().then(draw);
 }

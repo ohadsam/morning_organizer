@@ -139,6 +139,7 @@ export function renderSettings(root, version, focusKey = '') {
         select(t('homeMode'), st.homeMode || 'full', [['full', t('homeModeFull')], ['now', t('homeModeNow')]], (v) => set({ homeMode: v })), h('small', { class: 'hint' }, t('homeModeHint')),
         select(t('runView'), st.runView || 'full', [['full', t('runViewFull')], ['single', t('runViewSingle')]], (v) => set({ runView: v })), h('small', { class: 'hint' }, t('runViewHint')),
         toggle(t('iconMono'), t('iconMonoHint'), st.iconMono, (v) => set({ iconMono: v })),
+        toggle(t('screenArt'), t('screenArtHint'), st.screenArt !== false, (v) => set({ screenArt: v })),
         toggle(t('easyRead'), t('easyReadHint'), st.easyRead, (v) => set({ easyRead: v })),
         toggle(t('reduceMotion'), t('reduceMotionHint'), st.reduceMotion, (v) => set({ reduceMotion: v })),
         h('label', { class: 'field' }, h('span', { class: 'lbl' }, t('customColor')), h('input', { type: 'color', class: 'color-in', value: /^#[0-9a-f]{6}$/i.test(st.accent || '') ? st.accent : '#6c5ce7', 'aria-label': t('customColor'), onchange: (e) => set({ accent: e.target.value }, true) })),

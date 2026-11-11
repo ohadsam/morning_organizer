@@ -30,6 +30,8 @@ import { renderGoals } from './ui/goals.js';
 import { maybeShowWhatsNew, setVersion, getVersion } from './ui/whatsnew.js';
 import { renderLibrary } from './ui/library.js';
 import { renderCalm } from './ui/calm.js';
+import { screenBg } from './ui/scenery.js';
+import { screenArtFor } from './scenery.js';
 import { renderFeel } from './ui/feel.js';
 import { renderNlp } from './ui/nlp.js';
 import { loadPack as loadAvatarPack } from './ui/avatarKit.js';
@@ -53,6 +55,7 @@ async function route() {
   // Simple (kids) mode: only routines and running them are open; everything else needs the grown-up gate.
   if (S.get().settings.simpleMode && !['home', 'run'].includes(view) && !isUnlocked() && !(await requestGate())) { if (location.hash !== '#/') location.hash = '#/'; else drawNav('home'); return; }
   document.body.dataset.view = view;
+  { const x = S.get().settings; screenBg(screenArtFor(view, x.simpleMode), x.screenArt !== false && x.skin !== 'calm' && x.contrast !== 'high'); }
   root.scrollTo?.(0, 0); window.scrollTo(0, 0);
   if (view === 'import') { const code = decodeURIComponent(arg || ''); history.replaceState(null, '', '#/'); nav('#/'); openImport(code); return; }
   try {
@@ -103,7 +106,7 @@ async function boot() {
   S.subscribe(() => { const { textStyle, age } = S.get().settings, on = shouldBePlayful(textStyle, age); if (on !== isPlayful()) { setPlayful(on); route(); } });
   // each profile has its own look / language / sizes: when the person (or the settings) change, re-apply them and redraw
   let lookKey = '';
-  const look = () => { const x = S.get().settings; return [x.activeProfile, x.lang, x.theme, x.skin, x.easyRead, x.fontScale, x.colorSafe, x.contrast, x.accent, x.simpleMode, x.reduceMotion, x.iconStyle, x.iconMono, x.runView, x.density].join('|'); };
+  const look = () => { const x = S.get().settings; return [x.activeProfile, x.lang, x.theme, x.skin, x.easyRead, x.fontScale, x.colorSafe, x.contrast, x.accent, x.simpleMode, x.reduceMotion, x.iconStyle, x.iconMono, x.screenArt, x.runView, x.density].join('|'); };
   lookKey = look();
   S.subscribe(() => { const k = look(); if (k === lookKey) return; const was = lookKey.split('|'), x = S.get().settings; lookKey = k;
     setLang(x.lang); applyTheme(x.theme); applyA11y(x); refreshIcons(); document.title = t('appName'); try { localStorage.setItem('mo.theme', x.theme); localStorage.setItem('mo.lang', x.lang); } catch { /* blocked */ }

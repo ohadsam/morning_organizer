@@ -1,3 +1,5 @@
+> Superseded by `docs/CHATGPT_REMAINING_PROMPT.md` (the single prompt with everything that is still open).
+
 # What is waiting for ChatGPT
 
 1. Part A: the scenery kit, round 3 (frames, dividers, progress, patterns, backgrounds) - this is the only blocking item: the app waits for it to place backgrounds, avatar frames and decorations.

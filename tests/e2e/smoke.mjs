@@ -1713,6 +1713,17 @@ await step('v1.44: a soft picture behind the screens (a different one per screen
   await page.context().close();
 });
 
+await step('v1.45: a task can have a silhouette picture (picked in the icon picker, suggested first by its name), shown in the editor and in the run, kept after a reload; zero axe violations', async () => {
+  const { page } = await newPage({ lang: 'en' }); await page.goto(base + '#/'); await dismissWelcome(page);
+  const id = await page.evaluate(async () => { const S = await import('./js/store.js'); const x = await S.saveTemplate({ ...S.get().templates[0], tasks: [{ ...S.newTask(), name: 'Brush your teeth', sec: 60 }, { ...S.newTask(), name: 'Pack the bag', sec: 60 }] }); return x.id; });
+  await page.goto(base + '#/edit/' + id); await page.waitForSelector('.task-icon'); await page.click('.task-icon >> nth=0'); await page.waitForSelector('dialog[open] .sil-picks .emoji-pick svg.sc'); assert.deepEqual(await audit(page, 'sil-picker'), []);
+  assert.equal(await page.getAttribute('dialog[open] .sil-picks .emoji-pick >> nth=0', 'aria-label'), 'Brush teeth', 'the picture that fits the name comes first');
+  await page.click('dialog[open] .sil-picks .emoji-pick >> nth=0'); await page.waitForSelector('.task-icon .sil svg'); await page.waitForTimeout(800);
+  const kept = await page.evaluate(async (i) => { const S = await import('./js/store.js'); return S.getTemplate(i).tasks.map((k) => k.sil); }, id); assert.deepEqual(kept, ['brush-teeth', '']);
+  await page.goto(base + '#/run/' + id); await page.waitForSelector('.ring .ti .sil svg', { timeout: 15000 }); assert.deepEqual(await audit(page, 'sil-run'), []);
+  await page.context().close();
+});
+
 await step('v1.23: the picker offers "Build my own" and an avatar picked there is used at once; a kit avatar survives sanitising and other profiles keep theirs', async () => {
   const { page } = await newPage({ lang: 'en' }); await page.goto(base + '#/settings/profile'); await page.waitForSelector('details[data-group=profile]');
   await page.click('details[data-group=profile] button:has-text("Avatar")'); await page.waitForSelector('dialog[open] .avatar-picker'); assert.deepEqual(await audit(page, 'picker'), []);

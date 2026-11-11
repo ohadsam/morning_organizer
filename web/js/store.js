@@ -53,7 +53,7 @@ export const get = () => state;
 export const getTemplate = (id) => state.templates.find((x) => x.id === id);
 
 export function newTask(settings = state.settings, name = '') {
-  return { id: uid(), name, icon: '', photo: '', sec: settings.defTaskSec, est: settings.defEstSec || 0 };
+  return { id: uid(), name, icon: '', sil: '', photo: '', sec: settings.defTaskSec, est: settings.defEstSec || 0 };
 }
 export function newTemplate(name = '') {
   const now = Date.now();
@@ -84,7 +84,7 @@ export function normalizeTemplate(tpl) {
     plans: (Array.isArray(tpl.plans) ? tpl.plans : []).filter((x) => x && typeof x === 'object' && cleanText(x.when, 80) && cleanText(x.then, 80)).slice(0, 5).map((x) => ({ id: typeof x.id === 'string' && x.id ? x.id.slice(0, 64) : uid(), when: cleanText(x.when, 80), then: cleanText(x.then, 80) })),
     gear: (Array.isArray(tpl.gear) ? tpl.gear : []).filter((g) => g && typeof g === 'object' && cleanText(g.name, 40)).slice(0, 20).map((g) => ({ id: typeof g.id === 'string' && g.id ? g.id.slice(0, 64) : uid(), name: cleanText(g.name, 40), icon: cleanText(g.icon, 8), days: normDays(g.days) })),
     tasks: (Array.isArray(tpl.tasks) ? tpl.tasks : []).slice(0, LIMITS.maxTasks).map((x) => ({
-      id: typeof x?.id === 'string' && x.id ? x.id.slice(0, 64) : uid(), name: cleanText(x?.name, LIMITS.maxName), icon: cleanText(x?.icon, 8), photo: isSafePhoto(x?.photo) ? x.photo : '',
+      id: typeof x?.id === 'string' && x.id ? x.id.slice(0, 64) : uid(), name: cleanText(x?.name, LIMITS.maxName), icon: cleanText(x?.icon, 8), sil: /^[a-z-]{1,16}$/.test(x?.sil) ? x.sil : '', photo: isSafePhoto(x?.photo) ? x.photo : '',
       sec: clamp(Math.round(Number(x?.sec)) || 1, 1, LIMITS.maxTaskSec), est: clamp(Math.round(Number(x?.est)) || 0, 0, LIMITS.maxTaskSec),
       feelAfter: !!x?.feelAfter, helper: isHelper(x?.helper) ? x.helper : '', pts: clamp(Math.round(Number(x?.pts)) || 0, 0, MAX_PTS), award: isAward(x?.award) ? x.award : '', helperKey: typeof x?.helperKey === 'string' && /^sx_[a-z]+$/.test(x.helperKey) ? x.helperKey : '' })),
     alarm: normalizeAlarm(a),
@@ -100,7 +100,7 @@ export function sanitizeRun(r) {
     startedAt: n(r.startedAt), endedAt: n(r.endedAt), status: r.status === 'done' ? 'done' : 'stopped', mood: sanitizeMood(r.mood), unplanned: sanitizeUnplanned(r.unplanned), current: 0, pausedMs: n(r.pausedMs),
     shortened: (Array.isArray(r.shortened) ? r.shortened : []).slice(0, 12).map((x) => ({ i: n(x?.i, 99), name: cleanText(x?.name, LIMITS.maxName), fromSec: n(x?.fromSec, LIMITS.maxTaskSec), toSec: n(x?.toSec, LIMITS.maxTaskSec) })).filter((x) => x.toSec < x.fromSec),
     score: sanitizeScore(r.score), plannedTotal: n(r.plannedTotal, 1e7), estTotal: n(r.estTotal, 1e7), actualTotal: n(r.actualTotal, 1e7),
-    tasks: r.tasks.slice(0, LIMITS.maxTasks).map((x) => ({ id: String(x?.id ?? '').slice(0, 64), name: cleanText(x?.name, LIMITS.maxName), icon: cleanText(x?.icon, 8),
+    tasks: r.tasks.slice(0, LIMITS.maxTasks).map((x) => ({ id: String(x?.id ?? '').slice(0, 64), name: cleanText(x?.name, LIMITS.maxName), icon: cleanText(x?.icon, 8), sil: /^[a-z-]{1,16}$/.test(x?.sil) ? x.sil : '',
       plannedSec: n(x?.plannedSec, LIMITS.maxTaskSec), estSec: n(x?.estSec, LIMITS.maxTaskSec), extraSec: n(x?.extraSec, LIMITS.maxTaskSec), actualSec: n(x?.actualSec, LIMITS.maxTaskSec),
       done: !!x?.done, skipped: !!x?.skipped, guess: x?.guess === true, difficulty: clamp(Math.round(Number(x?.difficulty)) || 0, 0, 5),
       help: { note: n(x?.help?.note, 99), thought: n(x?.help?.thought, 99), relax: n(x?.help?.relax, 99) } })),

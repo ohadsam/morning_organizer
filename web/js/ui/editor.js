@@ -6,6 +6,8 @@ import { icon, iconBtn, toast, fold } from './common.js';
 import { requestWebNotifications } from '../reminders.js';
 import { native } from '../native.js';
 import { suggestIcon, PICKER_ICONS } from '../taskIcons.js';
+import { SILS, isSil, suggestSil } from '../scenery.js';
+import { silNode } from './scenery.js';
 import { resizeToDataUrl } from '../photo.js';
 import { suggestStart, validLeaveBy } from '../leave.js';
 import { presetDays, normDays } from '../schedule.js';
@@ -21,7 +23,7 @@ import { AWARDS, AWARD_EMOJI, MAX_PTS, autoBase } from '../points.js';
 import { openSpecialPicker, openTaskPicker, saveRoutineAsTemplate, saveTaskAsTemplate } from './library.js';
 
 /** Task picture if it has a photo, else its emoji. */
-export const iconNode = (task) => (task.photo ? h('img', { src: task.photo, alt: '' }) : (task.icon || suggestIcon(task.name)));
+export const iconNode = (task) => (task.photo ? h('img', { src: task.photo, alt: '' }) : isSil(task.sil) ? silNode(task.sil, task.icon || suggestIcon(task.name)) : (task.icon || suggestIcon(task.name)));
 
 export function renderEditor(root, id, nav) {
   const orig = S.getTemplate(id);
@@ -78,7 +80,9 @@ export function renderEditor(root, id, nav) {
       try { task.photo = await resizeToDataUrl(f); refresh(); } catch { toast(t('photoBad')); }
     } });
     const m = modal(t('pickIcon'), h('div', { class: 'stack' },
-      h('div', { class: 'swatches' }, PICKER_ICONS.map((ic) => h('button', { type: 'button', class: 'emoji-pick', 'aria-label': ic, onclick: () => { task.icon = ic; task.photo = ''; refresh(); } }, ic))),
+      h('p', { class: 'muted' }, t('silPictures')),
+      h('div', { class: 'swatches sil-picks' }, [suggestSil(task.name), ...Object.keys(SILS).filter((k) => k !== suggestSil(task.name))].filter(Boolean).map((k) => h('button', { type: 'button', class: `emoji-pick ${task.sil === k ? 'on' : ''}`, 'aria-label': t(`sil_${k.replace(/-/g, '_')}`), title: t(`sil_${k.replace(/-/g, '_')}`), onclick: () => { task.sil = k; task.photo = ''; refresh(); } }, silNode(k)))),
+      h('div', { class: 'swatches' }, PICKER_ICONS.map((ic) => h('button', { type: 'button', class: 'emoji-pick', 'aria-label': ic, onclick: () => { task.icon = ic; task.photo = ''; task.sil = ''; refresh(); } }, ic))),
       h('div', { class: 'toolbar wrap' }, h('button', { class: 'btn', type: 'button', onclick: () => file.click() }, '📷 ', t('addPhoto')),
         task.photo ? h('button', { class: 'btn danger', type: 'button', onclick: () => { task.photo = ''; refresh(); } }, t('removePhoto')) : null), file),
       [{ label: t('cancel') }]);

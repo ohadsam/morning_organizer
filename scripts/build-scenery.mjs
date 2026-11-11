@@ -4,10 +4,12 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 const kit = JSON.parse(readFileSync(process.argv[2], 'utf8'));
 const clean = (s) => s.replace(/^<\?xml[^>]*\?>\s*/, '').trim().replace(/(<svg[^>]*?)\s+width="[^"]*"/, '$1').replace(/(<svg[^>]*?)\s+height="[^"]*"/, '$1').replace(/\s+preserveAspectRatio="[^"]*"/g, '').replace(/ style="fill:\s*none;?"/g, ' fill="none"').replace(/ id="[^"]*"/g, '');
-const out = { format: 'sonrise-scenery', version: 1, frames: {}, skies: {}, dividers: {}, screens: {} };
+const out = { format: 'sonrise-scenery', version: 1, frames: {}, skies: {}, dividers: {}, screens: {}, tasks: {} };
 for (let i = 1; i <= 14; i++) out.frames[i] = clean(kit.frames[`frame-avatar-${i}`].svg);
 for (const k of ['dawn', 'morning', 'noon', 'afternoon', 'dusk', 'night']) out.skies[k] = clean(kit.backgrounds[`bg-${k}`].wide);
 for (const k of ['wave', 'rays', 'dots', 'sunrise', 'leaves', 'stars', 'hills', 'sun']) if (kit.dividers[`div-${k}`]) out.dividers[k] = clean(kit.dividers[`div-${k}`].svg);
 // the 14 screen backgrounds: BG_SVG=<dir with bg-<name>-portrait.svg and -wide.svg>
 if (process.env.BG_SVG) for (const n of ['home-hero', 'calm', 'focus', 'play', 'thinking', 'sensory-calm', 'welcome', 'settings', 'stats', 'journal', 'calm-corner', 'celebration', 'offline', 'error']) out.screens[n] = { p: clean(readFileSync(`${process.env.BG_SVG}/bg-${n}-portrait.svg`, 'utf8')), w: clean(readFileSync(`${process.env.BG_SVG}/bg-${n}-wide.svg`, 'utf8')) };
+// the 14 task silhouettes: SIL_SVG=<dir with task-sil-<name>.svg>
+if (process.env.SIL_SVG) for (const n of ['wake-up', 'wash-face', 'brush-teeth', 'get-dressed', 'breakfast', 'pack-bag', 'shoes-coat', 'leave-house', 'homework', 'tidy-up', 'shower', 'pyjamas', 'read', 'go-to-sleep']) out.tasks[n] = clean(readFileSync(`${process.env.SIL_SVG}/task-sil-${n}.svg`, 'utf8'));
 writeFileSync('web/data/scenery.json', JSON.stringify(out)); console.log(Object.keys(out.frames).length, 'frames,', Object.keys(out.skies).length, 'skies,', Object.keys(out.dividers).length, 'dividers,', JSON.stringify(out).length, 'bytes');

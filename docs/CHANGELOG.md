@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.45.0
+- **Task silhouettes** (open item O6): `tasks` in `data/scenery.json` (`SIL_SVG=<dir> node scripts/build-scenery.mjs`), `SILS` / `suggestSil` / `isSil` in `scenery.js`, `silNode` in `ui/scenery.js`. A task has an optional `sil` (a slug, sanitised in the template and run sanitisers, copied into runs); the emoji `icon` stays as the fallback for widgets, notifications and reports. The editor's icon picker shows the 14 pictures first (the one that fits the name leads); the editor and the run draw the picture in the text colour. Checked: unit tests, e2e v1.45 (picker, kept after reload, run) with axe.
+- Still emoji-only: reports, statistics, widgets, notifications.
+
 ## 1.44.0
 - **Screen backgrounds** (`screens` in `data/scenery.json`, built with `BG_SVG=<dir> node scripts/build-scenery.mjs <kit>`; `screenBg` in `ui/scenery.js`, `screenArtFor` in `scenery.js`): a fixed, quiet picture behind each screen (Home, calm corner, how-do-I-feel, NLP, Track, Settings, journal and looking back; the kids' Home uses the play scene); none on the run screen. New per-person setting `screenArt` (Settings → Appearance), off in the calm look and with high contrast.
 - Reviewed first: the no-panel backgrounds (the opaque centre block is gone; I measured the centre 60% myself: minimum contrast 7.27, Sunrise light and dark, the claimed table was not re-measured by ChatGPT). Their root width/height/preserveAspectRatio are stripped by the build, like the other scenery.

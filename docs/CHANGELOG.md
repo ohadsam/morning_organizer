@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.43.0
+- **Bolder mood faces**: `sunny-feel-1..5` replaced by the round-2 faces (big eyes, brows, mouth and tears; read at 32 px). Patched into `data/mascot.json`; `build-mascot.mjs` can redo it with `FEEL_SVG=<dir>` (together with `CAMEO_SVG`). Checked: allow-list, unit tests, e2e v1.24 / v1.29 (axe).
+- Not integrated: the loading sunrise (`anim-loading-sunrise`, no place for it yet; the file came with `ns0:` prefixes that the allow-list rejects, so it needs cleaning first). The faint backgrounds were not part of that package.
+
 ## 1.42.0
 - **Scenery kit** (`data/scenery.json` via `scripts/build-scenery.mjs`, `scenery.js`, `ui/scenery.js`): 14 avatar frames by level (`framedAvatar` in the picker preview and the level-up card, with Sunny's proud cameo), six time-of-day skies (`skyStrip` on the Home "now" card) and a sunrise divider in the weekly card. All pictures pass the icon allow-list.
 - Not integrated on purpose: the 14 screen backgrounds (distinct now but faint) and the kit's mood faces (Sunny's own composed faces stay).

@@ -121,3 +121,4 @@ Status: ✅ shipped (version) · 🟡 partly (what is missing) · ⛔ not possib
 | O7 | Checks on a real device: speech recognition, share sheet, adaptive and themed launcher icon, notification icon, avatar animations on a low-end phone, the icon looks | Cannot be done in CI. |
 | O8 | Scenery: frames by level, sky strip, dividers (1.42.0 ✅); screen backgrounds not integrated yet (faint) | Waiting for the user to decide. |
 | O9 | ChatGPT round 2: bolder 14 backgrounds, bolder Sunny faces, loading sunrise animation (`docs/SCENERY_BACKGROUNDS_PROMPT_2.md`) | Prompt written, waiting for the user to send it. |
+| O9 | ChatGPT round 2 returned stages 2+3: bolder faces adopted (1.43.0); loading sunrise not placed; backgrounds (stage 1) not returned | Waiting for stage 1. |

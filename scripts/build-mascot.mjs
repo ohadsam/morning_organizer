@@ -9,6 +9,10 @@ const FEEL = { 1: { eyes: 'sad', brows: 'worried', mouth: 'worried', effects: 't
 const L = m.layers;
 for (const [lv, o0] of Object.entries(FEEL)) { const o = { ...DEF, ...o0 };
   moods[`feel-${lv}`] = { svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="20 6 216 216">${ORDER.map((n) => { const v = o[n] && L[n][o[n]]; return v ? inner(v.svg ?? v.frames?.[0] ?? '') : ''; }).join('')}</svg>`, name: { en: `Feeling ${lv}`, he: `מרגיש ${lv}` }, description: { en: 'Sunny shows how it feels', he: 'שמשי מראה איך מרגישים' } }; }
+// bolder faces from the "mood faces" round: FEEL_SVG=<dir with sunny-feel-1..5.svg> replaces the composed ones (no ids, no empty hidden groups)
+if (process.env.FEEL_SVG) for (let lv = 1; lv <= 5; lv++) {
+  const svg = readFileSync(`${process.env.FEEL_SVG}/sunny-feel-${lv}.svg`, 'utf8').replace(/^<\?xml[^>]*\?>\s*/, '').trim().replace(/ id="[^"]*"/g, '').replace(/<g opacity="0"\/>/g, '').replace(/ (width|height)="256"/g, '').replace('viewBox="0 0 256 256"', 'viewBox="8 8 240 240"');
+  moods[`feel-${lv}`] = { ...moods[`feel-${lv}`], svg }; }
 // the cameos (open-eyed Sunny with a prop: thumbs up, clipboard, plug...) from the "Sunny refinement" kit: CAMEO_SVG=<dir with sunny-<name>.svg>
 if (process.env.CAMEO_SVG) for (const n of ['check', 'empty', 'error', 'offline', 'loading', 'reminder', 'calm', 'tired', 'proud', 'think', 'hello', 'goodbye']) {
   const svg = readFileSync(`${process.env.CAMEO_SVG}/sunny-${n}.svg`, 'utf8').replace(/^<\?xml[^>]*\?>\s*/, '').trim().replace(/ id="[^"]*"/g, '').replace(/ data-[a-z-]+="[^"]*"/g, '');

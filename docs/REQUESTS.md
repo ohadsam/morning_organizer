@@ -122,3 +122,4 @@ Status: ✅ shipped (version) · 🟡 partly (what is missing) · ⛔ not possib
 | O8 | Scenery: frames by level, sky strip, dividers (1.42.0 ✅); screen backgrounds not integrated yet (faint) | Waiting for the user to decide. |
 | O9 | ChatGPT round 2: bolder 14 backgrounds, bolder Sunny faces, loading sunrise animation (`docs/SCENERY_BACKGROUNDS_PROMPT_2.md`) | Prompt written, waiting for the user to send it. |
 | O9 | ChatGPT round 2 returned stages 2+3: bolder faces adopted (1.43.0); loading sunrise not placed; backgrounds (stage 1) not returned | Waiting for stage 1. |
+| O10 | One prompt with everything still needed from ChatGPT: bolder backgrounds, widget art for all looks + bell + balance, badge/silhouette inventory (`docs/CHATGPT_REMAINING_PROMPT.md`) | Written; waiting for the user to send it. |

@@ -1692,8 +1692,10 @@ await step('v1.41: every removal can be undone - a check-in with its voice note,
 
 await step('v1.42: the scenery kit - a sky strip on the Home "now" card, a framed avatar in the picker, zero axe violations (he + en)', async () => {
   for (const lang of ['en', 'he']) {
-    const { page } = await newPage({ lang }); await page.goto(base + '#/');
-    await page.evaluate(async () => { const S = await import('./js/store.js'); await S.updateSettings({ homeMode: 'now' }); }); await page.reload(); await page.waitForSelector('.now-card');
+    const { page } = await newPage({ lang }); await page.goto(base + '#/'); await dismissWelcome(page);
+    await page.evaluate(async () => { const S = await import('./js/store.js'); await S.updateSettings({ homeMode: 'now' }); });
+    for (let i = 0; i < 3 && !(await page.waitForSelector('.now-card', { timeout: 8000 }).then(() => true, () => false)); i++) await page.reload();   // the setting is saved asynchronously: reload until Home shows the "now" card
+    await page.waitForSelector('.now-card', { timeout: 10000 }).catch(async (e) => { throw new Error(lang + ' ' + e.message.split('\n')[0] + ' :: ' + await page.evaluate(() => document.body.innerText.slice(0, 250))); });
     await page.waitForSelector('.now-card .sky-strip svg.sc', { state: 'attached', timeout: 15000 }).catch(async (e) => { throw new Error(e.message.split('\n')[0] + ' :: ' + await page.evaluate(async () => { const m = await import('./js/ui/scenery.js'); const r = await fetch('data/scenery.json'); return JSON.stringify({ kit: !!m.sceneryKit(), st: r.status, strip: document.querySelector('.now-card .sky-strip')?.outerHTML.slice(0, 120) }); })); });
     assert.deepEqual(await audit(page, 'sky'), []);
     await page.goto(base + '#/settings/profile'); await page.waitForSelector('details[data-group=profile]');

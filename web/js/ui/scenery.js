@@ -42,3 +42,10 @@ export function screenBg(name, on = true) {
   const draw = () => { const v = kit?.screens?.[name]; if (!v || document.getElementById('scene-bg') !== el) return; const wide = window.innerWidth > window.innerHeight * 1.1; setChildren(el, svgOf(wide ? v.w : v.p, /viewBox="([^"]+)"/.exec(wide ? v.w : v.p)?.[1] || '0 0 360 640', true)); document.body.dataset.art = name; };
   if (kit) draw(); else loadScenery().then(draw);
 }
+/** A task silhouette (one ink, follows the text colour); the emoji `fallback` shows until the kit is loaded. */
+export function silNode(id, fallback = '') {
+  const box = h('span', { class: 'sil', 'aria-hidden': 'true' }, fallback);
+  const draw = () => { const t = kit?.tasks?.[id]; if (t) setChildren(box, svgOf(t, '0 0 96 96')); };
+  if (kit) draw(); else loadScenery().then(draw);
+  return box;
+}

@@ -16,5 +16,7 @@ if (process.env.SIL_SVG) for (const n of ['wake-up', 'wash-face', 'brush-teeth',
 if (process.env.BADGE_KIT && process.env.BADGE_SVG) {
   const orig = JSON.parse(readFileSync(process.env.BADGE_KIT, 'utf8')).badges, ids = [...Array.from({ length: 14 }, (_, i) => `level-${i + 1}`), 'streak-3', 'streak-7', 'streak-30', 'first-routine'];
   for (const id of ids) { out.badges[id] = clean(orig[id].svg); out.badges[`${id}-locked`] = clean(readFileSync(`${process.env.BADGE_SVG}/${id}-locked.svg`, 'utf8')); }
+  // the new first-* medals and streak-14 come from BADGE_SVG as well (the locked ring that used var(--i-bg) is drawn with the i-bg class instead: the allow-list refuses var() in attributes)
+  for (const id of ['streak-14', 'first-feeling-checkin', 'first-lookback', 'first-backup']) for (const f of [id, `${id}-locked`]) out.badges[f] = clean(readFileSync(`${process.env.BADGE_SVG}/${f}.svg`, 'utf8')).replace('fill="none" stroke="var(--i-bg)"', 'class="i-bg" fill="none" stroke="#FFFFFF"');
 }
 writeFileSync('web/data/scenery.json', JSON.stringify(out)); console.log(Object.keys(out.frames).length, 'frames,', Object.keys(out.skies).length, 'skies,', Object.keys(out.dividers).length, 'dividers,', JSON.stringify(out).length, 'bytes');

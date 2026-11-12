@@ -86,6 +86,7 @@ object AlarmStore {
             val show = PendingIntent.getActivity(ctx, a.id.hashCode(), MainActivity.startIntent(ctx, a.templateId, a.start, a.text), PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
             am.setAlarmClock(AlarmManager.AlarmClockInfo(at, show), pending(ctx, a, true)!!)
         }
+        runCatching { BellWidget.refresh(ctx) }   // the bell widget shows what rings next
     }
 
     fun parseRules(json: String): AlarmRules {

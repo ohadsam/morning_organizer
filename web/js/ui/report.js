@@ -1,4 +1,5 @@
 // The report screen + export: a designed report for one run or a period, as a page you can read, print, save as a real PDF, share or e-mail.
+import { loadingSunny } from './mascot.js';
 import { h, setChildren, fmtHuman, fmtDur } from '../util.js';
 import { t, units, getLang, isRtl } from '../i18n.js';
 import * as S from '../store.js';
@@ -119,7 +120,7 @@ export function renderReport(root, nav, kind, arg) {
   let scope = kind === 'run' ? { kind: 'run', runId: arg } : (() => { const a = String(arg || '30-all'), i = a.indexOf('-'), d = i < 0 ? a : a.slice(0, i), id = i < 0 ? '' : a.slice(i + 1); return { kind: 'period', days: Math.max(0, Math.min(3650, Number(d) || 0)), templateId: id && id !== 'all' ? id : null }; })();
   const draw = () => {
     const m = buildReport({ runs: S.myRuns(), templates: S.myTemplates(), goals: S.goals(), retros: S.retros(), profile: profile(), scope }), page = reportElement(m);
-    const btn = (label, fn, cls = '') => h('button', { class: `btn ${cls}`, type: 'button', onclick: async (e) => { const b = e.currentTarget; b.disabled = true; try { await fn(); } catch (err) { console.error(err); toast(t('rpFailed')); } b.disabled = false; } }, label);
+    const btn = (label, fn, cls = '') => h('button', { class: `btn ${cls}`, type: 'button', onclick: async (e) => { const b = e.currentTarget, sp = loadingSunny({ size: 22 }); b.disabled = true; b.setAttribute('aria-busy', 'true'); b.prepend(sp); try { await fn(); } catch (err) { console.error(err); toast(t('rpFailed')); } sp.remove(); b.removeAttribute('aria-busy'); b.disabled = false; } }, label);
     setChildren(root, h('div', { class: 'row between rpt-toolbar' }, h('h1', {}, `📄 ${t('rpTitle')}`), h('button', { class: 'btn', type: 'button', onclick: () => history.length > 1 ? history.back() : nav('#/stats') }, t('back'))),
       scope.kind === 'period' ? h('div', { class: 'toolbar rpt-toolbar' }, [7, 30, 90, 0].map((d) => h('button', { class: `chip btn-chip ${scope.days === d ? 'on' : ''}`, type: 'button', 'aria-pressed': String(scope.days === d), onclick: () => { scope = { ...scope, days: d }; draw(); } }, d ? t('rpDays', { n: d }) : t('rpAll')))) : null,
       scope.kind === 'period' ? h('label', { class: 'field rpt-toolbar' }, h('span', { class: 'lbl' }, t('rpWhichRoutine')), h('select', { onchange: (e) => { scope = { ...scope, templateId: e.target.value || null }; draw(); } }, [h('option', { value: '' }, t('rpAllRoutines')), ...S.get().templates.map((x) => h('option', { value: x.id, selected: x.id === scope.templateId }, `${x.icon} ${x.name}`))])) : null,

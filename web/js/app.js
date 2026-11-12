@@ -31,6 +31,7 @@ import { maybeShowWhatsNew, setVersion, getVersion } from './ui/whatsnew.js';
 import { renderLibrary } from './ui/library.js';
 import { renderCalm } from './ui/calm.js';
 import { screenBg } from './ui/scenery.js';
+import { weekBalance, balanceStep } from './balance.js';
 import { screenArtFor } from './scenery.js';
 import { renderFeel } from './ui/feel.js';
 import { renderNlp } from './ui/nlp.js';
@@ -113,7 +114,7 @@ async function boot() {
     if (was[0] !== x.activeProfile || was[1] !== x.lang || was[9] !== String(x.simpleMode)) { drawNav(document.body.dataset.view); route(); } });
   // progress widget (Android): a tiny snapshot whenever something changes
   const { finished: finishedRuns, streak: streakOf, totalStars: starsOf } = await import('./stats.js'), { weeklyReport } = await import('./weekly.js');
-  const pushStats = debounce(() => { if (!native.available) return; native.setLook?.(S.get().settings.skin || 'default'); const done = finishedRuns(S.myRuns()); native.setStats({ name: S.get().settings.personName, stars: starsOf(done), streak: streakOf(done), week: weeklyReport(done, Date.now()).onTime ?? 0, level: levelInfo(starsOf(done)).level, toNext: levelInfo(starsOf(done)).toNext, pct: Math.round(levelInfo(starsOf(done)).pct * 100) }); }, 800);
+  const pushStats = debounce(() => { if (!native.available) return; native.setLook?.(S.get().settings.skin || 'default'); const done = finishedRuns(S.myRuns()); native.setStats({ name: S.get().settings.personName, stars: starsOf(done), streak: streakOf(done), week: weeklyReport(done, Date.now()).onTime ?? 0, level: levelInfo(starsOf(done)).level, toNext: levelInfo(starsOf(done)).toNext, pct: Math.round(levelInfo(starsOf(done)).pct * 100), ...(() => { const w = weekBalance(S.myRuns(), S.feelings(), S.retros()); return { doing: w.doing, care: w.care, bal: balanceStep(w.doing, w.care) }; })() }); }, 800);
   S.subscribe(pushStats); pushStats();
   if (native.available && S.get().settings.voiceEngine) native.ttsSetEngine(S.get().settings.voiceEngine);
   S.subscribe(() => scheduleWebReminders(onRing));

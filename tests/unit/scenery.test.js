@@ -33,3 +33,17 @@ test('the medals: 14 levels and the streaks, each with a locked form', () => {
   for (let i = 1; i <= 14; i++) { assert.ok(s.badges[`level-${i}`], `level-${i}`); assert.ok(s.badges[`level-${i}-locked`], `level-${i}-locked`); }
   for (const id of Object.values(MEDAL_OF)) { assert.ok(s.badges[id], id); assert.ok(s.badges[`${id}-locked`], `${id}-locked`); }
 });
+test('the four new achievements have medals (and their locked form), and are earned from check-ins, look-backs and a backup', async () => {
+  const { earnedBadges, BADGES } = await import('../../web/js/badges.js');
+  const s = parseScenery(JSON.parse(readFileSync(new URL('../../web/data/scenery.json', import.meta.url), 'utf8')));
+  for (const id of ['streak14', 'firstfeel', 'firstlook', 'firstbackup']) { assert.ok(BADGES.some((b) => b.id === id), id); assert.ok(s.badges[MEDAL_OF[id]] && s.badges[`${MEDAL_OF[id]}-locked`], id); }
+  assert.deepEqual(earnedBadges([], {}), []); assert.deepEqual(earnedBadges([], { feel: 1, retro: 2, backup: true }).sort(), ['firstbackup', 'firstfeel', 'firstlook']);
+});
+test('the loading sunrise loops: the sun rises and sinks and the rays open in turn', async () => {
+  const { frameAt, LOOP_MS } = await import('../../web/js/loadingSunny.js');
+  assert.equal(LOOP_MS, 2400); assert.equal(frameAt(0).dy, 0); assert.equal(frameAt(0.5).dy, -19); assert.equal(frameAt(0.5).opacity, 1); assert.ok(Math.abs(frameAt(1).dy) < 1e-9, 'the end matches the start (no jump)');
+  assert.ok(frameAt(0.25).dy < 0 && frameAt(0.75).dy < 0 && frameAt(0.75).dy > frameAt(0.5).dy);
+  assert.notEqual(frameAt(0.3, 0).opacity, frameAt(0.3, 8).opacity, 'later rays open a little after the first');
+  const m = JSON.parse((await import('node:fs')).readFileSync(new URL('../../web/data/mascot.json', import.meta.url), 'utf8'));
+  assert.ok(m.moods['anim-loading'].svg.includes('viewBox="0 0 160 160"') && !m.moods['anim-loading'].svg.includes('ns0:'));
+});

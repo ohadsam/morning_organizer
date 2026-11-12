@@ -13,7 +13,7 @@ object WidgetLook {
     private val SKINS = setOf("default", "ocean", "forest", "sunset", "candy", "slate", "calm", "bold")
     private val PROVIDERS = listOf(
         RoutineWidget::class.java, RunWidget::class.java, StatsWidget::class.java, PointsWidget::class.java, JournalWidget::class.java,
-        CalmWidget::class.java, CalmSunnyWidget::class.java, SentenceWidget::class.java, MoodWidget::class.java, RoutineCardWidget::class.java,
+        CalmWidget::class.java, CalmSunnyWidget::class.java, SentenceWidget::class.java, MoodWidget::class.java, RoutineCardWidget::class.java, BellWidget::class.java, BalanceWidget::class.java,
     )
 
     fun current(context: Context): String = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getString(KEY, "default").takeIf { it in SKINS } ?: "default"

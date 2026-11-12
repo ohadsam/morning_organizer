@@ -58,6 +58,14 @@
     <string name="mood_3">Okay</string>
     <string name="mood_4">Good</string>
     <string name="mood_5">Great</string>
+    <string name="widget_bell_label">Next reminder</string>
+    <string name="widget_bell_desc">The time of the next reminder and the routine it is for</string>
+    <string name="bell_paused">Alarms paused</string>
+    <string name="bell_none">No reminder set</string>
+    <string name="bell_tomorrow">Tomorrow</string>
+    <string name="widget_balance_label">Week balance</string>
+    <string name="widget_balance_desc">A seesaw: routines you finished against looking after yourself this week</string>
+    <string name="balance_text">%1$d routines · %2$d check-ins</string>
     <string name="widget_points_label">Level and stars</string>
     <string name="widget_points_desc">Your level and how close the next one is</string>
     <string name="points_level">Level %1$d</string>

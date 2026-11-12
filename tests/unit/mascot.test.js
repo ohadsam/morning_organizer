@@ -6,7 +6,7 @@ import { sanitizeAvatar, defaultAvatar, avatarEmoji, avatarFromMascot, shareable
 
 const raw = JSON.parse(readFileSync(new URL('../../web/data/mascot.json', import.meta.url), 'utf8'));
 test('Sunny: the moods, the five faces and the cameos pass the strict allow-list and every animation / feeling maps to a mood', () => {
-  const m = parseMascot(raw); assert.ok(m); assert.equal(Object.keys(m).length, 31); for (const c of ['check', 'empty', 'error', 'offline', 'reminder']) assert.ok(m[`cameo-${c}`], c); for (let i = 1; i <= 5; i++) assert.ok(m[`feel-${i}`], `the face ${i} of how do I feel`);
+  const m = parseMascot(raw); assert.ok(m); assert.equal(Object.keys(m).length, 32); assert.ok(m['anim-loading']); for (const c of ['check', 'empty', 'error', 'offline', 'reminder']) assert.ok(m[`cameo-${c}`], c); for (let i = 1; i <= 5; i++) assert.ok(m[`feel-${i}`], `the face ${i} of how do I feel`);
   for (const [k, v] of Object.entries(MOOD_OF)) assert.ok(m[v], `${k} -> ${v}`);
   assert.equal(moodFor('__proto__'), 'idle'); assert.equal(moodFor('wave'), 'wave');
   assert.equal(parseMascot({ format: 'sonrise-mascot', version: 1, moods: { idle: '<svg>' } }), null);

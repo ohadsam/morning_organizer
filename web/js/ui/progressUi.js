@@ -15,8 +15,10 @@ import { partsUnlockedBetween } from '../avatarKit.js';
 import { confetti } from './fx.js';
 
 /** The gallery: earned badges in colour, the rest greyed with their hint. */
+/** What the badges need besides the runs: how many check-ins and look-backs the person has, and whether a backup was ever made on this device. */
+const badgeExtra = () => { let backup = false; try { backup = !!localStorage.getItem('mo.lastBackup'); } catch { /* blocked */ } return { feel: S.feelings().length, retro: S.retros().length, backup }; };
 export function achievementsCard(runs) {
-  const earned = earnedBadges(runs), lvNow = levelInfo(totalStars(finished(runs))).level;
+  const earned = earnedBadges(runs, badgeExtra()), lvNow = levelInfo(totalStars(finished(runs))).level;
   return h('section', { class: 'card' }, h('h2', {}, `🏆 ${t('achievements')}`), h('p', { class: 'note' }, t('badgesEarned', { n: earned.length, total: BADGES.length })),
     h('ul', { class: 'badges' }, BADGES.map((b) => { const on = earned.includes(b.id);
       return h('li', { class: `badge ${on ? 'on' : ''}`, 'aria-label': `${t(`badge_${b.id}`)}: ${t(`badgeDesc_${b.id}`)}${on ? '' : ` (${t('badgeLocked')})`}` }, h('span', { class: 'bi', 'aria-hidden': 'true' }, MEDAL_OF[b.id] ? medalNode(MEDAL_OF[b.id], { locked: !on, fallback: b.emoji }) : b.emoji), h('strong', {}, t(`badge_${b.id}`)), h('small', {}, t(`badgeDesc_${b.id}`))); })),
@@ -27,7 +29,7 @@ export function achievementsCard(runs) {
 export async function celebrationFor(run) {
   const mine = S.myRuns(), before = mine.filter((r) => r.id !== run.id);
   const lvBefore = levelInfo(totalStars(finished(before))).level, lvAfter = levelInfo(totalStars(finished(mine))).level;
-  const p = S.activeProfile(), fresh = newBadges(earnedBadges(mine), p.seenBadges);
+  const p = S.activeProfile(), fresh = newBadges(earnedBadges(mine, badgeExtra()), p.seenBadges);
   const parts = lvAfter > lvBefore ? partsUnlockedBetween(await loadPack(), lvBefore, lvAfter) : [];
   const unlocked = Object.entries(CHARACTERS).filter(([, c]) => c.unlock > lvBefore && c.unlock <= lvAfter);
   if (!fresh.length && lvAfter === lvBefore) return null;

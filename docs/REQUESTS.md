@@ -127,3 +127,4 @@ Status: ✅ shipped (version) · 🟡 partly (what is missing) · ⛔ not possib
 | O12 | Final package reviewed: no-panel backgrounds adopted (1.44.0, setting Pictures behind the screens); balance art, badges, task silhouettes look right but need features to place them (balance/bell widget content, task icon field, locked badge state) | Waiting for the user to choose the order. |
 | O13 | Task silhouettes in the icon picker, editor and run (1.45.0 ✅); next in order: balance/bell widgets (Kotlin), locked badges in the gallery, per-look widget cards | In progress. |
 | O14 | Locked medals + per-look Android widget cards (1.46.0): needs a device check of the widgets in each look | Shipped; widgets unverified on a device. |
+| O15 | Four new achievements, loading Sunny, bell + week-balance widgets (1.47.0); "balance" = routines finished vs check-ins/look-backs, my definition | Shipped; widgets unverified on a device. |

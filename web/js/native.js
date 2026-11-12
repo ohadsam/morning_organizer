@@ -49,6 +49,10 @@ export const native = {
   requestNotifications: () => call('requestNotifications'),
   takePending: () => { try { const s = call('takePendingIntent'); return s ? JSON.parse(s) : null; } catch { return null; } },
   version: () => call('appVersion'),
+  /** Asks GitHub for the latest release (Android app only); the answer arrives as an {type:'update', ok, latest, newer, current} event. */
+  checkUpdate: () => call('checkUpdate'),
+  /** Opens the download of the new version found by the last check. */
+  openUpdate: () => call('openUpdate'),
 };
 
 /** Native -> JS events: {type:'start', templateId} | {type:'import', text} | {type:'nfc', status} */

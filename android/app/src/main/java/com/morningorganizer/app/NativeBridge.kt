@@ -25,6 +25,12 @@ class NativeBridge(private val activity: MainActivity) {
 
     @JavascriptInterface fun appVersion(): String = BuildConfig.VERSION_NAME
 
+    /** Asks GitHub for the latest release; the answer arrives as a {type:'update'} event. Takes no argument: the address is fixed. */
+    @JavascriptInterface fun checkUpdate() { activity.checkForUpdate() }
+
+    /** Opens the download of the new version found by the last check (never an address given by the page). */
+    @JavascriptInterface fun openUpdate() { activity.openUpdateDownload() }
+
     @JavascriptInterface fun setAlarms(json: String) { if (json.length <= MAX_JSON) AlarmStore.replace(ctx, json) }
 
     @JavascriptInterface fun setWidget(json: String) { if (json.length <= MAX_JSON) { RoutineWidget.save(ctx, json); RoutineCardWidget.save(ctx, json) } }

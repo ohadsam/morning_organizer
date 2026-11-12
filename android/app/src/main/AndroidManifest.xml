@@ -3,6 +3,8 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <!-- Alarms: setAlarmClock needs no exact-alarm permission and is exempt from Doze. -->
+    <!-- Only for the "Check for a new version" button in Settings: one request to GitHub's releases address, made when the person taps it. -->
+    <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.VIBRATE"/>
     <uses-permission android:name="android.permission.WAKE_LOCK"/>
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>

@@ -23,6 +23,8 @@ import { openMyAvatars } from './avatarLibrary.js';
 import { saveBackupFile, copySyncCode, sendSyncCode, openBackupImport } from './backup.js';
 import { getLang } from '../i18n.js';
 import { APK_URL } from '../config.js';
+import { interpretUpdate } from '../appUpdate.js';
+import { loadingSunny } from './mascot.js';
 import { toast, icon } from './common.js';
 import { openMyFocus } from './focus.js';
 import { openWhatsNew, getVersion } from './whatsnew.js';
@@ -106,6 +108,21 @@ function group(key, title, open, ...kids) {
   return d;
 }
 export const ACCENTS = ['', '#5b4bd5', '#0b6fc4', '#0a7a5f', '#c2410c', '#be185d', '#334155'];
+
+/** The Android app's "Check for a new version": one tap asks GitHub (the app does it, once, on demand); a newer version offers its download. */
+function updateBox(version) {
+  const status = h('p', { class: 'note', role: 'status', 'aria-live': 'polite' }), dl = h('button', { class: 'btn primary', type: 'button', hidden: true, onclick: () => native.openUpdate() }, icon('download', 18), t('updDownload'));
+  const btn = h('button', { class: 'btn', type: 'button' }, t('updCheck')); let timer = 0, sunny = null, listener = null;
+  const done = (text, newer) => { clearTimeout(timer); sunny?.remove(); sunny = null; if (listener) { globalThis.removeEventListener('morning-native', listener); listener = null; } status.textContent = text; dl.hidden = !newer; btn.disabled = false; };
+  btn.onclick = () => {
+    btn.disabled = true; dl.hidden = true; status.textContent = t('updChecking'); sunny = loadingSunny({ size: 22 }); btn.prepend(sunny);
+    if (listener) globalThis.removeEventListener('morning-native', listener);
+    listener = (e) => { if (e.detail?.type !== 'update') return; const r = interpretUpdate(e.detail); done(r.state === 'new' ? t('updNew', { latest: r.latest, current: r.current || version || getVersion() || '?' }) : r.state === 'latest' ? t('updLatest', { v: r.current || r.latest }) : t('updFail'), r.state === 'new'); };
+    globalThis.addEventListener('morning-native', listener); timer = setTimeout(() => done(t('updFail'), false), 15000);
+    native.checkUpdate();
+  };
+  return h('div', { class: 'stack' }, h('div', { class: 'toolbar wrap' }, btn, dl), status, h('small', { class: 'hint' }, t('updHint')));
+}
 
 export function renderSettings(root, version, focusKey = '') {
   focusGroup = /^[a-z]{2,12}$/.test(focusKey) ? focusKey : ''; query = '';
@@ -213,7 +230,7 @@ export function renderSettings(root, version, focusKey = '') {
           h('button', { class: 'btn primary', type: 'button', onclick: () => openBackupImport() }, t('importBackupBtn')),
           h('button', { class: 'btn', type: 'button', onclick: async () => { await S.addSamples(true); toast(t('saved')); } }, t('moreSamples')))),
       group('app', t('app'), false,
-        native.available ? [h('p', {}, t('nativeActive')), h('p', { class: 'note' }, t('widgets'))] : [
+        native.available ? [h('p', {}, t('nativeActive')), h('p', { class: 'note' }, t('widgets')), updateBox(version)] : [
           h('p', { class: 'note' }, t('apkNote')),
           h('div', { class: 'toolbar wrap' },
             h('a', { class: 'btn primary', href: APK_URL, rel: 'noopener', download: 'morning-organizer.apk' }, icon('download', 18), t('downloadApk')),

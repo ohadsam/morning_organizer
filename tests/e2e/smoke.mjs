@@ -1764,6 +1764,21 @@ await step('v1.49: the silhouette of a task shows in the statistics (where it is
   await page.context().close();
 });
 
+await step('v1.50: Android app - Settings has "Check for a new version" (a fake bridge here): a newer version offers its download, the same version says so, a failure says so; zero axe violations (he + en)', async () => {
+  for (const lang of ['en', 'he']) {
+    const { page } = await newPage({ lang });
+    await page.addInitScript(() => { window.__calls = []; const answers = [{ ok: true, latest: '99.0.0', newer: true, current: '1.0.0' }, { ok: true, latest: '1.0.0', newer: false, current: '1.0.0' }, { ok: false }]; let n = 0;
+      window.MorningNative = { checkUpdate() { window.__calls.push('check'); const d = { type: 'update', ...answers[n++ % 3] }; setTimeout(() => window.dispatchEvent(new CustomEvent('morning-native', { detail: d })), 200); }, openUpdate() { window.__calls.push('open'); } }; });
+    await page.goto(base + '#/settings'); await page.reload(); await dismissWelcome(page); await page.waitForSelector('details[data-group=app]');
+    const check = page.locator('details[data-group=app] button').filter({ hasText: lang === 'en' ? 'Check for a new version' : 'בדיקת גרסה חדשה' }); await check.click();
+    await page.waitForSelector('details[data-group=app] button:visible >> text=/' + (lang === 'en' ? 'Download the new version' : 'הורדת הגרסה החדשה') + '/'); assert.match(await page.locator('details[data-group=app] [role=status]').innerText(), /99\.0\.0/); assert.deepEqual(await audit(page, 'update-new-' + lang), []);
+    await page.click('details[data-group=app] button:has-text("' + (lang === 'en' ? 'Download the new version' : 'הורדת הגרסה החדשה') + '")'); assert.deepEqual(await page.evaluate(() => window.__calls), ['check', 'open']);
+    await check.click(); await page.waitForFunction(() => /1\.0\.0/.test(document.querySelector('details[data-group=app] [role=status]').textContent) && !/99/.test(document.querySelector('details[data-group=app] [role=status]').textContent)); assert.equal(await page.locator('details[data-group=app] button:visible').filter({ hasText: lang === 'en' ? 'Download' : 'הורדת' }).count(), 0, 'no download when up to date');
+    await check.click(); await page.waitForFunction((t) => document.querySelector('details[data-group=app] [role=status]').textContent.includes(t), lang === 'en' ? 'Could not check' : 'לא הצלחנו לבדוק');
+    await page.context().close();
+  }
+});
+
 await step('v1.23: the picker offers "Build my own" and an avatar picked there is used at once; a kit avatar survives sanitising and other profiles keep theirs', async () => {
   const { page } = await newPage({ lang: 'en' }); await page.goto(base + '#/settings/profile'); await page.waitForSelector('details[data-group=profile]');
   await page.click('details[data-group=profile] button:has-text("Avatar")'); await page.waitForSelector('dialog[open] .avatar-picker'); assert.deepEqual(await audit(page, 'picker'), []);

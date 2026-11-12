@@ -12,6 +12,7 @@ class MoodWidget : AppWidgetProvider() {
         val faces = intArrayOf(R.id.mood_1, R.id.mood_2, R.id.mood_3, R.id.mood_4, R.id.mood_5)
         ids.forEach { id ->
             val v = RemoteViews(context.packageName, R.layout.widget_mood)
+            WidgetLook.apply(context, v, "4x1", R.drawable.wbg_mood)
             faces.forEachIndexed { i, view ->
                 val open = PendingIntent.getActivity(context, 900 + i, MainActivity.routeIntent(context, "#/feel/${i + 1}"), PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
                 v.setOnClickPendingIntent(view, open)

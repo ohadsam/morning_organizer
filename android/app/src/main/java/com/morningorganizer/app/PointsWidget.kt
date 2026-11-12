@@ -21,6 +21,7 @@ class PointsWidget : AppWidgetProvider() {
             val s = StatsWidget.readState(context)
             val level = s.optInt("level", 1).coerceIn(1, 99); val toNext = s.optInt("toNext", 0).coerceIn(0, 1_000_000); val pct = s.optInt("pct", 0)
             val v = RemoteViews(context.packageName, R.layout.widget_points)
+            WidgetLook.apply(context, v, "2x2", R.drawable.wbg_points)
             val ring = when (PointsMath.ringStep(pct)) { 25 -> R.drawable.wi_ring_25; 50 -> R.drawable.wi_ring_50; 75 -> R.drawable.wi_ring_75; 100 -> R.drawable.wi_ring_100; else -> R.drawable.wi_ring_0 }
             v.setImageViewResource(R.id.points_ring, ring)
             v.setTextViewText(R.id.points_level, context.getString(R.string.points_level, level))

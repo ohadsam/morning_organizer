@@ -37,6 +37,9 @@ class NativeBridge(private val activity: MainActivity) {
 
     @JavascriptInterface fun setStats(json: String) { if (json.length <= 2048) StatsWidget.save(ctx, json) }
 
+    /** The look (skin) the person chose, so the widget cards match it. Only a known name is kept. */
+    @JavascriptInterface fun setLook(skin: String) { if (skin.length <= 12) WidgetLook.save(ctx, skin) }
+
     /** Snapshot of the routine in progress for the progress widget. */
     @JavascriptInterface fun setProgress(json: String) { if (json.length <= 4096) RunWidget.save(ctx, json) }
 

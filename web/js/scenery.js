@@ -6,7 +6,8 @@ export function parseScenery(raw) {
   if (!raw || raw.format !== 'sonrise-scenery' || raw.version !== 1) return null;
   const out = { frames: {}, skies: {}, dividers: {} };
   for (const [sec, src] of [['frames', raw.frames], ['skies', raw.skies], ['dividers', raw.dividers]]) if (src && typeof src === 'object') for (const [k, s] of Object.entries(src).slice(0, 30)) if (/^[a-z0-9-]{1,24}$/.test(k) && checkIconSvg(s)) out[sec][k] = s;
-  out.screens = {}; out.tasks = {};
+  out.screens = {}; out.tasks = {}; out.badges = {};
+  if (raw.badges && typeof raw.badges === 'object') for (const [k, s] of Object.entries(raw.badges).slice(0, 60)) if (/^[a-z0-9-]{1,24}$/.test(k) && checkIconSvg(s)) out.badges[k] = s;
   if (raw.tasks && typeof raw.tasks === 'object') for (const [k, s] of Object.entries(raw.tasks).slice(0, 30)) if (/^[a-z-]{1,16}$/.test(k) && checkIconSvg(s)) out.tasks[k] = s;
   if (raw.screens && typeof raw.screens === 'object') for (const [k, v] of Object.entries(raw.screens).slice(0, 30)) if (/^[a-z0-9-]{1,24}$/.test(k) && v && checkIconSvg(v.p) && checkIconSvg(v.w)) out.screens[k] = { p: v.p, w: v.w };
   return Object.keys(out.frames).length || Object.keys(out.skies).length ? out : null;
@@ -28,3 +29,6 @@ export const SILS = {
 /** The silhouette that fits a task name, or '' when none does. */
 export const suggestSil = (name) => { const s = String(name || ''); for (const [id, re] of Object.entries(SILS)) if (re.test(s)) return id; return ''; };
 export const isSil = (id) => typeof id === 'string' && Object.hasOwn(SILS, id);
+
+/** The medals of the kit for some of the achievements (the others keep their emoji). */
+export const MEDAL_OF = { first: 'first-routine', streak3: 'streak-3', streak7: 'streak-7', streak30: 'streak-30' };

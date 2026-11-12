@@ -1,0 +1,3 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The per-look widget cards are looked up by name at run time (WidgetLook.res), so the resource shrinker and lint must keep them. -->
+<resources xmlns:tools="http://schemas.android.com/tools" tools:keep="@drawable/wbgk_*" />

@@ -73,6 +73,7 @@ class RoutineCardWidget : AppWidgetProvider() {
 
         private fun build(context: Context, widgetId: Int): RemoteViews {
             val v = RemoteViews(context.packageName, R.layout.widget_card)
+            WidgetLook.apply(context, v, "4x2", R.drawable.wbg_card)
             val all = items(context)
             v.setOnClickPendingIntent(R.id.card_prev, broadcast(context, widgetId, ACTION_PREV, widgetId * 2))
             v.setOnClickPendingIntent(R.id.card_next, broadcast(context, widgetId, ACTION_NEXT, widgetId * 2 + 1))

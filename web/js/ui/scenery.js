@@ -49,3 +49,10 @@ export function silNode(id, fallback = '') {
   if (kit) draw(); else loadScenery().then(draw);
   return box;
 }
+/** A medal (`id` of the kit, e.g. level-3 or streak-7), in its locked form when `locked`; the emoji `fallback` shows until the kit is loaded. */
+export function medalNode(id, { locked = false, fallback = '' } = {}) {
+  const box = h('span', { class: `medal${locked ? ' locked' : ''}`, 'aria-hidden': 'true' }, fallback);
+  const draw = () => { const t = kit?.badges?.[locked ? `${id}-locked` : id]; if (t) setChildren(box, svgOf(t, '0 0 96 96')); };
+  if (kit) draw(); else loadScenery().then(draw);
+  return box;
+}

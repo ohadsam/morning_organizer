@@ -3,7 +3,7 @@ export const EN = {
   // needs
   needsTitle: 'What the app is for', needsIntro: 'Choose what you need the app for and it shows only what fits, so there is less on every screen. You can change this or show everything again at any time.',
   needsModel: 'A way of working', needsProblem: 'What is hard (choose any)', needsAge: 'Age (optional)', needsAgeHint: 'Young children get playful wording and a calmer screen. Leave empty if unsure.',
-  need_full: 'Everything', need_cbt: 'CBT', need_cogfun: 'Cog-Fun', need_adhd: 'Attention and focus', need_anxiety: 'Anxiety and worry', need_organize: 'Getting organised', need_motivation: 'Getting started and motivation',
+  need_full: 'Everything', need_cbt: 'Inspired by CBT', need_cogfun: 'Inspired by Cog-Fun', need_adhd: 'Attention and focus', need_anxiety: 'Anxiety and worry', need_organize: 'Getting organised', need_motivation: 'Getting started and motivation',
   needDesc_full: 'All the tools, nothing hidden.', needDesc_cbt: 'Thoughts, feelings and behaviour: calm corner, situation log, journal, goals.', needDesc_cogfun: 'Goal, plan, do, check: goals, looking back, smart times and steps.',
   feat_goals: 'Goals', feat_retros: 'Looking back', feat_calm: 'Calm corner', feat_journal: 'Journal', feat_aprt: 'Situation log', feat_rewards: 'Rewards', feat_stats: 'Progress', feat_reports: 'Reports', feat_smart: 'Smart suggestions', feat_family: 'Family',
   needEverything: 'Showing everything', needShowing: 'Showing: {list}', needHiddenNote: 'Other features are only hidden, nothing is deleted. “Show everything” brings them back.',
@@ -28,7 +28,7 @@ export const EN = {
 export const HE = {
   needsTitle: 'למה האפליקציה משמשת', needsIntro: 'בחרו למה אתם צריכים את האפליקציה והיא תציג רק את מה שמתאים, כך שיהיה פחות על כל מסך. אפשר לשנות או להציג שוב הכול בכל רגע.',
   needsModel: 'דרך עבודה', needsProblem: 'מה קשה (אפשר לבחור כמה)', needsAge: 'גיל (לא חובה)', needsAgeHint: 'ילדים קטנים מקבלים ניסוח שובב ומסך רגוע יותר. אפשר להשאיר ריק.',
-  need_full: 'הכול', need_cbt: 'CBT', need_cogfun: 'Cog-Fun', need_adhd: 'קשב וריכוז', need_anxiety: 'חרדה ודאגה', need_organize: 'התארגנות', need_motivation: 'התחלה ומוטיבציה',
+  need_full: 'הכול', need_cbt: 'בהשראת שיטת CBT', need_cogfun: 'בהשראת שיטת Cog-Fun', need_adhd: 'קשב וריכוז', need_anxiety: 'חרדה ודאגה', need_organize: 'התארגנות', need_motivation: 'התחלה ומוטיבציה',
   needDesc_full: 'כל הכלים, בלי להסתיר דבר.', needDesc_cbt: 'מחשבות, רגשות והתנהגות: פינת רוגע, יומן מצבים, יומן, מטרות.', needDesc_cogfun: 'מטרה, תכנון, ביצוע, בדיקה: מטרות, מבט לאחור, זמנים וצעדים חכמים.',
   feat_goals: 'מטרות', feat_retros: 'מבט לאחור', feat_calm: 'פינת הרוגע', feat_journal: 'יומן', feat_aprt: 'יומן מצבים', feat_rewards: 'פרסים', feat_stats: 'התקדמות', feat_reports: 'דוחות', feat_smart: 'הצעות חכמות', feat_family: 'משפחה',
   needEverything: 'מוצג הכול', needShowing: 'מוצג: {list}', needHiddenNote: 'שאר היכולות רק מוסתרות, שום דבר לא נמחק. “להציג הכול” מחזיר אותן.',

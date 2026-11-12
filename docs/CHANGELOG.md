@@ -1,12 +1,15 @@
 # Changelog
 
+## 1.49.1
+- **Wording ("inspired by")**: every user-facing mention of a named method (CBT, Cog-Fun, NLP) now says the app is *inspired by* it, so the app does not present itself as the method: the "what the app is for" options (`need_cbt` / `need_cogfun` / `need_nlp`), the NLP tools page title, tags and special-task names, the coach and thinking labels, the Android widget approach names, `guide.js` and `docs/USER_GUIDE.md` (both languages), the in-app What's new and these release notes, `README.md`, the goals disclaimer (`wellbeing.js`). Left as they are on purpose: code identifiers and ids (`cbt`, `cogfun`, `nlp`, `needs.js`), search keywords (so people can still find things by the method's name), the internal ledger / roadmap / architecture notes, and the honest line that the evidence for the NLP method is limited.
+
 ## 1.49.0
 - **Task silhouettes in the statistics and reports**: `sil` travels with a task into `difficulty.js` (where it is hard, trends) and `report.js` (task rows, run tasks); `taskPic(x, none)` in `ui/scenery.js` draws it (the emoji as the fallback) in the difficulty bars, the trend list and the report tables / bars. The text report and the PDF stay emoji (they are plain text / canvas). Widgets and notifications show routines, not tasks: their emoji is the routine's, so nothing to change there.
 - **Contrast fix** (found by the new e2e step): the red "over time" number in `.tbl tr.over` was `--bad` (#d63a3a, just under 4.5:1 on white); it now uses `--bad-text` (#b42d2d in the light look, `--bad` in the dark one).
 
 ## 1.48.0
 - **"A calm moment" achievement** (`firstcalm`, medal `first-calm-exercise`): the calm corner's `finish()` now counts a finished exercise on the profile (`calmDone`, sanitised in `profiles.js`, so it is part of the backup); `earnedBadges(runs, { calm })`.
-- **Leave-time sounds by method** (open item O3): `cueStyle(view)` and `leaveCuePattern(event, view)` in `leave.js` (data), `playPattern` in `audio.js`, played by the runner on "leave soon" / "leave now" with the person's sound mode and a volume capped at 70; quiet in the calm run mode. A difficulty chosen in "what the app is for" wins (anxiety: soft and slow, attention: short and clear), then the model (CBT chime, Cog-Fun rising run, NLP bell), else a plain beep.
+- **Leave-time sounds by method** (open item O3): `cueStyle(view)` and `leaveCuePattern(event, view)` in `leave.js` (data), `playPattern` in `audio.js`, played by the runner on "leave soon" / "leave now" with the person's sound mode and a volume capped at 70; quiet in the calm run mode. A difficulty chosen in "what the app is for" wins (anxiety: soft and slow, attention: short and clear), then the way of working (the chime of the CBT-inspired one, the rising run of the Cog-Fun-inspired one, the bell of the NLP-inspired one), else a plain beep.
 - Left as they are on purpose: the task silhouettes in reports, statistics, widgets and notifications (the emoji is their fallback; the stats lists group tasks by name, so a picture would need a per-name lookup).
 
 ## 1.47.0
@@ -23,7 +26,7 @@
 - Still emoji-only: reports, statistics, widgets, notifications.
 
 ## 1.44.0
-- **Screen backgrounds** (`screens` in `data/scenery.json`, built with `BG_SVG=<dir> node scripts/build-scenery.mjs <kit>`; `screenBg` in `ui/scenery.js`, `screenArtFor` in `scenery.js`): a fixed, quiet picture behind each screen (Home, calm corner, how-do-I-feel, NLP, Track, Settings, journal and looking back; the kids' Home uses the play scene); none on the run screen. New per-person setting `screenArt` (Settings → Appearance), off in the calm look and with high contrast.
+- **Screen backgrounds** (`screens` in `data/scenery.json`, built with `BG_SVG=<dir> node scripts/build-scenery.mjs <kit>`; `screenBg` in `ui/scenery.js`, `screenArtFor` in `scenery.js`): a fixed, quiet picture behind each screen (Home, calm corner, how-do-I-feel, the tools inspired by NLP, Track, Settings, journal and looking back; the kids' Home uses the play scene); none on the run screen. New per-person setting `screenArt` (Settings → Appearance), off in the calm look and with high contrast.
 - Reviewed first: the no-panel backgrounds (the opaque centre block is gone; I measured the centre 60% myself: minimum contrast 7.27, Sunrise light and dark, the claimed table was not re-measured by ChatGPT). Their root width/height/preserveAspectRatio are stripped by the build, like the other scenery.
 - Not integrated yet: the balance widget art (now reads as a scale), badge fixes, task silhouettes (clearly distinct now), bell widget, logo marks, per-look widget cards: each needs its own feature (Kotlin widget content, a task icon field, a locked-badge state).
 
@@ -51,7 +54,7 @@
 
 ## 1.38.0
 - **"Start for me"** (open item O5): a second button on the "just what to do now" card sets a one-time flag (`sessionStorage mo.startForMe`) and opens the run; that run speaks an opening sentence, each step (even if "announce steps" is off) and "well done" at the end through the usual voice settings (`speakWithSettings`, the phone's or the browser's voice).
-- **Sunny placements**: `think` on the NLP page, `goodbye` instead of the avatar on a stopped routine's summary (the finished summary keeps the person's own avatar dancing).
+- **Sunny placements**: `think` on the page of tools inspired by NLP, `goodbye` instead of the avatar on a stopped routine's summary (the finished summary keeps the person's own avatar dancing).
 
 ## 1.37.0
 - **Calm weekly summary** (open item O5): `weeklyCalm.js` (pure) summarises the previous week (Sunday to Saturday): finished routines and days, stars, on-time runs, check-ins and the average face. Home shows it once per week (`mo.weekly.<profile>` = the week's Sunday) with Sunny proud; only kind words, a week with nothing is skipped; closed with "Thank you".
@@ -112,7 +115,7 @@
 
 ## 1.28.0
 - **Two calm widgets** (owner request): "Calm ball" (the five circle frames in a `ViewFlipper`, in and out, 1 s per frame) and the new "Sunny breathes" (`CalmSunnyWidget`, five frames of Sunny's calm-breathe mood rendered from `mascot.json` at 0.90 to 1.10 scale, light and dark, four densities). RemoteViews cannot animate by itself; a `ViewFlipper` with `autoStart` is allowed and only runs while the widget is on screen. A tap opens the calm corner.
-- **"A good sentence" widget** (`SentenceWidget`, 4x1): when it is placed, `SentenceConfigActivity` asks for the approach (a mix, CBT, time / memory / planning, NLP, ADHD, anxiety, organising, motivation) and how often the sentence changes (1, 3, 6 or 24 hours). 56 sentences x English + Hebrew live in `values/sentences.xml` and `values-he/sentences.xml` (neutral Hebrew, no gender forms); `SentenceMath.index` picks the sentence from the clock and the widget id, so it needs no background service (the system refreshes every 30 minutes). Unit tests in `SentenceMathTest`. The widget follows the phone's language, not the app's.
+- **"A good sentence" widget** (`SentenceWidget`, 4x1): when it is placed, `SentenceConfigActivity` asks for the approach (a mix, inspired by CBT, time / memory / planning, inspired by NLP, ADHD, anxiety, organising, motivation) and how often the sentence changes (1, 3, 6 or 24 hours). 56 sentences x English + Hebrew live in `values/sentences.xml` and `values-he/sentences.xml` (neutral Hebrew, no gender forms); `SentenceMath.index` picks the sentence from the clock and the widget id, so it needs no background service (the system refreshes every 30 minutes). Unit tests in `SentenceMathTest`. The widget follows the phone's language, not the app's.
 - Verified by CI only (no device here).
 
 ## 1.27.0
@@ -166,7 +169,7 @@
 - Fix: toasts hid behind open sheets - the studio and My avatars show their messages (and Undo) inside the sheet.
 
 ## 1.22.0
-- **NLP as a method**, next to CBT and Cog-Fun: choose it in Settings → What the app is for and the app shows its tools. Six short guided exercises (**a clear outcome, another way to see it, a calming anchor, precise words, points of view, mental rehearsal**) on a new NLP tools page (Home → Calm), each with an optional note to the journal. They are also **special tasks** (new NLP group in the picker) that open their exercise on the run screen. NLP is shown honestly: research evidence for it is limited and mixed, so it is offered as gentle self-reflection, not therapy, with no claims about results.
+- **A way of working inspired by NLP**, next to those inspired by CBT and Cog-Fun: choose it in Settings → What the app is for and the app shows its tools. Six short guided exercises (**a clear outcome, another way to see it, a calming anchor, precise words, points of view, mental rehearsal**) on a new page of tools inspired by NLP (Home → Calm), each with an optional note to the journal. They are also **special tasks** (a new group inspired by NLP in the picker) that open their exercise on the run screen. The method NLP is inspired by is shown honestly: research evidence for it is limited and mixed, so it is offered as gentle self-reflection, not therapy, with no claims about results.
 - **Calm animations**: a switch in Settings → Accessibility that turns off movement (fireworks, confetti, bouncing, transitions) for people who find it distracting or unsettling; kept per person and applied before first paint.
 - A light vibration tick when a step is done (vibrate / both sound modes, Android).
 
@@ -181,7 +184,7 @@
 - Fix: Done/Pause stay on the first screen of the run (the voice row moved below); two overlapping route changes could leave a stale Home alive.
 
 ## 1.20.0
-- **What the app is for**: in Settings choose a way of working (CBT, Cog-Fun) and/or what is hard (attention, anxiety, organising, motivation) plus an age; the app shows only what fits (toolbar, search, navigation, run-screen helpers). "Show everything" and a different choice are always one tap away; nothing is deleted.
+- **What the app is for**: in Settings choose a way of working (inspired by CBT or by Cog-Fun) and/or what is hard (attention, anxiety, organising, motivation) plus an age; the app shows only what fits (toolbar, search, navigation, run-screen helpers). "Show everything" and a different choice are always one tap away; nothing is deleted.
 - **People**: several profiles, each with its own settings (look, text, sound, voice, pace...) and its own view; a small switcher at the top of every screen; "Who is using the app?" at the start (can be turned off); manage everyone in Settings → People.
 - **Settings**: a sticky search box and a jump bar; the welcome/setup screens can be reopened; **skins** (Classic, Ocean, Forest, Sunset, Candy, Slate), **easy-read text** and a custom accent colour.
 - **Voice commands in a routine**: a Listen button (and a ? that lists the commands) keeps listening through all steps - done, add time, pause, resume, skip, journal, calm corner, remind me the step, time left, tip, stop (asks first), yes / no. Listed in Settings → Voice commands; optional auto-start. Uses the same opt-in and recogniser as voice notes; the app ignores its own voice.
@@ -252,10 +255,10 @@
 - **Interactive HTML report** (animated, tabs for 7/30/90 days and all time, count-up numbers, growing bars, drawing charts) next to PDF.
 - **Smart times**: suggested durations from the person's own history, age and the chosen help areas (focus, calm, time...), for one task or the whole routine; a parent can suggest for a linked child.
 - **Smart extra steps**: breathing, movement, focus and check steps proposed between tasks according to the chosen help (anxiety / attention / memory ...), with a reason for each.
-- **More Cog-Fun-inspired tools**: estimate accuracy ("how close are my guesses"), which strategies helped (per goal), guiding questions for parents.
+- **More tools inspired by the Cog-Fun method**: estimate accuracy ("how close are my guesses"), which strategies helped (per goal), guiding questions for parents.
 
 ## 1.12.0
-- **Task feelings and help in every task**: rate how hard it is (5 icons), **write why it is hard** (note or voice, attached to the task), get **a different kind thought** (22, CBT-style reframes / self-compassion / starting small) or **a relaxation exercise** (13, breathing and body-based) every time, worded for the person's age. All of it is saved with the run.
+- **Task feelings and help in every task**: rate how hard it is (5 icons), **write why it is hard** (note or voice, attached to the task), get **a different kind thought** (22, reframes inspired by CBT / self-compassion / starting small) or **a relaxation exercise** (13, breathing and body-based) every time, worded for the person's age. All of it is saved with the run.
 - **Difficulty statistics**: "Where is it hard?" ranks tasks by average difficulty, flags hard-and-slow tasks and shows how often help was used; the parent's weekly digest also names the hardest steps.
 - **Reports**: a designed report for one run or a period (7/30/90 days / all, all routines or one) with KPIs, plain-language insights, charts, activity calendar, task tables, difficulty, interruptions, mood and goals - on screen, **print**, **real PDF file** (made on the device, Hebrew/RTL correct) and **e-mail** (Android: share sheet with the PDF attached; browsers: share files where supported, else download + mail with summary).
 
@@ -270,7 +273,7 @@
 - **Choose what you want help with**: six areas (focus, calm, time sense, remembering, motivation, habits) switch on matching helpers; every helper stays individually switchable; a **parent can set the child's areas and helpers** over the family link; the coach picks tips that match the chosen areas.
 - **Calm corner** (breathing patterns, 5-4-3-2-1 grounding, body scan) from home or mid-routine (the clock pauses while you breathe).
 - **Focus tools in the run screen**: sprints with movement breaks, parking lot for stray thoughts, next-task heads-up with a soft chime, pie timer, quiet work buddy.
-- **Journal** (📓): notes, **voice notes recorded during tasks**, thought checks (CBT, kid-friendly wording), "3 good things", parked thoughts, mood faces after a routine with a mood-vs-time insight in Stats.
+- **Journal** (📓): notes, **voice notes recorded during tasks**, thought checks (inspired by CBT, kid-friendly wording), "3 good things", parked thoughts, mood faces after a routine with a mood-vs-time insight in Stats.
 - **Optional journal password**: PBKDF2-SHA256 (210,000 iterations) with a random salt; entries and voice notes are encrypted (a per-entry AES-GCM key wrapped with RSA-OAEP), so a note can be added while locked; **password reset through security questions** (answers never stored, they protect a second copy of the key); brute-force throttling; a way to erase the journal if both are lost.
 - **Speech-to-text suggestions** (opt-in): the Android app uses the phone's recognizer (offline preferred); browsers use the Web Speech API after an explicit privacy notice. The transcript is only a suggestion the person edits.
 - **Reward menu**: spend stars on rewards, a parent can set the menu and gets "would like" requests.
@@ -282,7 +285,7 @@
 - Fixed: the "send to child" dialog title was missing its text.
 
 ## 1.9.0
-- **26 new coach tips (61 total)**, each in two languages and three tones: attention and executive-function support (getting started / task initiation, working memory, switching between tasks, body doubling, 3-minute sprints, fidget and movement, making time visible, estimate-then-compare), more CBT (mini thought record, all-or-nothing words, testing predictions), more mindfulness (4-7-8 breathing, body scan, wall push, naming feelings, "worry radio").
+- **26 new coach tips (61 total)**, each in two languages and three tones: attention and executive-function support (getting started / task initiation, working memory, switching between tasks, body doubling, 3-minute sprints, fidget and movement, making time visible, estimate-then-compare), more tools inspired by CBT (mini thought record, all-or-nothing words, testing predictions), more mindfulness (4-7-8 breathing, body scan, wall push, naming feelings, "worry radio").
 - **Three new tip categories** (🚦 getting started, 🧩 remembering, 🔀 switching tasks); the coach picks by situation (late / stuck / any).
 - **Encouragement doubled** (6-7 variants per event instead of 3-4) plus more playful lines for young children.
 - `docs/ROADMAP.md`: ideas for what to build next, with status.
@@ -333,7 +336,7 @@
 ## 1.2.0
 - **Hebrew + RTL is now the default** (English one tap away in Settings).
 - **Profile**: first-run welcome (name, age, gender), editable in Settings. All messages and tips adapt: Hebrew masculine/feminine forms, and three tones (kid ≤ 11, teen 12-17, adult 18+).
-- **Mindful coach**: 35 short CBT / mindfulness / ACT-style tips (breathing with an animated guide, grounding, thought checking, letting thoughts pass, self-compassion, focus, time pressure, body) in two languages × three tones, with humour for the young. 💡 button on every task and next to Pause; optional automatic tips when a task runs over, 3+ min behind plan, or paused 2+ min.
+- **Mindful coach**: 35 short tips inspired by CBT, mindfulness and ACT (breathing with an animated guide, grounding, thought checking, letting thoughts pass, self-compassion, focus, time pressure, body) in two languages × three tones, with humour for the young. 💡 button on every task and next to Pause; optional automatic tips when a task runs over, 3+ min behind plan, or paused 2+ min.
 - **Read aloud** (encouragement and/or tips, independent from the on-screen text; same personalised text, voice and style) with the device's text-to-speech: choose a voice and a style (deep, high, robot, chipmunk, giant, sleepy, superhero, fairy).
 
 ## 1.1.0

@@ -1432,7 +1432,7 @@ await step('v1.22: NLP - a choice in "what the app is for" (with the honest note
   assert.deepEqual(await audit(page, 'starter-set'), []); await page.click('dialog[open] footer button.primary'); await page.waitForTimeout(500);
   const after = await page.evaluate(async () => { const S = await import('./js/store.js'); const pid = S.activeProfile().id; return [S.get().templates.length, S.get().templates.filter((x) => x.name === 'A clear goal' || x.name === 'Mental rehearsal').map((x) => [x.owners.join(), x.alarm.enabled]), pid]; });
   assert.equal(after[0], before + 2, 'both were added'); assert.ok(after[1].every(([o, a]) => o === after[2] && a === false), 'for this person only, no alarm');
-  await page.goto(base + '#/'); await page.waitForSelector('.tb-btn'); await qk(page, 'NLP tools'); await page.waitForSelector('.nlp-tool');
+  await page.goto(base + '#/'); await page.waitForSelector('.tb-btn'); await qk(page, 'Tools inspired by NLP'); await page.waitForSelector('.nlp-tool');
   assert.equal(await page.locator('.nlp-tool').count(), 6); assert.match(await page.textContent('main, #app'), /limited and mixed/); assert.deepEqual(await audit(page, 'nlp-page'), []);
   await page.click('.nlp-tool:has-text("Precise words")'); await page.waitForSelector('dialog[open] textarea');
   await page.fill('dialog[open] textarea', "I always fail and I can't do it"); assert.deepEqual(await audit(page, 'nlp-step'), []);
@@ -1443,7 +1443,7 @@ await step('v1.22: NLP - a choice in "what the app is for" (with the honest note
   const saved = await page.evaluate(async () => { const J = await import('./js/journal.js'); const S = await import('./js/store.js'); const r = await J.listEntries?.(S.activeProfile().id); return JSON.stringify(r ?? []).includes('late twice'); }).catch(() => true); assert.ok(saved);
   await closeDialogs(page);
   await page.evaluate(async () => { const S = await import('./js/store.js'); await S.setNeeds(S.activeProfile().id, { model: 'cbt', problems: [] }); });
-  await page.goto(base + '#/'); await page.waitForSelector('.tb-btn'); await openMenuWith(page, 'Calm corner'); assert.equal(await page.locator('.tb-panel:not([hidden]) button:has-text("NLP tools")').count(), 0, 'not shown for another method');
+  await page.goto(base + '#/'); await page.waitForSelector('.tb-btn'); await openMenuWith(page, 'Calm corner'); assert.equal(await page.locator('.tb-panel:not([hidden]) button:has-text("Tools inspired by NLP")').count(), 0, 'not shown for another method');
 });
 await step('v1.22: NLP special tasks - in the picker, and the task opens its tool on the run screen; "calm animations" switches movement off', async () => {
   const { page } = await newPage({ lang: 'en' }); await page.goto(base + '#/'); await page.waitForSelector('.routine');

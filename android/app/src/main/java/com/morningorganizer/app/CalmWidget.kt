@@ -10,6 +10,6 @@ import android.widget.RemoteViews
 class CalmWidget : AppWidgetProvider() {
     override fun onUpdate(context: Context, manager: AppWidgetManager, ids: IntArray) {
         val open = PendingIntent.getActivity(context, 500, MainActivity.routeIntent(context, "#/calm"), PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
-        ids.forEach { id -> manager.updateAppWidget(id, RemoteViews(context.packageName, R.layout.widget_calm).apply { setOnClickPendingIntent(R.id.calm_root, open) }) }
+        ids.forEach { id -> manager.updateAppWidget(id, RemoteViews(context.packageName, R.layout.widget_calm).apply { WidgetLook.apply(context, this, "4x2", R.drawable.wbg_calm); setOnClickPendingIntent(R.id.calm_root, open) }) }
     }
 }

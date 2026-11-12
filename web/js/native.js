@@ -21,6 +21,7 @@ export const native = {
   sharePdf: (name, b64, subject, text) => call('sharePdf', name, b64, subject, text),
   /** {name, stars, streak, week} for the progress widget. */
   setStats: (o) => call('setStats', json(o)),
+  setLook: (skin) => call('setLook', String(skin || 'default')),
   /** System notification (Android app): used for parent alerts. */
   notify: (title, text) => call('notify', title, text),
   keepAwake: (on) => call('keepAwake', !!on),

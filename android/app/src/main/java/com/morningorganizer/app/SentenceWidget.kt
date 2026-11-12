@@ -39,6 +39,7 @@ class SentenceWidget : AppWidgetProvider() {
             val text = if (list.isEmpty()) context.getString(R.string.app_name) else list[SentenceMath.index(System.currentTimeMillis(), hours(context, id), id, list.size)]
             val label = context.resources.getIdentifier("sentence_m_$m", "string", context.packageName).let { if (it == 0) "" else context.getString(it) }
             val v = RemoteViews(context.packageName, R.layout.widget_sentence)
+            WidgetLook.apply(context, v, "4x1", R.drawable.wbg_sentence)
             v.setTextViewText(R.id.sentence_text, text)
             v.setTextViewText(R.id.sentence_label, label)
             v.setOnClickPendingIntent(R.id.sentence_root, PendingIntent.getActivity(context, 800 + id, MainActivity.startIntent(context, null), PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT))

@@ -31,6 +31,7 @@ class StatsWidget : AppWidgetProvider() {
         private fun build(context: Context): RemoteViews {
             val s = readState(context)
             val v = RemoteViews(context.packageName, R.layout.widget_stats)
+            WidgetLook.apply(context, v, "4x2", R.drawable.wbg_stats)
             v.setTextViewText(R.id.stats_title, s.optString("name").ifBlank { context.getString(R.string.app_name) })
             v.setTextViewText(R.id.stats_stars, "⭐ ${s.optInt("stars", 0)}")
             v.setTextViewText(R.id.stats_streak, "🔥 ${s.optInt("streak", 0)}")

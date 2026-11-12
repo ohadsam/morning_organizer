@@ -10,6 +10,6 @@ import android.widget.RemoteViews
 class JournalWidget : AppWidgetProvider() {
     override fun onUpdate(context: Context, manager: AppWidgetManager, ids: IntArray) {
         val open = PendingIntent.getActivity(context, 700, MainActivity.routeIntent(context, "#/journal"), PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
-        ids.forEach { id -> manager.updateAppWidget(id, RemoteViews(context.packageName, R.layout.widget_journal).apply { setOnClickPendingIntent(R.id.journal_root, open) }) }
+        ids.forEach { id -> manager.updateAppWidget(id, RemoteViews(context.packageName, R.layout.widget_journal).apply { WidgetLook.apply(context, this, "4x2", R.drawable.wbg_journal); setOnClickPendingIntent(R.id.journal_root, open) }) }
     }
 }

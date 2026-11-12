@@ -46,6 +46,7 @@ class RunWidget : AppWidgetProvider() {
 
         private fun build(context: Context): RemoteViews {
             val v = RemoteViews(context.packageName, R.layout.widget_run)
+            WidgetLook.apply(context, v, "4x2", R.drawable.wbg_run)
             val s = try { JSONObject(context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getString("state", "{}") ?: "{}") } catch (_: Exception) { JSONObject() }
             val active = s.optBoolean("active", false)
             val open = PendingIntent.getActivity(context, 200, MainActivity.startIntent(context, if (active) s.optString("templateId").ifEmpty { null } else null), PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)

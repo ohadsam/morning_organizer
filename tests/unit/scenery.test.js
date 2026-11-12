@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { parseScenery, skyAt, frameFor, screenArtFor, suggestSil, isSil, SILS, SKIES } from '../../web/js/scenery.js';
+import { parseScenery, skyAt, frameFor, MEDAL_OF, screenArtFor, suggestSil, isSil, SILS, SKIES } from '../../web/js/scenery.js';
 
 test('the shipped scenery kit parses with 14 frames, 6 skies and the dividers', () => {
   const s = parseScenery(JSON.parse(readFileSync(new URL('../../web/data/scenery.json', import.meta.url), 'utf8')));
@@ -27,4 +27,9 @@ test('the 14 task silhouettes ship and are suggested from a task name (Hebrew an
   assert.deepEqual(Object.keys(s.tasks).sort(), Object.keys(SILS).sort());
   assert.equal(suggestSil('Brush your teeth'), 'brush-teeth'); assert.equal(suggestSil('לצחצח שיניים'), 'brush-teeth'); assert.equal(suggestSil('Pack the bag'), 'pack-bag'); assert.equal(suggestSil('לאכול ארוחת בוקר'), 'breakfast'); assert.equal(suggestSil('Meditate'), '');
   assert.ok(isSil('shower')); assert.equal(isSil('../x'), false); assert.equal(isSil(undefined), false);
+});
+test('the medals: 14 levels and the streaks, each with a locked form', () => {
+  const s = parseScenery(JSON.parse(readFileSync(new URL('../../web/data/scenery.json', import.meta.url), 'utf8')));
+  for (let i = 1; i <= 14; i++) { assert.ok(s.badges[`level-${i}`], `level-${i}`); assert.ok(s.badges[`level-${i}-locked`], `level-${i}-locked`); }
+  for (const id of Object.values(MEDAL_OF)) { assert.ok(s.badges[id], id); assert.ok(s.badges[`${id}-locked`], `${id}-locked`); }
 });

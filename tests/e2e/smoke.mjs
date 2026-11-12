@@ -1724,6 +1724,18 @@ await step('v1.45: a task can have a silhouette picture (picked in the icon pick
   await page.context().close();
 });
 
+await step('v1.46: the achievements show medals (a row of 14 levels, the current one and below lit, the rest locked) and the streak / first medals; zero axe violations (he + en)', async () => {
+  for (const lang of ['en', 'he']) {
+    const { page } = await newPage({ lang }); await page.goto(base + '#/'); await dismissWelcome(page);
+    await page.evaluate(async () => { const S = await import('./js/store.js'), tpl = S.get().templates[0], tasks = tpl.tasks.map((t) => ({ id: t.id, name: t.name, icon: t.icon, plannedSec: t.sec, estSec: t.sec, extraSec: 0, actualSec: t.sec, done: true, skipped: false })), tot = tasks.reduce((a, x) => a + x.plannedSec, 0);
+      await S.saveRun({ id: 'medal1', profileId: S.activeProfile().id, templateId: tpl.id, templateName: tpl.name, icon: tpl.icon, color: '#6c5ce7', startedAt: Date.now() - 900_000, endedAt: Date.now() - 300_000, status: 'done', current: 0, pausedMs: 0, plannedTotal: tot, estTotal: tot, actualTotal: tot, tasks, unplanned: [] }); });
+    await page.goto(base + '#/stats'); await page.reload(); await page.waitForSelector('.medals li .medal svg.sc', { timeout: 15000 });
+    assert.equal(await page.locator('.medals li').count(), 14); assert.ok(await page.locator('.medals li.on').count() >= 1 && await page.locator('.medals li:not(.on)').count() >= 1, 'some levels lit, the rest locked');
+    assert.ok(await page.locator('.badge .bi .medal svg').count() >= 4, 'the first and streak badges have medals'); assert.deepEqual(await audit(page, 'medals-' + lang), []);
+    await page.context().close();
+  }
+});
+
 await step('v1.23: the picker offers "Build my own" and an avatar picked there is used at once; a kit avatar survives sanitising and other profiles keep theirs', async () => {
   const { page } = await newPage({ lang: 'en' }); await page.goto(base + '#/settings/profile'); await page.waitForSelector('details[data-group=profile]');
   await page.click('details[data-group=profile] button:has-text("Avatar")'); await page.waitForSelector('dialog[open] .avatar-picker'); assert.deepEqual(await audit(page, 'picker'), []);

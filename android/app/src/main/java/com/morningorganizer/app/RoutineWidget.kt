@@ -39,6 +39,7 @@ class RoutineWidget : AppWidgetProvider() {
 
         private fun build(context: Context): RemoteViews {
             val views = RemoteViews(context.packageName, R.layout.widget_routines)
+            WidgetLook.apply(context, views, "4x2", R.drawable.wbg_routines)
             val items = try { JSONArray(context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getString("items", "[]")) } catch (_: Exception) { JSONArray() }
             BUTTONS.forEachIndexed { i, viewId ->
                 val o = items.optJSONObject(i)

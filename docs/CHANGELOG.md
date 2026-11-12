@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.50.0
+- **Check for a new version** (Android app, Settings → The app): `NativeBridge.checkUpdate()` -> `MainActivity.checkForUpdate()` -> `UpdateCheck.fetch` (one `HttpsURLConnection` GET of GitHub's `releases/latest`, 8 s timeouts, no redirects, answer capped at 512 KB, a generic `User-Agent`), the answer returns as a `{type:'update'}` event that `appUpdate.js` (`interpretUpdate`) reads strictly. `UpdateMath` (pure, `UpdateMathTest`) compares the installed version with the release title ("v1.50.0 (build 340)"); the same version in a newer build is not "new". "Download the new version" calls `openUpdate()`, which opens only an `https://github.com/ohadsam/morning_organizer/releases/download/.../morning-organizer.apk` address taken from the last check (never one passed by the page) in the browser; installing it is Android's own step.
+- **New `INTERNET` permission** (the app made no network request before): used only by this button. `usesCleartextTraffic` stays false. Documented in `ARCHITECTURE.md`; the in-app What's new says so.
+- Verified: unit tests (`UpdateMathTest` runs in the Android CI), e2e v1.50 with a fake bridge (new / latest / failure, axe in both languages). Not verified here: the real request and the download on a device.
+
 ## 1.49.1
 - **Wording ("inspired by")**: every user-facing mention of a named method (CBT, Cog-Fun, NLP) now says the app is *inspired by* it, so the app does not present itself as the method: the "what the app is for" options (`need_cbt` / `need_cogfun` / `need_nlp`), the NLP tools page title, tags and special-task names, the coach and thinking labels, the Android widget approach names, `guide.js` and `docs/USER_GUIDE.md` (both languages), the in-app What's new and these release notes, `README.md`, the goals disclaimer (`wellbeing.js`). Left as they are on purpose: code identifiers and ids (`cbt`, `cogfun`, `nlp`, `needs.js`), search keywords (so people can still find things by the method's name), the internal ledger / roadmap / architecture notes, and the honest line that the evidence for the NLP method is limited.
 

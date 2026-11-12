@@ -244,6 +244,20 @@ class MainActivity : ComponentActivity() {
         } else NdefFormatable.get(tag)?.let { it.connect(); try { it.format(message); true } finally { it.close() } } ?: false
     } catch (_: Exception) { false }
 
+    @Volatile private var updateApk: String? = null
+    /** "Check for a new version": one request on a background thread, the answer goes to the page as {type:'update', ok, latest, newer, current}. */
+    fun checkForUpdate() {
+        Thread {
+            val r = UpdateCheck.fetch(BuildConfig.VERSION_NAME); updateApk = if (r.newer) r.apk else null
+            deliver(JSONObject().put("type", "update").put("ok", r.ok).put("latest", r.latest).put("newer", r.newer).put("current", BuildConfig.VERSION_NAME))
+        }.start()
+    }
+    /** Opens the (checked) download of the new version in the browser / download manager; installing it is the system's own step. */
+    fun openUpdateDownload() {
+        val u = updateApk?.takeIf { UpdateMath.isTrustedApk(it) } ?: return
+        runCatching { startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(u)).addCategory(Intent.CATEGORY_BROWSABLE)) }
+    }
+
     /** Before the page has asked for pending work, queue it; afterwards push it straight into the page as an event. */
     private fun deliver(event: JSONObject) {
         synchronized(lock) { if (!jsReady) { pending = event; return } }

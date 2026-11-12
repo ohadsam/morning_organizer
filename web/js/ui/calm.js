@@ -43,6 +43,7 @@ export function calmPanel(host, { onClose, compact = false, initial = {} } = {})
   }
   function finish() {
     stop(); over = true;
+    { const p = S.activeProfile(); S.saveProfile({ ...p, calmDone: (p.calmDone || 0) + 1 }); }   // counts for the "first calm exercise" achievement
     setChildren(host, h('div', { class: 'stack center calm-done' }, cameoNode('calm', { size: 120 }), h('h2', {}, t('calmWell')), h('p', {}, t('moodAsk')),
       moodRow(async (v) => { await J.addEntry(S.activeProfile().id, { kind: 'calm', mood: v }); toast(t('jSaved')); }),
       S.features().journal !== false ? h('button', { class: 'btn', type: 'button', onclick: () => openAprt({}) }, `🧭 ${t('calmWrite')}`) : null,

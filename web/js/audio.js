@@ -22,8 +22,10 @@ function beepAt(freq, startAt, dur, vol) {
 const PATTERN = { warn: { beeps: [[880, 0, 0.12]], vib: [120] }, end: { beeps: [[988, 0, 0.18], [988, 0.28, 0.18], [1318, 0.56, 0.35]], vib: [200, 100, 200, 100, 400] } };
 
 /** kind: 'warn' | 'end'. mode: 'beep' | 'vibrate' | 'both' | 'silent'. volume 0-100. */
-export function signal(kind, mode, volume = 80) {
-  const p = PATTERN[kind]; if (!p || mode === 'silent') return;
+export function signal(kind, mode, volume = 80) { playPattern(PATTERN[kind], mode, volume); }
+/** Plays { beeps: [[Hz, offset s, duration s]], vib: [ms] } the way the person chose (beep / vibrate / both / silent). */
+export function playPattern(p, mode, volume = 80) {
+  if (!p || mode === 'silent') return;
   if ((mode === 'beep' || mode === 'both')) {
     unlockAudio();
     if (ctx) { const now = ctx.currentTime; for (const [f, off, d] of p.beeps) beepAt(f, now + off, d, (volume / 100) ** 2 * 0.8); }

@@ -47,3 +47,10 @@ test('the loading sunrise loops: the sun rises and sinks and the rays open in tu
   const m = JSON.parse((await import('node:fs')).readFileSync(new URL('../../web/data/mascot.json', import.meta.url), 'utf8'));
   assert.ok(m.moods['anim-loading'].svg.includes('viewBox="0 0 160 160"') && !m.moods['anim-loading'].svg.includes('ns0:'));
 });
+test('the silhouette of a task travels with it into the difficulty and trend lists, so the statistics can draw it', async () => {
+  const D = await import('../../web/js/difficulty.js');
+  const run = (i) => ({ id: `r${i}`, status: 'done', endedAt: 1e12 + i * 1e6, startedAt: 1e12 + i * 1e6 - 1e5, templateId: 't', templateName: 'T', plannedTotal: 100, actualTotal: 90, tasks: [{ id: 'a', name: 'Brush teeth', icon: '🪥', sil: 'brush-teeth', done: true, plannedSec: 60, actualSec: 70, difficulty: 4 + (i % 2), help: {} }, { id: 'b', name: 'Read', icon: '📚', done: true, plannedSec: 60, actualSec: 50, difficulty: 2, help: {} }] });
+  const runs = [1, 2, 3].map(run), stats = D.taskDifficulty(runs), trends = D.difficultyTrends(runs);
+  assert.equal(stats.find((x) => x.name === 'Brush teeth').sil, 'brush-teeth'); assert.equal(stats.find((x) => x.name === 'Read').sil, '');
+  assert.equal(trends.find((x) => x.name === 'Brush teeth').sil, 'brush-teeth');
+});

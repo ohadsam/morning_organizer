@@ -1,5 +1,5 @@
 // Draws the scenery kit (see ../scenery.js): a frame around an avatar, a sky strip, a divider. The pictures are copied element by element, never as markup.
-import { parseScenery, frameFor, skyAt } from '../scenery.js';
+import { parseScenery, frameFor, skyAt, isSil } from '../scenery.js';
 import { inner } from './avatarKit.js';
 import { h, setChildren } from '../util.js';
 
@@ -56,3 +56,5 @@ export function medalNode(id, { locked = false, fallback = '' } = {}) {
   if (kit) draw(); else loadScenery().then(draw);
   return box;
 }
+/** What stands before a task's name in lists: its silhouette when it has one (the emoji until the kit is loaded), else its emoji (or `none`). */
+export const taskPic = (x, none = '') => (isSil(x?.sil) ? silNode(x.sil, x.icon || none) : (x?.icon || none));

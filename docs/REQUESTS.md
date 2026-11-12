@@ -129,3 +129,4 @@ Status: ✅ shipped (version) · 🟡 partly (what is missing) · ⛔ not possib
 | O14 | Locked medals + per-look Android widget cards (1.46.0): needs a device check of the widgets in each look | Shipped; widgets unverified on a device. |
 | O15 | Four new achievements, loading Sunny, bell + week-balance widgets (1.47.0); "balance" = routines finished vs check-ins/look-backs, my definition | Shipped; widgets unverified on a device. |
 | O3 ✅ 1.48.0 | Leave-time sounds by method (done); first-calm achievement (done) | Silhouettes in reports/stats/widgets: emoji kept on purpose. |
+| O16 | Task silhouettes in statistics and reports (1.49.0); widgets/notifications show routines so keep emoji; text report/PDF stay emoji | Done. |

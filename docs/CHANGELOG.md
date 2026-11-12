@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.49.0
+- **Task silhouettes in the statistics and reports**: `sil` travels with a task into `difficulty.js` (where it is hard, trends) and `report.js` (task rows, run tasks); `taskPic(x, none)` in `ui/scenery.js` draws it (the emoji as the fallback) in the difficulty bars, the trend list and the report tables / bars. The text report and the PDF stay emoji (they are plain text / canvas). Widgets and notifications show routines, not tasks: their emoji is the routine's, so nothing to change there.
+- **Contrast fix** (found by the new e2e step): the red "over time" number in `.tbl tr.over` was `--bad` (#d63a3a, just under 4.5:1 on white); it now uses `--bad-text` (#b42d2d in the light look, `--bad` in the dark one).
+
 ## 1.48.0
 - **"A calm moment" achievement** (`firstcalm`, medal `first-calm-exercise`): the calm corner's `finish()` now counts a finished exercise on the profile (`calmDone`, sanitised in `profiles.js`, so it is part of the backup); `earnedBadges(runs, { calm })`.
 - **Leave-time sounds by method** (open item O3): `cueStyle(view)` and `leaveCuePattern(event, view)` in `leave.js` (data), `playPattern` in `audio.js`, played by the runner on "leave soon" / "leave now" with the person's sound mode and a volume capped at 70; quiet in the calm run mode. A difficulty chosen in "what the app is for" wins (anxiety: soft and slow, attention: short and clear), then the model (CBT chime, Cog-Fun rising run, NLP bell), else a plain beep.

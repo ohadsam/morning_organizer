@@ -38,6 +38,7 @@ export function normalizeProfile(p) {
     avatar: p?.avatar ? sanitizeAvatar(p.avatar) : avatarFromMascot(p?.mascot), createdAt: Number.isFinite(Number(p?.createdAt)) ? Number(p.createdAt) : Date.now(),
     focus: sanitizeAreas(p?.focus), focusSet: p?.focusSet === true, tools: sanitizeTools(p?.tools), menu: sanitizeMenu(p?.menu), redeemed: sanitizeRedeemed(p?.redeemed), goals: sanitizeGoals(p?.goals),
     view: sanitizeView(p?.view), prefs: sanitizePrefs(p?.prefs),
+    calmDone: Math.min(100000, Math.max(0, Math.round(Number(p?.calmDone)) || 0)),   // calm-corner exercises finished (for the "first calm exercise" achievement)
     seenBadges: (Array.isArray(p?.seenBadges) ? p.seenBadges : []).filter((x) => typeof x === 'string').map((x) => x.slice(0, 40)).slice(0, 80),
   };
 }

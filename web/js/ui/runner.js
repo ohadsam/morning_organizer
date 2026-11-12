@@ -6,7 +6,7 @@ import { stars } from '../stats.js';
 import { choose, taskEvent } from '../feedback.js';
 import { suggestIcon } from '../taskIcons.js';
 import { setAwake } from '../awake.js';
-import { signal, unlockAudio } from '../audio.js';
+import { signal, playPattern, unlockAudio } from '../audio.js';
 import { icon, confirmBox, toast } from './common.js';
 import { progressWidget, overallProgress } from './progress.js';
 import { native } from '../native.js';
@@ -18,7 +18,7 @@ import * as F from '../family.js';
 import { afterRun, pushActive, alertParents } from '../family.js';
 import { celebrateGoals } from './family.js';
 import { announce } from '../a11y.js';
-import { leaveStatus, leaveEvent, newLeaveMemo } from '../leave.js';
+import { leaveStatus, leaveEvent, newLeaveMemo, leaveCuePattern } from '../leave.js';
 import { planShortening } from '../shorten.js';
 import { buildHistory } from '../smart.js';
 import { gearFor } from '../schedule.js';
@@ -330,7 +330,7 @@ export async function renderRunner(root, id, nav) {
       if (ev === 'end' && s.autoAdvance) { doComplete(); return; }
       persist();
     }
-    const le = leaveEvent(leaveAtOf(), Date.now(), leaveMemo); if (le && !calm(run)) say(le);
+    const le = leaveEvent(leaveAtOf(), Date.now(), leaveMemo); if (le && !calm(run)) { playPattern(leaveCuePattern(le, S.activeProfile()?.view), st().mode, Math.min(st().volume, 70)); say(le); }
     if (le === 'leaveNow') { const lateMin = Math.round((E.etaMs(run, Date.now()) - leaveAtOf()) / 60000); if (lateMin > 0) alertParents({ kind: 'late', name: run.templateName, minutes: lateMin }, run.profileId); }
     if (!alerted && E.paceDiffSec(run, Date.now()) >= 300) { alerted = true; alertParents({ kind: 'overtime', name: run.templateName, minutes: Math.round(E.paceDiffSec(run, Date.now()) / 60) }, run.profileId); }
     if (s.srAnnounce) { const cur = run.tasks[run.current], left = E.remainingSec(run, Date.now()); if (left <= 60 && left > 0 && !srMarks.has(cur.id)) { srMarks.add(cur.id); announce(`${cur.name}: ${fmtHuman(Math.ceil(left), units())} ${t('left')}`); } }

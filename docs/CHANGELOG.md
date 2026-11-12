@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.48.0
+- **"A calm moment" achievement** (`firstcalm`, medal `first-calm-exercise`): the calm corner's `finish()` now counts a finished exercise on the profile (`calmDone`, sanitised in `profiles.js`, so it is part of the backup); `earnedBadges(runs, { calm })`.
+- **Leave-time sounds by method** (open item O3): `cueStyle(view)` and `leaveCuePattern(event, view)` in `leave.js` (data), `playPattern` in `audio.js`, played by the runner on "leave soon" / "leave now" with the person's sound mode and a volume capped at 70; quiet in the calm run mode. A difficulty chosen in "what the app is for" wins (anxiety: soft and slow, attention: short and clear), then the model (CBT chime, Cog-Fun rising run, NLP bell), else a plain beep.
+- Left as they are on purpose: the task silhouettes in reports, statistics, widgets and notifications (the emoji is their fallback; the stats lists group tasks by name, so a picture would need a per-name lookup).
+
 ## 1.47.0
 - **Four new achievements** (`badges.js`, medals in `scenery.json`): `streak14`, `firstfeel` (a check-in), `firstlook` (a look-back), `firstbackup` (`mo.lastBackup`). `earnedBadges(runs, extra)` takes the counts the runs cannot give. "First calm exercise" is NOT added: the app keeps no record of calm exercises. The kit's locked ring for the check-in medal used `var(--i-bg)` (refused by the allow-list); the build draws it with the i-bg class.
 - **Loading sunrise**: `anim-loading` in `mascot.json` (the `ns0:` prefixes of the delivered file are removed; `LOADING_SVG=` in `build-mascot.mjs`), `loadingSunny()` in `ui/mascot.js` moved by the loop of `loadingSunny.js` (2.4 s, smoothstep, rays staggered); still with "calm animations" or a reduced-motion phone. Shown beside a busy report button and while an invite is made.

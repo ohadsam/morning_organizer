@@ -31,4 +31,4 @@ export const suggestSil = (name) => { const s = String(name || ''); for (const [
 export const isSil = (id) => typeof id === 'string' && Object.hasOwn(SILS, id);
 
 /** The medals of the kit for some of the achievements (the others keep their emoji). */
-export const MEDAL_OF = { first: 'first-routine', streak3: 'streak-3', streak7: 'streak-7', streak30: 'streak-30', streak14: 'streak-14', firstfeel: 'first-feeling-checkin', firstlook: 'first-lookback', firstbackup: 'first-backup' };
+export const MEDAL_OF = { first: 'first-routine', streak3: 'streak-3', streak7: 'streak-7', streak30: 'streak-30', streak14: 'streak-14', firstcalm: 'first-calm-exercise', firstfeel: 'first-feeling-checkin', firstlook: 'first-lookback', firstbackup: 'first-backup' };

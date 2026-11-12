@@ -16,7 +16,7 @@ import { confetti } from './fx.js';
 
 /** The gallery: earned badges in colour, the rest greyed with their hint. */
 /** What the badges need besides the runs: how many check-ins and look-backs the person has, and whether a backup was ever made on this device. */
-const badgeExtra = () => { let backup = false; try { backup = !!localStorage.getItem('mo.lastBackup'); } catch { /* blocked */ } return { feel: S.feelings().length, retro: S.retros().length, backup }; };
+const badgeExtra = () => { let backup = false; try { backup = !!localStorage.getItem('mo.lastBackup'); } catch { /* blocked */ } return { calm: S.activeProfile().calmDone || 0, feel: S.feelings().length, retro: S.retros().length, backup }; };
 export function achievementsCard(runs) {
   const earned = earnedBadges(runs, badgeExtra()), lvNow = levelInfo(totalStars(finished(runs))).level;
   return h('section', { class: 'card' }, h('h2', {}, `🏆 ${t('achievements')}`), h('p', { class: 'note' }, t('badgesEarned', { n: earned.length, total: BADGES.length })),

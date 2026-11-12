@@ -1745,6 +1745,14 @@ await step('v1.47: the busy report button shows Sunny rising (moving), still wit
   await page.context().close();
 });
 
+await step('v1.48: finishing a calm exercise counts (the first one earns "A calm moment"), and it is kept per person', async () => {
+  const { page } = await newPage({ lang: 'en' }); await page.goto(base + '#/'); await dismissWelcome(page);
+  const before = await page.evaluate(async () => { const S = await import('./js/store.js'), B = await import('./js/badges.js'); return [S.activeProfile().calmDone, B.earnedBadges([], { calm: S.activeProfile().calmDone }).includes('firstcalm')]; }); assert.deepEqual(before, [0, false]);
+  await page.evaluate(async () => { const S = await import('./js/store.js'); await S.saveProfile({ ...S.activeProfile(), calmDone: 1 }); });
+  await page.reload(); await page.waitForSelector('.routine, .now-card, .empty', { timeout: 15000 }).catch(() => {}); await page.waitForTimeout(500); const after = await page.evaluate(async () => { const S = await import('./js/store.js'), B = await import('./js/badges.js'); return [S.activeProfile().calmDone, B.earnedBadges([], { calm: S.activeProfile().calmDone }).includes('firstcalm')]; }); assert.deepEqual(after, [1, true], 'kept after a reload');
+  await page.context().close();
+});
+
 await step('v1.23: the picker offers "Build my own" and an avatar picked there is used at once; a kit avatar survives sanitising and other profiles keep theirs', async () => {
   const { page } = await newPage({ lang: 'en' }); await page.goto(base + '#/settings/profile'); await page.waitForSelector('details[data-group=profile]');
   await page.click('details[data-group=profile] button:has-text("Avatar")'); await page.waitForSelector('dialog[open] .avatar-picker'); assert.deepEqual(await audit(page, 'picker'), []);

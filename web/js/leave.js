@@ -30,3 +30,21 @@ export function leaveEvent(leaveAt, now, memo) {
   return null;
 }
 export const newLeaveMemo = () => ({ soon: new Set(), now: false });
+
+// The sound of "leave soon" and "leave now", in the style of the way the person works (pure data; audio.js plays it): [frequency Hz, offset s, duration s].
+const CUES = {
+  default: { leaveSoon: { beeps: [[784, 0, 0.15]], vib: [120] }, leaveNow: { beeps: [[784, 0, 0.15], [988, 0.25, 0.3]], vib: [150, 80, 250] } },
+  anxiety: { leaveSoon: { beeps: [[523, 0, 0.5], [659, 0.55, 0.6]], vib: [80] }, leaveNow: { beeps: [[523, 0, 0.5], [659, 0.55, 0.5], [784, 1.1, 0.8]], vib: [100, 80, 100] } },   // soft, slow, never sharp
+  adhd: { leaveSoon: { beeps: [[988, 0, 0.1], [988, 0.18, 0.1]], vib: [100, 60, 100] }, leaveNow: { beeps: [[988, 0, 0.12], [988, 0.2, 0.12], [1318, 0.4, 0.3]], vib: [200, 80, 200, 80, 300] } },   // short and clear: it cuts through
+  cbt: { leaveSoon: { beeps: [[880, 0, 0.25]], vib: [100] }, leaveNow: { beeps: [[880, 0, 0.25], [1175, 0.35, 0.4]], vib: [150, 100, 200] } },   // a calm neutral chime
+  cogfun: { leaveSoon: { beeps: [[659, 0, 0.12], [784, 0.14, 0.12]], vib: [100] }, leaveNow: { beeps: [[659, 0, 0.12], [784, 0.14, 0.12], [988, 0.28, 0.12], [1318, 0.42, 0.3]], vib: [120, 60, 120, 60, 240] } },   // a playful rising run
+  nlp: { leaveSoon: { beeps: [[1046, 0, 0.9]], vib: [100] }, leaveNow: { beeps: [[1046, 0, 0.9], [1568, 0.02, 0.6], [1046, 1.2, 1]], vib: [150, 100, 250] } },   // a soft bell
+};
+/** The style of the cue for a person's "what the app is for" choice: a difficulty (anxiety, then attention) first, then the way of working. */
+export function cueStyle(view) {
+  const problems = Array.isArray(view?.problems) ? view.problems : [];
+  if (problems.includes('anxiety')) return 'anxiety'; if (problems.includes('adhd')) return 'adhd';
+  return ['cbt', 'cogfun', 'nlp'].includes(view?.model) ? view.model : 'default';
+}
+/** { beeps, vib } for 'leaveSoon' | 'leaveNow', or null. */
+export const leaveCuePattern = (event, view) => CUES[cueStyle(view)]?.[event] ?? null;

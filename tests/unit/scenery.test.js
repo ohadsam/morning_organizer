@@ -36,8 +36,8 @@ test('the medals: 14 levels and the streaks, each with a locked form', () => {
 test('the four new achievements have medals (and their locked form), and are earned from check-ins, look-backs and a backup', async () => {
   const { earnedBadges, BADGES } = await import('../../web/js/badges.js');
   const s = parseScenery(JSON.parse(readFileSync(new URL('../../web/data/scenery.json', import.meta.url), 'utf8')));
-  for (const id of ['streak14', 'firstfeel', 'firstlook', 'firstbackup']) { assert.ok(BADGES.some((b) => b.id === id), id); assert.ok(s.badges[MEDAL_OF[id]] && s.badges[`${MEDAL_OF[id]}-locked`], id); }
-  assert.deepEqual(earnedBadges([], {}), []); assert.deepEqual(earnedBadges([], { feel: 1, retro: 2, backup: true }).sort(), ['firstbackup', 'firstfeel', 'firstlook']);
+  for (const id of ['streak14', 'firstcalm', 'firstfeel', 'firstlook', 'firstbackup']) { assert.ok(BADGES.some((b) => b.id === id), id); assert.ok(s.badges[MEDAL_OF[id]] && s.badges[`${MEDAL_OF[id]}-locked`], id); }
+  assert.deepEqual(earnedBadges([], {}), []); assert.deepEqual(earnedBadges([], { calm: 3 }), ['firstcalm']); assert.deepEqual(earnedBadges([], { feel: 1, retro: 2, backup: true }).sort(), ['firstbackup', 'firstfeel', 'firstlook']);
 });
 test('the loading sunrise loops: the sun rises and sinks and the rays open in turn', async () => {
   const { frameAt, LOOP_MS } = await import('../../web/js/loadingSunny.js');

@@ -12,7 +12,7 @@ Status: 💡 idea · 🔬 needs a decision / research · ✅ built (see CHANGELO
 - ✅ (1.10) **Choose-your-reward menu** and instant tiny rewards (extends stars / goals).
 - ✅ Estimate-vs-actual feedback, calm mode, quick mode, task photos, spoken next task, checklists with gear.
 
-## Mindfulness and CBT
+## Mindfulness and ideas inspired by CBT
 - ✅ (1.10) **Calm corner**: a standalone 1-3 minute guided breathing / grounding screen (box, 4-7-8, physiological sigh) with an animated circle and optional voice, reachable from the home screen without starting a routine.
 - ✅ (1.10) **Mood check-in** after a routine (one emoji) and a simple mood-vs-time chart ("mornings are smoother after a good night").
 - ✅ (1.10, with optional password, voice notes and dictation) **Thought diary** for teens and adults (situation, thought, evidence, kinder thought) kept on the device.
@@ -22,7 +22,7 @@ Status: 💡 idea · 🔬 needs a decision / research · ✅ built (see CHANGELO
 - ✅ (1.10) **Alarm chains** with per-ring sound/text/voice and offer-or-auto start; **unplanned interruptions** with pattern detection.
 - ✅ (1.10) Interruption patterns in the parent report; snooze button on the alarm notification.
 
-- ✅ (1.11) **Goal - Plan - Do - Check** (Cog-Fun-inspired self-help), **Alarms screen**, **What's new** sheet.
+- ✅ (1.11) **Goal - Plan - Do - Check** (self-help inspired by the Cog-Fun method), **Alarms screen**, **What's new** sheet.
 - 🔬 Parent view of a child's goal progress/check-ins; a parent-set weekly goal reminder.
 
 - ✅ (1.12) Task difficulty + kind thoughts + relaxation, difficulty statistics, report/PDF/e-mail export.

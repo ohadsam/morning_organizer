@@ -39,9 +39,9 @@
     <string name="sentence_cfg_every">להחליף משפט כל</string>
     <string name="sentence_cfg_save">סיום</string>
     <string name="sentence_m_all">תערובת של הכול</string>
-    <string name="sentence_m_cbt">מחשבות ורגשות (CBT)</string>
+    <string name="sentence_m_cbt">מחשבות ורגשות (בהשראת שיטת CBT)</string>
     <string name="sentence_m_cogfun">זמן, זיכרון ותכנון</string>
-    <string name="sentence_m_nlp">תוצאות ומילים (NLP)</string>
+    <string name="sentence_m_nlp">תוצאות ומילים (בהשראת שיטת NLP)</string>
     <string name="sentence_m_adhd">ריכוז וקשב (ADHD)</string>
     <string name="sentence_m_anxiety">רוגע ודאגה (חרדה)</string>
     <string name="sentence_m_organize">ארגון</string>

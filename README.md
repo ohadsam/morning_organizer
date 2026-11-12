@@ -17,21 +17,21 @@ Build morning routines (for kids or anyone), time every task, and watch yourself
 - **Looking back** (retrospective): where it got stuck, why, one-tap changes to the routine, and whether they helped.
 - **Smart times & extra steps** from history, age and the help you chose; **interactive HTML reports** next to PDF.
 - **Task feelings** - rate difficulty per task, a kind thought or relaxation exercise on demand, statistics on where it is hard; **reports** as PDF/e-mail/print.
-- **Goals** - Goal - Plan - Do - Check with strategies (inspired by Cog-Fun; self-help, not therapy), and an **Alarms** screen for wake-up chains.
+- **Goals** - Goal - Plan - Do - Check with strategies (inspired by the Cog-Fun method; self-help, not therapy), and an **Alarms** screen for wake-up chains.
 - **Templates** - save tasks and routines for reuse, pick them with big tiles, share and back them up.
 - **Helpers** - help areas, calm corner, focus tools, journal with optional password and voice notes, reward menu, routine-card widget.
 - **Share without a server** - code/link, system share sheet (Bluetooth, Nearby Share, WhatsApp…), NFC tags; import from code, link, file or tag.
 - **Personal & encouraging** - name, age, gender (Hebrew masculine/feminine forms), a buddy, cheerful messages, stars, 🔥 streaks, confetti, optional read-aloud with voice styles.
-- **Mindful coach** - 💡 on every task: 60+ short CBT / mindfulness / attention-support tips (breathing, grounding, thought checking, letting thoughts pass, getting started, remembering, switching tasks, time sense…), automatic when you run late or get stuck.
+- **Mindful coach** - 💡 on every task: 60+ short tips inspired by CBT and mindfulness, and attention support (breathing, grounding, thought checking, letting thoughts pass, getting started, remembering, switching tasks, time sense…), automatic when you run late or get stuck.
 - **Move data between the website and the app** - backup file or sync code, merge or replace.
 - **Family** - link a parent's and a child's phone (NFC tap / NFC tag / Bluetooth / Wi-Fi live link / share sheet, encrypted, no server): progress dashboard, routines, cheers and reward goals.
 - **Leave-by time, Quick/Calm pace, accessibility** (text size, color-blind palette, screen-reader announcements), task photos and stickers.
 - **Avatars & people** - animated characters (or your own photo/GIF), several people per phone, levels, badges, routines by day with gear checklists, QR/NFC/Bluetooth/Wi-Fi linking, parent alerts and weekly goals.
 - **Weekly summary, heat-map, CSV export, undo, more example routines.**
-- **What the app is for, people, skins** - a Kids view / Full view switch next to the profile chip; choose a model (CBT, Cog-Fun) and/or what is hard and the app shows only what fits; several people with their own settings and view; a settings search and jump bar; skins, easy-read text, custom colour.
+- **What the app is for, people, skins** - a Kids view / Full view switch next to the profile chip; choose a way of working (inspired by CBT or by Cog-Fun) and/or what is hard and the app shows only what fits; several people with their own settings and view; a settings search and jump bar; skins, easy-read text, custom colour.
 - **Voice commands** - during a routine say done / add time / pause / skip / journal / calm corner / remind me the step / stop (asks first); a ? lists them.
 - **Sharing, special tasks, points** - choose who sees a routine; add the app's own tools as steps (journal, body scan, guided imagery...); optional points with bonus for finishing early, awards (medal, coin, trophy), a podium with fireworks and a points chart; copy / export / import routines between people and devices.
-- **NLP tools** - six short guided exercises (clear outcome, reframing, calming anchor, precise words, points of view, mental rehearsal) as a method next to CBT and Cog-Fun, also as special tasks; offered as gentle self-help with an honest note that the evidence for NLP is limited. A *Calm animations* switch turns movement off.
+- **Tools inspired by NLP** - six short guided exercises (clear outcome, reframing, calming anchor, precise words, points of view, mental rehearsal) as a way of working next to those inspired by CBT and Cog-Fun, also as special tasks; offered as gentle self-help with an honest note that the evidence for the NLP method is limited. A *Calm animations* switch turns movement off.
 - **Avatar studio** - build your own avatar from an original layered kit (hair, eyes, clothes, hats, glasses, a little friend...), recolour it, watch it wave, dance and show feelings; save it in *My avatars* and share it with a short code.
 - **Illustrations and feeling faces** - friendly pictures for empty screens and the welcome sheet, and five feeling faces for the mood question; they take their colours from the chosen look (8 looks, light and dark).
 - **Android widget** - favourite routines, one tap to start.

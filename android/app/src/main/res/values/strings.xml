@@ -39,9 +39,9 @@
     <string name="sentence_cfg_every">Change the sentence every</string>
     <string name="sentence_cfg_save">Done</string>
     <string name="sentence_m_all">A mix of everything</string>
-    <string name="sentence_m_cbt">Thoughts and feelings (CBT)</string>
+    <string name="sentence_m_cbt">Thoughts and feelings (inspired by CBT)</string>
     <string name="sentence_m_cogfun">Time, memory and planning</string>
-    <string name="sentence_m_nlp">Outcomes and words (NLP)</string>
+    <string name="sentence_m_nlp">Outcomes and words (inspired by NLP)</string>
     <string name="sentence_m_adhd">Focus and attention (ADHD)</string>
     <string name="sentence_m_anxiety">Calm and worry (anxiety)</string>
     <string name="sentence_m_organize">Organising</string>

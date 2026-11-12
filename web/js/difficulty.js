@@ -10,7 +10,7 @@ export function taskDifficulty(runs, templateId = null) {
     if (templateId && r.templateId !== templateId) continue;
     for (const k of r.tasks || []) {
       if (!k.name) continue;
-      const e = m.get(k.name) ?? { name: k.name, icon: k.icon, rated: 0, sum: 0, hard: 0, seen: 0, over: 0, notes: 0, thoughts: 0, relax: 0 };
+      const e = m.get(k.name) ?? { name: k.name, icon: k.icon, sil: k.sil || '', rated: 0, sum: 0, hard: 0, seen: 0, over: 0, notes: 0, thoughts: 0, relax: 0 };
       e.seen++; e.over += k.actualSec - k.plannedSec; e.notes += k.help?.note || 0; e.thoughts += k.help?.thought || 0; e.relax += k.help?.relax || 0;
       if (k.difficulty >= 1) { e.rated++; e.sum += k.difficulty; if (k.difficulty >= 4) e.hard++; }
       m.set(k.name, e);
@@ -51,7 +51,7 @@ export function difficultyTrends(runs, templateId = null, min = 3) {
   const m = new Map();
   for (const r of [...finishedRuns(runs)].sort((a, b) => (a.endedAt || 0) - (b.endedAt || 0))) {
     if (templateId && r.templateId !== templateId) continue;
-    for (const k of r.tasks || []) { if (!k.name || !(k.difficulty >= 1)) continue; const e = m.get(k.name) ?? { name: k.name, icon: k.icon, points: [] }; e.points.push(k.difficulty); m.set(k.name, e); }
+    for (const k of r.tasks || []) { if (!k.name || !(k.difficulty >= 1)) continue; const e = m.get(k.name) ?? { name: k.name, icon: k.icon, sil: k.sil || '', points: [] }; e.points.push(k.difficulty); m.set(k.name, e); }
   }
   const avg = (a) => a.reduce((s, x) => s + x, 0) / a.length;
   return [...m.values()].filter((e) => e.points.length >= min).slice(0).map((e) => {

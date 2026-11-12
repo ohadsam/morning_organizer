@@ -1,4 +1,5 @@
 // The report screen + export: a designed report for one run or a period, as a page you can read, print, save as a real PDF, share or e-mail.
+import { taskPic } from './scenery.js';
 import { loadingSunny } from './mascot.js';
 import { h, setChildren, fmtHuman, fmtDur } from '../util.js';
 import { t, units, getLang, isRtl } from '../i18n.js';
@@ -26,7 +27,7 @@ export async function reportCss() { if (!cssText) { try { cssText = await (await
 
 const sec = (title, ...kids) => h('section', { class: 'rpt-sec' }, title ? h('h2', {}, title) : null, ...kids);
 const kpi = (v, label) => h('div', { class: 'rpt-kpi' }, h('b', {}, v), h('span', {}, label));
-const bar = (label, frac, text, color = BRAND) => h('div', { class: 'rpt-bar', title: `${label}: ${text}` }, h('span', {}, label), h('div', { class: 'tr' }, h('div', { class: 'fl', style: { width: `${Math.max(2, Math.min(100, frac * 100))}%`, background: color } })), h('span', { class: 'tx' }, text));
+const bar = (label, frac, text, color = BRAND, node = null) => h('div', { class: 'rpt-bar', title: `${label}: ${text}` }, h('span', {}, node || label), h('div', { class: 'tr' }, h('div', { class: 'fl', style: { width: `${Math.max(2, Math.min(100, frac * 100))}%`, background: color } })), h('span', { class: 'tx' }, text));
 
 const NS = 'http://www.w3.org/2000/svg';
 const sv = (tag, a = {}, ...kids) => { const e = document.createElementNS(NS, tag); for (const [k, v] of Object.entries(a)) e.setAttribute(k, v); e.append(...kids); return e; };
@@ -55,7 +56,7 @@ export function reportElement(m, { lang = getLang() } = {}) {
     root.append(sec(t('rpSummary'), h('div', { class: 'rpt-kpis' }, kpi(fmt(k.plannedSec), t('planned')), kpi(fmt(k.actualSec), t('actual')), kpi(`${k.deltaSec > 0 ? '+' : '−'}${fmt(Math.abs(k.deltaSec))}`, t('difference')), kpi(`${k.done}/${k.total}`, t('tasksDone')), kpi(`⭐ ${k.stars}`, t('stars')), kpi(m.mood ? MOODS[m.mood - 1].emoji : '—', t('rpMood')))));
     const peak = Math.max(1, ...m.tasks.flatMap((x) => [x.plannedSec, x.actualSec]));
     root.append(sec(t('rpPerTask'), h('table', { class: 'rpt-tbl' }, h('thead', {}, h('tr', {}, [t('colTask'), t('colPlanned'), t('colActual'), t('rpDifficulty'), t('rpHelp')].map((x) => h('th', {}, x)))),
-      h('tbody', {}, m.tasks.map((x) => h('tr', {}, h('td', {}, `${x.icon || '•'} ${x.name}${x.skipped ? ` (${t('skippedTag')})` : ''}`), h('td', {}, fmtDur(x.plannedSec)), h('td', { class: x.actualSec > x.plannedSec ? 'over' : '' }, fmtDur(x.actualSec)), h('td', {}, x.difficulty ? `${levelEmoji(x.difficulty)} ${x.difficulty}/5` : '—'), h('td', {}, [x.help.note ? `✍️${x.help.note}` : '', x.help.thought ? `💭${x.help.thought}` : '', x.help.relax ? `🧘${x.help.relax}` : ''].filter(Boolean).join(' ') || '—'))))),
+      h('tbody', {}, m.tasks.map((x) => h('tr', {}, h('td', {}, taskPic(x, '•'), ` ${x.name}${x.skipped ? ` (${t('skippedTag')})` : ''}`), h('td', {}, fmtDur(x.plannedSec)), h('td', { class: x.actualSec > x.plannedSec ? 'over' : '' }, fmtDur(x.actualSec)), h('td', {}, x.difficulty ? `${levelEmoji(x.difficulty)} ${x.difficulty}/5` : '—'), h('td', {}, [x.help.note ? `✍️${x.help.note}` : '', x.help.thought ? `💭${x.help.thought}` : '', x.help.relax ? `🧘${x.help.relax}` : ''].filter(Boolean).join(' ') || '—'))))),
     h('div', { style: { height: '10px' } }), ...m.tasks.map((x) => h('div', { class: 'rpt-bar' }, h('span', {}, x.name), h('div', { class: 'rpt-gantt' }, h('div', { class: 'p', style: { width: `${(x.plannedSec / peak) * 100}%` } }), h('div', { class: 'a', style: { width: `${(x.actualSec / peak) * 100}%`, background: x.actualSec > x.plannedSec ? WARN : GOOD } })), h('span', { class: 'tx' }, `${fmtDur(x.actualSec)} / ${fmtDur(x.plannedSec)}`)))));
     if (m.unplanned.length) root.append(sec(`⚡ ${t('unpTitle')}`, h('ul', { class: 'rpt-ul' }, m.unplanned.map((u) => h('li', {}, `${u.emoji} ${reasonName(u)} · ${fmt(u.sec)}${u.task ? ` · ${u.task}` : ''}`)))));
   } else {
@@ -69,11 +70,11 @@ export function reportElement(m, { lang = getLang() } = {}) {
     if (m.byRoutine.length) root.append(sec(t('rpByRoutine'), ...m.byRoutine.map((r) => bar(`${r.icon} ${r.name}`, r.onTimeRate, `${pct(r.onTimeRate)} · ${r.runs}×`, r.onTimeRate >= 0.7 ? GOOD : r.onTimeRate >= 0.4 ? '#fdcb6e' : WARN))));
     if (m.difficulty.rated) {
       root.append(sec(`🧗 ${t('rpWhereHard')}`, h('p', { class: 'rpt-note' }, t('rpDifficultyIntro', { n: m.difficulty.rated, avg: (Math.round(m.difficulty.avg * 10) / 10), hard: pct(m.difficulty.hardShare) })),
-        ...m.hardTasks.map((x) => bar(`${x.icon || ''} ${x.name}`, x.avg / 5, `${levelEmoji(Math.round(x.avg))} ${(Math.round(x.avg * 10) / 10)} · ${x.rated}×`, DIFF_COLORS[Math.max(0, Math.min(4, Math.round(x.avg) - 1))])),
+        ...m.hardTasks.map((x) => bar(`${x.icon || ''} ${x.name}`, x.avg / 5, `${levelEmoji(Math.round(x.avg))} ${(Math.round(x.avg * 10) / 10)} · ${x.rated}×`, DIFF_COLORS[Math.max(0, Math.min(4, Math.round(x.avg) - 1))], h('span', {}, taskPic(x), ` ${x.name}`))),
         h('p', { class: 'rpt-chips' }, h('span', {}, `✍️ ${t('rpHelpNotes', { n: m.difficulty.help.note })}`), h('span', {}, `💭 ${t('rpHelpThoughts', { n: m.difficulty.help.thought })}`), h('span', {}, `🧘 ${t('rpHelpRelax', { n: m.difficulty.help.relax })}`))));
     }
     if (m.tasks.length) root.append(sec(t('rpTaskTable'), h('table', { class: 'rpt-tbl' }, h('thead', {}, h('tr', {}, [t('colTask'), t('colPlanned'), t('colActual'), t('rpDifficulty')].map((x) => h('th', {}, x)))),
-      h('tbody', {}, m.tasks.map((x) => h('tr', {}, h('td', {}, `${x.icon || '•'} ${x.name}`), h('td', {}, fmtDur(x.avgPlannedSec)), h('td', { class: x.avgActualSec > x.avgPlannedSec + 29 ? 'over' : '' }, fmtDur(x.avgActualSec)), h('td', {}, x.avgDifficulty ? `${levelEmoji(Math.round(x.avgDifficulty))} ${(Math.round(x.avgDifficulty * 10) / 10)}` : '—')))))));
+      h('tbody', {}, m.tasks.map((x) => h('tr', {}, h('td', {}, taskPic(x, '•'), ` ${x.name}`), h('td', {}, fmtDur(x.avgPlannedSec)), h('td', { class: x.avgActualSec > x.avgPlannedSec + 29 ? 'over' : '' }, fmtDur(x.avgActualSec)), h('td', {}, x.avgDifficulty ? `${levelEmoji(Math.round(x.avgDifficulty))} ${(Math.round(x.avgDifficulty * 10) / 10)}` : '—')))))));
     if (m.unplanned.count) root.append(sec(`⚡ ${t('unpStatsTitle')}`, ...m.unplanned.by.slice(0, 5).map((e) => bar(`${e.emoji} ${reasonName(e)}`, e.count / m.unplanned.by[0].count, `${e.count}× · ${fmt(e.sec)}`, WARN))));
     if (m.mood.n >= 2) root.append(sec(`🙂 ${t('moodStatsTitle')}`, h('p', { class: 'rpt-chips' }, MOODS.map((x) => h('span', {}, `${x.emoji} ${m.mood.byMood[x.v]?.n || 0}`)))));
     if (m.retro?.total) root.append(sec(`🔄 ${t('rcvTitle')}`, h('p', { class: 'rpt-chips' }, h('span', {}, `${t('rcvLooks')}: ${m.retro.total}`), h('span', {}, `${t('rcvApplied')}: ${m.retro.applied}`), h('span', {}, `📈 ${m.retro.improved}`), h('span', {}, `➖ ${m.retro.same}`), h('span', {}, `📉 ${m.retro.worse}`), h('span', {}, `⏳ ${m.retro.waiting}`)),

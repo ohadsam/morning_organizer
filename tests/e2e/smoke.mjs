@@ -1753,6 +1753,17 @@ await step('v1.48: finishing a calm exercise counts (the first one earns "A calm
   await page.context().close();
 });
 
+await step('v1.49: the silhouette of a task shows in the statistics (where it is hard, trends) and in the report tables; zero axe violations', async () => {
+  const { page } = await newPage({ lang: 'en' }); await page.goto(base + '#/'); await dismissWelcome(page);
+  const id = await page.evaluate(async () => { const S = await import('./js/store.js'), tpl = S.get().templates[0], day = 86_400_000;
+    for (let i = 0; i < 4; i++) { const tasks = [{ id: 'a', name: 'Brush teeth', icon: '🪥', sil: 'brush-teeth', plannedSec: 60, estSec: 60, extraSec: 0, actualSec: 80, done: true, skipped: false, difficulty: 4 + (i % 2) }, { id: 'b', name: 'Pack bag', icon: '🎒', sil: 'pack-bag', plannedSec: 60, estSec: 60, extraSec: 0, actualSec: 60, done: true, skipped: false, difficulty: 2 }];
+      await S.saveRun({ id: `pic${i}`, profileId: S.activeProfile().id, templateId: tpl.id, templateName: tpl.name, icon: tpl.icon, color: '#6c5ce7', startedAt: Date.now() - (5 - i) * day, endedAt: Date.now() - (5 - i) * day + 600_000, status: 'done', current: 0, pausedMs: 0, plannedTotal: 120, estTotal: 120, actualTotal: 140, tasks, unplanned: [] }); } return tpl.id; });
+  await page.goto(base + '#/stats/' + id); await page.reload(); await page.waitForSelector('.diff-bar .sil svg', { timeout: 15000 }); assert.deepEqual(await audit(page, 'stats-pics'), []);
+  await page.goto(base + '#/report/period/0-all'); await page.waitForSelector('.rpt .rpt-head'); await page.waitForSelector('.rpt .sil svg', { timeout: 15000 }); assert.deepEqual(await audit(page, 'report-pics'), []);
+  await page.goto(base + '#/report/run/pic1'); await page.waitForSelector('.rpt .rpt-tbl .sil svg', { timeout: 15000 });
+  await page.context().close();
+});
+
 await step('v1.23: the picker offers "Build my own" and an avatar picked there is used at once; a kit avatar survives sanitising and other profiles keep theirs', async () => {
   const { page } = await newPage({ lang: 'en' }); await page.goto(base + '#/settings/profile'); await page.waitForSelector('details[data-group=profile]');
   await page.click('details[data-group=profile] button:has-text("Avatar")'); await page.waitForSelector('dialog[open] .avatar-picker'); assert.deepEqual(await audit(page, 'picker'), []);

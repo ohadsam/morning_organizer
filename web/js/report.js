@@ -22,8 +22,8 @@ export function buildReport({ runs, templates = [], goals = [], retros = [], pro
     const list = rs.filter((r) => r.templateId === id), d = D.summary(list);
     return { id, name, icon: list.at(-1).icon, runs: list.length, onTimeRate: list.filter((r) => r.actualTotal <= r.plannedTotal).length / list.length, avgActualSec: Math.round(avg(list.map((r) => r.actualTotal))), avgPlannedSec: Math.round(avg(list.map((r) => r.plannedTotal))), avgDifficulty: d.avg, unplanned: list.reduce((s, r) => s + (r.unplanned || []).length, 0) };
   }).sort((a, b) => b.runs - a.runs);
-  const taskRows = (() => { const m = new Map(); for (const r of rs) for (const k of r.tasks) { if (!k.done || !k.name) continue; const e = m.get(k.name) ?? { name: k.name, icon: k.icon, n: 0, actual: 0, planned: 0 }; e.n++; e.actual += k.actualSec; e.planned += k.plannedSec; m.set(k.name, e); }
-    return [...m.values()].map((e) => { const h = hard.find((x) => x.name === e.name); return { name: e.name, icon: e.icon, n: e.n, avgActualSec: Math.round(e.actual / e.n), avgPlannedSec: Math.round(e.planned / e.n), avgDifficulty: h?.avg ?? 0, hardShare: h?.hardShare ?? 0, helps: h?.helps ?? 0 }; }).sort((a, b) => (b.avgActualSec - b.avgPlannedSec) - (a.avgActualSec - a.avgPlannedSec)); })();
+  const taskRows = (() => { const m = new Map(); for (const r of rs) for (const k of r.tasks) { if (!k.done || !k.name) continue; const e = m.get(k.name) ?? { name: k.name, icon: k.icon, sil: k.sil || '', n: 0, actual: 0, planned: 0 }; e.n++; e.actual += k.actualSec; e.planned += k.plannedSec; m.set(k.name, e); }
+    return [...m.values()].map((e) => { const h = hard.find((x) => x.name === e.name); return { name: e.name, icon: e.icon, sil: e.sil, n: e.n, avgActualSec: Math.round(e.actual / e.n), avgPlannedSec: Math.round(e.planned / e.n), avgDifficulty: h?.avg ?? 0, hardShare: h?.hardShare ?? 0, helps: h?.helps ?? 0 }; }).sort((a, b) => (b.avgActualSec - b.avgPlannedSec) - (a.avgActualSec - a.avgPlannedSec)); })();
   const half = Math.floor(rs.length / 2), first = rs.slice(0, half), last = rs.slice(half), rate = (l) => (l.length ? l.filter((r) => r.actualTotal <= r.plannedTotal).length / l.length : 0);
   const insights = [];
   if (rs.length >= 4 && Math.abs(rate(last) - rate(first)) >= 0.15) insights.push({ key: rate(last) > rate(first) ? 'rpOnTimeUp' : 'rpOnTimeDown', p: { a: Math.round(rate(first) * 100), b: Math.round(rate(last) * 100) } });
@@ -48,7 +48,7 @@ export function buildReport({ runs, templates = [], goals = [], retros = [], pro
 
 function runReport(runs, runId, profile, now) {
   const r = runs.find((x) => x.id === runId); if (!r) return { kind: 'run', empty: true, title: '', tasks: [], insights: [], now };
-  const tasks = r.tasks.map((k) => ({ name: k.name, icon: k.icon, done: k.done, skipped: k.skipped, plannedSec: k.plannedSec, actualSec: k.actualSec, difficulty: k.difficulty || 0, help: k.help || { note: 0, thought: 0, relax: 0 } }));
+  const tasks = r.tasks.map((k) => ({ name: k.name, icon: k.icon, sil: k.sil || '', done: k.done, skipped: k.skipped, plannedSec: k.plannedSec, actualSec: k.actualSec, difficulty: k.difficulty || 0, help: k.help || { note: 0, thought: 0, relax: 0 } }));
   const dif = D.runDifficulty(r), unp = r.unplanned || [], over = r.actualTotal - r.plannedTotal, insights = [];
   insights.push({ key: over <= 0 ? 'rpRunOnTime' : 'rpRunOver', p: { sec: Math.abs(over) } });
   const worst = tasks.filter((k) => k.done).sort((a, b) => (b.actualSec - b.plannedSec) - (a.actualSec - a.plannedSec))[0]; if (worst && worst.actualSec - worst.plannedSec >= 30) insights.push({ key: 'rpRunSlowest', p: { name: worst.name, sec: worst.actualSec - worst.plannedSec } });

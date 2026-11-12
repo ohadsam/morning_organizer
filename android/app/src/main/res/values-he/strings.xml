@@ -58,6 +58,14 @@
     <string name="mood_3">בסדר</string>
     <string name="mood_4">טוב</string>
     <string name="mood_5">מצוין</string>
+    <string name="widget_bell_label">התזכורת הבאה</string>
+    <string name="widget_bell_desc">שעת התזכורת הבאה והשגרה שלה</string>
+    <string name="bell_paused">ההתראות מושהות</string>
+    <string name="bell_none">אין תזכורת</string>
+    <string name="bell_tomorrow">מחר</string>
+    <string name="widget_balance_label">איזון השבוע</string>
+    <string name="widget_balance_desc">נדנדה: שגרות שסיימתם מול טיפול בעצמכם השבוע</string>
+    <string name="balance_text">%1$d שגרות · %2$d בדיקות</string>
     <string name="widget_points_label">רמה וכוכבים</string>
     <string name="widget_points_desc">הרמה שלכם וכמה קרובה הרמה הבאה</string>
     <string name="points_level">רמה %1$d</string>

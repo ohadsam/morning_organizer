@@ -1736,6 +1736,15 @@ await step('v1.46: the achievements show medals (a row of 14 levels, the current
   }
 });
 
+await step('v1.47: the busy report button shows Sunny rising (moving), still with calm animations; the new achievements (two-week streak, first check-in, look-back, backup) exist; zero axe violations', async () => {
+  const { page } = await newPage({ lang: 'en' }); await page.goto(base + '#/'); await dismissWelcome(page);
+  const probe = await page.evaluate(async () => { const M = await import('./js/ui/mascot.js'); await M.loadMascot(); const el = M.loadingSunny({ size: 40 }); document.body.append(el); await new Promise((r) => setTimeout(r, 700)); const sun = el.children[1], a = sun.style.transform; await new Promise((r) => setTimeout(r, 600)); const b = sun.style.transform; el.remove();
+    document.documentElement.dataset.motion = 'calm'; const el2 = M.loadingSunny({ size: 40 }); document.body.append(el2); await new Promise((r) => setTimeout(r, 400)); const still = el2.children[1].style.transform; el2.remove(); delete document.documentElement.dataset.motion; return { a, b, still }; });
+  assert.ok(probe.a && probe.b && probe.a !== probe.b, 'the sun moves while loading'); assert.equal(probe.still, '', 'and stands still with calm animations');
+  const ids = await page.evaluate(async () => { const B = await import('./js/badges.js'); return B.earnedBadges([], { feel: 1, retro: 1, backup: true }); }); assert.deepEqual(ids.sort(), ['firstbackup', 'firstfeel', 'firstlook']);
+  await page.context().close();
+});
+
 await step('v1.23: the picker offers "Build my own" and an avatar picked there is used at once; a kit avatar survives sanitising and other profiles keep theirs', async () => {
   const { page } = await newPage({ lang: 'en' }); await page.goto(base + '#/settings/profile'); await page.waitForSelector('details[data-group=profile]');
   await page.click('details[data-group=profile] button:has-text("Avatar")'); await page.waitForSelector('dialog[open] .avatar-picker'); assert.deepEqual(await audit(page, 'picker'), []);

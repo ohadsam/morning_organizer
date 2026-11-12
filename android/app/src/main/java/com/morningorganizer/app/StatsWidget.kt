@@ -20,10 +20,12 @@ class StatsWidget : AppWidgetProvider() {
             val clean = JSONObject().put("name", o.optString("name").take(30)).put("stars", o.optInt("stars", 0).coerceIn(0, 1_000_000))
                 .put("streak", o.optInt("streak", 0).coerceIn(0, 5000)).put("week", o.optInt("week", 0).coerceIn(0, 999))
                 .put("level", o.optInt("level", 1).coerceIn(1, 99)).put("toNext", o.optInt("toNext", 0).coerceIn(0, 1_000_000)).put("pct", o.optInt("pct", 0).coerceIn(0, 100))
+                .put("doing", o.optInt("doing", 0).coerceIn(0, 9999)).put("care", o.optInt("care", 0).coerceIn(0, 9999)).put("bal", o.optInt("bal", 2).coerceIn(0, 4))
             context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putString("state", clean.toString()).apply()
             val mgr = AppWidgetManager.getInstance(context)
             mgr.getAppWidgetIds(ComponentName(context, StatsWidget::class.java)).forEach { mgr.updateAppWidget(it, build(context)) }
             PointsWidget.refresh(context)
+            BalanceWidget.refresh(context)
         }
 
         fun readState(context: Context): JSONObject = try { JSONObject(context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getString("state", "{}") ?: "{}") } catch (_: Exception) { JSONObject() }

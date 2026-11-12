@@ -1,4 +1,5 @@
 // Family tab: parent dashboard (children, rewards, routines, cheers) and child view (parent, goal, cheers). No server - see link.js.
+import { loadingSunny } from './mascot.js';
 import { h, fmtDur, setChildren, clamp } from '../util.js';
 import { t, getLang } from '../i18n.js';
 import * as S from '../store.js';
@@ -66,8 +67,8 @@ function openInvite() {
   const live = h('input', { type: 'checkbox' });
   const out = h('div', { class: 'stack' }), reply = h('textarea', { rows: 3, class: 'code', placeholder: t('inviteReply'), 'aria-label': t('inviteReply') });
   const make = h('button', { class: 'btn primary', type: 'button', onclick: async () => {
-    make.disabled = true;
-    const { code } = await F.createInvite(S.get().settings.personName || '', { live: live.checked });
+    make.disabled = true; const sp = loadingSunny({ size: 28 }); make.after(sp);
+    const { code } = await F.createInvite(S.get().settings.personName || '', { live: live.checked }); sp.remove();
     setChildren(out, codeTools(code, t('inviteTitle')), h('small', { class: 'hint' }, t('inviteFresh')), reply,
       h('div', { class: 'toolbar wrap' }, h('button', { class: 'btn', type: 'button', onclick: async () => { if (reply.value.trim()) { await routeIncoming(reply.value); reply.value = ''; } } }, t('inviteProcess')), tapReceiveButton()));
   } }, t('inviteGenerate'));

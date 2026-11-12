@@ -13,6 +13,8 @@ for (const [lv, o0] of Object.entries(FEEL)) { const o = { ...DEF, ...o0 };
 if (process.env.FEEL_SVG) for (let lv = 1; lv <= 5; lv++) {
   const svg = readFileSync(`${process.env.FEEL_SVG}/sunny-feel-${lv}.svg`, 'utf8').replace(/^<\?xml[^>]*\?>\s*/, '').trim().replace(/ id="[^"]*"/g, '').replace(/<g opacity="0"\/>/g, '').replace(/ (width|height)="256"/g, '').replace('viewBox="0 0 256 256"', 'viewBox="8 8 240 240"');
   moods[`feel-${lv}`] = { ...moods[`feel-${lv}`], svg }; }
+// the loading sunrise (ids kept: the player moves a-sun / a-rays / a-ray-N): LOADING_SVG=<anim-loading-sunrise.svg> (its ns0: prefixes are removed)
+if (process.env.LOADING_SVG) moods['anim-loading'] = { svg: readFileSync(process.env.LOADING_SVG, 'utf8').trim().replace(/ xmlns:ns0="[^"]*"/, '').replace(/ns0:/g, '').replace(/ (width|height)="160"/g, '').replace(/ preserveAspectRatio="[^"]*"/, ''), name: { en: 'Loading', he: 'טוען' }, description: { en: 'Sunny rises while something loads', he: 'שמשי זורחת בזמן טעינה' } };
 // the cameos (open-eyed Sunny with a prop: thumbs up, clipboard, plug...) from the "Sunny refinement" kit: CAMEO_SVG=<dir with sunny-<name>.svg>
 if (process.env.CAMEO_SVG) for (const n of ['check', 'empty', 'error', 'offline', 'loading', 'reminder', 'calm', 'tired', 'proud', 'think', 'hello', 'goodbye']) {
   const svg = readFileSync(`${process.env.CAMEO_SVG}/sunny-${n}.svg`, 'utf8').replace(/^<\?xml[^>]*\?>\s*/, '').trim().replace(/ id="[^"]*"/g, '').replace(/ data-[a-z-]+="[^"]*"/g, '');
